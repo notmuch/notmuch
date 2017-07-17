@@ -1,6 +1,49 @@
 Notmuch 0.25 (UNRELEASED)
 =========================
 
+General
+-------
+
+Add regexp searching for mid, paths, and tags.
+
+Skip HTML tags when indexing
+
+    In particular this avoids indexing large inline images.
+
+Command Line Interface
+----------------------
+
+Bash completion is now installed to /usr/share by default.
+
+Fix dump headers to match documentation
+
+Allow space as separator for keyword arguments.
+
+Emacs
+-----
+
+Don't use 'function' as variable name, workaround emacs bug 26406.
+
+Library Changes
+---------------
+
+Add workaround for date parsing of bad input in older GMime
+
+    In certain circumstances, older GMime libraries could return
+    negative numbers when parsing syntactically invalid dates.
+
+Replace deprecated functions with status returning versions
+
+    API of notmuch_query_{search,count}_{messages,threads} has
+    changed.  notmuch_query_add_tag_exclude now returns a status
+    value.
+
+Add support for building against GMime 3.0.
+
+Rename libutil.a to libnotmuch_util.a.
+
+libnotmuch SONAME is incremented to libnotmuch.so.5.
+
 Notmuch 0.24.2 (2017-06-01)
 ===========================
 
