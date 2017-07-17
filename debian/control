@@ -130,7 +130,6 @@ Description: thread-based email index, search and tagging (emacs interface)
 
 Package: notmuch-vim
 Architecture: all
-Section: mail
 Breaks: notmuch (<<0.6~254~)
 Replaces: notmuch (<<0.6~254~)
 Depends: ${misc:Depends}, notmuch, vim-addon-manager, vim-ruby, ruby-notmuch
