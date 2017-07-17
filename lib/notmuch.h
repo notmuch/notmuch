@@ -1568,11 +1568,11 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * its filename ends with the sequence ":2," followed by zero or more
  * of the following single-character flags (in ASCII order):
  *
- *   'D' iff the message has the "draft" tag
- *   'F' iff the message has the "flagged" tag
- *   'P' iff the message has the "passed" tag
- *   'R' iff the message has the "replied" tag
- *   'S' iff the message does not have the "unread" tag
+ *   * flag 'D' iff the message has the "draft" tag
+ *   * flag 'F' iff the message has the "flagged" tag
+ *   * flag 'P' iff the message has the "passed" tag
+ *   * flag 'R' iff the message has the "replied" tag
+ *   * flag 'S' iff the message does not have the "unread" tag
  *
  * Any existing flags unmentioned in the list above will be preserved
  * in the renaming.
