@@ -245,7 +245,7 @@ class Thread(object):
 
         The :class:`Tags` object is owned by the thread and as such, will only
         be valid for as long as this :class:`Thread` is valid (e.g. until the
-        query from which it derived is explicitely deleted).
+        query from which it derived is explicitly deleted).
 
         :returns: A :class:`Tags` iterator.
         :raises: :exc:`NotInitializedError` if query is not initialized

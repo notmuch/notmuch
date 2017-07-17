@@ -60,7 +60,7 @@ Supported options for **address** include
         Control the deduplication of results.
 
         **no**
-            Output all occurences of addresses in the matching
+            Output all occurrences of addresses in the matching
             messages. This is not applicable with --output=count.
 
         **mailbox**

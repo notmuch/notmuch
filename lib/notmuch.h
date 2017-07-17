@@ -829,7 +829,7 @@ notmuch_query_get_sort (const notmuch_query_t *query);
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured.
  *      Most likely a problem lazily parsing the query string.
  *
- * NOTMUCH_STATUS_IGNORED: tag is explicitely present in the query, so
+ * NOTMUCH_STATUS_IGNORED: tag is explicitly present in the query, so
  *		not excluded.
  */
 notmuch_status_t

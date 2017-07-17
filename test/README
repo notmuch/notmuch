@@ -26,7 +26,7 @@ that you know if you break anything.
   - gpg(1)
   - python(1)
 
-If your system lacks these tools or have older, non-upgreable versions
+If your system lacks these tools or have older, non-upgradable versions
 of these, please (possibly compile and) install these to some other
 path, for example /usr/local/bin or /opt/gnu/bin. Then prepend the
 chosen directory to your PATH before running the tests.
@@ -144,9 +144,9 @@ remaining tests to be unaffected.
 
 Currently we do not consider skipped tests as build failures. For
 maximum robustness, when setting up automated build processes, you
-should explicitely skip tests, rather than relying on notmuch's
+should explicitly skip tests, rather than relying on notmuch's
 detection of missing prerequisites. In the future we may treat tests
-unable to run because of missing prerequisites, but not explicitely
+unable to run because of missing prerequisites, but not explicitly
 skipped by the user, as failures.
 
 Writing Tests

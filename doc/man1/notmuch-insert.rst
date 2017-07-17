@@ -65,7 +65,7 @@ errors most likely to be temporary in nature, e.g. failure to get a
 database write lock.
 
 ``75 (EX_TEMPFAIL)``
-    A temporary failure occured; the user is invited to retry.
+    A temporary failure occurred; the user is invited to retry.
 
 The exit status of the **post-insert** hook does not affect the exit
 status of the **insert** command.

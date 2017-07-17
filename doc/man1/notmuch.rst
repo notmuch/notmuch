@@ -123,7 +123,7 @@ If the given command is not known to notmuch, notmuch tries to execute
 the external **notmuch-<subcommand>** in ${PATH} instead. This allows
 users to have their own notmuch related tools to be run via the
 notmuch command. By design, this does not allow notmuch's own commands
-to be overriden using external commands.
+to be overridden using external commands.
 
 OPTION SYNTAX
 -------------

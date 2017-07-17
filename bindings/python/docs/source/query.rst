@@ -29,7 +29,7 @@
    .. attribute::  sort
 
       Instance attribute :attr:`sort` contains the sort order (see
-      :attr:`Query.SORT`) if explicitely specified via
+      :attr:`Query.SORT`) if explicitly specified via
       :meth:`set_sort`. By default it is set to `None`.
 
    .. automethod:: exclude_tag
