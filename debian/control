@@ -114,7 +114,7 @@ Package: notmuch-emacs
 Section: oldlibs
 Priority: extra
 Architecture: all
-Depends: elpa-notmuch
+Depends: elpa-notmuch, ${misc:Depends}
 Description: thread-based email index, search and tagging (transitional package)
  This dummy package help ease transition to the new package elpa-notmuch
 
