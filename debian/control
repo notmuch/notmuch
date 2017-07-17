@@ -27,7 +27,7 @@ Build-Depends:
  gpgsm <!nocheck>,
  gnupg <!nocheck>,
  bash-completion (>=1.9.0~)
-Standards-Version: 3.9.6
+Standards-Version: 4.0.0
 Homepage: https://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
 Vcs-Browser: https://git.notmuchmail.org/git/notmuch
