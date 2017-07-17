@@ -100,9 +100,9 @@ g_mime_signature_status_error (GMimeSignatureError error) {
     return (error != GMIME_SIGNATURE_ERROR_NONE);
 }
 
-time_t
+gint64
 g_mime_utils_header_decode_date_unix (const char *date) {
-    return g_mime_utils_header_decode_date (date, NULL);
+    return (gint64) g_mime_utils_header_decode_date (date, NULL);
 }
 
 #else /* GMime >= 3.0 */
