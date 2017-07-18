@@ -1,8 +1,9 @@
-notmuch (0.25~rc0-3) UNRELEASED; urgency=medium
+notmuch (0.25~rc1-1) experimental; urgency=medium
 
   * Bump standards version to 4.0.0 (no changes needed)
+  * New upstream release candidate
 
- -- David Bremner <bremner@debian.org>  Tue, 18 Jul 2017 06:41:21 -0300
+ -- David Bremner <bremner@debian.org>  Tue, 18 Jul 2017 07:04:14 -0300
 
 notmuch (0.25~rc0-2) experimental; urgency=medium
 
