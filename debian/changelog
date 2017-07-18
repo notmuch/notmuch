@@ -1,3 +1,9 @@
+notmuch (0.25~rc1-2) unstable; urgency=low
+
+  * upload to unstable
+
+ -- David Bremner <bremner@debian.org>  Tue, 18 Jul 2017 19:47:45 -0300
+
 notmuch (0.25~rc1-1) experimental; urgency=medium
 
   * Bump standards version to 4.0.0 (no changes needed)
