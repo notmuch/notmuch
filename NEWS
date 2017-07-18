@@ -15,8 +15,6 @@ Command Line Interface
 
 Bash completion is now installed to /usr/share by default.
 
-Fix dump headers to match documentation
-
 Allow space as separator for keyword arguments.
 
 Emacs
