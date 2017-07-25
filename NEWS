@@ -8,7 +8,7 @@ Add regexp searching for mid, paths, and tags.
 
 Skip HTML tags when indexing
 
-    In particular this avoids indexing large inline images.
+  In particular this avoids indexing large inline images.
 
 Command Line Interface
 ----------------------
@@ -33,14 +33,14 @@ Library Changes
 
 Add workaround for date parsing of bad input in older GMime
 
-    In certain circumstances, older GMime libraries could return
-    negative numbers when parsing syntactically invalid dates.
+  In certain circumstances, older GMime libraries could return
+  negative numbers when parsing syntactically invalid dates.
 
 Replace deprecated functions with status returning versions
 
-    API of notmuch_query_{search,count}_{messages,threads} has
-    changed.  notmuch_query_add_tag_exclude now returns a status
-    value.
+  API of notmuch_query_{search,count}_{messages,threads} has
+  changed.  notmuch_query_add_tag_exclude now returns a status
+  value.
 
 Add support for building against GMime 3.0.
 
