@@ -1,4 +1,4 @@
-Notmuch 0.25 (UNRELEASED)
+Notmuch 0.25 (2017-07-25)
 =========================
 
 General
@@ -8,7 +8,7 @@ Add regexp searching for mid, paths, and tags.
 
 Skip HTML tags when indexing
 
-    In particular this avoids indexing large inline images.
+  In particular this avoids indexing large inline images.
 
 Command Line Interface
 ----------------------
@@ -20,6 +20,12 @@ Allow space as separator for keyword arguments.
 Emacs
 -----
 
+Support for stashing message timestamp in show and tree views
+
+  Invoking `notmuch-show-stash-date` with a prefix argument
+  stashes the unix timestamp of the current message instead of
+  the date string.
+
 Don't use 'function' as variable name, workaround emacs bug 26406.
 
 Library Changes
@@ -27,14 +33,14 @@ Library Changes
 
 Add workaround for date parsing of bad input in older GMime
 
-    In certain circumstances, older GMime libraries could return
-    negative numbers when parsing syntactically invalid dates.
+  In certain circumstances, older GMime libraries could return
+  negative numbers when parsing syntactically invalid dates.
 
 Replace deprecated functions with status returning versions
 
-    API of notmuch_query_{search,count}_{messages,threads} has
-    changed.  notmuch_query_add_tag_exclude now returns a status
-    value.
+  API of notmuch_query_{search,count}_{messages,threads} has
+  changed.  notmuch_query_add_tag_exclude now returns a status
+  value.
 
 Add support for building against GMime 3.0.
 

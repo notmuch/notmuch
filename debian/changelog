@@ -1,3 +1,11 @@
+notmuch (0.25-1) unstable; urgency=medium
+
+  * New upstream release
+    - regexp search for mid, paths, tags
+    - drop inline images when indexing html
+
+ -- David Bremner <bremner@debian.org>  Tue, 25 Jul 2017 08:28:20 -0300
+
 notmuch (0.25~rc1-2) unstable; urgency=low
 
   * upload to unstable
