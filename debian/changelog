@@ -1,3 +1,11 @@
+notmuch (0.25-2) unstable; urgency=medium
+
+  * Drop build-dep on libgmime-2.4-dev, long unsupported upstream
+  * Bug fix: "please transition to gmime 3.0", thanks to Daniel Kahn
+    Gillmor (Closes: #867353).
+
+ -- David Bremner <bremner@debian.org>  Wed, 26 Jul 2017 10:59:14 -0400
+
 notmuch (0.25-1) unstable; urgency=medium
 
   * New upstream release
