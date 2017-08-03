@@ -1,3 +1,9 @@
+notmuch (0.25-3) unstable; urgency=medium
+
+  * Remove old startup file /etc/emacs/site-start.d/50notmuch.el
+
+ -- David Bremner <bremner@debian.org>  Thu, 03 Aug 2017 09:26:00 -0400
+
 notmuch (0.25-2) unstable; urgency=medium
 
   * Drop build-dep on libgmime-2.4-dev, long unsupported upstream
