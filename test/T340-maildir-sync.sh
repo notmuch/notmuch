@@ -181,11 +181,33 @@ test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maild
 
 test_begin_subtest "Files in new/ get default synchronized tags"
 OLDCONFIG=$(notmuch config get new.tags)
-notmuch config set new.tags test
+notmuch config set new.tags test;unread
 add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
 notmuch config set new.tags $OLDCONFIG
 notmuch search 'subject:"File in new"' | notmuch_search_sanitize > output
 test_expect_equal "$(< output)" \
 "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; File in new/ (test unread)"
 
+test_begin_subtest "unread is not mandatory in new/"
+test_subtest_known_broken
+OLDCONFIG=$(notmuch config get new.tags)
+notmuch config set new.tags test
+add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
+notmuch config set new.tags $OLDCONFIG
+notmuch search 'subject:"File in new"' | notmuch_search_sanitize > output
+test_expect_equal "$(< output)" \
+"thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; File in new/ (test)"
+
+for tag in draft flagged passed replied; do
+
+    test_begin_subtest "$tag is valid in new.tags"
+    test_subtest_known_broken
+    OLDCONFIG=$(notmuch config get new.tags)
+    notmuch config set new.tags "$tag"
+    add_message [subject]="\"$tag sync in new\"" [dir]=new
+    notmuch config set new.tags $OLDCONFIG
+    notmuch search "subject:\"$tag sync in new\"" | notmuch_search_sanitize > output
+    test_expect_equal "$(< output)" \
+		      "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; $tag sync in new ($tag)"
+done
 test_done
