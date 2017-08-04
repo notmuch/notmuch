@@ -1,3 +1,9 @@
+notmuch (0.25-4) unstable; urgency=medium
+
+  * Recommend elpa-emacs instead emacs-notmuch
+
+ -- David Bremner <bremner@debian.org>  Fri, 04 Aug 2017 18:11:35 -0400
+
 notmuch (0.25-3) unstable; urgency=medium
 
   * Remove old startup file /etc/emacs/site-start.d/50notmuch.el
