@@ -28,6 +28,14 @@ add_message [subject]='"Adding message with S"' [filename]='adding-with-s-flag:2
 output=$(notmuch search subject:"Adding message with S" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding message with S (inbox)"
 
+test_begin_subtest "Adding message with 'S' w/o 'unread' in new.tags prevents 'unread' tag"
+OLDCONFIG=$(notmuch config get new.tags)
+notmuch config set new.tags "inbox"
+add_message [subject]='"Adding message with S 2"' [filename]='adding-with-s-flag2:2,S' [dir]=cur
+notmuch config set new.tags $OLDCONFIG
+output=$(notmuch search subject:Adding-message-with-S-2 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding message with S 2 (inbox)"
+
 test_begin_subtest "Adding 'replied' tag adds 'R' flag to filename"
 add_message [subject]='"Adding replied tag"' [filename]='adding-replied-tag:2,S' [dir]=cur
 notmuch tag +replied subject:"Adding replied tag"
@@ -49,7 +57,7 @@ test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "Date": "GENERATED_DATE"},
 "body": [{"id": 1,
 "content-type": "text/plain",
-"content": "This is just a test message (#3)\n"}]},
+"content": "This is just a test message (#4)\n"}]},
 []]]]'
 
 test_begin_subtest "notmuch reply works with renamed file (without notmuch new)"
