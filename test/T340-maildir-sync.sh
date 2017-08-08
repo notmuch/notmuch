@@ -181,7 +181,7 @@ test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maild
 
 test_begin_subtest "Files in new/ get default synchronized tags"
 OLDCONFIG=$(notmuch config get new.tags)
-notmuch config set new.tags test;unread
+notmuch config set new.tags "test;unread"
 add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
 notmuch config set new.tags $OLDCONFIG
 notmuch search 'subject:"File in new"' | notmuch_search_sanitize > output
