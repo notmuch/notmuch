@@ -417,6 +417,24 @@ _notmuch_search()
     esac
 }
 
+_notmuch_reindex()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    ! $split &&
+    case "${cur}" in
+	-*)
+	    local options="${_notmuch_shared_options}"
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    ;;
+	*)
+	    _notmuch_search_terms
+	    ;;
+    esac
+}
+
 _notmuch_address()
 {
     local cur prev words cword split
@@ -532,7 +550,7 @@ _notmuch_tag()
 
 _notmuch()
 {
-    local _notmuch_commands="compact config count dump help insert new reply restore search address setup show tag emacs-mua"
+    local _notmuch_commands="compact config count dump help insert new reply restore reindex search address setup show tag emacs-mua"
     local arg cur prev words cword split
 
     # require bash-completion with _init_completion
