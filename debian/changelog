@@ -1,3 +1,10 @@
+notmuch (0.25-5) unstable; urgency=medium
+
+  * Bug fix: "dependency on elpa-emacs doesn't seem right", thanks
+    to Jiri Palecek (Closes: #871642).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Aug 2017 06:42:50 -0400
+
 notmuch (0.25-4) unstable; urgency=medium
 
   * Recommend elpa-emacs instead emacs-notmuch
