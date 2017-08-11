@@ -23,8 +23,7 @@ test_expect_success ':'
 
 test_begin_subtest 'test runs if prerequisite is satisfied'
 test_set_prereq HAVEIT
-haveit=no
-test_expect_success 'test_have_prereq HAVEIT && haveit=yes'
+test_expect_success 'test_have_prereq HAVEIT'
 
 test_begin_subtest 'tests clean up after themselves'
 clean=no
