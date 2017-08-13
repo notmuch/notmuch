@@ -1260,7 +1260,9 @@ matched."
     ;; aren't wiped out.
     (setq notmuch-show-thread-id thread-id
 	  notmuch-show-parent-buffer parent-buffer
-	  notmuch-show-query-context query-context
+	  notmuch-show-query-context (if (or (string= query-context "")
+					     (string= query-context "*"))
+					 nil query-context)
 
 	  notmuch-show-process-crypto notmuch-crypto-process-mime
 	  ;; If `elide-toggle', invert the default value.

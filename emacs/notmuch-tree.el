@@ -897,7 +897,9 @@ the same as for the function notmuch-tree."
   (notmuch-tree-mode)
   (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
   (setq notmuch-tree-basic-query basic-query)
-  (setq notmuch-tree-query-context query-context)
+  (setq notmuch-tree-query-context (if (or (string= query-context "")
+					   (string= query-context "*"))
+				       nil query-context))
   (setq notmuch-tree-target-msg target)
   (setq notmuch-tree-open-target open-target)
   ;; Set the default value for `notmuch-show-process-crypto' in this
