@@ -598,6 +598,8 @@ message will be \"unarchived\", i.e. the tag changes in
 (defun notmuch-tree-refresh-view ()
   "Refresh view."
   (interactive)
+  (when (get-buffer-process (current-buffer))
+    (error "notmuch tree process already running for current buffer"))
   (let ((inhibit-read-only t)
 	(basic-query notmuch-tree-basic-query)
 	(query-context notmuch-tree-query-context)
