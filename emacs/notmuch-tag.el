@@ -457,7 +457,7 @@ QUERY should be a string containing the search-terms.
 TAG-CHANGES is a list of strings of the form \"+tag\" or
 \"-tag\" to add or remove tags, respectively.
 
-Note: Other code should always use this function alter tags of
+Note: Other code should always use this function to alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
