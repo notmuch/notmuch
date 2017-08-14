@@ -47,6 +47,10 @@ html_static_path = []
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'notmuchdoc'
 
+# Disable SmartyPants, as it mangles command lines.
+# Despite the name, this actually affects manual pages as well.
+html_use_smartypants = False
+
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
