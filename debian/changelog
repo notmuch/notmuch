@@ -1,3 +1,11 @@
+notmuch (0.25-6) unstable; urgency=medium
+
+  * Bug fix: "deletes shipped file on reinstall:
+    /etc/emacs/site-start.d/50notmuch.el", thanks to Andreas Beckmann
+    (Closes: #872197).
+
+ -- David Bremner <bremner@debian.org>  Tue, 15 Aug 2017 07:52:21 -0300
+
 notmuch (0.25-5) unstable; urgency=medium
 
   * Bug fix: "dependency on elpa-emacs doesn't seem right", thanks
