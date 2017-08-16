@@ -450,9 +450,10 @@ test_expect_equal_json () {
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
+    local script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
         || echo "$1")
-    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
         || echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
