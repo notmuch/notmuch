@@ -909,21 +909,42 @@ invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
 
-  ;; There is no way (as of Emacs 24.3) to capture stdout and stderr
-  ;; separately for asynchronous processes, or even to redirect stderr
-  ;; to a file, so we use a trivial shell wrapper to send stderr to a
-  ;; temporary file and clean things up in the sentinel.
-  (let* ((err-file (make-temp-file "nmerr"))
-	 ;; Use a pipe
-	 (process-connection-type nil)
-	 ;; Find notmuch using Emacs' `exec-path'
-	 (command (or (executable-find notmuch-command)
-		      (error "command not found: %s" notmuch-command)))
-	 (proc (apply #'start-process name buffer
-		      "/bin/sh" "-c"
-		      "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
-		      command err-file args)))
-    (process-put proc 'err-file err-file)
+  (let (err-file err-buffer proc
+	;; Find notmuch using Emacs' `exec-path'
+	(command (or (executable-find notmuch-command)
+		     (error "Command not found: %s" notmuch-command))))
+    (if (fboundp 'make-process)
+	(progn
+	  (setq err-buffer (generate-new-buffer " *notmuch-stderr*"))
+	  ;; Emacs 25 and newer has `make-process', which allows
+	  ;; redirecting stderr independently from stdout to a
+	  ;; separate buffer. As this allows us to avoid using a
+	  ;; temporary file and shell invocation, use it when
+	  ;; available.
+	  (setq proc (make-process
+		      :name name
+		      :buffer buffer
+		      :command (cons command args)
+		      :connection-type 'pipe
+		      :stderr err-buffer))
+	  (process-put proc 'err-buffer err-buffer)
+	  ;; Silence "Process NAME stderr finished" in stderr by adding a
+	  ;; no-op sentinel to the fake stderr process object
+	  (set-process-sentinel (get-buffer-process err-buffer) #'ignore))
+
+      ;; On Emacs versions before 25, there is no way to capture
+      ;; stdout and stderr separately for asynchronous processes, or
+      ;; even to redirect stderr to a file, so we use a trivial shell
+      ;; wrapper to send stderr to a temporary file and clean things
+      ;; up in the sentinel.
+      (setq err-file (make-temp-file "nmerr"))
+      (let ((process-connection-type nil)) ;; Use a pipe
+	(setq proc (apply #'start-process name buffer
+			  "/bin/sh" "-c"
+			  "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
+			  command err-file args)))
+      (process-put proc 'err-file err-file))
+
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
@@ -932,10 +953,10 @@ status."
 (defun notmuch-start-notmuch-sentinel (proc event)
   "Process sentinel function used by `notmuch-start-notmuch'."
   (let* ((err-file (process-get proc 'err-file))
-	 (err (with-temp-buffer
-		(insert-file-contents err-file)
-		(unless (eobp)
-		  (buffer-string))))
+	 (err-buffer (or (process-get proc 'err-buffer)
+			 (find-file-noselect err-file)))
+	 (err (when (not (zerop (buffer-size err-buffer)))
+		(with-current-buffer err-buffer (buffer-string))))
 	 (sub-sentinel (process-get proc 'sub-sentinel))
 	 (real-command (process-get proc 'real-command)))
     (condition-case err
@@ -953,8 +974,8 @@ status."
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
-		 (with-temp-buffer
-		   (unless (= (second (insert-file-contents err-file)) 0)
+		 (when err
+		   (with-current-buffer err-buffer
 		     (goto-char (point-min))
 		     (end-of-line)
 		     ;; Show first line; stuff remaining lines in the
@@ -969,7 +990,8 @@ status."
        ;; Emacs behaves strangely if an error escapes from a sentinel,
        ;; so turn errors into messages.
        (message "%s" (error-message-string err))))
-    (ignore-errors (delete-file err-file))))
+    (when err-buffer (kill-buffer err-buffer))
+    (when err-file (ignore-errors (delete-file err-file)))))
 
 ;; This variable is used only buffer local, but it needs to be
 ;; declared globally first to avoid compiler warnings.
