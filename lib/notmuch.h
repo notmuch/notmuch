@@ -542,8 +542,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
 				notmuch_directory_t **directory);
 
 /**
- * Add a new message to the given notmuch database or associate an
- * additional filename with an existing message.
+ * Add a message file to a database, indexing it for retrieval by
+ * future searches.  If a message already exists with the same message
+ * ID as the specified file, their indexes will be merged, and this
+ * new filename will also be associated with the existing message.
  *
  * Here, 'filename' should be a path relative to the path of
  * 'database' (see notmuch_database_get_path), or else should be an
@@ -556,8 +558,9 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * entire contents of the file.
  *
  * If another message with the same message ID already exists in the
- * database, rather than creating a new message, this adds 'filename'
- * to the list of the filenames for the existing message.
+ * database, rather than creating a new message, this adds the search
+ * terms from the identified file to the existing message's index, and
+ * adds 'filename' to the list of filenames known for the message.
  *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
