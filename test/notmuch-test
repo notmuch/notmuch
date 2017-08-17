@@ -50,6 +50,6 @@ echo
 ev=$?
 
 # Clean up
-rm -rf test-results corpus.mail
+rm -rf test-results corpora.mail
 
 exit $ev
