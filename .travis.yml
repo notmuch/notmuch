@@ -1,11 +1,18 @@
 language: c
 
 dist: trusty
-sudo: required
+sudo: false
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install dtach libxapian-dev libgmime-2.6-dev libtalloc-dev python-sphinx gdb gpgsm
+addons:
+  apt:
+    packages:
+    - dtach
+    - libxapian-dev
+    - libgmime-2.6-dev
+    - libtalloc-dev
+    - python-sphinx
+    - gdb
+    - gpgsm
 
 script:
   - ./configure
