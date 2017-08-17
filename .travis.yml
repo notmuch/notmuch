@@ -1,7 +1,7 @@
 language: c
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install dtach libxapian-dev libgmime-2.6-dev libtalloc-dev python-sphinx
+  - sudo apt-get install dtach libxapian-dev libgmime-2.6-dev libtalloc-dev python-sphinx gdb gpgsm
 
   # Notmuch requires zlib 1.2.5.2, unfortunately travis runs on Ubuntu 12.04LTS which
   # ships with zlib 1.2.3.3. We need to update to zlib 1.2.5.2 to be able to build.
