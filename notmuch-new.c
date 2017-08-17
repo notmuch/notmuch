@@ -261,7 +261,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     if (status)
 	goto DONE;
 
-    status = notmuch_database_add_message (notmuch, filename, &message);
+    status = notmuch_database_index_file (notmuch, filename, NULL, &message);
     switch (status) {
     /* Success. */
     case NOTMUCH_STATUS_SUCCESS:

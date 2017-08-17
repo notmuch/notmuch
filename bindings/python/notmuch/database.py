@@ -285,7 +285,7 @@ class Database(object):
         """Does this database need to be upgraded before writing to it?
 
         If this function returns `True` then no functions that modify the
-        database (:meth:`add_message`,
+        database (:meth:`index_file`,
         :meth:`Message.add_tag`, :meth:`Directory.set_mtime`,
         etc.) will work unless :meth:`upgrade` is called successfully first.
 
@@ -399,12 +399,13 @@ class Database(object):
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
 
-    _add_message = nmlib.notmuch_database_add_message
-    _add_message.argtypes = [NotmuchDatabaseP, c_char_p,
+    _index_file = nmlib.notmuch_database_index_file
+    _index_file.argtypes = [NotmuchDatabaseP, c_char_p,
+                             c_void_p,
                              POINTER(NotmuchMessageP)]
-    _add_message.restype = c_uint
+    _index_file.restype = c_uint
 
-    def add_message(self, filename, sync_maildir_flags=False):
+    def index_file(self, filename, sync_maildir_flags=False):
         """Adds a new message to the database
 
         :param filename: should be a path relative to the path of the
@@ -455,7 +456,7 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         msg_p = NotmuchMessageP()
-        status = self._add_message(self._db, _str(filename), byref(msg_p))
+        status = self._index_file(self._db, _str(filename), c_void_p(None), byref(msg_p))
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
@@ -466,6 +467,11 @@ class Database(object):
         if sync_maildir_flags:
             msg.maildir_flags_to_tags()
         return (msg, status)
+
+    def add_message(self, filename, sync_maildir_flags=False):
+        """Deprecated alias for :meth:`index_file`
+        """
+        self.index_file(self, filename, sync_maildir_flags=sync_maildir_flags)
 
     _remove_message = nmlib.notmuch_database_remove_message
     _remove_message.argtypes = [NotmuchDatabaseP, c_char_p]

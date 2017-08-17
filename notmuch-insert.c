@@ -384,7 +384,7 @@ add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
     notmuch_message_t *message;
     notmuch_status_t status;
 
-    status = notmuch_database_add_message (notmuch, path, &message);
+    status = notmuch_database_index_file (notmuch, path, NULL, &message);
     if (status == NOTMUCH_STATUS_SUCCESS) {
 	status = tag_op_list_apply (message, tag_ops, 0);
 	if (status) {

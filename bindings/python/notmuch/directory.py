@@ -93,7 +93,7 @@ class Directory(object):
 
         * Read the mtime of a directory from the filesystem
 
-        * Call :meth:`Database.add_message` for all mail files in
+        * Call :meth:`Database.index_file` for all mail files in
           the directory
 
         * Call notmuch_directory_set_mtime with the mtime read from the

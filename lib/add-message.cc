@@ -458,9 +458,10 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 }
 
 notmuch_status_t
-notmuch_database_add_message (notmuch_database_t *notmuch,
-			      const char *filename,
-			      notmuch_message_t **message_ret)
+notmuch_database_index_file (notmuch_database_t *notmuch,
+			     const char *filename,
+			     notmuch_param_t unused (*indexopts),
+			     notmuch_message_t **message_ret)
 {
     notmuch_message_file_t *message_file;
     notmuch_message_t *message = NULL;
@@ -574,4 +575,15 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	ret = ret2;
 
     return ret;
+}
+
+notmuch_status_t
+notmuch_database_add_message (notmuch_database_t *notmuch,
+			      const char *filename,
+			      notmuch_message_t **message_ret)
+{
+    return notmuch_database_index_file (notmuch, filename,
+					NULL,
+					message_ret);
+
 }

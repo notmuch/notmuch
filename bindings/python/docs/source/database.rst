@@ -25,7 +25,7 @@
 
    .. automethod:: get_directory
 
-   .. automethod:: add_message
+   .. automethod:: index_file
 
    .. automethod:: remove_message
 

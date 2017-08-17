@@ -170,7 +170,7 @@ func (self *Database) GetVersion() uint {
 /* Does this database need to be upgraded before writing to it?
  *
  * If this function returns TRUE then no functions that modify the
- * database (notmuch_database_add_message, notmuch_message_add_tag,
+ * database (notmuch_database_index_file, notmuch_message_add_tag,
  * notmuch_directory_set_mtime, etc.) will work unless the function
  * notmuch_database_upgrade is called successfully first. */
 func (self *Database) NeedsUpgrade() bool {

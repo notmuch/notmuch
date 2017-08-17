@@ -566,7 +566,7 @@ class Message(Python3StringMixIn):
         logical OR operator.)
 
         As a convenience, you can set the sync_maildir_flags parameter in
-        :meth:`Database.add_message` to implicitly call this.
+        :meth:`Database.index_file` to implicitly call this.
 
         :returns: a :class:`STATUS`. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""

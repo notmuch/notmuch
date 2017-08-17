@@ -237,7 +237,7 @@ typedef struct _notmuch_param notmuch_param_t;
  * The database will not yet have any data in it
  * (notmuch_database_create itself is a very cheap function). Messages
  * contained within 'path' can be added to the database by calling
- * notmuch_database_add_message.
+ * notmuch_database_index_file.
  *
  * In case of any failure, this function returns an error status and
  * sets *database to NULL (after printing an error message on stderr).
@@ -562,6 +562,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * terms from the identified file to the existing message's index, and
  * adds 'filename' to the list of filenames known for the message.
  *
+ * 'indexopts' can be NULL (meaning, use the indexing defaults from
+ * the database), or can be an explicit choice of indexing options
+ * that should govern the indexing of this specific 'filename'.
+ *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
  * will be initialized to a message object that can be used for things
@@ -593,7 +597,24 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
  * 	database to use this function.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
  */
+notmuch_status_t
+notmuch_database_index_file (notmuch_database_t *database,
+			     const char *filename,
+			     notmuch_param_t *indexopts,
+			     notmuch_message_t **message);
+
+/**
+ * Deprecated alias for notmuch_database_index_file called with
+ * NULL indexopts.
+ *
+ * @deprecated Deprecated as of libnotmuch 5.1 (notmuch 0.26). Please
+ * use notmuch_database_index_file instead.
+ *
+ */
+NOTMUCH_DEPRECATED(5,1)
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
@@ -1401,7 +1422,7 @@ notmuch_message_get_filenames (notmuch_message_t *message);
  * Re-index the e-mail corresponding to 'message' using the supplied index options
  *
  * Returns the status of the re-index operation.  (see the return
- * codes documented in notmuch_database_add_message)
+ * codes documented in notmuch_database_index_file)
  *
  * After reindexing, the user should discard the message object passed
  * in here by calling notmuch_message_destroy, since it refers to the
@@ -1584,7 +1605,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  *
  * A client can ensure that notmuch database tags remain synchronized
  * with maildir flags by calling this function after each call to
- * notmuch_database_add_message. See also
+ * notmuch_database_index_file. See also
  * notmuch_message_tags_to_maildir_flags for synchronizing tag changes
  * back to maildir flags.
  */
@@ -1946,7 +1967,7 @@ notmuch_tags_destroy (notmuch_tags_t *tags);
  *
  *   o Read the mtime of a directory from the filesystem
  *
- *   o Call add_message for all mail files in the directory
+ *   o Call index_file for all mail files in the directory
  *
  *   o Call notmuch_directory_set_mtime with the mtime read from the
  *     filesystem.
