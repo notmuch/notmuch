@@ -309,7 +309,7 @@ cat <<EOF > notmuch-new-vanish.gdb
 set breakpoint pending on
 set logging file notmuch-new-vanish-gdb.log
 set logging on
-break add_file
+break notmuch_database_index_file
 commands
 shell rm -f ${MAIL_DIR}/vanish
 continue
