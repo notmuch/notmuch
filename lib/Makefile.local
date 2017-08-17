@@ -43,6 +43,7 @@ libnotmuch_c_srcs =		\
 	$(dir)/sha1.c		\
 	$(dir)/built-with.c	\
 	$(dir)/string-map.c	\
+	$(dir)/indexopts.c	\
 	$(dir)/tags.c
 
 libnotmuch_cxx_srcs =		\

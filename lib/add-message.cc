@@ -460,7 +460,7 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 notmuch_status_t
 notmuch_database_index_file (notmuch_database_t *notmuch,
 			     const char *filename,
-			     notmuch_param_t unused (*indexopts),
+			     notmuch_indexopts_t unused (*indexopts),
 			     notmuch_message_t **message_ret)
 {
     notmuch_message_file_t *message_file;

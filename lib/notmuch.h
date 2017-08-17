@@ -219,7 +219,7 @@ typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
 typedef struct _notmuch_config_list notmuch_config_list_t;
-typedef struct _notmuch_param notmuch_param_t;
+typedef struct _notmuch_indexopts notmuch_indexopts_t;
 #endif /* __DOXYGEN__ */
 
 /**
@@ -603,7 +603,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
 notmuch_status_t
 notmuch_database_index_file (notmuch_database_t *database,
 			     const char *filename,
-			     notmuch_param_t *indexopts,
+			     notmuch_indexopts_t *indexopts,
 			     notmuch_message_t **message);
 
 /**
@@ -1430,7 +1430,7 @@ notmuch_message_get_filenames (notmuch_message_t *message);
  */
 notmuch_status_t
 notmuch_message_reindex (notmuch_message_t *message,
-			 notmuch_param_t *indexopts);
+			 notmuch_indexopts_t *indexopts);
 
 /**
  * Message flags.
@@ -2171,6 +2171,31 @@ notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
  */
 void
 notmuch_config_list_destroy (notmuch_config_list_t *config_list);
+
+
+/**
+ * get the current default indexing options for a given database.
+ *
+ * This object will survive until the database itself is destroyed,
+ * but the caller may also release it earlier with
+ * notmuch_indexopts_destroy.
+ *
+ * This object represents a set of options on how a message can be
+ * added to the index.  At the moment it is a featureless stub.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_indexopts_t *
+notmuch_database_get_default_indexopts (notmuch_database_t *db);
+
+/**
+ * Destroy a notmuch_indexopts_t object.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+void
+notmuch_indexopts_destroy (notmuch_indexopts_t *options);
+
 
 /**
  * interrogate the library for compile time features

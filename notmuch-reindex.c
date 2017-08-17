@@ -40,7 +40,7 @@ handle_sigint (unused (int sig))
  */
 static int
 reindex_query (notmuch_database_t *notmuch, const char *query_string,
-	       notmuch_param_t *indexopts)
+	       notmuch_indexopts_t *indexopts)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
@@ -89,7 +89,7 @@ notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[])
     struct sigaction action;
     int opt_index;
     int ret;
-    notmuch_param_t *indexopts = NULL;
+    notmuch_indexopts_t *indexopts = NULL;
 
     /* Set up our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));

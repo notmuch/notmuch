@@ -1939,7 +1939,7 @@ _notmuch_message_frozen (notmuch_message_t *message)
 
 notmuch_status_t
 notmuch_message_reindex (notmuch_message_t *message,
-			 notmuch_param_t unused (*indexopts))
+			 notmuch_indexopts_t unused (*indexopts))
 {
     notmuch_database_t *notmuch = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
