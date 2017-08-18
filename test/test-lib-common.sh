@@ -71,6 +71,183 @@ if [ -e ./test-lib-$PLATFORM.sh ]; then
 	. ./test-lib-$PLATFORM.sh || exit 1
 fi
 
+# Generate a new message in the mail directory, with a unique message
+# ID and subject. The message is not added to the index.
+#
+# After this function returns, the filename of the generated message
+# is available as $gen_msg_filename and the message ID is available as
+# $gen_msg_id .
+#
+# This function supports named parameters with the bash syntax for
+# assigning a value to an associative array ([name]=value). The
+# supported parameters are:
+#
+#  [dir]=directory/of/choice
+#
+#	Generate the message in directory 'directory/of/choice' within
+#	the mail store. The directory will be created if necessary.
+#
+#  [filename]=name
+#
+#	Store the message in file 'name'. The default is to store it
+#	in 'msg-<count>', where <count> is three-digit number of the
+#	message.
+#
+#  [body]=text
+#
+#	Text to use as the body of the email message
+#
+#  '[from]="Some User <user@example.com>"'
+#  '[to]="Some User <user@example.com>"'
+#  '[subject]="Subject of email message"'
+#  '[date]="RFC 822 Date"'
+#
+#	Values for email headers. If not provided, default values will
+#	be generated instead.
+#
+#  '[cc]="Some User <user@example.com>"'
+#  [reply-to]=some-address
+#  [in-reply-to]=<message-id>
+#  [references]=<message-id>
+#  [content-type]=content-type-specification
+#  '[header]=full header line, including keyword'
+#
+#	Additional values for email headers. If these are not provided
+#	then the relevant headers will simply not appear in the
+#	message.
+#
+#  '[id]=message-id'
+#
+#	Controls the message-id of the created message.
+gen_msg_cnt=0
+gen_msg_filename=""
+gen_msg_id=""
+generate_message ()
+{
+    # This is our (bash-specific) magic for doing named parameters
+    local -A template="($@)"
+    local additional_headers
+
+    gen_msg_cnt=$((gen_msg_cnt + 1))
+    if [ -z "${template[filename]}" ]; then
+	gen_msg_name="msg-$(printf "%03d" $gen_msg_cnt)"
+    else
+	gen_msg_name=${template[filename]}
+    fi
+
+    if [ -z "${template[id]}" ]; then
+	gen_msg_id="${gen_msg_name%:2,*}@notmuch-test-suite"
+    else
+	gen_msg_id="${template[id]}"
+    fi
+
+    if [ -z "${template[dir]}" ]; then
+	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
+    else
+	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
+	mkdir -p "$(dirname "$gen_msg_filename")"
+    fi
+
+    if [ -z "${template[body]}" ]; then
+	template[body]="This is just a test message (#${gen_msg_cnt})"
+    fi
+
+    if [ -z "${template[from]}" ]; then
+	template[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[to]}" ]; then
+	template[to]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[subject]}" ]; then
+	if [ -n "$test_subtest_name" ]; then
+	    template[subject]="$test_subtest_name"
+	else
+	    template[subject]="Test message #${gen_msg_cnt}"
+	fi
+    elif [ "${template[subject]}" = "@FORCE_EMPTY" ]; then
+	template[subject]=""
+    fi
+
+    if [ -z "${template[date]}" ]; then
+	# we use decreasing timestamps here for historical reasons;
+	# the existing test suite when we converted to unique timestamps just
+	# happened to have signicantly fewer failures with that choice.
+	local date_secs=$((978709437 - gen_msg_cnt))
+	# printf %(..)T is bash 4.2+ feature. use perl fallback if needed...
+	TZ=UTC printf -v template[date] "%(%a, %d %b %Y %T %z)T" $date_secs 2>/dev/null ||
+	    template[date]=`perl -le 'use POSIX "strftime";
+				@time = gmtime '"$date_secs"';
+				print strftime "%a, %d %b %Y %T +0000", @time'`
+    fi
+
+    additional_headers=""
+    if [ ! -z "${template[header]}" ]; then
+	additional_headers="${template[header]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[reply-to]}" ]; then
+	additional_headers="Reply-To: ${template[reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[in-reply-to]}" ]; then
+	additional_headers="In-Reply-To: ${template[in-reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[cc]}" ]; then
+	additional_headers="Cc: ${template[cc]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[bcc]}" ]; then
+	additional_headers="Bcc: ${template[bcc]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[references]}" ]; then
+	additional_headers="References: ${template[references]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[content-type]}" ]; then
+	additional_headers="Content-Type: ${template[content-type]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[content-transfer-encoding]}" ]; then
+	additional_headers="Content-Transfer-Encoding: ${template[content-transfer-encoding]}
+${additional_headers}"
+    fi
+
+    # Note that in the way we're setting it above and using it below,
+    # `additional_headers' will also serve as the header / body separator
+    # (empty line in between).
+
+    cat <<EOF >"$gen_msg_filename"
+From: ${template[from]}
+To: ${template[to]}
+Message-Id: <${gen_msg_id}>
+Subject: ${template[subject]}
+Date: ${template[date]}
+${additional_headers}
+${template[body]}
+EOF
+}
+
+# Generate a new message and add it to the database.
+#
+# All of the arguments and return values supported by generate_message
+# are also supported here, so see that function for details.
+add_message ()
+{
+    generate_message "$@" &&
+    notmuch new > /dev/null
+}
+
 if test -n "$valgrind"
 then
 	make_symlink () {
