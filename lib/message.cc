@@ -1560,6 +1560,13 @@ _ensure_maildir_flags (notmuch_message_t *message, notmuch_bool_t force)
 	message->maildir_flags = combined_flags;
 }
 
+notmuch_bool_t
+notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag)
+{
+    _ensure_maildir_flags (message, FALSE);
+    return message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
+}
+
 notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 {

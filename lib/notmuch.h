@@ -1613,6 +1613,14 @@ notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
 
 /**
+ * return TRUE if any filename of 'message' has maildir flag 'flag',
+ * FALSE otherwise.
+ *
+ */
+notmuch_bool_t
+notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag);
+
+/**
  * Rename message filename(s) to encode tags as maildir flags.
  *
  * Specifically, for each filename corresponding to this message:
