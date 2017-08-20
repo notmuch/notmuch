@@ -267,10 +267,16 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     case NOTMUCH_STATUS_SUCCESS:
 	state->added_messages++;
 	notmuch_message_freeze (message);
-	for (tag = state->new_tags; *tag != NULL; tag++)
-	    notmuch_message_add_tag (message, *tag);
 	if (state->synchronize_flags)
 	    notmuch_message_maildir_flags_to_tags (message);
+
+	for (tag = state->new_tags; *tag != NULL; tag++) {
+	    if (strcmp ("unread", *tag) !=0 ||
+		!notmuch_message_has_maildir_flag (message, 'S')) {
+		notmuch_message_add_tag (message, *tag);
+	    }
+	}
+
 	notmuch_message_thaw (message);
 	break;
     /* Non-fatal issues (go on to next file). */
