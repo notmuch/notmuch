@@ -36,6 +36,7 @@ struct _notmuch_message {
     notmuch_string_list_t *tag_list;
     notmuch_string_list_t *filename_term_list;
     notmuch_string_list_t *filename_list;
+    char *maildir_flags;
     char *author;
     notmuch_message_file_t *message_file;
     notmuch_string_list_t *property_term_list;
@@ -123,6 +124,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->tag_list = NULL;
     message->filename_term_list = NULL;
     message->filename_list = NULL;
+    message->maildir_flags = NULL;
     message->message_file = NULL;
     message->author = NULL;
     message->property_term_list = NULL;
@@ -1513,16 +1515,21 @@ _filename_is_in_maildir (const char *filename)
     return NULL;
 }
 
-notmuch_status_t
-notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
+static void
+_ensure_maildir_flags (notmuch_message_t *message, notmuch_bool_t force)
 {
     const char *flags;
-    notmuch_status_t status;
     notmuch_filenames_t *filenames;
     const char *filename, *dir;
     char *combined_flags = talloc_strdup (message, "");
-    unsigned i;
     int seen_maildir_info = 0;
+
+    if (message->maildir_flags) {
+	if (force) {
+	    talloc_free (message->maildir_flags);
+	    message->maildir_flags = NULL;
+	}
+    }
 
     for (filenames = notmuch_message_get_filenames (message);
 	 notmuch_filenames_valid (filenames);
@@ -1549,11 +1556,21 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	    seen_maildir_info = 1;
 	}
     }
+    if (seen_maildir_info)
+	message->maildir_flags = combined_flags;
+}
 
+notmuch_status_t
+notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
+{
+    notmuch_status_t status;
+    unsigned i;
+
+    _ensure_maildir_flags (message, TRUE);
     /* If none of the filenames have any maildir info field (not even
      * an empty info with no flags set) then there's no information to
      * go on, so do nothing. */
-    if (! seen_maildir_info)
+    if (! message->maildir_flags)
 	return NOTMUCH_STATUS_SUCCESS;
 
     status = notmuch_message_freeze (message);
@@ -1561,7 +1578,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	return status;
 
     for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
-	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
+	if ((strchr (message->maildir_flags, flag2tag[i].flag) != NULL)
 	    ^
 	    flag2tag[i].inverse)
 	{
@@ -1573,8 +1590,6 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	    return status;
     }
     status = notmuch_message_thaw (message);
-
-    talloc_free (combined_flags);
 
     return status;
 }
