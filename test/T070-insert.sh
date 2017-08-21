@@ -133,7 +133,6 @@ dirname=$(dirname "$output")
 test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 
 test_begin_subtest "Insert message into folder with trailing /"
-test_subtest_known_broken
 gen_insert_msg
 notmuch insert --folder=Drafts/ < "$gen_msg_filename"
 output=$(notmuch search --output=files id:${gen_msg_id})

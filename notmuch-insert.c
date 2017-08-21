@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "string-util.h"
 
 static volatile sig_atomic_t interrupted;
 
@@ -451,7 +452,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     size_t new_tags_length;
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
-    const char *folder = NULL;
+    char *folder = NULL;
     notmuch_bool_t create_folder = FALSE;
     notmuch_bool_t keep = FALSE;
     notmuch_bool_t no_hooks = FALSE;
@@ -511,6 +512,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     if (folder == NULL) {
 	maildir = db_path;
     } else {
+	strip_trailing (folder, '/');
 	if (! is_valid_folder_name (folder)) {
 	    fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
 	    return EXIT_FAILURE;
