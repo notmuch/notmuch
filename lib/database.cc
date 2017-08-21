@@ -858,8 +858,7 @@ notmuch_database_open_verbose (const char *path,
     notmuch->status_string = NULL;
     notmuch->path = talloc_strdup (notmuch, path);
 
-    if (notmuch->path[strlen (notmuch->path) - 1] == '/')
-	notmuch->path[strlen (notmuch->path) - 1] = '\0';
+    strip_trailing(notmuch->path, '/');
 
     notmuch->mode = mode;
     notmuch->atomic_nesting = 0;

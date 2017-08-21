@@ -255,3 +255,16 @@ strcase_hash (const void *ptr)
 
     return hash;
 }
+
+void
+strip_trailing (char *str, char ch)
+{
+    int i;
+
+    for (i = strlen (str) - 1; i >= 0; i--) {
+	if (str[i] == ch)
+	    str[i] = '\0';
+	else
+	    break;
+    }
+}
