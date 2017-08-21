@@ -79,12 +79,32 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     }
     talloc_set_destructor (mctx, _mime_node_context_free);
 
+    /* Fast path */
     mctx->file = fopen (filename, "r");
     if (! mctx->file) {
-	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-	status = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
-    }
+	/* Slow path - for some reason the first file in the list is
+	 * not available anymore. This is clearly a problem in the
+	 * database, but we are not going to let this problem be a
+	 * show stopper */
+	notmuch_filenames_t *filenames;
+	for (filenames = notmuch_message_get_filenames (message);
+	     notmuch_filenames_valid (filenames);
+	     notmuch_filenames_move_to_next (filenames))
+	{
+	    filename = notmuch_filenames_get (filenames);
+	    mctx->file = fopen (filename, "r");
+	    if (mctx->file)
+		break;
+	}
+
+	talloc_free (filenames);
+	if (! mctx->file) {
+	    /* Give up */
+	    fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
+		status = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
+	    }
+	}
 
     mctx->stream = g_mime_stream_file_new (mctx->file);
     if (!mctx->stream) {

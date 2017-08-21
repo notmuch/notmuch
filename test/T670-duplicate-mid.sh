@@ -39,7 +39,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 rm ${MAIL_DIR}/copy1
 test_begin_subtest 'Deleted first duplicate file does not stop notmuch show from working'
-test_subtest_known_broken
 output=$(notmuch show --body=false --format=json id:duplicate)
 expected='[[[{
     "id": "'duplicate'",
