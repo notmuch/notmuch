@@ -121,13 +121,14 @@ main (int argc, char *argv[])
 {
     const char *progname;
     char *output_filename;
-    FILE *peer_file, *output;
-    int sock, peer, err;
+    FILE *peer_file = NULL, *output = NULL;
+    int sock = -1, peer, err;
     struct sockaddr_in addr, peer_addr;
     struct hostent *hostinfo;
     socklen_t peer_addr_len;
     int reuse;
     int background;
+    int ret = 0;
 
     progname = argv[0];
 
@@ -160,14 +161,16 @@ main (int argc, char *argv[])
     if (output == NULL) {
 	fprintf (stderr, "Failed to open %s for writing: %s\n",
 		 output_filename, strerror (errno));
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     sock = socket (AF_INET, SOCK_STREAM, 0);
     if (sock == -1) {
 	fprintf (stderr, "Error: socket() failed: %s\n",
 		 strerror (errno));
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     reuse = 1;
@@ -175,13 +178,15 @@ main (int argc, char *argv[])
     if (err) {
 	fprintf (stderr, "Error: setsockopt() failed: %s\n",
 		 strerror (errno));
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     hostinfo = gethostbyname ("localhost");
     if (hostinfo == NULL) {
 	fprintf (stderr, "Unknown host: localhost\n");
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     memset (&addr, 0, sizeof (addr));
@@ -193,7 +198,8 @@ main (int argc, char *argv[])
 	fprintf (stderr, "Error: bind() failed: %s\n",
 		 strerror (errno));
 	close (sock);
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     err = listen (sock, 1);
@@ -201,7 +207,8 @@ main (int argc, char *argv[])
 	fprintf (stderr, "Error: listen() failed: %s\n",
 		 strerror (errno));
 	close (sock);
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     if (background) {
@@ -210,13 +217,15 @@ main (int argc, char *argv[])
 	    printf ("smtp_dummy_pid='%d'\n", pid);
 	    fflush (stdout);
 	    close (sock);
-	    return 0;
+	    ret = 0;
+	    goto DONE;
 	}
 	if (pid < 0) {
 	    fprintf (stderr, "Error: fork() failed: %s\n",
 		     strerror (errno));
 	    close (sock);
-	    return 1;
+	    ret = 1;
+	    goto DONE;
 	}
 	/* Reached if pid == 0 (the child process). */
 	/* Close stdout so that the one interested in pid value will
@@ -239,21 +248,27 @@ main (int argc, char *argv[])
     if (peer == -1) {
 	fprintf (stderr, "Error: accept() failed: %s\n",
 		 strerror (errno));
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     peer_file = fdopen (peer, "w+");
     if (peer_file == NULL) {
 	fprintf (stderr, "Error: fdopen() failed: %s\n",
 		 strerror (errno));
-	return 1;
+	ret = 1;
+	goto DONE;
     }
 
     do_smtp_to_file (peer_file, output);
 
-    fclose (output);
-    fclose (peer_file);
-    close (sock);
+ DONE:
+    if (output)
+	fclose (output);
+    if (peer_file)
+	fclose (peer_file);
+    if (sock >= 0)
+	close (sock);
 
-    return 0;
+    return ret;
 }
