@@ -235,6 +235,8 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     if (batch) {
 	if (opt_index != argc) {
 	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
+	    if (input)
+		fclose (input);
 	    return EXIT_FAILURE;
 	}
     } else {

@@ -204,6 +204,8 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (batch && opt_index != argc) {
 	fprintf (stderr, "--batch and query string are not compatible\n");
+	if (input)
+	    fclose (input);
 	return EXIT_FAILURE;
     }
 
