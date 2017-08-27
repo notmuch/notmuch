@@ -13,6 +13,31 @@ EOF
 notmuch search id:duplicate | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest 'First subject preserved in notmuch-show (json)'
+test_subtest_known_broken
+output=$(notmuch show --body=false --format=json id:duplicate | notmuch_json_show_sanitize)
+expected='[[[{
+    "id": "XXXXX",
+    "match": true,
+    "excluded": false,
+    "filename": [
+        "'"${MAIL_DIR}"/copy0'",
+        "'"${MAIL_DIR}"/copy1'",
+        "'"${MAIL_DIR}"/copy2'"
+    ],
+    "timestamp": 42,
+    "date_relative": "2001-01-05",
+    "tags": ["inbox","unread"],
+    "headers": {
+        "Subject": "message 1",
+        "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+        "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+        "Date": "GENERATED_DATE"
+    }
+ },
+[]]]]'
+test_expect_equal_json "$output" "$expected"
+
 test_begin_subtest 'Search for second subject'
 cat <<EOF >EXPECTED
 MAIL_DIR/copy0
