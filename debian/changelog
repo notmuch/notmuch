@@ -1,8 +1,9 @@
 notmuch (0.25-6~bpo9+1) stretch-backports; urgency=medium
 
   * Rebuild for stretch-backports.
+  * drop dependency on libgmime-3.0, not yet in backports
 
- -- David Bremner <bremner@debian.org>  Sun, 27 Aug 2017 15:55:08 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 27 Aug 2017 16:00:45 -0300
 
 notmuch (0.25-6) unstable; urgency=medium
 
