@@ -240,7 +240,7 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
      */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch dump", query, status))
 	return EXIT_FAILURE;
 

@@ -19,7 +19,12 @@ To work around this problem you may try to execute:
 # Store original IFS value so it can be changed (and restored) in many places.
 readonly DEFAULT_IFS="$IFS"
 
+# The top-level directory for the source. This ./configure and all Makefiles
+# are good with ${srcdir} usually being relative. Some components (e.g. tests)
+# are executed in subdirectories and for those it is simpler to use
+# ${NOTMUCH_SRCDIR} which holds absolute path to the source.
 srcdir=$(dirname "$0")
+NOTMUCH_SRCDIR=$(cd "$srcdir" && pwd)
 
 subdirs="util compat lib parse-time-string completion doc emacs"
 subdirs="${subdirs} performance-test test test/test-databases"
@@ -42,6 +47,12 @@ if [ "$srcdir" != "." ]; then
     # Emacs only likes to generate compiled files next to the .el files
     # by default so copy these as well (which is not ideal).
     cp -a "$srcdir"/emacs/*.el emacs
+
+    # We were not able to create fully working Makefile using ruby mkmf.rb
+    # so ruby bindings source files are copied as well (ditto -- not ideal).
+    mkdir bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/*.[ch] bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/extconf.rb bindings/ruby
 fi
 
 # Set several defaults (optionally specified by the user in
@@ -132,7 +143,7 @@ Fine tuning of some installation directories is available:
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
-	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
+	--bashcompletiondir=DIR Bash completions files [PREFIX/share/bash-completion/completions]
 	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
 
 Some features can be disabled (--with-feature=no is equivalent to
@@ -311,22 +322,29 @@ errors=0
 printf "int main(void){return 0;}\n" > minimal.c
 
 printf "Sanity checking C compilation environment... "
-if ${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+test_cmdline="${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if  ${test_cmdline} > /dev/null 2>&1
 then
     printf "OK.\n"
 else
     printf "Fail.\n"
     errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
 fi
 
 printf "Sanity checking C++ compilation environment... "
-if ${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+test_cmdline="${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if ${test_cmdline} > /dev/null 2>&1
 then
     printf "OK.\n"
 else
     printf "Fail.\n"
     errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
 fi
+unset test_cmdline
 
 if [ $errors -gt 0 ]; then
     cat <<EOF
@@ -352,8 +370,8 @@ int main(void) {
     return 0;
 }
 EOF
-if ${CC} ${CFLAGS} _libversion.c -o _libversion > /dev/null 2>&1 && \
-       ./_libversion > _libversion.sh && . ./_libversion.sh
+if ${CC} ${CFLAGS} -I"$srcdir" _libversion.c -o _libversion > /dev/null 2>&1 \
+       && ./_libversion > _libversion.sh && . ./_libversion.sh
 then
     printf "OK.\n"
 else
@@ -466,11 +484,18 @@ fi
 GMIME_MINVER=2.6.7
 
 printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
-    printf "Yes.\n"
+if pkg-config --exists "gmime-3.0"; then
+    printf "Yes (3.0).\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-3.0)
+    gmime_ldflags=$(pkg-config --libs gmime-3.0)
+    gmime_major=3
+elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
+    printf "Yes (2.6).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-2.6)
     gmime_ldflags=$(pkg-config --libs gmime-2.6)
+    gmime_major=2
 else
     have_gmime=0
     printf "No.\n"
@@ -493,8 +518,7 @@ else
 fi
 
 if ! pkg-config --exists zlib; then
-  ${CC} ${zlib_cflags} -o compat/gen_zlib_pc \
-	  "$srcdir"/compat/gen_zlib_pc.c ${zlib_ldflags} > /dev/null 2>&1 &&
+  ${CC} -o compat/gen_zlib_pc "$srcdir"/compat/gen_zlib_pc.c >/dev/null 2>&1 &&
   compat/gen_zlib_pc > compat/zlib.pc &&
   PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
   export PKG_CONFIG_PATH
@@ -914,6 +938,7 @@ cat > Makefile.config <<EOF
 # the configure script). This may be different than the build
 # directory (the current directory at the time configure was run).
 srcdir = ${srcdir}
+NOTMUCH_SRCDIR = ${NOTMUCH_SRCDIR}
 
 # subdirectories to build
 subdirs = ${subdirs}
@@ -1031,7 +1056,7 @@ HAVE_DOXYGEN=${have_doxygen}
 desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
-bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(sysconfdir)/bash_completion.d}
+bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
 
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
@@ -1165,6 +1190,8 @@ cat > sh.config <<EOF
 # This sh.config was automatically generated by the ./configure
 # script of notmuch.
 
+NOTMUCH_SRCDIR='${NOTMUCH_SRCDIR}'
+
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
 
@@ -1186,6 +1213,12 @@ NOTMUCH_PYTHON=${python}
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
+
+# Major version of gmime
+NOTMUCH_GMIME_MAJOR=${gmime_major}
+
+# Platform we are run on
+PLATFORM=${platform}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.

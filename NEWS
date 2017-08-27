@@ -1,3 +1,53 @@
+Notmuch 0.25 (2017-07-25)
+=========================
+
+General
+-------
+
+Add regexp searching for mid, paths, and tags.
+
+Skip HTML tags when indexing
+
+  In particular this avoids indexing large inline images.
+
+Command Line Interface
+----------------------
+
+Bash completion is now installed to /usr/share by default.
+
+Allow space as separator for keyword arguments.
+
+Emacs
+-----
+
+Support for stashing message timestamp in show and tree views
+
+  Invoking `notmuch-show-stash-date` with a prefix argument
+  stashes the unix timestamp of the current message instead of
+  the date string.
+
+Don't use 'function' as variable name, workaround emacs bug 26406.
+
+Library Changes
+---------------
+
+Add workaround for date parsing of bad input in older GMime
+
+  In certain circumstances, older GMime libraries could return
+  negative numbers when parsing syntactically invalid dates.
+
+Replace deprecated functions with status returning versions
+
+  API of notmuch_query_{search,count}_{messages,threads} has
+  changed.  notmuch_query_add_tag_exclude now returns a status
+  value.
+
+Add support for building against GMime 3.0.
+
+Rename libutil.a to libnotmuch_util.a.
+
+libnotmuch SONAME is incremented to libnotmuch.so.5.
+
 Notmuch 0.24.2 (2017-06-01)
 ===========================
 
@@ -17,7 +67,7 @@ Notmuch 0.24.1 (2017-04-01)
 General
 -------
 
-Fix regressions in non-regexp search for `from:` and `subject:`.
+Fix regressions in non-regexp search for `from:` and `subject:`
 
   The regexp search code in 0.24 introduced a regression in the
   handling of empty queries and wildcards. These are both corrected in
@@ -26,11 +76,11 @@ Fix regressions in non-regexp search for `from:` and `subject:`.
 Command Line Interface
 ----------------------
 
-Fix several memory leaks in `notmuch show`.
+Fix several memory leaks in `notmuch show`
 
-Update NEWS for 0.24 to mention schema changes.
+Update NEWS for 0.24 to mention schema changes
 
-Fix bug in dump header.
+Fix bug in dump header
 
   The previous version of the dump header failed to mention the
   inclusion of tags. This fix bumps the version number of the dump
@@ -47,7 +97,7 @@ Notmuch 0.24 (2017-03-12)
 General
 -------
 
-Regular expression searches supported for `from:` and `subject:`.
+Regular expression searches supported for `from:` and `subject:`
 
   This requires recent Xapian (1.4+) See notmuch-search-terms(7) for
   details.
@@ -108,16 +158,16 @@ Refresh all buffers
   It is now possible to refresh all notmuch buffers to reflect the
   current state of the database with a single command, `M-=`.
 
-Stop display of application/* parts
+Stop display of `application/*` parts
 
-  By default gnus displays all application/* parts such as
+  By default gnus displays all `application/*` parts such as
   application/zip in the message buffer. This has several undesirable
   effects for notmuch (security, triggering errors etc). Notmuch now
   overrides this and does not display them by default. If you have
   customized `mm-inline-override-types` then we assume you know what
   you want and do not interfere; if you do want to stop the display of
-  application/* add application/* to your customization. If you want
-  to allow application/* then set `mm-inline-override-types` to
+  `application/*` add `application/*` to your customization. If you want
+  to allow `application/*` then set `mm-inline-override-types` to
   "non/existent".
 
 Small change in the api for notmuch-search-tag
@@ -126,7 +176,7 @@ Small change in the api for notmuch-search-tag
   is set, then it only tags the threads in the region. (Previously it
   only tagged the current thread.)
 
-Bugfix for sending messages with very long headers.
+Bugfix for sending messages with very long headers
 
   Previously emacs didn't fold very long headers when sending which
   could cause the MTA to refuse to send the message. This makes sure
@@ -151,7 +201,7 @@ Notmuch Emacs desktop integration
 Library changes
 ---------------
 
-`notmuch_query_count_messages` is now non-destructive.
+`notmuch_query_count_messages` is now non-destructive
 
   Internally the implementation of excludes has changed to make this
   possible.
@@ -284,7 +334,7 @@ Compiling against Xapian 1.4 enables several new features.
 
 Support for single argument date: queries
 
-  `date:<expr>` is equivalent to  `date:<expr>..<expr>`.
+  `date:<expr>` is equivalent to `date:<expr>..<expr>`.
 
 Support for blocking opens
 

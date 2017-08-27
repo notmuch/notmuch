@@ -25,12 +25,12 @@ Adrian Perez de Castro <aperez@igalia.com>
 Israel Herraiz <isra@herraiz.org>
 Mikhail Gusarov <dottedmag@dottedmag.net>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "without --output"
 notmuch address '*' >OUTPUT
 # Use EXPECTED from previous subtest
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=sender --format=json"
 notmuch address --output=sender --format=json '*' >OUTPUT
@@ -53,7 +53,7 @@ cat <<EOF >EXPECTED
 {"name": "Israel Herraiz", "address": "isra@herraiz.org", "name-addr": "Israel Herraiz <isra@herraiz.org>"},
 {"name": "Mikhail Gusarov", "address": "dottedmag@dottedmag.net", "name-addr": "Mikhail Gusarov <dottedmag@dottedmag.net>"}]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=recipients"
 notmuch address --output=recipients '*' >OUTPUT
@@ -66,7 +66,7 @@ notmuch <notmuch@notmuchmail.org>
 Keith Packard <keithp@keithp.com>
 Mikhail Gusarov <dottedmag@dottedmag.net>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=sender --output=recipients"
 notmuch address --output=sender --output=recipients '*' >OUTPUT
@@ -94,7 +94,7 @@ Adrian Perez de Castro <aperez@igalia.com>
 Israel Herraiz <isra@herraiz.org>
 Mikhail Gusarov <dottedmag@dottedmag.net>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=sender --output=count"
 notmuch address --output=sender --output=count '*' | sort -n >OUTPUT
@@ -117,7 +117,7 @@ cat <<EOF >EXPECTED
 7	Keith Packard <keithp@keithp.com>
 12	Carl Worth <cworth@cworth.org>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=count --format=json"
 # Since the iteration order of GHashTable is not specified, we
@@ -143,7 +143,7 @@ cat <<EOF >EXPECTED
 {"name": "Rolland Santimano", "address": "rollandsantimano@yahoo.com", "name-addr": "Rolland Santimano <rollandsantimano@yahoo.com>", "count": 1}
 {"name": "Stewart Smith", "address": "stewart@flamingspork.com", "name-addr": "Stewart Smith <stewart@flamingspork.com>", "count": 3}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--deduplicate=no --sort=oldest-first --output=sender"
 notmuch address --deduplicate=no --sort=oldest-first --output=sender '*' >OUTPUT
@@ -201,7 +201,7 @@ Chris Wilson <chris@chris-wilson.co.uk>
 Olivier Berger <olivier.berger@it-sudparis.eu>
 François Boulogne <boulogne.f@gmail.com>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--deduplicate=no --sort=newest-first --output=sender --output=recipients"
 notmuch address --deduplicate=no --sort=newest-first --output=sender --output=recipients path:foo/new >OUTPUT
@@ -213,7 +213,7 @@ notmuch@notmuchmail.org
 Lars Kellogg-Stedman <lars@seas.harvard.edu>
 notmuch@notmuchmail.org
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--deduplicate=address --output=sender --output=recipients"
 notmuch address --deduplicate=address --output=sender --output=recipients '*' | sort >OUTPUT
@@ -238,7 +238,7 @@ Rolland Santimano <rollandsantimano@yahoo.com>
 Stewart Smith <stewart@flamingspork.com>
 notmuch@notmuchmail.org
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 generate_message '[from]="Foo Bar <foo.bar@example.com>"'
 generate_message '[from]="Foo Bar <Foo.Bar@Example.Com>"'
@@ -266,7 +266,7 @@ Foo Bar <foo.bar@example.com>
 foo.bar@example.com
 foo.bar@example.com
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--deduplicate=mailbox --output=sender --output=count"
 notmuch address --deduplicate=mailbox --output=sender --output=count from:example.com | sort -n >OUTPUT
@@ -279,7 +279,7 @@ cat <<EOF >EXPECTED
 2	Foo Bar <foo.bar@example.com>
 2	foo.bar@example.com
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--deduplicate=address --output=sender --output=count"
 notmuch address --deduplicate=address --output=sender --output=count from:example.com | sort -n >OUTPUT
@@ -287,6 +287,6 @@ cat <<EOF >EXPECTED
 3	Baz <foo.bar+baz@example.com>
 7	Foo Bar <foo.bar@example.com>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

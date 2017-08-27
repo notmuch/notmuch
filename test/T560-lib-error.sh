@@ -5,7 +5,8 @@ test_description="error reporting for library"
 
 add_email_corpus
 
-test_expect_success "building database" "NOTMUCH_NEW"
+test_begin_subtest "building database"
+test_expect_success "NOTMUCH_NEW"
 
 test_begin_subtest "Open null pointer"
 test_C <<'EOF'
@@ -285,7 +286,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
        notmuch_messages_t *messages = NULL;
        notmuch_query_t *query=notmuch_query_create (db, "*");
-       stat = notmuch_query_search_messages_st (query, &messages);
+       stat = notmuch_query_search_messages (query, &messages);
    }
 EOF
 sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
@@ -302,9 +303,9 @@ backup_database
 test_begin_subtest "Xapian exception counting messages"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
+       int count;
        notmuch_query_t *query=notmuch_query_create (db, "id:87ocn0qh6d.fsf@yoom.home.cworth.org");
-       int count = notmuch_query_count_messages (query);
-       stat = (count == 0);
+       stat = notmuch_query_count_messages (query, &count);
    }
 EOF
 sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean

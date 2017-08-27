@@ -18,26 +18,21 @@ fi
 
 ################################################################
 # Test harness
-test_expect_success 'success is reported like this' '
-    :
-'
+test_begin_subtest 'success is reported like this'
+test_expect_success ':'
+
+test_begin_subtest 'test runs if prerequisite is satisfied'
 test_set_prereq HAVEIT
 haveit=no
-test_expect_success HAVEIT 'test runs if prerequisite is satisfied' '
-    test_have_prereq HAVEIT &&
-    haveit=yes
-'
+test_expect_success 'test_have_prereq HAVEIT && haveit=yes'
 
+test_begin_subtest 'tests clean up after themselves'
 clean=no
-test_expect_success 'tests clean up after themselves' '
-    test_when_finished clean=yes
-'
+test_expect_success 'test_when_finished clean=yes'
 
+test_begin_subtest 'tests clean up even after a failure'
 cleaner=no
-test_expect_code 1 'tests clean up even after a failure' '
-    test_when_finished cleaner=yes &&
-    (exit 1)
-'
+test_expect_code 1 'test_when_finished cleaner=yes && (exit 1)'
 
 if test $clean$cleaner != yesyes
 then
@@ -45,9 +40,8 @@ then
 	exit 1
 fi
 
-test_expect_code 2 'failure to clean up causes the test to fail' '
-    test_when_finished "(exit 2)"
-'
+test_begin_subtest 'failure to clean up causes the test to fail'
+test_expect_code 2 'test_when_finished "(exit 2)"'
 
 EXPECTED=$TEST_DIRECTORY/test.expected-output
 suppress_diff_date() {
@@ -72,19 +66,15 @@ test_expect_equal "$output" "$expected"
 ################################################################
 # Test mail store prepared in test-lib.sh
 
-test_expect_success \
-    'test that mail store was created' \
-    'test -d "${MAIL_DIR}"'
+test_begin_subtest 'test that mail store was created'
+test_expect_success 'test -d "${MAIL_DIR}"'
 
-
+test_begin_subtest 'mail store should be empty'
 find "${MAIL_DIR}" -type f -print >should-be-empty
-test_expect_success \
-    'mail store should be empty' \
-    'cmp -s /dev/null should-be-empty'
+test_expect_success 'cmp -s /dev/null should-be-empty'
 
-test_expect_success \
-    'NOTMUCH_CONFIG is set and points to an existing file' \
-    'test -f "${NOTMUCH_CONFIG}"'
+test_begin_subtest 'NOTMUCH_CONFIG is set and points to an existing file'
+test_expect_success 'test -f "${NOTMUCH_CONFIG}"'
 
 test_begin_subtest 'PATH is set to build directory'
 test_expect_equal \

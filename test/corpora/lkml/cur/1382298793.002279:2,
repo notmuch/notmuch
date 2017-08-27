@@ -1,0 +1,88 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 26/44] drivers/scsi/qla2xxx: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:45 -0800
+Lines: 49
+Message-ID: <40854ce1b1e958e2c0bb9b79911d89b45b5e5f27.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>,
+	linux-driver@qlogic.com,
+	"James E.J. Bottomley" <James.Bottomley@suse.de>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-scsi-owner@vger.kernel.org Mon Nov 15 04:10:09 2010
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Envelope-to: lnx-linux-scsi@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-scsi-owner@vger.kernel.org>)
+	id 1PHpSK-0002RT-EP
+	for lnx-linux-scsi@lo.gmane.org; Mon, 15 Nov 2010 04:10:08 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932860Ab0KODJt (ORCPT <rfc822;lnx-linux-scsi@m.gmane.org>);
+	Sun, 14 Nov 2010 22:09:49 -0500
+Received: from mail.perches.com ([173.55.12.10]:1202 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932797Ab0KODFo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:44 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id E65A02436B;
+	Sun, 14 Nov 2010 19:04:11 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-scsi.vger.kernel.org>
+X-Mailing-List: linux-scsi@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062298>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c  |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 1f06ddd..59c4870 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1049,7 +1049,7 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		}
+ 		DEBUG2(qla2x00_dump_buffer((uint8_t *)pkt, sizeof(*pkt)));
+ 	} else {
+-		bsg_job->reply->result =  DID_OK << 16;;
++		bsg_job->reply->result =  DID_OK << 16;
+ 		bsg_job->reply->reply_payload_rcv_len =
+ 		    bsg_job->reply_payload.payload_len;
+ 		bsg_job->reply_len = 0;
+@@ -1144,7 +1144,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 		DEBUG2(qla2x00_dump_buffer((uint8_t *)pkt, sizeof(*pkt)));
+ 	}
+ 	else {
+-		bsg_job->reply->result =  DID_OK << 16;;
++		bsg_job->reply->result =  DID_OK << 16;
+ 		bsg_job->reply->reply_payload_rcv_len = bsg_job->reply_payload.payload_len;
+ 		bsg_job->reply_len = 0;
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 8d9edfb..de2d1eb 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1022,7 +1022,7 @@ ql82xx_rom_lock_d(struct qla_hw_data *ha)
+ 		qla_printk(KERN_WARNING, ha, "ROM lock failed\n");
+ 		return -1;
+ 	}
+-	return 0;;
++	return 0;
+ }
+ 
+ static int
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

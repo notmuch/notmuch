@@ -28,13 +28,15 @@ line_error (tag_parse_status_t status,
     fprintf (stderr, status < 0 ? "Error: " : "Warning: ");
     vfprintf (stderr, format, va_args);
     fprintf (stderr, " [%s]\n", line);
+
+    va_end (va_args);
+
     return status;
 }
 
 const char *
 illegal_tag (const char *tag, notmuch_bool_t remove)
 {
-
     if (*tag == '\0' && ! remove)
 	return "empty tag forbidden";
 
@@ -155,7 +157,6 @@ tag_parse_status_t
 parse_tag_command_line (void *ctx, int argc, char **argv,
 			char **query_str, tag_op_list_t *tag_ops)
 {
-
     int i;
 
     for (i = 0; i < argc; i++) {
@@ -202,6 +203,8 @@ message_error (notmuch_message_t *message,
     vfprintf (stderr, format, va_args);
     fprintf (stderr, "Message-ID: %s\n", notmuch_message_get_message_id (message));
     fprintf (stderr, "Status: %s\n", notmuch_status_to_string (status));
+
+    va_end (va_args);
 }
 
 static int
@@ -209,14 +212,12 @@ makes_changes (notmuch_message_t *message,
 	       tag_op_list_t *list,
 	       tag_op_flag_t flags)
 {
-
     size_t i;
 
     notmuch_tags_t *tags;
     notmuch_bool_t changes = FALSE;
 
     /* First, do we delete an existing tag? */
-    changes = FALSE;
     for (tags = notmuch_message_get_tags (message);
 	 ! changes && notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags)) {

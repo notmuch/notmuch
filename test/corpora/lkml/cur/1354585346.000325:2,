@@ -1,0 +1,86 @@
+Return-Path: <stefan@datenfreihafen.org>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id B2DE3431FBC
+	for <notmuch@notmuchmail.org>; Sun, 22 Nov 2009 11:52:54 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id TrLH7uZhkvFU for <notmuch@notmuchmail.org>;
+	Sun, 22 Nov 2009 11:52:53 -0800 (PST)
+Received: from sirius.lasnet.de (sirius.lasnet.de [78.47.116.19])
+	by olra.theworths.org (Postfix) with ESMTP id 7024B431FAE
+	for <notmuch@notmuchmail.org>; Sun, 22 Nov 2009 11:52:53 -0800 (PST)
+Received: from p5b0353d3.dip.t-dialin.net ([91.3.83.211] helo=excalibur)
+	by sirius.lasnet.de with esmtpsa 
+	(Cipher TLS-1.0:RSA_AES_256_CBC_SHA1:32) (Exim 4.63 #1)
+	id 1NCIUJ-0002QO-OM by authid <stefan@sostec.de> with cram_md5;
+	Sun, 22 Nov 2009 20:52:50 +0100
+Received: from stefan by excalibur with local (Exim 4.69)
+	(envelope-from <stefan@excalibur.local>)
+	id 1NCIUI-0003ON-Sr; Sun, 22 Nov 2009 20:52:46 +0100
+Date: Sun, 22 Nov 2009 20:52:46 +0100
+From: Stefan Schmidt <stefan@datenfreihafen.org>
+To: Michiel Buddingh' <michiel@michielbuddingh.net>
+Message-ID: <20091122195246.GC5735@excalibur.local>
+References: <yes> <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+	<yunvdh3pfm9.fsf@aiko.keithp.com>
+	<20091122183338.GB5735@excalibur.local>
+	<4b09891e.YhJ/aJZOBwneOaFr%michiel@michielbuddingh.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4b09891e.YhJ/aJZOBwneOaFr%michiel@michielbuddingh.net>
+X-Mailer: Mutt http://www.mutt.org/
+X-KeyID: 0xDDF51665
+X-Website: http://www.datenfreihafen.org/
+User-Agent: Mutt/1.5.20 (2009-06-14)
+Cc: notmuch@notmuchmail.org
+Subject: Re: [notmuch] [PATCH 1/2] lib/message: Add function to get maildir
+ flags.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Sun, 22 Nov 2009 19:52:54 -0000
+
+Hello.
+
+On Sun, 2009-11-22 at 19:55, Michiel Buddingh' wrote:
+> Stefan Schmidt <stefan@datenfreihafen.org> wrote:
+> > > This function should interpret the flags that it finds and return a
+> > > suitable set of notmuch tags. I'd suggest that 'unread' messages get
+> > > both 'unread' and 'inbox' tags, as Maildir doesn't distinguish between
+> > > 'don't show this to be by default again please' and 'I've read this
+> > > message'. It seems best to hide the maildir-specific details inside the
+> > > library instead of exposing them.
+> >
+> > Thanks for the review. On a second thought the interface was really a bit ugly.
+> > :)
+> >
+> > I'm just back to my box and going through the outstanding mails shows me that
+> > Michiel Buddingh has a more complete patch on the
+> > convert-maildir-flags-into-tags issue which Carl has tagged for review. Will
+> > wait what comes out of it and if anything is left for me to. :)
+> 
+> Apologies.  In my haste to cover up my appalling and incorrect first patch, I
+> neglected to review the archives to see if someone had already done this. Sorry
+> for stealing your thunder.
+
+No need to be sorry. I'm interestecd in having this itch scratched, but don't
+care who is doing it. :)
+
+Just go ahead and get it in after Carl's review.
+
+regards
+Stefan Schmidt
+

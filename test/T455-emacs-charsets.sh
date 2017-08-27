@@ -48,7 +48,7 @@ awk 'show {print} /^$/ {show=1}' < OUTPUT.raw > OUTPUT
 cat <<EOF >EXPECTED
 Yen: $UTF8_YEN
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "8bit text parts are decoded when rendering"
 test_emacs '(notmuch-show "id:test-plain-8bit@example.com")
@@ -57,7 +57,7 @@ awk 'show {print} /^$/ {show=1}' < OUTPUT.raw > OUTPUT
 cat <<EOF >EXPECTED
 Yen: $UTF8_YEN
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "HTML parts are decoded when rendering"
 test_emacs '(notmuch-show "id:test-html@example.com")
@@ -67,7 +67,7 @@ cat <<EOF >EXPECTED
 [ text/html ]
 Yen: $UTF8_YEN
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 # Test saving
 
@@ -125,7 +125,7 @@ awk 'show {print} /^$/ {show=1}' < OUTPUT.raw > OUTPUT
 cat <<EOF >EXPECTED
 Yen: =A2=44
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "8bit text message are not decoded when viewing"
 test_emacs '(notmuch-show "id:test-plain-8bit@example.com")
@@ -135,6 +135,6 @@ awk 'show {print} /^$/ {show=1}' < OUTPUT.raw > OUTPUT
 cat <<EOF >EXPECTED
 Yen: $BIG5_YEN
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

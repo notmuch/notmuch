@@ -1,0 +1,66 @@
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFC][PATCH 06/10] cifs: define inode-level cache object and
+ register them
+Date: Sun, 27 Jun 2010 14:22:29 -0400
+Lines: 9
+Message-ID: <20100627182229.GA492@infradead.org>
+References: <20100625125306.7f9b1966@tlielax.poochiereds.net>
+ <4C24A606.5040001@suse.de>
+ <1277220214-3597-1-git-send-email-sjayaraman@suse.de>
+ <9822.1277312573@redhat.com>
+ <22697.1277470549@redhat.com>
+ <18628.1277502398@redhat.com>
+ <20100625182651.36800d06@tlielax.poochiereds.net>
+ <AANLkTilOTrHLvLv4XWYZO6xCnYZgYT7gO2M-oKZ6VvqM@mail.gmail.com>
+ <OFB55E8EC7.E8DD23D5-ON8725774E.0004921E-8825774E.0004CC31@us.ibm.com>
+ <871vbscpce.fsf@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Cc: Mingming Cao <mcao-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	DENIEL Philippe <philippe.deniel-KCE40YydGKI@public.gmane.org>,
+	David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>,
+	Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>,
+	Jeff Layton <jlayton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	samba-technical-w/Ol4Ecudpl8XjKLYN78aQ@public.gmane.org,
+	Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+To: "Aneesh Kumar K. V" <aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Sun Jun 27 20:22:46 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1OSwVB-0005TI-SG
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Sun, 27 Jun 2010 20:22:46 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1752811Ab0F0SWo (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Sun, 27 Jun 2010 14:22:44 -0400
+Received: from bombadil.infradead.org ([18.85.46.34]:55433 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728Ab0F0SWn (ORCPT
+	<rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>); Sun, 27 Jun 2010 14:22:43 -0400
+Received: from hch by bombadil.infradead.org with local (Exim 4.72 #1 (Red Hat Linux))
+	id 1OSwUv-00009z-9N; Sun, 27 Jun 2010 18:22:29 +0000
+Content-Disposition: inline
+In-Reply-To: <871vbscpce.fsf-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+User-Agent: Mutt/1.5.20 (2009-08-17)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> by bombadil.infradead.org
+	See http://www.infradead.org/rpr.html
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1003358>
+
+On Sun, Jun 27, 2010 at 11:47:21PM +0530, Aneesh Kumar K. V wrote:
+> NFS ganesha pNFS also had a requirement for getting i_generation and
+> inode number in userspace. So may be we should now look at updating
+> stat or add a variant syscall that include i_generation and create time
+> in the return value
+
+What's missing in knfsd that you feel the sudden urge to move backwards
+to a userspace nfsd (one with a horribly crappy codebase, too).
+
+
+

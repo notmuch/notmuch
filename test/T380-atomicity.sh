@@ -95,6 +95,7 @@ fi
 test_begin_subtest '"notmuch new" is idempotent under arbitrary aborts'
 test_expect_equal_file searchall expectall
 
-test_expect_success "detected $outcount>10 abort points" "test $outcount -gt 10"
+test_begin_subtest "detected $outcount>10 abort points"
+test_expect_success "test $outcount -gt 10"
 
 test_done

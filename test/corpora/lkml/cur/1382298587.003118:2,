@@ -1,0 +1,122 @@
+From: Steve French <smfrench@gmail.com>
+Subject: Re: [RFC][PATCH 06/10] cifs: define inode-level cache object and 
+	register them
+Date: Fri, 25 Jun 2010 18:05:30 -0500
+Lines: 51
+Message-ID: <AANLkTilOTrHLvLv4XWYZO6xCnYZgYT7gO2M-oKZ6VvqM@mail.gmail.com>
+References: <20100625125306.7f9b1966@tlielax.poochiereds.net>
+	<4C24A606.5040001@suse.de>
+	<1277220214-3597-1-git-send-email-sjayaraman@suse.de>
+	<9822.1277312573@redhat.com>
+	<22697.1277470549@redhat.com>
+	<18628.1277502398@redhat.com>
+	<20100625182651.36800d06@tlielax.poochiereds.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: David Howells <dhowells@redhat.com>,
+	Suresh Jayaraman <sjayaraman@suse.de>,
+	linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, samba-technical@lists.samba.org,
+	Jeff Layton <jlayton@redhat.com>
+To: Jeff Layton <jlayton@samba.org>,
+	"Aneesh Kumar K.V" <aneesh.kumar@linux.vnet.ibm.com>,
+	Mingming Cao <mcao@us.ibm.com>
+X-From: linux-kernel-owner@vger.kernel.org Sat Jun 26 01:05:41 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1OSHxs-0006a8-BA
+	for glk-linux-kernel-3@lo.gmane.org; Sat, 26 Jun 2010 01:05:40 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1756188Ab0FYXFd convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Fri, 25 Jun 2010 19:05:33 -0400
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51369 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575Ab0FYXFb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Fri, 25 Jun 2010 19:05:31 -0400
+Received: by qwi4 with SMTP id 4so742644qwi.19
+        for <multiple recipients>; Fri, 25 Jun 2010 16:05:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:mime-version:received:received:in-reply-to
+         :references:date:message-id:subject:from:to:cc:content-type
+         :content-transfer-encoding;
+        bh=6wKQkGOEeUGN4oPR3Nm4SRxtJr/EBwN8ENmpLnfdCDU=;
+        b=X7L6W0MtpQeW/4iBuj+oDlcP2yCJ3qwUs9lHBq1fRW6WdYblHXjmaN8o++3GDPLAg5
+         0MD07zxbYTGXRSrgCjCrGVm0tT88/6hY2a/rB8g68h/Qso2sIHa7B1iIN8JRR4pPWle0
+         sVjp9Xy/bQn2e0uE481Ii1TLHuWYA/QDXZreU=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :cc:content-type:content-transfer-encoding;
+        b=B+7qQvdOpN5a/KCRrDbssKZX8D3SnP73VMHd9RpkqP9nCHCmSLAgbeH03+/m6CLVAo
+         G+NKWqWtknwPBkYqT/bdP2XEak1yr+0rjOqjUaNvaT7AhzsyHEJBkaNnsbS3qaRy39OP
+         S7OkAyHfmgdeNAHkKnKRF73hfpvgAqR9X4bn8=
+Received: by 10.224.59.223 with SMTP id m31mr1130670qah.63.1277507130411; Fri, 
+	25 Jun 2010 16:05:30 -0700 (PDT)
+Received: by 10.229.46.136 with HTTP; Fri, 25 Jun 2010 16:05:30 -0700 (PDT)
+In-Reply-To: <20100625182651.36800d06@tlielax.poochiereds.net>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1003154>
+
+On Fri, Jun 25, 2010 at 5:26 PM, Jeff Layton <jlayton@samba.org> wrote:
+>
+> On Fri, 25 Jun 2010 22:46:38 +0100
+> David Howells <dhowells@redhat.com> wrote:
+>
+> > Jeff Layton <jlayton@samba.org> wrote:
+> >
+> > > Looks like it mostly uses the ctime. IMO, the mtime would be a be=
+tter
+> > > choice since it changes less frequently, but I don't guess that i=
+t
+> > > matters very much.
+> >
+> > I'd've thought mtime changes more frequently since that's altered w=
+hen data is
+> > written. =A0ctime is changed when attributes are changed.
+> >
+>
+> IIUC, updating mtime for a write is also an attribute change, and tha=
+t
+> affects ctime. According to the stat(2) manpage:
+>
+> =A0 =A0 =A0 The field st_ctime is changed by writing or by setting =A0=
+inode =A0informa-
+> =A0 =A0 =A0 tion (i.e., owner, group, link count, mode, etc.).
+>
+> > Note that Ext4 appears to have a file creation time field in its in=
+ode
+> > (struct ext4_inode::i_crtime[_extra]). =A0Can Samba be made to use =
+that?
+> >
+>
+> Is it exposed to userspace in any (standard) way? It would be handy t=
+o
+> have that. While we're wishing...it might also be nice to have a
+> standard way to get at the i_generation from userspace too.
+>
+
+Yes - I have talked with MingMing and Aneesh about those (NFS may
+someday be able to use those too).=A0 An obstacle in the past had been
+that samba server stores its own fake creation time in an ndr encoded
+xattr which complicates things.
+
+MingMing/Annesh -
+Xattr or other way to get at birth time?
+
+
+--
+Thanks,
+
+Steve
+
+

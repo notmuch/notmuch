@@ -1,0 +1,88 @@
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 44/44] sound/soc/codecs: Remove unnecessary
+	semicolons
+Date: Wed, 17 Nov 2010 20:32:56 +0100
+Lines: 19
+Message-ID: <20101117193256.GA28010@ucw.cz>
+References: <cover.1289789604.git.joe@perches.com>
+	<97fd199b7dac50613f6843156687223928cce44a.1289789605.git.joe@perches.com>
+	<20101115134939.GC12986@rakim.wolfsonmicro.main>
+	<1289840957.16461.138.camel@Joe-Laptop>
+	<20101115173031.GI12986@rakim.wolfsonmicro.main>
+	<1289842444.16461.140.camel@Joe-Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Dimitris Papastamos <dp@opensource.wolfsonmicro.com>,
+	alsa-devel@alsa-project.org, Jiri Kosina <trivial@kernel.org>,
+	Takashi Iwai <tiwai@suse.de>, linux-kernel@vger.kernel.org,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Ian Lartey <ian@opensource.wolfsonmicro.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>
+To: Joe Perches <joe@perches.com>
+X-From: alsa-devel-bounces@alsa-project.org Wed Nov 17 20:33:19 2010
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Envelope-to: glad-alsa-devel-2@m.gmane.org
+Received: from alsa0.perex.cz ([212.20.107.51])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <alsa-devel-bounces@alsa-project.org>)
+	id 1PInkr-0005bs-LY
+	for glad-alsa-devel-2@m.gmane.org; Wed, 17 Nov 2010 20:33:17 +0100
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id D7C501038BF; Wed, 17 Nov 2010 20:33:14 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.2.4 (2008-01-01) on mail1.perex.cz
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=5.0 tests=none autolearn=disabled
+	version=3.2.4
+Received: from alsa0.perex.cz (localhost [127.0.0.1])
+	by alsa0.perex.cz (Postfix) with ESMTP id 193061038BD;
+	Wed, 17 Nov 2010 20:33:08 +0100 (CET)
+X-Original-To: alsa-devel@alsa-project.org
+Delivered-To: alsa-devel@alsa-project.org
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id 664E91038BD; Wed, 17 Nov 2010 20:33:06 +0100 (CET)
+Received: from atrey.karlin.mff.cuni.cz (ksp.mff.cuni.cz [195.113.26.206])
+	by alsa0.perex.cz (Postfix) with ESMTP id 9E5621038BA
+	for <alsa-devel@alsa-project.org>; Wed, 17 Nov 2010 20:33:05 +0100 (CET)
+Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
+	id AC6A1F23E1; Wed, 17 Nov 2010 20:33:04 +0100 (CET)
+Content-Disposition: inline
+In-Reply-To: <1289842444.16461.140.camel@Joe-Laptop>
+User-Agent: Mutt/1.5.20 (2009-06-14)
+X-BeenThere: alsa-devel@alsa-project.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "Alsa-devel mailing list for ALSA developers -
+	http://www.alsa-project.org" <alsa-devel.alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1064096>
+
+On Mon 2010-11-15 09:34:04, Joe Perches wrote:
+> On Mon, 2010-11-15 at 17:30 +0000, Mark Brown wrote:
+> > On Mon, Nov 15, 2010 at 09:09:17AM -0800, Joe Perches wrote:
+> > > Signed-off-by: Joe Perches <joe@perches.com>
+> > Applied, thanks.
+> > Please try to use changelog formats consistent with the code you're
+> > modifying.
+> 
+> I think it's more important to use consistent changelogs
+> for a patch series.
+
+And I agree here. Having to learn code-style quirks for patches is
+bad, having to learn new changelog style for each subsystem is very
+bad.
+								Pavel
+
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+
+

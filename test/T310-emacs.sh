@@ -8,13 +8,13 @@ EXPECTED=$TEST_DIRECTORY/emacs.expected-output
 add_email_corpus
 
 # syntax errors in test-lib.el cause mysterious failures
-test_expect_success 'Syntax of emacs test library' \
-    "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
+test_begin_subtest "Syntax of emacs test library"
+test_expect_success "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
 	    (test-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello
+test_expect_equal_file $EXPECTED/notmuch-hello OUTPUT
 
 test_begin_subtest "Saved search with 0 results"
 test_emacs '(let ((notmuch-show-empty-saved-searches t)
@@ -24,20 +24,20 @@ test_emacs '(let ((notmuch-show-empty-saved-searches t)
 			("empty" . "tag:doesnotexist"))))
 	      (notmuch-hello)
 	      (test-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-with-empty
+test_expect_equal_file $EXPECTED/notmuch-hello-with-empty OUTPUT
 
 test_begin_subtest "No saved searches displayed (all with 0 results)"
 test_emacs '(let ((notmuch-saved-searches
 		   '\''(("empty" . "tag:doesnotexist"))))
 	      (notmuch-hello)
 	      (test-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-no-saved-searches
+test_expect_equal_file $EXPECTED/notmuch-hello-no-saved-searches OUTPUT
 
 test_begin_subtest "Basic notmuch-search view in emacs"
 test_emacs '(notmuch-search "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox OUTPUT
 
 test_begin_subtest "Incremental parsing of search results"
 test_emacs "(ad-enable-advice 'notmuch-search-process-filter 'around 'pessimal)
@@ -47,7 +47,7 @@ test_emacs "(ad-enable-advice 'notmuch-search-process-filter 'around 'pessimal)
 	    (ad-disable-advice 'notmuch-search-process-filter 'around 'pessimal)
 	    (ad-activate 'notmuch-search-process-filter)
 	    (test-output)"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox OUTPUT
 
 test_begin_subtest "Navigation of notmuch-hello to search results"
 test_emacs '(notmuch-hello)
@@ -56,36 +56,37 @@ test_emacs '(notmuch-hello)
 	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
 	    (test-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-view-inbox
+test_expect_equal_file $EXPECTED/notmuch-hello-view-inbox OUTPUT
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
 test_emacs "(notmuch-show \"$maildir_storage_thread\")
 	    (test-output)"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage OUTPUT
 
 test_begin_subtest "Basic notmuch-show view in emacs default indentation"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
 test_emacs "(let ((notmuch-show-indent-messages-width 1))
 	      (notmuch-show \"$maildir_storage_thread\")
 	      (test-output))"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage OUTPUT
 
 test_begin_subtest "Basic notmuch-show view in emacs without indentation"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
 test_emacs "(let ((notmuch-show-indent-messages-width 0))
 	      (notmuch-show \"$maildir_storage_thread\")
 	      (test-output))"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage-without-indentation
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage-without-indentation OUTPUT
 
 test_begin_subtest "Basic notmuch-show view in emacs with fourfold indentation"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
 test_emacs "(let ((notmuch-show-indent-messages-width 4))
 	      (notmuch-show \"$maildir_storage_thread\")
 	      (test-output))"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage-with-fourfold-indentation
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage-with-fourfold-indentation OUTPUT
 
 test_begin_subtest "notmuch-show for message with invalid From"
+test_subtest_broken_gmime_3
 add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)
@@ -100,7 +101,7 @@ Date: GENERATED_DATE
 This is just a test message (#1)
 EOF
 notmuch_date_sanitize < OUTPUT.raw > OUTPUT
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
 test_emacs '(notmuch-search "tag:inbox")
@@ -110,7 +111,7 @@ test_emacs '(notmuch-search "tag:inbox")
 	    (notmuch-search-show-thread)
 	    (notmuch-test-wait)
 	    (test-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage OUTPUT
 
 test_begin_subtest "Add tag from search view"
 os_x_darwin_thread=$(notmuch search --output=threads id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com)
@@ -206,7 +207,7 @@ Content-Type: text/plain
 
 This is a test that messages are sent via SMTP
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Folding a long header when sending via (fake) SMTP"
 long_subject="This is a long subject `echo {1..1000}`"
@@ -284,7 +285,7 @@ Content-Type: text/plain
 
 This is a test that long headers are folded when messages are sent via SMTP
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Verify that sent messages are saved/searchable (via FCC)"
 notmuch new > /dev/null
@@ -301,7 +302,7 @@ To:
 Subject: 
 --text follows this line--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 # Make another FCC maildir specific for the next test
 mkdir -p mail/sent-string/cur
@@ -319,7 +320,7 @@ Subject:
 Fcc: ${MAIL_DIR}/sent-string
 --text follows this line--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 # Make more FCC maildirs specific for the next test
 mkdir -p mail/sent-list-match/cur
@@ -342,7 +343,7 @@ Subject:
 Fcc: ${MAIL_DIR}/sent-list-match
 --text follows this line--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 # Make another FCC maildir specific for the next test
 mkdir -p mail/sent-list-catch-all/cur
@@ -362,7 +363,7 @@ Subject:
 Fcc: ${MAIL_DIR}/sent-list-catch-all
 --text follows this line--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch-fcc-dirs set to a list (no match)"
 test_emacs "(let ((notmuch-fcc-dirs
@@ -376,7 +377,7 @@ To:
 Subject: 
 --text follows this line--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs"
 test_emacs '(let ((message-hidden-headers ''()))
@@ -398,7 +399,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
 > This is a test that messages are sent via SMTP
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply from alternate address within emacs"
 add_message '[from]="Sender <sender@example.com>"' \
@@ -421,7 +422,7 @@ Sender <sender@example.com> writes:
 
 > This is just a test message (#${gen_msg_cnt})
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply from address in named group list within emacs"
 add_message '[from]="Sender <sender@example.com>"' \
@@ -445,7 +446,7 @@ Sender <sender@example.com> writes:
 
 > This is just a test message (#${gen_msg_cnt})
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to a multipart/mixed message"
 test_emacs '(let ((message-hidden-headers ''()))
@@ -506,7 +507,7 @@ Adrian Perez de Castro <aperez@igalia.com> writes:
 > notmuch@notmuchmail.org
 > http://notmuchmail.org/mailman/listinfo/notmuch
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to a multipart/alternative message"
 test_emacs '(let ((message-hidden-headers ''()))
@@ -576,7 +577,7 @@ Alex Botero-Lowry <alex.boterolowry@gmail.com> writes:
 > notmuch@notmuchmail.org
 > http://notmuchmail.org/mailman/listinfo/notmuch
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to an html-only message"
 add_message '[content-type]="text/html"' \
@@ -597,7 +598,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
 > Hi,This is an HTML test message.OK?
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to message from self"
 test_subtest_known_broken
@@ -644,7 +645,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
 > <#!part disposition=inline>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Save attachment from within emacs using notmuch-show-save-attachments"
 # save as archive to test that Emacs does not re-compress .gz
@@ -691,7 +692,7 @@ test_begin_subtest "View raw message within emacs"
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 	    (notmuch-show-view-raw-message)
 	    (test-output)'
-test_expect_equal_file OUTPUT $EXPECTED/raw-message-cf0c4d-52ad0a
+test_expect_equal_file $EXPECTED/raw-message-cf0c4d-52ad0a OUTPUT
 
 test_begin_subtest "Hiding/showing signature in notmuch-show view"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
@@ -701,7 +702,7 @@ test_emacs "(notmuch-show \"$maildir_storage_thread\")
 	    (search-backward \"Click/Enter to hide.\")
 	    (button-activate (button-at (point)))
 	    (test-output)"
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
+test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage OUTPUT
 
 test_begin_subtest "Detection and hiding of top-post quoting of message"
 add_message '[subject]="The problem with top-posting"' \
@@ -749,13 +750,13 @@ Thanks for the advice! I will be sure to put it to good use.
 
 [ 9-line hidden original message. Click/Enter to show. ]" > EXPECTED
 notmuch_date_sanitize < OUTPUT.raw > OUTPUT
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Hiding message in notmuch-show view"
 test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	    (notmuch-show-toggle-message)
 	    (test-visible-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
+test_expect_equal_file $EXPECTED/notmuch-show-thread-with-hidden-messages OUTPUT
 
 test_begin_subtest "Hiding message with visible citation in notmuch-show view"
 test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
@@ -763,7 +764,7 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (button-activate (button-at (point)))
 	    (notmuch-show-toggle-message)
 	    (test-visible-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
+test_expect_equal_file $EXPECTED/notmuch-show-thread-with-hidden-messages OUTPUT
 
 test_begin_subtest "notmuch-show: show message headers"
 test_emacs \
@@ -771,7 +772,7 @@ test_emacs \
 	       (notmuch-message-headers-visible t))
 	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	   (test-visible-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-visible
+test_expect_equal_file $EXPECTED/notmuch-show-message-with-headers-visible OUTPUT
 
 test_begin_subtest "notmuch-show: hide message headers"
 test_emacs \
@@ -779,7 +780,7 @@ test_emacs \
 	       (notmuch-message-headers-visible nil))
 	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	   (test-visible-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
+test_expect_equal_file $EXPECTED/notmuch-show-message-with-headers-hidden OUTPUT
 
 test_begin_subtest "notmuch-show: hide message headers (w/ notmuch-show-toggle-visibility-headers)"
 test_emacs \
@@ -788,20 +789,20 @@ test_emacs \
 	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	   (notmuch-show-toggle-visibility-headers)
 	   (test-visible-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
+test_expect_equal_file $EXPECTED/notmuch-show-message-with-headers-hidden OUTPUT
 
 test_begin_subtest "notmuch-show: collapse all messages in thread"
 test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
 	(let ((current-prefix-arg t))
 	  (notmuch-show-open-or-close-all)
 	  (test-visible-output))'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-collapsed
+test_expect_equal_file $EXPECTED/notmuch-show-thread-with-all-messages-collapsed OUTPUT
 
 test_begin_subtest "notmuch-show: uncollapse all messages in thread"
 test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
 	(notmuch-show-open-or-close-all)
 	(test-visible-output)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-uncollapsed
+test_expect_equal_file $EXPECTED/notmuch-show-thread-with-all-messages-uncollapsed OUTPUT
 
 test_begin_subtest "Stashing in notmuch-show"
 add_message '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
@@ -847,7 +848,7 @@ http://mid.gmane.org/bought
 https://marc.info/?i=bought
 https://mid.mail-archive.com/bought
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Stashing in notmuch-search"
 test_emacs '(notmuch-search "id:\"bought\"")
@@ -872,14 +873,14 @@ test_emacs "(notmuch-search \"$message1 or $message2\")
 	    (redisplay)
 	    (notmuch-show-advance-and-archive)
 	    (test-output)"
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Refresh show buffer"
 test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	    (test-visible-output "EXPECTED")
 	    (notmuch-show-refresh-view)
 	    (test-visible-output)'
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Refresh modified show buffer"
 test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
@@ -889,7 +890,7 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (test-visible-output "EXPECTED")
 	    (notmuch-show-refresh-view)
 	    (test-visible-output)'
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
 id='message-with-application/mpeg-attachment@notmuchmail.org'
@@ -983,9 +984,8 @@ test_emacs "(let ((mm-text-html-renderer
 # Different Emacs versions and renderers give very different results,
 # so just check that something reasonable showed up.  We first cat the
 # output so the test framework will print it if the test fails.
-test_expect_success "Rendering HTML mail with images" \
-    'cat OUTPUT && grep -q smiley OUTPUT'
-
+test_begin_subtest "Rendering HTML mail with images"
+test_expect_success 'cat OUTPUT && grep -q smiley OUTPUT'
 
 test_begin_subtest "Search handles subprocess error exit codes"
 cat > notmuch_fail <<EOF
@@ -1015,7 +1015,7 @@ YYY/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
 === ERROR ===
 [XXX]
 YYY/notmuch_fail exited with status 1
-command: YYY/notmuch_fail search --format\=sexp --format-version\=2 --sort\=newest-first tag\:inbox
+command: YYY/notmuch_fail search --format\=sexp --format-version\=4 --sort\=newest-first tag\:inbox
 exit status: 1"
 
 test_begin_subtest "Search handles subprocess warnings"

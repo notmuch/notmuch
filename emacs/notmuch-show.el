@@ -247,6 +247,19 @@ every user interaction with notmuch."
   :type 'function
   :group 'notmuch-show)
 
+(defcustom notmuch-show-imenu-indent nil
+  "Should Imenu display messages indented.
+
+By default, Imenu (see Info node `(emacs) Imenu') in a
+notmuch-show buffer displays all messages straight.  This is
+because the default Emacs frontend for Imenu makes it difficult
+to select an Imenu entry with spaces in front.  Other imenu
+frontends such as counsel-imenu does not have this limitation.
+In these cases, Imenu entries can be indented to reflect the
+position of the message in the thread."
+  :type 'boolean
+  :group 'notmuch-show)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -330,7 +343,7 @@ operation on the contents of the current buffer."
     (with-temp-buffer
       (insert all)
       (if indenting
-	  (indent-rigidly (point-min) (point-max) (- depth)))
+	  (indent-rigidly (point-min) (point-max) (- (* notmuch-show-indent-messages-width depth))))
       ;; Remove the original header.
       (goto-char (point-min))
       (re-search-forward "^$" (point-max) nil)
@@ -909,7 +922,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	(narrow-to-region part-beg part-end)
 	(delete-region part-beg part-end)
 	(apply #'notmuch-show-insert-bodypart-internal part-args)
-	(indent-rigidly part-beg part-end depth))
+	(indent-rigidly part-beg part-end (* notmuch-show-indent-messages-width depth)))
       (goto-char part-end)
       (delete-char 1)
       (notmuch-show-record-part-information (second part-args)
@@ -1516,7 +1529,11 @@ All currently available key bindings:
 \\{notmuch-show-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
   (setq buffer-read-only t
-	truncate-lines t))
+	truncate-lines t)
+  (setq imenu-prev-index-position-function
+        #'notmuch-show-imenu-prev-index-position-function)
+  (setq imenu-extract-index-name-function
+        #'notmuch-show-imenu-extract-index-name-function))
 
 (defun notmuch-tree-from-show-current-query ()
   "Call notmuch tree with the current query"
@@ -1660,9 +1677,10 @@ current thread."
 
 ;; dme: Would it make sense to use a macro for many of these?
 
+;; XXX TODO figure out what to do about multiple filenames
 (defun notmuch-show-get-filename ()
   "Return the filename of the current message."
-  (notmuch-show-get-prop :filename))
+  (car (notmuch-show-get-prop :filename)))
 
 (defun notmuch-show-get-header (header &optional props)
   "Return the named header of the current message, if any."
@@ -1673,6 +1691,9 @@ current thread."
 
 (defun notmuch-show-get-date ()
   (notmuch-show-get-header :Date))
+
+(defun notmuch-show-get-timestamp ()
+  (notmuch-show-get-prop :timestamp))
 
 (defun notmuch-show-get-from ()
   (notmuch-show-get-header :From))
@@ -2239,10 +2260,17 @@ thread from search."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-cc)))
 
-(defun notmuch-show-stash-date ()
-  "Copy date of current message to kill-ring."
-  (interactive)
-  (notmuch-common-do-stash (notmuch-show-get-date)))
+(put 'notmuch-show-stash-date 'notmuch-prefix-doc
+     "Copy timestamp of current message to kill-ring.")
+(defun notmuch-show-stash-date (&optional stash-timestamp)
+  "Copy date of current message to kill-ring.
+
+If invoked with a prefix argument, copy timestamp of current
+message to kill-ring."
+  (interactive "P")
+  (if stash-timestamp
+      (notmuch-common-do-stash (format "%d" (notmuch-show-get-timestamp)))
+    (notmuch-common-do-stash (notmuch-show-get-date))))
 
 (defun notmuch-show-stash-filename ()
   "Copy filename of current message to kill-ring."
@@ -2454,6 +2482,26 @@ the new buffer."
    (list (completing-read "Mime type to use (default text/plain): "
 			  (mailcap-mime-types) nil nil nil nil "text/plain")))
   (notmuch-show-apply-to-current-part-handle #'notmuch-show--mm-display-part mime-type))
+
+(defun notmuch-show-imenu-prev-index-position-function ()
+  "Move point to previous message in notmuch-show buffer.
+This function is used as a value for
+`imenu-prev-index-position-function'."
+  (if (bobp)
+      nil
+    (notmuch-show-previous-message)
+    t))
+
+(defun notmuch-show-imenu-extract-index-name-function ()
+  "Return imenu name for line at point.
+This function is used as a value for
+`imenu-extract-index-name-function'.  Point should be at the
+beginning of the line."
+  (back-to-indentation)
+  (buffer-substring-no-properties (if notmuch-show-imenu-indent
+				      (line-beginning-position)
+				    (point))
+				  (line-end-position)))
 
 (provide 'notmuch-show)
 

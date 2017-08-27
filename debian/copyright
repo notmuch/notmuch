@@ -1,7 +1,7 @@
-Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=59
-Debianized-By: Jameson Graef Rollins <jrollins@finestructure.net>
-Debianized-Date: Fri Nov 28 18:00:00 EDT 2009
-Original-Source: git://notmuchmail.org/git/notmuch
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: notmuch
+Source: git://notmuchmail.org/git/notmuch
+Upstream-Contact: Notmuch Mailing List <notmuch@notmuchmail.org>
 
 Files: *
 Copyright:  Copyright 2009 Carl Worth <cworth@cworth.org>
@@ -31,19 +31,12 @@ Copyright:  Copyright 2009 Carl Worth <cworth@cworth.org>
  Holger Freyther <zecke@selfish.org>
  David Bremner <bremner@unb.ca>
  Alexander Botero-Lowry <alexbl@fortitudo.(none)>
-
 License: GPL-3+
- This package is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 3 of the License, or
- (at your option) any later version.
- .
- On Debian systems, the complete text of the GNU General Public License
- version 3 can be found in file "/usr/share/common-licenses/GPL-3".
 
 Files: debian/*
 Copyright:  Copyright 2010 Jameson Graef Rollins <jrollins@finestructure.net>
  martin f. krafft <madduck@debian.org>
+License: GPL-3+
 
 License: GPL-3+
  This package is free software; you can redistribute it and/or modify

@@ -16,12 +16,14 @@ if [ $NOTMUCH_HAVE_XAPIAN_COMPACT -eq 0 ]; then
     test_expect_equal "$output" "notmuch was compiled against a xapian version lacking compaction support.
 Compaction failed: Unsupported operation"
 
-    test_expect_code 1 "Compact unsupported: status code" "notmuch compact"
+    test_begin_subtest "Compact unsupported: status code"
+    test_expect_code 1 "notmuch compact"
 
     test_done
 fi
 
-test_expect_success "Running compact" "notmuch compact --backup=${TEST_DIRECTORY}/xapian.old"
+test_begin_subtest "Running compact"
+test_expect_success "notmuch compact --backup=${TEST_DIRECTORY}/xapian.old"
 
 test_begin_subtest "Compact preserves database"
 output=$(notmuch search \* | notmuch_search_sanitize)
@@ -30,8 +32,8 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag2 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Three (inbox tag3 unread)"
 
-test_expect_success 'Restoring Backup' \
-    'rm -Rf ${MAIL_DIR}/.notmuch/xapian &&
+test_begin_subtest "Restoring Backup"
+test_expect_success 'rm -Rf ${MAIL_DIR}/.notmuch/xapian &&
      mv ${TEST_DIRECTORY}/xapian.old ${MAIL_DIR}/.notmuch/xapian'
 
 test_begin_subtest "Checking restored backup"

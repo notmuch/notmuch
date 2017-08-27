@@ -65,11 +65,13 @@ class RegexpFieldProcessor : public Xapian::FieldProcessor {
  protected:
     Xapian::valueno slot;
     std::string term_prefix;
+    notmuch_field_flag_t options;
     Xapian::QueryParser &parser;
     notmuch_database_t *notmuch;
 
  public:
-    RegexpFieldProcessor (std::string prefix, Xapian::QueryParser &parser_, notmuch_database_t *notmuch_);
+    RegexpFieldProcessor (std::string prefix, notmuch_field_flag_t options,
+			  Xapian::QueryParser &parser_, notmuch_database_t *notmuch_);
 
     ~RegexpFieldProcessor () { };
 

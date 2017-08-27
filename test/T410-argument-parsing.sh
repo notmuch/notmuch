@@ -12,6 +12,6 @@ string foo
 positional arg 1 pos1
 positional arg 2 pos2
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

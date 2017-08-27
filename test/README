@@ -26,12 +26,23 @@ that you know if you break anything.
   - gpg(1)
   - python(1)
 
-If your system lacks these tools or have older, non-upgreable versions
+If your system lacks these tools or have older, non-upgradable versions
 of these, please (possibly compile and) install these to some other
 path, for example /usr/local/bin or /opt/gnu/bin. Then prepend the
 chosen directory to your PATH before running the tests.
 
 e.g. env PATH=/opt/gnu/bin:$PATH make test
+
+For FreeBSD you need to install latest gdb from ports or packages and
+provide path to it in TEST_GDB environment variable before executing
+the tests, native FreeBSD gdb does not not work.  If you install
+coreutils, which provides GNU versions of basic utils like 'date' and
+'base64' on FreeBSD, the test suite will use these instead of the
+native ones. This provides robustness against portability issues with
+these system tools. Most often the tests are written, reviewed and
+tested on Linux system so such portability issues arise from time to
+time.
+
 
 Running Tests
 -------------
@@ -133,9 +144,9 @@ remaining tests to be unaffected.
 
 Currently we do not consider skipped tests as build failures. For
 maximum robustness, when setting up automated build processes, you
-should explicitely skip tests, rather than relying on notmuch's
+should explicitly skip tests, rather than relying on notmuch's
 detection of missing prerequisites. In the future we may treat tests
-unable to run because of missing prerequisites, but not explicitely
+unable to run because of missing prerequisites, but not explicitly
 skipped by the user, as failures.
 
 Writing Tests
@@ -189,16 +200,21 @@ Test harness library
 There are a handful helper functions defined in the test harness
 library for your script to use.
 
- test_expect_success <message> <script>
-
-   This takes two strings as parameter, and evaluates the
-   <script>.  If it yields success, test is considered
-   successful.  <message> should state what it is testing.
-
  test_begin_subtest <message>
 
-   Set the test description message for a subsequent test_expect_equal
+   Set the test description message for a subsequent test_expect_*
    invocation (see below).
+
+ test_expect_success <script>
+
+   This takes a string as parameter, and evaluates the
+   <script>.  If it yields success, test is considered
+   successful.
+
+ test_expect_code <code> <script>
+
+   This takes two strings as parameter, and evaluates the <script>.
+   If it yields <code> exit status, test is considered successful.
 
  test_subtest_known_broken
 

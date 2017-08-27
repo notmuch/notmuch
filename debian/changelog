@@ -1,3 +1,77 @@
+notmuch (0.25-6) unstable; urgency=medium
+
+  * Bug fix: "deletes shipped file on reinstall:
+    /etc/emacs/site-start.d/50notmuch.el", thanks to Andreas Beckmann
+    (Closes: #872197).
+
+ -- David Bremner <bremner@debian.org>  Tue, 15 Aug 2017 07:52:21 -0300
+
+notmuch (0.25-5) unstable; urgency=medium
+
+  * Bug fix: "dependency on elpa-emacs doesn't seem right", thanks
+    to Jiri Palecek (Closes: #871642).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Aug 2017 06:42:50 -0400
+
+notmuch (0.25-4) unstable; urgency=medium
+
+  * Recommend elpa-emacs instead emacs-notmuch
+
+ -- David Bremner <bremner@debian.org>  Fri, 04 Aug 2017 18:11:35 -0400
+
+notmuch (0.25-3) unstable; urgency=medium
+
+  * Remove old startup file /etc/emacs/site-start.d/50notmuch.el
+
+ -- David Bremner <bremner@debian.org>  Thu, 03 Aug 2017 09:26:00 -0400
+
+notmuch (0.25-2) unstable; urgency=medium
+
+  * Drop build-dep on libgmime-2.4-dev, long unsupported upstream
+  * Bug fix: "please transition to gmime 3.0", thanks to Daniel Kahn
+    Gillmor (Closes: #867353).
+
+ -- David Bremner <bremner@debian.org>  Wed, 26 Jul 2017 10:59:14 -0400
+
+notmuch (0.25-1) unstable; urgency=medium
+
+  * New upstream release
+    - regexp search for mid, paths, tags
+    - drop inline images when indexing html
+
+ -- David Bremner <bremner@debian.org>  Tue, 25 Jul 2017 08:28:20 -0300
+
+notmuch (0.25~rc1-2) unstable; urgency=low
+
+  * upload to unstable
+
+ -- David Bremner <bremner@debian.org>  Tue, 18 Jul 2017 19:47:45 -0300
+
+notmuch (0.25~rc1-1) experimental; urgency=medium
+
+  * Bump standards version to 4.0.0 (no changes needed)
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Tue, 18 Jul 2017 07:04:14 -0300
+
+notmuch (0.25~rc0-2) experimental; urgency=medium
+
+  * Fix compilation on 32 bit architectures (time_t vs. gint64)
+
+ -- David Bremner <bremner@debian.org>  Mon, 17 Jul 2017 08:49:32 -0300
+
+notmuch (0.25~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Drop notmuch-dbg, use notmuch-dbgsym if debug symbols are needed.
+  * [lib] Bump SONAME to libnotmuch.so.5
+  * Bug fix: "doesn't check gpg/pgp signatures by default", thanks
+    to Vagrant Cascadian (Closes: #755544).
+  * Bug fix: "allow separation of command-line options and their
+    values: --option foo", thanks to Paul Wise (Closes: #825886).
+
+ -- David Bremner <bremner@debian.org>  Sun, 16 Jul 2017 08:48:59 -0300
+
 notmuch (0.24.2-2~bpo9+1) stretch-backports; urgency=medium
 
   * Rebuild for stretch-backports.
@@ -54,6 +128,12 @@ notmuch (0.24~rc0-1) experimental; urgency=medium
   * New upstream feature release (candidate).
 
  -- David Bremner <bremner@debian.org>  Sun, 05 Mar 2017 19:32:08 -0400
+
+notmuch (0.23.7-3) unstable; urgency=medium
+
+  * Cherry pick fixes to dump header from 0.24.1
+
+ -- David Bremner <bremner@debian.org>  Sat, 01 Apr 2017 21:09:36 -0300
 
 notmuch (0.23.7-2) unstable; urgency=medium
 

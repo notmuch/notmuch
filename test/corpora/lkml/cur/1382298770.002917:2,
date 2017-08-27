@@ -1,0 +1,67 @@
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [RFC][PATCH 05/10] cifs: define superblock-level cache index objects and register them
+Date: Fri, 25 Jun 2010 13:58:33 +0100
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+Lines: 21
+Message-ID: <22746.1277470713@redhat.com>
+References: <4C24A4A0.90408@suse.de> <1277220206-3559-1-git-send-email-sjayaraman@suse.de> <yes> <9720.1277312290@redhat.com>
+Cc: dhowells@redhat.com, Steve French <smfrench@gmail.com>,
+	linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Suresh Jayaraman <sjayaraman@suse.de>
+X-From: linux-fsdevel-owner@vger.kernel.org Fri Jun 25 15:02:20 2010
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Envelope-to: lnx-linux-fsdevel@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with smtp (Exim 4.69)
+	(envelope-from <linux-fsdevel-owner@vger.kernel.org>)
+	id 1OS8Xz-000628-FG
+	for lnx-linux-fsdevel@lo.gmane.org; Fri, 25 Jun 2010 15:02:19 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1755357Ab0FYM6k (ORCPT <rfc822;lnx-linux-fsdevel@m.gmane.org>);
+	Fri, 25 Jun 2010 08:58:40 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50417 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754086Ab0FYM6j (ORCPT <rfc822;linux-fsdevel@vger.kernel.org>);
+	Fri, 25 Jun 2010 08:58:39 -0400
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o5PCwa7Z005113
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Fri, 25 Jun 2010 08:58:36 -0400
+Received: from redhat.com (ovpn01.gateway.prod.ext.phx2.redhat.com [10.5.9.1])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o5PCwXVB011094;
+	Fri, 25 Jun 2010 08:58:34 -0400
+In-Reply-To: <4C24A4A0.90408@suse.de>
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.17
+Sender: linux-fsdevel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-fsdevel.vger.kernel.org>
+X-Mailing-List: linux-fsdevel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002951>
+
+Suresh Jayaraman <sjayaraman@suse.de> wrote:
+
+> Also, considering the UNC name of the resource (//server/share) may not
+> be a good idea too as the cache will not be used when for e.g. IPaddress
+> is used to mount.
+
+You could convert the UNC name to an IP address, and just use that as your
+key.
+
+> > validate the root directory of the share in some way?
+>
+> I don't know if there is a way to do this.
+
+Is there an inode number or something?  Even the creation time might do.
+
+David
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

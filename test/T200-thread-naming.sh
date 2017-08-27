@@ -66,11 +66,11 @@ test_expect_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; t
 test_begin_subtest "Use empty subjects if necessary."
 add_message '[subject]="@FORCE_EMPTY"' \
 	    '[date]="Sat, 13 Jan 2001 15:43:45 -0000"' \
-            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"'
+            '[from]="Empty Sender <empty_test@notmuchmail.org>"'
 empty_parent=${gen_msg_id}
 add_message '[subject]="@FORCE_EMPTY"' \
 	    '[date]="Sun, 14 Jan 2001 15:43:45 -0000"' \
-            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            '[from]="Empty Sender <empty_test@notmuchmail.org>"' \
             "[in-reply-to]=\<$empty_parent\>"
 output=$(notmuch search --sort=newest-first from:empty_test@notmuchmail.org | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-14 [2/2] Empty Sender;  (inbox unread)"
@@ -78,15 +78,15 @@ test_expect_equal "$output" "thread:XXX   2001-01-14 [2/2] Empty Sender;  (inbox
 test_begin_subtest "Avoid empty subjects if possible (newest-first)."
 add_message '[subject]="Non-empty subject (1)"' \
 	    '[date]="Mon, 15 Jan 2001 15:43:45 -0000"' \
-            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            '[from]="Empty Sender <empty_test@notmuchmail.org>"' \
             "[in-reply-to]=\<$empty_parent\>"
 add_message '[subject]="Non-empty subject (2)"' \
 	    '[date]="Mon, 16 Jan 2001 15:43:45 -0000"' \
-            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            '[from]="Empty Sender <empty_test@notmuchmail.org>"' \
             "[in-reply-to]=\<$empty_parent\>"
 add_message '[subject]="@FORCE_EMPTY"' \
 	    '[date]="Tue, 17 Jan 2001 15:43:45 -0000"' \
-            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            '[from]="Empty Sender <empty_test@notmuchmail.org>"' \
             "[in-reply-to]=\<$empty_parent\>"
 output=$(notmuch search --sort=newest-first from:Empty | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-17 [5/5] Empty Sender; Non-empty subject (2) (inbox unread)"

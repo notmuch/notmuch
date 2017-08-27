@@ -151,7 +151,7 @@ set_signature_list_destructor (mime_node_t *node)
 /* Verify a signed mime node (GMime 2.6) */
 static void
 node_verify (mime_node_t *node, GMimeObject *part,
-	     notmuch_crypto_context_t *cryptoctx)
+	     g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
 {
     GError *err = NULL;
 
@@ -172,7 +172,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 /* Decrypt and optionally verify an encrypted mime node (GMime 2.6) */
 static void
 node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
-			 notmuch_crypto_context_t *cryptoctx)
+			 g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
 {
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
@@ -240,15 +240,19 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	return NULL;
     }
 
+#if (GMIME_MAJOR_VERSION < 3)
     if ((GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt)
 	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
 	GMimeContentType *content_type = g_mime_object_get_content_type (part);
 	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
 	cryptoctx = notmuch_crypto_get_context (node->ctx->crypto, protocol);
+	if (!cryptoctx)
+	    return NULL;
     }
+#endif
 
     /* Handle PGP/MIME parts */
-    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt && cryptoctx) {
+    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/encrypted "
@@ -257,7 +261,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	} else {
 	    node_decrypt_and_verify (node, part, cryptoctx);
 	}
-    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify && cryptoctx) {
+    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 5, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/signed message "
@@ -322,20 +326,21 @@ mime_node_child (mime_node_t *parent, int child)
 static mime_node_t *
 _mime_node_seek_dfs_walk (mime_node_t *node, int *n)
 {
-    mime_node_t *ret = NULL;
     int i;
 
     if (*n == 0)
 	return node;
 
     *n -= 1;
-    for (i = 0; i < node->nchildren && !ret; i++) {
+    for (i = 0; i < node->nchildren; i++) {
 	mime_node_t *child = mime_node_child (node, i);
-	ret = _mime_node_seek_dfs_walk (child, n);
-	if (!ret)
-	    talloc_free (child);
+	mime_node_t *ret = _mime_node_seek_dfs_walk (child, n);
+	if (ret)
+	    return ret;
+
+	talloc_free (child);
     }
-    return ret;
+    return NULL;
 }
 
 mime_node_t *

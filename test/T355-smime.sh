@@ -7,6 +7,8 @@ add_gpgsm_home ()
 {
     local fpr
     [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
     gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $TEST_DIRECTORY/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
     fpr=$(gpgsm  --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
@@ -23,14 +25,16 @@ FINGERPRINT=$(openssl x509 -fingerprint -in test_suite.pem -noout | sed -e 's/^.
 
 add_gpgsm_home
 
-test_expect_success 'emacs delivery of S/MIME signed message' \
+test_begin_subtest "emacs delivery of S/MIME signed message"
+test_expect_success \
      'emacs_fcc_message \
      "test signed message 001" \
      "This is a test signed message." \
      "(mml-secure-message-sign \"smime\")"'
 
+test_begin_subtest "emacs delivery of S/MIME encrypted + signed message"
 # Hard code the MML to avoid several interactive questions
-test_expect_success 'emacs delivery of S/MIME encrypted + signed message' \
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 001" \
     "<#secure method=smime mode=signencrypt keyfile=\\\"test_suite.pem\\\" certfile=\\\"test_suite.pem\\\">\nThis is a test encrypted message.\n"'
@@ -60,8 +64,8 @@ expected='[[[{"id": "XXXXX",
  "To": "test_suite@notmuchmail.org",
  "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
- "sigstatus": [{"status": "good",
- "fingerprint": "'$FINGERPRINT'",
+ "sigstatus": [{"fingerprint": "'$FINGERPRINT'",
+ "status": "good",
  "expires": 424242424,
  "created": 946728000}],
  "content-type": "multipart/signed",

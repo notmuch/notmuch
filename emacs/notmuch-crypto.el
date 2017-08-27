@@ -21,9 +21,10 @@
 
 ;;; Code:
 
+(require 'epg)
 (require 'notmuch-lib)
 
-(defcustom notmuch-crypto-process-mime nil
+(defcustom notmuch-crypto-process-mime t
   "Should cryptographic MIME parts be processed?
 
 If this variable is non-nil signatures in multipart/signed
@@ -39,6 +40,7 @@ providing a prefix when viewing a signed or encrypted message, or
 by providing a prefix when reloading the message in notmuch-show
 mode."
   :type 'boolean
+  :package-version '(notmuch . "0.25")
   :group 'notmuch-crypto)
 
 (defface notmuch-crypto-part-header
@@ -140,7 +142,7 @@ mode."
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
-	(call-process "gpg" nil t t "--list-keys" fingerprint))
+	(call-process epg-gpg-program nil t t "--list-keys" fingerprint))
       (recenter -1))))
 
 (defun notmuch-crypto-sigstatus-error-callback (button)
@@ -151,9 +153,9 @@ mode."
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
-	(call-process "gpg" nil t t "--recv-keys" keyid)
+	(call-process epg-gpg-program nil t t "--recv-keys" keyid)
 	(insert "\n")
-	(call-process "gpg" nil t t "--list-keys" keyid))
+	(call-process epg-gpg-program nil t t "--list-keys" keyid))
       (recenter -1))
     (notmuch-show-refresh-view)))
 

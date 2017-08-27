@@ -1,0 +1,59 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 23/44] drivers/scsi/bfa: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:42 -0800
+Lines: 21
+Message-ID: <71d0d7db4197f7b6f6b946a295648dc18bd559e0.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Jing Huang <huangj@brocade.com>,
+	"James E.J. Bottomley" <James.Bottomley@suse.de>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:10:53 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpT0-0002p1-2I
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:10:50 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932981Ab0KODKh (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:10:37 -0500
+Received: from mail.perches.com ([173.55.12.10]:1192 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932746Ab0KODFm (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:42 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id EFB872436B;
+	Sun, 14 Nov 2010 19:04:09 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062301>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 377cbff..55b3f74 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -1683,7 +1683,7 @@ bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
+ 	memcpy(attr->value, fcs_hba_attr->driver_version, attr->len);
+ 	attr->len = fc_roundup(attr->len, sizeof(u32));
+ 	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
+-	len += attr->len;;
++	len += attr->len;
+ 	count++;
+ 	attr->len = cpu_to_be16(attr->len + sizeof(attr->type) +
+ 			     sizeof(attr->len));
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

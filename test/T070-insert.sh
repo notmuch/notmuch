@@ -20,13 +20,13 @@ gen_insert_msg() {
 	"[body]=\"insert-message\""
 }
 
-test_expect_code 1 "Insert zero-length file" \
-    "notmuch insert < /dev/null"
+test_begin_subtest "Insert zero-length file"
+test_expect_code 1 "notmuch insert < /dev/null"
 
 # This test is a proxy for other errors that may occur while trying to
 # add a message to the notmuch database, e.g. database locked.
-test_expect_code 1 "Insert non-message" \
-    "echo bad_message | notmuch insert"
+test_begin_subtest "Insert non-message"
+test_expect_code 1 "echo bad_message | notmuch insert"
 
 test_begin_subtest "Database empty so far"
 test_expect_equal "0" "`notmuch count --output=messages '*'`"
@@ -138,9 +138,9 @@ notmuch insert --folder=Drafts +draft -unread < "$gen_msg_filename"
 output=$(notmuch search --output=messages path:Drafts/cur tag:draft NOT tag:unread)
 test_expect_equal "$output" "id:$gen_msg_id"
 
+test_begin_subtest "Insert message into non-existent folder"
 gen_insert_msg
-test_expect_code 1 "Insert message into non-existent folder" \
-    "notmuch insert --folder=nonesuch < $gen_msg_filename"
+test_expect_code 1 "notmuch insert --folder=nonesuch < $gen_msg_filename"
 
 test_begin_subtest "Insert message, create folder"
 gen_insert_msg
@@ -162,9 +162,9 @@ notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch count path:F/G/H/I/J/new tag:folder)
 test_expect_equal "$output" "2"
 
+test_begin_subtest "Insert message, create invalid subfolder"
 gen_insert_msg
-test_expect_code 1 "Insert message, create invalid subfolder" \
-    "notmuch insert --folder=../G --create-folder $gen_msg_filename"
+test_expect_code 1 "notmuch insert --folder=../G --create-folder $gen_msg_filename"
 
 OLDCONFIG=$(notmuch config get new.tags)
 
@@ -180,8 +180,8 @@ gen_insert_msg
 output=$(notmuch insert $gen_msg_filename 2>&1)
 test_expect_equal "$output" "Error: tag '-foo' in new.tags: tag starting with '-' forbidden"
 
-test_expect_code 1 "Invalid tags set exit code" \
-    "notmuch insert $gen_msg_filename 2>&1"
+test_begin_subtest "Invalid tags set exit code"
+test_expect_code 1 "notmuch insert $gen_msg_filename 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
 
@@ -205,22 +205,28 @@ done
 gen_insert_msg
 
 for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
-    test_expect_code 1 "EXIT_FAILURE when add_message returns $code" \
+    test_begin_subtest "EXIT_FAILURE when add_message returns $code"
+    test_expect_code 1 \
          "${TEST_GDB} --batch-silent --return-child-result \
 	     -ex 'set args insert < $gen_msg_filename' \
 	     -x index-file-$code.gdb notmuch"
-    test_expect_code 0 "success exit with --keep when add_message returns $code" \
+
+    test_begin_subtest "success exit with --keep when add_message returns $code"
+    test_expect_code 0 \
          "${TEST_GDB} --batch-silent --return-child-result \
 	     -ex 'set args insert --keep < $gen_msg_filename' \
 	     -x index-file-$code.gdb notmuch"
 done
 
 for code in OUT_OF_MEMORY XAPIAN_EXCEPTION ; do
-    test_expect_code 75 "EX_TEMPFAIL when add_message returns $code" \
+    test_begin_subtest "EX_TEMPFAIL when add_message returns $code"
+    test_expect_code 75 \
          "${TEST_GDB} --batch-silent --return-child-result \
 	     -ex 'set args insert < $gen_msg_filename' \
 	     -x index-file-$code.gdb notmuch"
-    test_expect_code 0 "success exit with --keep when add_message returns $code" \
+
+    test_begin_subtest "success exit with --keep when add_message returns $code"
+    test_expect_code 0 \
          "${TEST_GDB} --batch-silent --return-child-result \
 	     -ex 'set args insert --keep < $gen_msg_filename' \
 	     -x index-file-$code.gdb notmuch"

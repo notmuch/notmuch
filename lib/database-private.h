@@ -38,8 +38,6 @@
 
 #include <xapian.h>
 
-#pragma GCC visibility push(hidden)
-
 /* Bit masks for _notmuch_database::features.  Features are named,
  * independent aspects of the database schema.
  *
@@ -247,7 +245,5 @@ notmuch_string_list_t *
 _notmuch_database_get_terms_with_prefix (void *ctx, Xapian::TermIterator &i,
 					 Xapian::TermIterator &end,
 					 const char *prefix);
-
-#pragma GCC visibility pop
 
 #endif

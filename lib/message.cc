@@ -26,7 +26,7 @@
 
 #include <gmime/gmime.h>
 
-struct visible _notmuch_message {
+struct _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;
     int frozen;
@@ -1034,10 +1034,16 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 
     /* GMime really doesn't want to see a NULL date, so protect its
      * sensibilities. */
-    if (date == NULL || *date == '\0')
+    if (date == NULL || *date == '\0') {
 	time_value = 0;
-    else
-	time_value = g_mime_utils_header_decode_date (date, NULL);
+    } else {
+	time_value = g_mime_utils_header_decode_date_unix (date);
+	/*
+	 * Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=779923
+	 */
+	if (time_value < 0)
+	    time_value = 0;
+    }
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
@@ -1123,7 +1129,7 @@ _notmuch_message_delete (notmuch_message_t *message)
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
-    status = notmuch_query_count_messages_st (query, &count);
+    status = notmuch_query_count_messages (query, &count);
     if (status) {
 	notmuch_query_destroy (query);
 	return status;
@@ -1837,7 +1843,7 @@ _notmuch_message_ensure_property_map (notmuch_message_t *message)
 	const char *key;
 	char *value;
 
-	value = index(node->string, '=');
+	value = strchr(node->string, '=');
 	if (!value)
 	    INTERNAL_ERROR ("malformed property term");
 

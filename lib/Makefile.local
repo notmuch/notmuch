@@ -1,5 +1,12 @@
 # -*- makefile -*-
 
+dir := lib
+
+# The (often-reused) $dir works fine within targets/prerequisites,
+# but cannot be used reliably within commands, so copy its value to a
+# variable that is not reused.
+lib := $(dir)
+
 ifeq ($(PLATFORM),MACOSX)
 LIBRARY_SUFFIX = dylib
 # On OS X, library version numbers go before suffix.
@@ -12,7 +19,7 @@ LIBRARY_SUFFIX = so
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
 SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
 LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
-LIBRARY_LINK_FLAG = -shared -Wl,--version-script=notmuch.sym,-soname=$(SONAME) $(NO_UNDEFINED_LDFLAGS)
+LIBRARY_LINK_FLAG = -shared -Wl,--version-script=$(lib)/notmuch.sym,-soname=$(SONAME) $(NO_UNDEFINED_LDFLAGS)
 ifeq ($(PLATFORM),OPENBSD)
 LIBRARY_LINK_FLAG += -lc
 endif
@@ -23,13 +30,8 @@ endif
 endif
 endif
 
-dir := lib
-extra_cflags += -I$(srcdir)/$(dir) -fPIC
-
-# The (often-reused) $dir works fine within targets/prerequisites,
-# but cannot be used reliably within commands, so copy its value to a
-# variable that is not reused.
-lib := $(dir)
+extra_cflags += -I$(srcdir)/$(dir) -fPIC -fvisibility=hidden
+extra_cxxflags += -fvisibility-inlines-hidden
 
 libnotmuch_c_srcs =		\
 	$(notmuch_compat_srcs)	\
@@ -60,11 +62,8 @@ libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
-$(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym util/libutil.a parse-time-string/libparse-time-string.a
-	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libutil.a parse-time-string/libparse-time-string.a
-
-notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
-	sh $(srcdir)/$(lib)/gen-version-script.sh $< $(libnotmuch_modules) > $@
+$(dir)/$(LIBNAME): $(libnotmuch_modules) util/libnotmuch_util.a parse-time-string/libparse-time-string.a
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libnotmuch_util.a parse-time-string/libparse-time-string.a
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@
@@ -85,5 +84,5 @@ install-$(dir): $(dir)/$(LIBNAME)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN += $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME)
-CLEAN += $(dir)/$(LIBNAME) $(dir)/libnotmuch.a notmuch.sym
+CLEAN += $(dir)/$(LIBNAME) $(dir)/libnotmuch.a
 CLEAN += $(dir)/notmuch.h.gch

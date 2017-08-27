@@ -19,8 +19,11 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag3 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag3 unread)"
 
-test_expect_code 1 "No tag operations" 'notmuch tag One'
-test_expect_code 1 "No query" 'notmuch tag +tag2'
+test_begin_subtest "No tag operations"
+test_expect_code 1 'notmuch tag One'
+
+test_begin_subtest "No query"
+test_expect_code 1 'notmuch tag +tag2'
 
 test_begin_subtest "Redundant tagging"
 notmuch tag +tag1 -tag3 One
@@ -282,9 +285,11 @@ notmuch dump --format=batch-tag| \
 
 test_expect_equal_file EXPECTED OUTPUT
 
-test_expect_code 1 "Empty tag names" 'notmuch tag + One'
+test_begin_subtest "Empty tag names"
+test_expect_code 1 'notmuch tag + One'
 
-test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
+test_begin_subtest "Tag name beginning with -"
+test_expect_code 1 'notmuch tag +- One'
 
 test_begin_subtest "Xapian exception: read only files"
 chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}

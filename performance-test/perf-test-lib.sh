@@ -149,7 +149,7 @@ memory_run ()
 
     printf "[ %d ]\t%s\n" $test_count "$1"
 
-    NOTMUCH_TALLOC_REPORT="$talloc_log" valgrind --leak-check=full --log-file="$log_file" $2
+    NOTMUCH_TALLOC_REPORT="$talloc_log" eval "valgrind --leak-check=full --log-file='$log_file' $2"
 
     awk '/LEAK SUMMARY/,/suppressed/ { sub(/^==[0-9]*==/," "); print }' "$log_file"
     echo

@@ -1,0 +1,91 @@
+From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
+Subject: RE: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Date: Tue, 3 Aug 2010 05:17:54 -0700
+Lines: 34
+Message-ID: <0CE8B6BE3C4AD74AB97D9D29BD24E5520114309D@CORPEXCH1.na.ads.idt.com>
+References: <20100308191005.GE4324@amak.tundra.com> <AANLkTine3pc2Ai2Woj81Y9fS_KgGs1sIMb2NMR6G74ww@mail.gmail.com> <AANLkTinKbimKyLpvFD7KOvavshu_n8gRcp2BvEJj0XZQ@mail.gmail.com> <4381.1280815590@neuling.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Cc: "Alexandre Bounine" <abounine@tundra.com>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
+	<thomas.moll@sysgo.com>
+To: "Michael Neuling" <mikey@neuling.org>,
+	"Timur Tabi" <timur.tabi@gmail.com>
+X-From: linux-kernel-owner@vger.kernel.org Tue Aug 03 14:27:12 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1OgGaG-0002zE-Fr
+	for glk-linux-kernel-3@lo.gmane.org; Tue, 03 Aug 2010 14:27:04 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1756073Ab0HCM0x (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Tue, 3 Aug 2010 08:26:53 -0400
+Received: from mxout1.idt.com ([157.165.5.25]:35046 "EHLO mxout1.idt.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756010Ab0HCM0w convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Tue, 3 Aug 2010 08:26:52 -0400
+X-Greylist: delayed 521 seconds by postgrey-1.27 at vger.kernel.org; Tue, 03 Aug 2010 08:26:52 EDT
+Received: from mail.idt.com (localhost [127.0.0.1])
+	by mxout1.idt.com (8.13.1/8.13.1) with ESMTP id o73CHxil001904;
+	Tue, 3 Aug 2010 05:17:59 -0700
+Received: from corpml3.corp.idt.com (corpml3.corp.idt.com [157.165.140.25])
+	by mail.idt.com (8.13.8/8.13.8) with ESMTP id o73CHvit016488;
+	Tue, 3 Aug 2010 05:17:57 -0700 (PDT)
+Received: from CORPEXCH1.na.ads.idt.com (localhost [127.0.0.1])
+	by corpml3.corp.idt.com (8.11.7p1+Sun/8.11.7) with ESMTP id o73CHtN07516;
+	Tue, 3 Aug 2010 05:17:55 -0700 (PDT)
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Content-class: urn:content-classes:message
+In-Reply-To: <4381.1280815590@neuling.org>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Thread-Index: Acsy0pTOmhzzm4GETvS4r2R2pYb40wAMtx8w
+X-Scanned-By: MIMEDefang 2.43
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1017995>
+
+This happened after change to book-e definitions.
+There are patches that address this issue.
+
+> -----Original Message-----
+> From: Michael Neuling [mailto:mikey@neuling.org]
+> Sent: Tuesday, August 03, 2010 2:07 AM
+> To: Timur Tabi
+> Cc: Alexandre Bounine; linuxppc-dev@lists.ozlabs.org;
+linux-kernel@vger.kernel.org;
+> thomas.moll@sysgo.com
+> Subject: Re: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO
+port
+> 
+> > > MCSR_MASK is not defined anywhere, so when I compile this code, I
+get this:
+> >
+> > Never mind.  I see that it's been fixed already, and that the patch
+> > that removed MCSR_MASK was posted around the same time that this
+patch
+> > was posted.
+> 
+> I don't know what happened here but 2.6.35 is broken because of this
+> problem:
+> 
+> arch/powerpc/sysdev/fsl_rio.c:248: error: 'MCSR_MASK' undeclared
+(first use in this function)
+> arch/powerpc/sysdev/fsl_rio.c:248: error: (Each undeclared identifier
+is reported only once
+> arch/powerpc/sysdev/fsl_rio.c:248: error: for each function it appears
+in.)
+> arch/powerpc/sysdev/fsl_rio.c:250: error: 'MCSR_BUS_RBERR' undeclared
+(first use in this function)
+> 
+> Mikey
+
+

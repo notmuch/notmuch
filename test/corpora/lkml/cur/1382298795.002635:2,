@@ -1,0 +1,54 @@
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH 19/44] drivers/platform/x86: Remove unnecessary
+	semicolons
+Date: Wed, 24 Nov 2010 16:52:46 +0000
+Lines: 4
+Message-ID: <20101124165246.GH2150@srcf.ucam.org>
+References: <cover.1289789604.git.joe@perches.com> <eda82bcfaad265fc5cd3901bc4f41bfcfac2403b.1289789604.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Cc: Jiri Kosina <trivial@kernel.org>,
+	Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	Daniel Oliveira Nascimento <don@syst.com.br>,
+	Henrique de Moraes Holschuh <ibm-acpi@hmh.eng.br>,
+	platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ibm-acpi-devel@lists.sourceforge.net
+To: Joe Perches <joe@perches.com>
+X-From: platform-driver-x86-owner@vger.kernel.org Wed Nov 24 17:53:05 2010
+Return-path: <platform-driver-x86-owner@vger.kernel.org>
+Envelope-to: gldpxd-platform-driver-x86@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <platform-driver-x86-owner@vger.kernel.org>)
+	id 1PLIae-0001zN-Vf
+	for gldpxd-platform-driver-x86@lo.gmane.org; Wed, 24 Nov 2010 17:53:05 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1754012Ab0KXQxE (ORCPT
+	<rfc822;gldpxd-platform-driver-x86@m.gmane.org>);
+	Wed, 24 Nov 2010 11:53:04 -0500
+Received: from cavan.codon.org.uk ([93.93.128.6]:37338 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab0KXQxD (ORCPT
+	<rfc822;platform-driver-x86@vger.kernel.org>);
+	Wed, 24 Nov 2010 11:53:03 -0500
+Received: from mjg59 by cavan.codon.org.uk with local (Exim 4.69)
+	(envelope-from <mjg59@cavan.codon.org.uk>)
+	id 1PLIaM-0000fC-HX; Wed, 24 Nov 2010 16:52:46 +0000
+Content-Disposition: inline
+In-Reply-To: <eda82bcfaad265fc5cd3901bc4f41bfcfac2403b.1289789604.git.joe@perches.com>
+User-Agent: Mutt/1.5.18 (2008-05-17)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: mjg59@cavan.codon.org.uk
+X-SA-Exim-Scanned: No (on cavan.codon.org.uk); SAEximRunCond expanded to false
+Sender: platform-driver-x86-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <platform-driver-x86.vger.kernel.org>
+X-Mailing-List: platform-driver-x86@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1067655>
+
+Applied, thanks.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
+
+

@@ -1,0 +1,89 @@
+From: Joe Perches <joe@perches.com>
+Subject: [uml-user] [PATCH 03/44] arch/um: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:22 -0800
+Lines: 28
+Message-ID: <9ab60a1761dde357ebc028c525dae7572e072588.1289789604.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Jeff Dike <jdike@addtoit.com>, user-mode-linux-user@lists.sourceforge.net,
+	user-mode-linux-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: user-mode-linux-user-bounces@lists.sourceforge.net Mon Nov 15 04:06:03 2010
+Return-path: <user-mode-linux-user-bounces@lists.sourceforge.net>
+Envelope-to: gluu-user-mode-linux-user-592@gmane.org
+Received: from lists.sourceforge.net ([216.34.181.88])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <user-mode-linux-user-bounces@lists.sourceforge.net>)
+	id 1PHpOM-0000er-Jl
+	for gluu-user-mode-linux-user-592@gmane.org; Mon, 15 Nov 2010 04:06:02 +0100
+Received: from localhost ([127.0.0.1] helo=sfs-ml-4.v29.ch3.sourceforge.com)
+	by sfs-ml-4.v29.ch3.sourceforge.com with esmtp (Exim 4.69)
+	(envelope-from <user-mode-linux-user-bounces@lists.sourceforge.net>)
+	id 1PHpNz-0002ZS-PM; Mon, 15 Nov 2010 03:05:39 +0000
+Received: from sog-mx-2.v43.ch3.sourceforge.com ([172.29.43.192]
+	helo=mx.sourceforge.net)
+	by sfs-ml-4.v29.ch3.sourceforge.com with esmtp (Exim 4.69)
+	(envelope-from <joe@perches.com>)
+	id 1PHpNy-0002ZA-Q9; Mon, 15 Nov 2010 03:05:38 +0000
+X-ACL-Warn: 
+Received: from mail.perches.com ([173.55.12.10])
+	by sog-mx-2.v43.ch3.sourceforge.com with esmtp (Exim 4.69)
+	id 1PHpNu-0002aj-Ks; Mon, 15 Nov 2010 03:05:38 +0000
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 845BB2436D;
+	Sun, 14 Nov 2010 19:03:56 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+X-Spam-Score: 0.1 (/)
+X-Spam-Report: Spam Filtering performed by mx.sourceforge.net.
+	See http://spamassassin.org/tag/ for more details.
+	-0.0 T_RP_MATCHES_RCVD Envelope sender domain matches handover relay
+	domain 0.1 AWL AWL: From: address is in the auto white-list
+X-Headers-End: 1PHpNu-0002aj-Ks
+X-BeenThere: user-mode-linux-user@lists.sourceforge.net
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: The user-mode Linux user list
+	<user-mode-linux-user.lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
+	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=user-mode-linux-user>
+List-Post: <mailto:user-mode-linux-user@lists.sourceforge.net>
+List-Help: <mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
+	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: user-mode-linux-user-bounces@lists.sourceforge.net
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062275>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ arch/um/drivers/mmapper_kern.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/um/drivers/mmapper_kern.c b/arch/um/drivers/mmapper_kern.c
+index 8501e7d..6256fa9 100644
+--- a/arch/um/drivers/mmapper_kern.c
++++ b/arch/um/drivers/mmapper_kern.c
+@@ -122,7 +122,7 @@ static int __init mmapper_init(void)
+ 	if (err) {
+ 		printk(KERN_ERR "mmapper - misc_register failed, err = %d\n",
+ 		       err);
+-		return err;;
++		return err;
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.3.1.g432b3.dirty
+
+
+------------------------------------------------------------------------------
+Centralized Desktop Delivery: Dell and VMware Reference Architecture
+Simplifying enterprise desktop deployment and management using
+Dell EqualLogic storage and VMware View: A highly scalable, end-to-end
+client virtualization framework. Read more!
+http://p.sf.net/sfu/dell-eql-dev2dev
+
+

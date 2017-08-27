@@ -31,7 +31,9 @@ $(TAR_FILE):
 	fi ; \
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
-	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
+	tar --owner root --group root --append -f $(TAR_FILE).tmp \
+		--transform s_^_$(PACKAGE)-$(VERSION)/_  \
+		--transform 's_.tmp$$__' version.tmp
 	rm version.tmp
 	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
@@ -210,6 +212,7 @@ dataclean: distclean
 	rm -rf $(DATACLEAN)
 
 notmuch_client_srcs =		\
+	$(notmuch_compat_srcs)	\
 	command-line-arguments.c\
 	debugger.c		\
 	status.c		\
@@ -241,7 +244,7 @@ notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
 notmuch.o: version.stamp
 
-notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a parse-time-string/libparse-time-string.a
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libnotmuch_util.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)

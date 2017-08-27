@@ -134,10 +134,10 @@ class Query(object):
         self._assert_query_is_initialized()
         self._exclude_tag(self._query, _str(tagname))
 
-    """notmuch_query_search_threads_st"""
-    _search_threads_st = nmlib.notmuch_query_search_threads_st
-    _search_threads_st.argtypes = [NotmuchQueryP, POINTER(NotmuchThreadsP)]
-    _search_threads_st.restype = c_uint
+    """notmuch_query_search_threads"""
+    _search_threads = nmlib.notmuch_query_search_threads
+    _search_threads.argtypes = [NotmuchQueryP, POINTER(NotmuchThreadsP)]
+    _search_threads.restype = c_uint
 
     def search_threads(self):
         """Execute a query for threads
@@ -155,7 +155,7 @@ class Query(object):
         """
         self._assert_query_is_initialized()
         threads_p = NotmuchThreadsP() # == NULL
-        status = Query._search_threads_st(self._query, byref(threads_p))
+        status = Query._search_threads(self._query, byref(threads_p))
         if status != 0:
             raise NotmuchError(status)
 
@@ -164,9 +164,9 @@ class Query(object):
         return Threads(threads_p, self)
 
     """notmuch_query_search_messages_st"""
-    _search_messages_st = nmlib.notmuch_query_search_messages_st
-    _search_messages_st.argtypes = [NotmuchQueryP, POINTER(NotmuchMessagesP)]
-    _search_messages_st.restype = c_uint
+    _search_messages = nmlib.notmuch_query_search_messages
+    _search_messages.argtypes = [NotmuchQueryP, POINTER(NotmuchMessagesP)]
+    _search_messages.restype = c_uint
 
     def search_messages(self):
         """Filter messages according to the query and return
@@ -177,7 +177,7 @@ class Query(object):
         """
         self._assert_query_is_initialized()
         msgs_p = NotmuchMessagesP() # == NULL
-        status = Query._search_messages_st(self._query, byref(msgs_p))
+        status = Query._search_messages(self._query, byref(msgs_p))
         if status != 0:
             raise NotmuchError(status)
 
@@ -185,7 +185,7 @@ class Query(object):
             raise NullPointerError
         return Messages(msgs_p, self)
 
-    _count_messages = nmlib.notmuch_query_count_messages_st
+    _count_messages = nmlib.notmuch_query_count_messages
     _count_messages.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_messages.restype = c_uint
 
@@ -204,7 +204,7 @@ class Query(object):
             raise NotmuchError(status)
         return count.value
 
-    _count_threads = nmlib.notmuch_query_count_threads_st
+    _count_threads = nmlib.notmuch_query_count_threads
     _count_threads.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_threads.restype = c_uint
 

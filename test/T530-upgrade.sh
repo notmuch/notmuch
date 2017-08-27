@@ -10,8 +10,8 @@ if [ ! -e ${TEST_DIRECTORY}/test-databases/${dbtarball} ]; then
     test_subtest_missing_external_prereq_["${dbtarball} - fetch with 'make download-test-databases'"]=t
 fi
 
+test_begin_subtest "database checksum"
 test_expect_success \
-    'database checksum' \
     '( cd $TEST_DIRECTORY/test-databases &&
        sha256sum --quiet --check --status ${dbtarball}.sha256 )'
 
@@ -25,7 +25,8 @@ test_begin_subtest "path: search does not work with old database version"
 output=$(notmuch search path:foo)
 test_expect_equal "$output" ""
 
-test_expect_success 'pre upgrade dump' 'notmuch dump | sort > pre-upgrade-dump'
+test_begin_subtest "pre upgrade dump"
+test_expect_success 'notmuch dump | sort > pre-upgrade-dump'
 
 test_begin_subtest "database upgrade from format version 1"
 output=$(notmuch new | sed -e 's/^Backing up tags to .*$/Backing up tags to FILENAME/')

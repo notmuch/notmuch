@@ -286,8 +286,8 @@ notmuch config set new.tags "-foo;bar"
 output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" "Error: tag '-foo' in new.tags: tag starting with '-' forbidden"
 
-test_expect_code 1 "Invalid tags set exit code" \
-    "NOTMUCH_NEW --debug 2>&1"
+test_begin_subtest "Invalid tags set exit code"
+test_expect_code 1 "NOTMUCH_NEW --debug 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
 

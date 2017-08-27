@@ -29,7 +29,7 @@
 
 #include "compat.h"
 
-#include <gmime/gmime.h>
+#include "gmime-extra.h"
 
 typedef GMimeCryptoContext notmuch_crypto_context_t;
 /* This is automatically included only since gmime 2.6.10 */
@@ -72,21 +72,23 @@ typedef struct notmuch_show_format {
 } notmuch_show_format_t;
 
 typedef struct notmuch_crypto {
-    notmuch_crypto_context_t* gpgctx;
-    notmuch_crypto_context_t* pkcs7ctx;
     notmuch_bool_t verify;
     notmuch_bool_t decrypt;
+#if (GMIME_MAJOR_VERSION < 3)
+    notmuch_crypto_context_t* gpgctx;
+    notmuch_crypto_context_t* pkcs7ctx;
     const char *gpgpath;
+#endif
 } notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
     notmuch_bool_t omit_excluded;
     notmuch_bool_t output_body;
-    notmuch_bool_t raw;
     int part;
     notmuch_crypto_t crypto;
     notmuch_bool_t include_html;
+    GMimeStream *out_stream;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -145,7 +147,7 @@ chomp_newline (char *str)
  * this.  New (required) map fields can be added without increasing
  * this.
  */
-#define NOTMUCH_FORMAT_CUR 3
+#define NOTMUCH_FORMAT_CUR 4
 /* The minimum supported structured output format version.  Requests
  * for format versions below this will return an error. */
 #define NOTMUCH_FORMAT_MIN 1
@@ -178,8 +180,10 @@ typedef struct _notmuch_config notmuch_config_t;
 void
 notmuch_exit_if_unsupported_format (void);
 
+#if (GMIME_MAJOR_VERSION <3)
 notmuch_crypto_context_t *
 notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
+#endif
 
 int
 notmuch_crypto_cleanup (notmuch_crypto_t *crypto);
@@ -289,12 +293,14 @@ void
 notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path);
 
+#if (GMIME_MAJOR_VERSION < 3)
 const char *
 notmuch_config_get_crypto_gpg_path (notmuch_config_t *config);
 
 void
 notmuch_config_set_crypto_gpg_path (notmuch_config_t *config,
 				  const char *gpg_path);
+#endif
 
 const char *
 notmuch_config_get_user_name (notmuch_config_t *config);

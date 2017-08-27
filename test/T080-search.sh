@@ -144,7 +144,7 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unr
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Search body (utf-8):"
 add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'

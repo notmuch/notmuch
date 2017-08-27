@@ -49,7 +49,7 @@ EXIT STATUS
 This command supports the following special exit status code
 
 ``75 (EX_TEMPFAIL)``
-    A temporary failure occured; the user is invited to retry.
+    A temporary failure occurred; the user is invited to retry.
 
 SEE ALSO
 ========

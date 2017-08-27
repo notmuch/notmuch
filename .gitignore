@@ -7,7 +7,6 @@ tags
 *cscope*
 .deps
 /notmuch
-notmuch.sym
 notmuch-shared
 libnotmuch.so*
 libnotmuch*.dylib

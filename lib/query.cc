@@ -49,7 +49,7 @@ struct _notmuch_doc_id_set {
 #define DOCIDSET_WORD(bit) ((bit) / CHAR_BIT)
 #define DOCIDSET_BIT(bit) ((bit) % CHAR_BIT)
 
-struct visible _notmuch_threads {
+struct _notmuch_threads {
     notmuch_query_t *query;
 
     /* The ordered list of doc ids matched by the query. */
@@ -177,29 +177,22 @@ notmuch_query_get_sort (const notmuch_query_t *query)
     return query->sort;
 }
 
-void
+notmuch_status_t
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag)
 {
     notmuch_status_t status;
     char *term;
 
     status = _notmuch_query_ensure_parsed (query);
-    /* The following is not ideal error handling, but to avoid
-     * breaking the ABI, we can live with it for now. In particular at
-     * least in the notmuch CLI, any syntax error in the query is
-     * caught in a later call to _notmuch_query_ensure_parsed with a
-     * better error path.
-     *
-     * TODO: add status return to this function.
-     */
     if (status)
-	return;
+	return status;
 
     term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
     if (query->terms.count(term) != 0)
-	return; /* XXX report ignoring exclude? */
+	return NOTMUCH_STATUS_IGNORED;
 
     _notmuch_string_list_append (query->exclude_terms, term);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 /* We end up having to call the destructors explicitly because we had
@@ -233,20 +226,16 @@ _notmuch_exclude_tags (notmuch_query_t *query)
     return exclude_query;
 }
 
-notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query)
-{
-    notmuch_status_t status;
-    notmuch_messages_t *messages;
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (status)
-	return NULL;
-    else
-	return messages;
-}
 
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
+				  notmuch_messages_t **out)
+{
+    return notmuch_query_search_messages (query, out);
+}
+
+notmuch_status_t
+notmuch_query_search_messages (notmuch_query_t *query,
 				  notmuch_messages_t **out)
 {
     return _notmuch_query_search_documents (query, "mail", out);
@@ -497,22 +486,15 @@ _notmuch_threads_destructor (notmuch_threads_t *threads)
     return 0;
 }
 
-
-notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out)
 {
-    notmuch_status_t status;
-    notmuch_threads_t *threads;
-    status = notmuch_query_search_threads_st (query, &threads);
-    if (status)
-	return NULL;
-    else
-	return threads;
+    return notmuch_query_search_threads(query, out);
 }
 
 notmuch_status_t
-notmuch_query_search_threads_st (notmuch_query_t *query,
-				 notmuch_threads_t **out)
+notmuch_query_search_threads (notmuch_query_t *query,
+			      notmuch_threads_t **out)
 {
     notmuch_threads_t *threads;
     notmuch_messages_t *messages;
@@ -526,7 +508,7 @@ notmuch_query_search_threads_st (notmuch_query_t *query,
 
     threads->query = query;
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (status) {
 	talloc_free (threads);
 	return status;
@@ -609,18 +591,14 @@ notmuch_threads_destroy (notmuch_threads_t *threads)
     talloc_free (threads);
 }
 
-unsigned int
-notmuch_query_count_messages (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
 {
-    notmuch_status_t status;
-    unsigned int count;
-
-    status = notmuch_query_count_messages_st (query, &count);
-    return status ? 0 : count;
+    return notmuch_query_count_messages (query, count_out);
 }
 
 notmuch_status_t
-notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
+notmuch_query_count_messages (notmuch_query_t *query, unsigned *count_out)
 {
     return _notmuch_query_count_documents (query, "mail", count_out);
 }
@@ -695,18 +673,14 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-unsigned
-notmuch_query_count_threads (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
 {
-    notmuch_status_t status;
-    unsigned int count;
-
-    status = notmuch_query_count_threads_st (query, &count);
-    return status ? 0 : count;
+    return notmuch_query_count_threads (query, count);
 }
 
 notmuch_status_t
-notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
+notmuch_query_count_threads (notmuch_query_t *query, unsigned *count)
 {
     notmuch_messages_t *messages;
     GHashTable *hash;
@@ -715,7 +689,7 @@ notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
 
     sort = query->sort;
     query->sort = NOTMUCH_SORT_UNSORTED;
-    ret = notmuch_query_search_messages_st (query, &messages);
+    ret = notmuch_query_search_messages (query, &messages);
     if (ret)
 	return ret;
     query->sort = sort;

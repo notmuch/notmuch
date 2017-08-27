@@ -1,0 +1,113 @@
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: [PATCH 36/44] fs/ocfs2: Remove unnecessary
+	semicolons
+Date: Tue, 16 Nov 2010 16:10:47 -0800
+Lines: 38
+Message-ID: <20101117001046.GE10237@mail.oracle.com>
+References: <cover.1289789604.git.joe@perches.com>
+	<e32409b17aaa1a54fec85f3654583ef08fcf851c.1289789605.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Mark Fasheh <mfasheh@suse.com>, Jiri Kosina <trivial@kernel.org>,
+        linux-kernel@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Joe Perches <joe@perches.com>
+X-From: ocfs2-devel-bounces@oss.oracle.com Wed Nov 17 01:11:36 2010
+Return-path: <ocfs2-devel-bounces@oss.oracle.com>
+Envelope-to: gcfod-ocfs2-devel@gmane.org
+Received: from rcsinet10.oracle.com ([148.87.113.121])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <ocfs2-devel-bounces@oss.oracle.com>)
+	id 1PIVcY-0003qc-VC
+	for gcfod-ocfs2-devel@gmane.org; Wed, 17 Nov 2010 01:11:31 +0100
+Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117])
+	by rcsinet10.oracle.com (Switch-3.4.2/Switch-3.4.2) with ESMTP id oAH0B96Y007820
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Wed, 17 Nov 2010 00:11:10 GMT
+Received: from oss.oracle.com (oss.oracle.com [141.146.12.120])
+	by rcsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id oAH0B6rM032434
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO);
+	Wed, 17 Nov 2010 00:11:07 GMT
+Received: from localhost ([127.0.0.1] helo=oss.oracle.com)
+	by oss.oracle.com with esmtp (Exim 4.63)
+	(envelope-from <ocfs2-devel-bounces@oss.oracle.com>)
+	id 1PIVcA-0001bs-K0; Tue, 16 Nov 2010 16:11:06 -0800
+Received: from rcsinet15.oracle.com ([148.87.113.117])
+	by oss.oracle.com with esmtp (Exim 4.63)
+	(envelope-from <joel.becker@oracle.com>) id 1PIVc7-0001bl-Td
+	for ocfs2-devel@oss.oracle.com; Tue, 16 Nov 2010 16:11:04 -0800
+Received: from acsmt354.oracle.com (acsmt354.oracle.com [141.146.40.154])
+	by rcsinet15.oracle.com (Switch-3.4.2/Switch-3.4.1) with ESMTP id
+	oAH0B1gV032165; Wed, 17 Nov 2010 00:11:01 GMT
+Received: from ca-server1.us.oracle.com by acsmt353.oracle.com
+	with ESMTP id 784380701289952654; Tue, 16 Nov 2010 16:10:54 -0800
+Received: from jlbec by ca-server1.us.oracle.com with local (Exim 4.69)
+	(envelope-from <joel.becker@oracle.com>)
+	id 1PIVbx-0007gG-4G; Tue, 16 Nov 2010 16:10:53 -0800
+Mail-Followup-To: Joe Perches <joe@perches.com>,
+	Jiri Kosina <trivial@kernel.org>, Mark Fasheh <mfasheh@suse.com>,
+	ocfs2-devel@oss.oracle.com, linux-kernel@vger.kernel.org
+Content-Disposition: inline
+In-Reply-To: <e32409b17aaa1a54fec85f3654583ef08fcf851c.1289789605.git.joe@perches.com>
+X-Burt-Line: Trees are cool.
+X-Red-Smith: Ninety feet between bases is perhaps as close as man has ever
+	come to perfection.
+User-Agent: Mutt/1.5.20 (2009-06-14)
+X-BeenThere: ocfs2-devel@oss.oracle.com
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: <ocfs2-devel.oss.oracle.com>
+List-Unsubscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
+List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
+List-Post: <mailto:ocfs2-devel@oss.oracle.com>
+List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
+List-Subscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
+	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
+Sender: ocfs2-devel-bounces@oss.oracle.com
+Errors-To: ocfs2-devel-bounces@oss.oracle.com
+X-Source-IP: oss.oracle.com [141.146.12.120]
+X-Auth-Type: Internal IP
+X-CT-RefId: str=0001.0A090207.4CE31D9C.007A:SCFSTAT3865452,ss=1,fgs=0
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1063511>
+
+On Sun, Nov 14, 2010 at 07:04:55PM -0800, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+
+Acked-by: Joel Becker <joel.becker@oracle.com>
+
+
+> ---
+>  fs/ocfs2/refcounttree.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/ocfs2/refcounttree.c b/fs/ocfs2/refcounttree.c
+> index b5f9160..da14a42 100644
+> --- a/fs/ocfs2/refcounttree.c
+> +++ b/fs/ocfs2/refcounttree.c
+> @@ -3704,7 +3704,7 @@ int ocfs2_refcount_cow_xattr(struct inode *inode,
+>  	context->cow_start = cow_start;
+>  	context->cow_len = cow_len;
+>  	context->ref_tree = ref_tree;
+> -	context->ref_root_bh = ref_root_bh;;
+> +	context->ref_root_bh = ref_root_bh;
+>  	context->cow_object = xv;
+>  
+>  	context->cow_duplicate_clusters = ocfs2_duplicate_clusters_by_jbd;
+> -- 
+> 1.7.3.1.g432b3.dirty
+> 
+
+-- 
+
+Life's Little Instruction Book #237
+
+	"Seek out the good in people."
+
+Joel Becker
+Senior Development Manager
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
+
+

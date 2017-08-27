@@ -1,0 +1,64 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 39/44] include/net/caif/cfctrl.h: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:58 -0800
+Lines: 26
+Message-ID: <35914cfea1bd0ab3963e632d02b1fdd52a9d2bc8.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Sjur Braendeland <sjur.brandeland@stericsson.com>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: netdev-owner@vger.kernel.org Mon Nov 15 04:08:21 2010
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1PHpQW-0001fQ-TC
+	for linux-netdev-2@lo.gmane.org; Mon, 15 Nov 2010 04:08:17 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932988Ab0KODHd (ORCPT <rfc822;linux-netdev-2@m.gmane.org>);
+	Sun, 14 Nov 2010 22:07:33 -0500
+Received: from mail.perches.com ([173.55.12.10]:1252 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932944Ab0KODGB (ORCPT <rfc822;netdev@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:06:01 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 4F8E124376;
+	Sun, 14 Nov 2010 19:04:28 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062292>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ include/net/caif/cfctrl.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/caif/cfctrl.h b/include/net/caif/cfctrl.h
+index 9402543..e54f639 100644
+--- a/include/net/caif/cfctrl.h
++++ b/include/net/caif/cfctrl.h
+@@ -51,7 +51,7 @@ struct cfctrl_rsp {
+ 	void (*restart_rsp)(void);
+ 	void (*radioset_rsp)(void);
+ 	void (*reject_rsp)(struct cflayer *layer, u8 linkid,
+-				struct cflayer *client_layer);;
++				struct cflayer *client_layer);
+ };
+ 
+ /* Link Setup Parameters for CAIF-Links. */
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

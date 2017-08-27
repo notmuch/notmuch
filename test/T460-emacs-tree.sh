@@ -12,7 +12,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
 test_begin_subtest "Refreshed notmuch-tree view in emacs"
 test_emacs '(notmuch-tree "tag:inbox")
@@ -21,7 +21,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
 # In the following tag tests we make sure the display is updated
 # correctly and, in a separate test, that the database is updated
@@ -34,7 +34,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-tree-tag (list "+test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox-tagged
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox-tagged OUTPUT
 
 test_begin_subtest "Tag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_tag')
@@ -47,7 +47,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-tree-tag (list "-test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
 test_begin_subtest "Untag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_tag')
@@ -61,7 +61,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-tree-tag-thread (list "+test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox-thread-tagged
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox-thread-tagged OUTPUT
 
 test_begin_subtest "Tag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_thread_tag')
@@ -82,7 +82,7 @@ test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-tree-tag-thread (list "-test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
 test_begin_subtest "Untag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_thread_tag')
@@ -98,7 +98,7 @@ test_emacs '(notmuch-hello)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
 test_begin_subtest "Tree view of a single thread (from search)"
 test_emacs '(notmuch-hello)
@@ -110,7 +110,7 @@ test_emacs '(notmuch-hello)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-single-thread
+test_expect_equal_file $EXPECTED/notmuch-tree-single-thread OUTPUT
 
 test_begin_subtest "Tree view of a single thread (from show)"
 test_emacs '(notmuch-hello)
@@ -123,7 +123,7 @@ test_emacs '(notmuch-hello)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-single-thread
+test_expect_equal_file $EXPECTED/notmuch-tree-single-thread OUTPUT
 
 test_begin_subtest "Message window of tree view"
 test_emacs '(notmuch-hello)
@@ -137,8 +137,7 @@ test_emacs '(notmuch-hello)
 	    (select-window notmuch-tree-message-window)
 	    (test-output)
 	    (delete-other-windows)'
-cp OUTPUT /tmp/mjwout
-test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-show-window
+test_expect_equal_file $EXPECTED/notmuch-tree-show-window OUTPUT
 
 test_begin_subtest "Stash id"
 output=$(test_emacs '(notmuch-tree "id:1258498485-sup-142@elly")

@@ -66,6 +66,11 @@ export LD_LIBRARY_PATH
 # configure output
 . $notmuch_path/sh.config || exit 1
 
+# load OS specifics
+if [ -e ./test-lib-$PLATFORM.sh ]; then
+	. ./test-lib-$PLATFORM.sh || exit 1
+fi
+
 if test -n "$valgrind"
 then
 	make_symlink () {

@@ -8,6 +8,7 @@ ifeq ($(HAVE_RUBY_DEV),1)
 	cd $(dir)/ruby && \
 		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
+		NOTMUCH_SRCDIR='$(NOTMUCH_SRCDIR)' \
 		ruby extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby
 endif

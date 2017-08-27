@@ -832,7 +832,7 @@ passed to it by notmuch-tree-process-filter."
   (mapc 'notmuch-tree-insert-forest-thread forest))
 
 (define-derived-mode notmuch-tree-mode fundamental-mode "notmuch-tree"
-  "Major mode displaying messages (as opposed to threads) of of a notmuch search.
+  "Major mode displaying messages (as opposed to threads) of a notmuch search.
 
 This buffer contains the results of a \"notmuch tree\" of your
 email archives. Each line in the buffer represents a single
@@ -917,7 +917,7 @@ the same as for the function notmuch-tree."
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel
-		 "show" "--body=false" "--format=sexp" "--format-version=2"
+		 "show" "--body=false" "--format=sexp" "--format-version=4"
 		 message-arg search-args))
 	  ;; Use a scratch buffer to accumulate partial output.
 	  ;; This buffer will be killed by the sentinel, which

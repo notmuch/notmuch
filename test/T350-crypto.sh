@@ -11,6 +11,8 @@ add_gnupg_home ()
 {
     local output
     [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
     gpg --no-tty --import <$TEST_DIRECTORY/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
@@ -28,7 +30,8 @@ add_gnupg_home
 # Change this if we ship a new test key
 FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 
-test_expect_success 'emacs delivery of signed message' \
+test_begin_subtest "emacs delivery of signed message"
+test_expect_success \
 'emacs_fcc_message \
     "test signed message 001" \
     "This is a test signed message." \
@@ -65,7 +68,90 @@ test_expect_equal_json \
     "$output" \
     "$expected"
 
+test_begin_subtest "detection of modified signed contents"
+emacs_fcc_message \
+    "bad signed message 001" \
+    "Incriminating stuff. This is a test signed message." \
+    "(mml-secure-message-sign)"
+
+file=$(notmuch search --output=files subject:"bad signed message 001")
+
+sed -i 's/Incriminating stuff. //' ${file}
+
+output=$(notmuch show --format=json --verify subject:"bad signed message 001" \
+    | notmuch_json_show_sanitize \
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+expected='[[[{"id": "XXXXX",
+ "match": true,
+ "excluded": false,
+ "filename": ["YYYYY"],
+ "timestamp": 946728000,
+ "date_relative": "2000-01-01",
+ "tags": ["inbox","signed"],
+ "headers": {"Subject": "bad signed message 001",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "test_suite@notmuchmail.org",
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
+ "body": [{"id": 1,
+ "sigstatus": [{"status": "bad",
+ "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'"}],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
+ "content-type": "text/plain",
+ "content": "This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature",
+ "content-length": "NONZERO"}]}]},
+ []]]]'
+test_expect_equal_json \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "corrupted pgp/mime signature"
+emacs_fcc_message \
+    "bad signed message 002" \
+    "Incriminating stuff. This is a test signed message." \
+    "(mml-secure-message-sign)"
+
+file=$(notmuch search --output=files subject:"bad signed message 002")
+
+awk '/-----BEGIN PGP SIGNATURE-----/{flag=1;print;next} \
+     /-----END PGP SIGNATURE-----/{flag=0;print;next} \
+     flag{gsub(/[A-Za-z]/,"0");print}!flag{print}' $file > $file.new
+
+rm $file
+mv $file.new $file
+
+output=$(notmuch show --format=json --verify subject:"bad signed message 002" \
+    | notmuch_json_show_sanitize \
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+expected='[[[{"id": "XXXXX",
+ "match": true,
+ "excluded": false,
+ "filename": ["YYYYY"],
+ "timestamp": 946728000,
+ "date_relative": "2000-01-01",
+ "tags": ["inbox","signed"],
+ "headers": {"Subject": "bad signed message 002",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "test_suite@notmuchmail.org",
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
+ "body": [{"id": 1,
+ "sigstatus": [],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
+ "content-type": "text/plain",
+ "content": "Incriminating stuff. This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature",
+ "content-length": "NONZERO"}]}]},
+ []]]]'
+test_expect_equal_json \
+    "$output" \
+    "$expected"
+
 test_begin_subtest "signature verification with full owner trust"
+test_subtest_broken_gmime_2
 # give the key full owner trust
 echo "${FINGERPRINT}:6:" | gpg --no-tty --import-ownertrust >>"$GNUPGHOME"/trust.log 2>&1
 gpg --no-tty --check-trustdb >>"$GNUPGHOME"/trust.log 2>&1
@@ -87,7 +173,7 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
- "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "userid": "Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",
@@ -120,7 +206,7 @@ expected='[[[{"id": "XXXXX",
  "body": [{"id": 1,
  "sigstatus": [{"status": "error",
  "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'",
- "errors": 2}],
+ "errors": {"key-missing": true}}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",
@@ -134,11 +220,12 @@ test_expect_equal_json \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
 
+test_begin_subtest "emacs delivery of encrypted message with attachment"
 # create a test encrypted message with attachment
 cat <<EOF >TESTATTACHMENT
 This is a test file.
 EOF
-test_expect_success 'emacs delivery of encrypted message with attachment' \
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 001" \
     "This is a test encrypted message.\n" \
@@ -231,7 +318,7 @@ notmuch show \
     --part=5 \
     --decrypt \
     subject:"test encrypted message 001" >OUTPUT
-test_expect_equal_file OUTPUT TESTATTACHMENT
+test_expect_equal_file TESTATTACHMENT OUTPUT
 
 test_begin_subtest "decryption failure with missing key"
 mv "${GNUPGHOME}"{,.bak}
@@ -264,13 +351,15 @@ test_expect_equal_json \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
 
-test_expect_success 'emacs delivery of encrypted + signed message' \
+test_begin_subtest "emacs delivery of encrypted + signed message"
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 002" \
     "This is another test encrypted message.\n" \
     "(mml-secure-message-sign-encrypt)"'
 
 test_begin_subtest "decryption + signature verification"
+test_subtest_broken_gmime_2
 output=$(notmuch show --format=json --decrypt subject:"test encrypted message 002" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
@@ -290,7 +379,7 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
- "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "userid": "Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
  "content-type": "multipart/encrypted",
  "content": [{"id": 2,
  "content-type": "application/pgp-encrypted",
@@ -362,7 +451,7 @@ expected='[[[{"id": "XXXXX",
  "body": [{"id": 1,
  "sigstatus": [{"status": "error",
  "keyid": "6D92612D94E46381",
- "errors": 8}],
+ "errors": {"key-revoked": true}}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",

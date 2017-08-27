@@ -1,0 +1,107 @@
+From: =?ISO-8859-1?Q?Nicolas_de_Peslo=FCan?= 
+	<nicolas.2p.debian@gmail.com>
+Subject: Re: [PATCH] core: dev: don't call BUG() on bad input
+Date: Mon, 14 Feb 2011 14:01:44 +0100
+Lines: 40
+Message-ID: <4D5927B8.2070704@gmail.com>
+References: <1297680967-11893-1-git-send-email-segoon@openwall.com> <4D591D04.4050000@gmail.com> <20110214122313.GA10062@albatros>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Tom Herbert <therbert@google.com>,
+	Changli Gao <xiaosuo@gmail.com>,
+	Jesse Gross <jesse@nicira.com>, netdev@vger.kernel.org
+To: Vasiliy Kulikov <segoon@openwall.com>
+X-From: netdev-owner@vger.kernel.org Mon Feb 14 14:02:23 2011
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1Poy4M-0006df-J5
+	for linux-netdev-2@lo.gmane.org; Mon, 14 Feb 2011 14:02:22 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1754233Ab1BNNBu convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;linux-netdev-2@m.gmane.org>); Mon, 14 Feb 2011 08:01:50 -0500
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54545 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753647Ab1BNNBs (ORCPT
+	<rfc822;netdev@vger.kernel.org>); Mon, 14 Feb 2011 08:01:48 -0500
+Received: by fxm20 with SMTP id 20so5178314fxm.19
+        for <multiple recipients>; Mon, 14 Feb 2011 05:01:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:message-id:date:from:user-agent:mime-version:to
+         :cc:subject:references:in-reply-to:content-type
+         :content-transfer-encoding;
+        bh=AbxlHNh3L+hBj6Vij/+GRK5xyYUXmvKoB1QZLa2ZBj0=;
+        b=b/GQO7FpiFoh6WrR9d9qEW2Q1ZOK0YtYzl/fLoXZS49QbuYiuExhWkohPnHsdH/n7s
+         liu8crpx1n3Ajna/7GX1mHBP6V4lfhH+NyF0Rmw3w+fx154lFiY9dbyPX7H9MZNdW60a
+         8TmPRR356gmV+7bijgKwyMN1FRVMPNV0Zg0i8=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        b=C+hWB2Aof37xOLi8SWuN+D3QsDtf/f4yCxcLrNGhRYytyr/7CUmq/rS7PpgnfvBVBr
+         yaKwVZXs7QRxIWbPnzmV38e1K+eUwZ+dd9XuEFN1dnXd5KJVv4CjWr2N84NIHx/NvOBL
+         7QYK5+DuuRaccybcS4xWMNK8mujh9ebSBXTgM=
+Received: by 10.223.87.1 with SMTP id u1mr4464553fal.112.1297688507260;
+        Mon, 14 Feb 2011 05:01:47 -0800 (PST)
+Received: from [192.168.0.101] (eab95-4-88-175-177-37.fbx.proxad.net [88.175.177.37])
+        by mx.google.com with ESMTPS id y3sm1031898fai.38.2011.02.14.05.01.45
+        (version=SSLv3 cipher=OTHER);
+        Mon, 14 Feb 2011 05:01:46 -0800 (PST)
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.16) Gecko/20101226 Icedove/3.0.11
+In-Reply-To: <20110214122313.GA10062@albatros>
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099723>
+
+Le 14/02/2011 13:23, Vasiliy Kulikov a =E9crit :
+> Hi Nicolas,
+
+Hi Vasiliy,
+
+> On Mon, Feb 14, 2011 at 13:16 +0100, Nicolas de Peslo=FCan wrote:
+>>> -	BUG_ON(strlen(name)>=3D sizeof(dev->name));
+>>> +	if (strnlen(name, sizeof(dev->name))>=3D sizeof(dev->name)) {
+>
+> Ehh...  Space after ")" is needed :)
+
+:-D
+
+>> "size_t strnlen(const char *s, size_t maxlen) : The strnlen()
+>> function returns strlen(s), if that is less than maxlen, or maxlen
+>> if there is no '\0' character among the first maxlen characters
+>> pointed to by s."
+>>
+>> How can strnlen(name, sizeof(dev->name)) be greater than sizeof(dev-=
+>name)?
+>>
+>> Shouldn't it be "if (strnlen(name, sizeof(dev->name)) =3D=3D sizeof(=
+dev->name))" instead?
+>
+> Not a big deal, but MO it's better to guard from everything that
+> is not a good input by negating the check.  strnlen()<  sizeof() is O=
+K,
+> strnlen()>=3D sizeof() is bad.  Is "=3D=3D" more preferable for net/ =
+coding style?
+
+Agreed, both cannot cause any troubles. =3D=3D is supposed to be better=
+ from the API point of view, but=20
+ >=3D is probably more readable.
+
+	Nicolas.
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

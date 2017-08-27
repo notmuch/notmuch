@@ -131,10 +131,10 @@ generic_print_progress (const char *action, const char *object,
     elapsed_overall = notmuch_time_elapsed (tv_start, tv_now);
     rate_overall = processed / elapsed_overall;
 
-    printf ("%s %d ", action, processed);
+    printf ("%s %u ", action, processed);
 
     if (total) {
-	printf ("of %d %s", total, object);
+	printf ("of %u %s", total, object);
 	if (processed > 0 && elapsed_overall > 0.5) {
 	    double time_remaining = ((total - processed) / rate_overall);
 	    printf (" (");
@@ -850,7 +850,7 @@ _remove_directory (void *ctx,
 		   const char *path,
 		   add_files_state_t *add_files_state)
 {
-    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    notmuch_status_t status;
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
     char *absolute;
@@ -905,10 +905,9 @@ print_results (const add_files_state_t *state)
 		state->processed_files == 1 ? "file" : "total files");
 	notmuch_time_print_formatted_seconds (elapsed);
 	if (elapsed > 1)
-	    printf (" (%d files/sec.).\033[K\n",
+	    printf (" (%d files/sec.)",
 		    (int) (state->processed_files / elapsed));
-	else
-	    printf (".\033[K\n");
+	printf (".%s\n", (state->output_is_a_tty) ? "\033[K" : "");
     }
 
     if (state->added_messages)

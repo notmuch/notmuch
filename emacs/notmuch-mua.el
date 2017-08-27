@@ -176,7 +176,7 @@ mutiple parts get a header."
   (unless (bolp) (insert "\n")))
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=sexp" "--format-version=1"))
+  (let ((args '("reply" "--format=sexp" "--format-version=4"))
 	(process-crypto notmuch-show-process-crypto)
 	reply
 	original)

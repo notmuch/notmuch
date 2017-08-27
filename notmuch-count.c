@@ -43,7 +43,7 @@ count_files (notmuch_query_t *query)
     notmuch_status_t status;
     int count = 0;
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch count", query, status))
 	return -1;
 
@@ -87,18 +87,23 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	return -1;
     }
 
-    for (i = 0; i < exclude_tags_length; i++)
-	notmuch_query_add_tag_exclude (query, exclude_tags[i]);
+    for (i = 0; i < exclude_tags_length; i++) {
+	status = notmuch_query_add_tag_exclude (query, exclude_tags[i]);
+	if (status && status != NOTMUCH_STATUS_IGNORED) {
+	    print_status_query ("notmuch count", query, status);
+	    return -1;
+	}
+    }
 
     switch (output) {
     case OUTPUT_MESSAGES:
-	status = notmuch_query_count_messages_st (query, &ucount);
+	status = notmuch_query_count_messages (query, &ucount);
 	if (print_status_query ("notmuch count", query, status))
 	    return -1;
 	printf ("%u", ucount);
 	break;
     case OUTPUT_THREADS:
-	status = notmuch_query_count_threads_st (query, &ucount);
+	status = notmuch_query_count_threads (query, &ucount);
 	if (print_status_query ("notmuch count", query, status))
 	    return -1;
 	printf ("%u", ucount);
@@ -106,7 +111,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
     case OUTPUT_FILES:
 	count = count_files (query);
 	if (count >= 0) {
-	    printf ("%u", count);
+	    printf ("%d", count);
 	} else {
 	    ret = -1;
 	    goto DONE;

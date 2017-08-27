@@ -52,7 +52,8 @@ test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "content": "This is just a test message (#3)\n"}]},
 []]]]'
 
-test_expect_success 'notmuch reply works with renamed file (without notmuch new)' 'notmuch reply id:${gen_msg_id}'
+test_begin_subtest "notmuch reply works with renamed file (without notmuch new)"
+test_expect_success 'notmuch reply id:${gen_msg_id}'
 
 test_begin_subtest "notmuch new detects no file rename after tag->flag synchronization"
 output=$(NOTMUCH_NEW)
@@ -123,9 +124,10 @@ output+=$(notmuch search subject:"Message to lose maildir info" | notmuch_search
 test_expect_equal "$output" "No new mail. Detected 1 file rename.
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message to lose maildir info (inbox)"
 
+test_begin_subtest "Can remove unread tag from message in non-maildir directory"
 add_message [subject]='"Non-maildir message"' [dir]=notmaildir [filename]='non-maildir-message'
 expected=$(notmuch search --output=files subject:"Non-maildir message")
-test_expect_success "Can remove unread tag from message in non-maildir directory" 'notmuch tag -unread subject:"Non-maildir message"'
+test_expect_success 'notmuch tag -unread subject:"Non-maildir message"'
 
 test_begin_subtest "Message in non-maildir directory does not get renamed"
 output=$(notmuch search --output=files subject:"Non-maildir message")

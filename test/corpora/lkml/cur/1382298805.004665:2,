@@ -1,0 +1,121 @@
+From: =?ISO-8859-1?Q?Nicolas_de_Peslo=FCan?= 
+	<nicolas.2p.debian@gmail.com>
+Subject: Re: [PATCH] core: dev: don't call BUG() on bad input
+Date: Mon, 14 Feb 2011 13:16:04 +0100
+Lines: 54
+Message-ID: <4D591D04.4050000@gmail.com>
+References: <1297680967-11893-1-git-send-email-segoon@openwall.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Tom Herbert <therbert@google.com>,
+	Changli Gao <xiaosuo@gmail.com>,
+	Jesse Gross <jesse@nicira.com>, netdev@vger.kernel.org
+To: Vasiliy Kulikov <segoon@openwall.com>
+X-From: netdev-owner@vger.kernel.org Mon Feb 14 13:16:23 2011
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1PoxLn-0007s8-Rx
+	for linux-netdev-2@lo.gmane.org; Mon, 14 Feb 2011 13:16:20 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1753819Ab1BNMQQ convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;linux-netdev-2@m.gmane.org>); Mon, 14 Feb 2011 07:16:16 -0500
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53692 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690Ab1BNMQO (ORCPT
+	<rfc822;netdev@vger.kernel.org>); Mon, 14 Feb 2011 07:16:14 -0500
+Received: by bwz15 with SMTP id 15so5395788bwz.19
+        for <multiple recipients>; Mon, 14 Feb 2011 04:16:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:message-id:date:from:user-agent:mime-version:to
+         :cc:subject:references:in-reply-to:content-type
+         :content-transfer-encoding;
+        bh=xx3YxuXgqhBANV8wzcWyUMECJelpRfdmoRSp1AKdYdc=;
+        b=N0KOUEiWNDJjbwFsNkzabK7eGUNcoUNkqBGVRMNJFQ1jIgKtMC9sXdcmSFkLf2G3W0
+         zzRsPc9T6wnstCSnGFjIStR1GQK4bQ7o7SC+bmV0UqsBQAMW8sdDkT20PMZlBl2X7PkF
+         a2TGrPtJKfEcGFXay9Xo1ZMu1aYODhlRfsZKo=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=message-id:date:from:user-agent:mime-version:to:cc:subject
+         :references:in-reply-to:content-type:content-transfer-encoding;
+        b=vyCGwBn8dYUhOjmcV0am255nAUilQntfBxUI4yId3MocKlSBfEE0jJCJIVDySIAYOj
+         4g7FzXDeqZ5brwXgwA1derVfTXYvhKUC/60QA9/377l/PZ0vvRfqyPQcinMoOSCc+Kvv
+         vnBZtq/Kr+D4nUnefIwwjJ/dXS3dGjFBvis6w=
+Received: by 10.204.98.65 with SMTP id p1mr25300616bkn.198.1297685772974;
+        Mon, 14 Feb 2011 04:16:12 -0800 (PST)
+Received: from [192.168.0.101] (eab95-4-88-175-177-37.fbx.proxad.net [88.175.177.37])
+        by mx.google.com with ESMTPS id a17sm1733557bku.23.2011.02.14.04.16.07
+        (version=SSLv3 cipher=OTHER);
+        Mon, 14 Feb 2011 04:16:09 -0800 (PST)
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.16) Gecko/20101226 Icedove/3.0.11
+In-Reply-To: <1297680967-11893-1-git-send-email-segoon@openwall.com>
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099697>
+
+Le 14/02/2011 11:56, Vasiliy Kulikov a =E9crit :
+> alloc_netdev() may be called with too long name (more that IFNAMSIZ b=
+ytes).
+> Currently this leads to BUG().  Other insane inputs (bad txqs, rxqs) =
+and
+> even OOM don't lead to BUG().  Made alloc_netdev() return NULL, like =
+on
+> other errors.
+>
+> Signed-off-by: Vasiliy Kulikov<segoon@openwall.com>
+> ---
+>   Compile tested.
+>
+>   net/core/dev.c |    5 ++++-
+>   1 files changed, 4 insertions(+), 1 deletions(-)
+>
+> diff --git a/net/core/dev.c b/net/core/dev.c
+> index 6392ea0..12ef4b0 100644
+> --- a/net/core/dev.c
+> +++ b/net/core/dev.c
+> @@ -5761,7 +5761,10 @@ struct net_device *alloc_netdev_mqs(int sizeof=
+_priv, const char *name,
+>   	size_t alloc_size;
+>   	struct net_device *p;
+>
+> -	BUG_ON(strlen(name)>=3D sizeof(dev->name));
+> +	if (strnlen(name, sizeof(dev->name))>=3D sizeof(dev->name)) {
+
+"size_t strnlen(const char *s, size_t maxlen) : The strnlen() function =
+returns strlen(s), if that is=20
+less than maxlen, or maxlen if there is no '\0' character among the fir=
+st maxlen characters pointed=20
+to by s."
+
+How can strnlen(name, sizeof(dev->name)) be greater than sizeof(dev->na=
+me)?
+
+Shouldn't it be "if (strnlen(name, sizeof(dev->name)) =3D=3D sizeof(dev=
+->name))" instead?
+
+         Nicolas.
+
+> +		pr_err("alloc_netdev: Too long device name \n");
+> +		return NULL;
+> +	}
+>
+>   	if (txqs<  1) {
+>   		pr_err("alloc_netdev: Unable to allocate device "
+
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

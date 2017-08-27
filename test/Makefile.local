@@ -12,15 +12,15 @@ smtp_dummy_srcs =		\
 
 smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 
-$(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
+$(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS)
 
-$(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
+$(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS) $(TALLOC_LDFLAGS)
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			notmuch-config.o status.o command-line-arguments.o \
-			lib/libnotmuch.a util/libutil.a \
+			lib/libnotmuch.a util/libnotmuch_util.a \
 			parse-time-string/libparse-time-string.a
 
 $(dir)/random-corpus: $(random_corpus_deps)
@@ -61,7 +61,7 @@ test-binaries: $(TEST_BINARIES)
 
 test:	all test-binaries
 ifeq ($V,)
-	@echo 'Use "$(MAKE) V=1" to print test headings and PASSing results.'
+	@echo 'Use "$(MAKE) V=1" to see the details for passing and known broken tests.'
 	@env NOTMUCH_TEST_QUIET=1 ${test_src_dir}/notmuch-test $(OPTIONS)
 else
 # The user has explicitly enabled quiet execution.

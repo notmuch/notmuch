@@ -259,11 +259,15 @@ prefix_t prefix_table[] = {
     { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL },
-    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL },
-    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL },
+    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
+    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL |
+					        NOTMUCH_FIELD_PROCESSOR },
     { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
-    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL },
-    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL },
+    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
+    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL|
+						NOTMUCH_FIELD_PROCESSOR },
     { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
@@ -271,7 +275,8 @@ prefix_t prefix_table[] = {
      * letters. See Xapian document termprefixes.html for related
      * discussion.
      */
-    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL },
+    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
 #if HAVE_XAPIAN_FIELD_PROCESSOR
     { "date",			NULL,		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROCESSOR },
@@ -313,7 +318,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else
-	    fp = (new RegexpFieldProcessor (prefix->name, *notmuch->query_parser, notmuch))->release ();
+	    fp = (new RegexpFieldProcessor (prefix->name, prefix->flags,
+					    *notmuch->query_parser, notmuch))->release ();
 
 	/* we treat all field-processor fields as boolean in order to get the raw input */
 	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);
@@ -1493,7 +1499,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	query = notmuch_query_create (notmuch, "");
 	unsigned msg_count;
 
-	status = notmuch_query_count_messages_st (query, &msg_count);
+	status = notmuch_query_count_messages (query, &msg_count);
 	if (status)
 	    goto DONE;
 
@@ -1531,7 +1537,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	query = notmuch_query_create (notmuch, "");
 
-	status = notmuch_query_search_messages_st (query, &messages);
+	status = notmuch_query_search_messages (query, &messages);
 	if (status)
 	    goto DONE;
 	for (;
@@ -2493,53 +2499,53 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (ret)
 	goto DONE;
 
-    try {
-	/* Before we do any real work, (especially before doing a
-	 * potential SHA-1 computation on the entire file's contents),
-	 * let's make sure that what we're looking at looks like an
-	 * actual email message.
-	 */
-	from = _notmuch_message_file_get_header (message_file, "from");
-	subject = _notmuch_message_file_get_header (message_file, "subject");
-	to = _notmuch_message_file_get_header (message_file, "to");
+    /* Before we do any real work, (especially before doing a
+     * potential SHA-1 computation on the entire file's contents),
+     * let's make sure that what we're looking at looks like an
+     * actual email message.
+     */
+    from = _notmuch_message_file_get_header (message_file, "from");
+    subject = _notmuch_message_file_get_header (message_file, "subject");
+    to = _notmuch_message_file_get_header (message_file, "to");
 
-	if ((from == NULL || *from == '\0') &&
-	    (subject == NULL || *subject == '\0') &&
-	    (to == NULL || *to == '\0'))
-	{
-	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+    if ((from == NULL || *from == '\0') &&
+	(subject == NULL || *subject == '\0') &&
+	(to == NULL || *to == '\0')) {
+	ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	goto DONE;
+    }
+
+    /* Now that we're sure it's mail, the first order of business
+     * is to find a message ID (or else create one ourselves).
+     */
+    header = _notmuch_message_file_get_header (message_file, "message-id");
+    if (header && *header != '\0') {
+	message_id = _parse_message_id (message_file, header, NULL);
+
+	/* So the header value isn't RFC-compliant, but it's
+	 * better than no message-id at all.
+	 */
+	if (message_id == NULL)
+	    message_id = talloc_strdup (message_file, header);
+    }
+
+    if (message_id == NULL ) {
+	/* No message-id at all, let's generate one by taking a
+	 * hash over the file's contents.
+	 */
+	char *sha1 = _notmuch_sha1_of_file (filename);
+
+	/* If that failed too, something is really wrong. Give up. */
+	if (sha1 == NULL) {
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
 
-	/* Now that we're sure it's mail, the first order of business
-	 * is to find a message ID (or else create one ourselves). */
+	message_id = talloc_asprintf (message_file, "notmuch-sha1-%s", sha1);
+	free (sha1);
+    }
 
-	header = _notmuch_message_file_get_header (message_file, "message-id");
-	if (header && *header != '\0') {
-	    message_id = _parse_message_id (message_file, header, NULL);
-
-	    /* So the header value isn't RFC-compliant, but it's
-	     * better than no message-id at all. */
-	    if (message_id == NULL)
-		message_id = talloc_strdup (message_file, header);
-	}
-
-	if (message_id == NULL ) {
-	    /* No message-id at all, let's generate one by taking a
-	     * hash over the file's contents. */
-	    char *sha1 = _notmuch_sha1_of_file (filename);
-
-	    /* If that failed too, something is really wrong. Give up. */
-	    if (sha1 == NULL) {
-		ret = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
-
-	    message_id = talloc_asprintf (message_file,
-					  "notmuch-sha1-%s", sha1);
-	    free (sha1);
-	}
-
+    try {
 	/* Now that we have a message ID, we get a message object,
 	 * (which may or may not reference an existing document in the
 	 * database). */

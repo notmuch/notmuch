@@ -46,13 +46,11 @@ NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
-#include <gmime/gmime.h>
+#include "gmime-extra.h"
 
 #include "xutil.h"
 #include "error_util.h"
 #include "string-util.h"
-
-#pragma GCC visibility push(hidden)
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
@@ -75,12 +73,6 @@ NOTMUCH_BEGIN_DECLS
     (_NOTMUCH_VALID_BIT(bit) ? (*(valp) &= ~(1ull << (bit))) : *(valp))
 
 #define unused(x) x __attribute__ ((unused))
-
-#ifdef __cplusplus
-# define visible __attribute__((visibility("default")))
-#else
-# define visible
-#endif
 
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
@@ -455,7 +447,7 @@ typedef struct _notmuch_message_list {
  * somewhere with some nasty C++ objects in it. We'll try to maintain
  * ignorance of that here. (See notmuch_mset_messages_t in query.cc)
  */
-struct visible _notmuch_messages {
+struct _notmuch_messages {
     notmuch_bool_t is_of_list_type;
     notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
@@ -524,7 +516,7 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-typedef struct visible _notmuch_string_list {
+typedef struct _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;
@@ -620,7 +612,5 @@ _notmuch_talloc_steal (const void *new_ctx, const T *ptr)
 #define talloc_steal _notmuch_talloc_steal
 #endif
 #endif
-
-#pragma GCC visibility pop
 
 #endif

@@ -28,7 +28,7 @@ MAIL_DIR/msg-001
 MAIL_DIR/spam/msg-001
 EOF
 notmuch search --output=files id:$id_x | notmuch_search_files_sanitize >OUTPUT
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Test matches folder:spam"
 output=$(notmuch search folder:spam)

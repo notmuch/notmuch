@@ -93,15 +93,6 @@ unset GREP_OPTIONS
 # For emacsclient
 unset ALTERNATE_EDITOR
 
-# Convenience
-#
-# A regexp to match 5 and 40 hexdigits
-_x05='[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
-_x40="$_x05$_x05$_x05$_x05$_x05$_x05$_x05$_x05"
-
-_x04='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
-_x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
-
 # Each test should start with something like this, after copyright notices:
 #
 # test_description='Description of this test...
@@ -122,17 +113,15 @@ _x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
 while test "$#" -ne 0
 do
 	case "$1" in
-	-d|--d|--de|--deb|--debu|--debug)
+	-d|--debug)
 		debug=t; shift ;;
-	-i|--i|--im|--imm|--imme|--immed|--immedi|--immedia|--immediat|--immediate)
+	-i|--immediate)
 		immediate=t; shift ;;
-	-l|--l|--lo|--lon|--long|--long-|--long-t|--long-te|--long-tes|--long-test|--long-tests)
-		GIT_TEST_LONG=t; export GIT_TEST_LONG; shift ;;
-	-h|--h|--he|--hel|--help)
+	-h|--help)
 		help=t; shift ;;
-	-v|--v|--ve|--ver|--verb|--verbo|--verbos|--verbose)
+	-v|--verbose)
 		verbose=t; shift ;;
-	-q|--q|--qu|--qui|--quie|--quiet)
+	-q|--quiet)
 		quiet=t; shift ;;
 	--with-dashes)
 		with_dashes=t; shift ;;
@@ -141,7 +130,7 @@ do
 	--no-python)
 		# noop now...
 		shift ;;
-	--va|--val|--valg|--valgr|--valgri|--valgrin|--valgrind)
+	--valgrind)
 		valgrind=t; verbose=t; shift ;;
 	--tee)
 		shift ;; # was handled already
@@ -230,10 +219,21 @@ test_fixed=0
 test_broken=0
 test_success=0
 
+declare -a _exit_functions=()
+
+at_exit_function () {
+	_exit_functions=($1 ${_exit_functions[@]/$1})
+}
+
+rm_exit_function () {
+	_exit_functions=(${_exit_functions[@]/$1})
+}
+
 _exit_common () {
 	code=$?
 	trap - EXIT
 	set +ex
+	for _fn in ${_exit_functions[@]}; do $_fn; done
 	rm -rf "$TEST_TMPDIR"
 }
 
@@ -275,33 +275,6 @@ TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
 export GNUPGHOME="${TEST_TMPDIR}/gnupg"
 trap 'trap_exit' EXIT
 trap 'trap_signal' HUP INT TERM
-
-test_decode_color () {
-	sed	-e 's/.\[1m/<WHITE>/g' \
-		-e 's/.\[31m/<RED>/g' \
-		-e 's/.\[32m/<GREEN>/g' \
-		-e 's/.\[33m/<YELLOW>/g' \
-		-e 's/.\[34m/<BLUE>/g' \
-		-e 's/.\[35m/<MAGENTA>/g' \
-		-e 's/.\[36m/<CYAN>/g' \
-		-e 's/.\[m/<RESET>/g'
-}
-
-q_to_nul () {
-	perl -pe 'y/Q/\000/'
-}
-
-q_to_cr () {
-	tr Q '\015'
-}
-
-append_cr () {
-	sed -e 's/$/Q/' | tr Q '\015'
-}
-
-remove_cr () {
-	tr '\015' Q | sed -e 's/Q$//'
-}
 
 # Generate a new message in the mail directory, with a unique message
 # ID and subject. The message is not added to the index.
@@ -597,10 +570,12 @@ test_begin_subtest ()
 test_expect_equal ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_equal without test_begin_subtest"
+	fi
 	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+	error "bug in the test script: not 2 parameters to test_expect_equal"
 
 	output="$1"
 	expected="$2"
@@ -621,10 +596,12 @@ test_expect_equal ()
 test_expect_equal_file ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
+	fi
 	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+	error "bug in the test script: not 2 parameters to test_expect_equal_file"
 
 	file1="$1"
 	file2="$2"
@@ -665,9 +642,11 @@ test_sort_json () {
 }
 
 test_emacs_expect_t () {
-	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
-	error "bug in the test script: not 1 or 2 parameters to test_emacs_expect_t"
+	error "bug in the test script: not 1 parameter to test_emacs_expect_t"
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_emacs_expect_t without test_begin_subtest"
+	fi
 
 	# Run the test.
 	if ! test_skip "$test_subtest_name"
@@ -779,12 +758,8 @@ notmuch_config_sanitize ()
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
-# The prerequisite can later be checked for in two ways:
 #
-# - Explicitly using test_have_prereq.
-#
-# - Implicitly by specifying the prerequisite tag in the calls to
-#   test_expect_{success,failure,code}.
+# The prerequisite can later be checked for by using test_have_prereq.
 #
 # The single parameter is the prerequisite tag (a simple word, in all
 # capital letters by convention).
@@ -851,12 +826,12 @@ test_ok_ () {
 }
 
 test_failure_ () {
+	print_test_description
 	if test "$test_subtest_known_broken_" = "t"; then
 		test_known_broken_failure_ "$@"
 		return
 	fi
 	test_failure=$(($test_failure + 1))
-	print_test_description
 	test_failure_message_ "FAIL" "$test_subtest_name" "$@"
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 	return 1
@@ -866,7 +841,9 @@ test_failure_message_ () {
 	say_color error "%-6s" "$1"
 	echo " $2"
 	shift 2
-	echo "$@" | sed -e 's/^/	/'
+	if [ "$#" != "0" ]; then
+		echo "$@" | sed -e 's/^/	/'
+	fi
 	if test "$verbose" != "t"; then cat test.output; fi
 }
 
@@ -880,7 +857,11 @@ test_known_broken_ok_ () {
 test_known_broken_failure_ () {
 	test_reset_state_
 	test_broken=$(($test_broken+1))
-	test_failure_message_ "BROKEN" "$test_subtest_name" "$@"
+	if [ -z "$NOTMUCH_TEST_QUIET" ]; then
+		test_failure_message_ "BROKEN" "$test_subtest_name" "$@"
+	else
+		test_failure_message_ "BROKEN" "$test_subtest_name"
+	fi
 	return 1
 }
 
@@ -913,11 +894,6 @@ test_skip () {
 			break
 		esac
 	done
-	if test -z "$to_skip" && test -n "$prereq" &&
-	   ! test_have_prereq "$prereq"
-	then
-		to_skip=t
-	fi
 	case "$to_skip" in
 	t)
 		test_report_skip_ "$@"
@@ -951,14 +927,17 @@ test_subtest_known_broken () {
 }
 
 test_expect_success () {
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
-	test_subtest_name="$1"
-	test_reset_state_
-	if ! test_skip "$@"
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_success without test_begin_subtest"
+	fi
+	inside_subtest=
+	test "$#" = 1 ||
+	error "bug in the test script: not 1 parameters to test_expect_success"
+
+	if ! test_skip "$test_subtest_name"
 	then
-		test_run_ "$2"
+		test_run_ "$1"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites
 		test_check_missing_external_prereqs_ "$@" ||
@@ -966,20 +945,23 @@ test_expect_success () {
 		then
 			test_ok_
 		else
-			test_failure_ "$2"
+			test_failure_ "$1"
 		fi
 	fi
 }
 
 test_expect_code () {
-	test "$#" = 4 && { prereq=$1; shift; } || prereq=
-	test "$#" = 3 ||
-	error "bug in the test script: not 3 or 4 parameters to test-expect-code"
-	test_subtest_name="$2"
-	test_reset_state_
-	if ! test_skip "$@"
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_code without test_begin_subtest"
+	fi
+	inside_subtest=
+	test "$#" = 2 ||
+	error "bug in the test script: not 2 parameters to test_expect_code"
+
+	if ! test_skip "$test_subtest_name"
 	then
-		test_run_ "$3"
+		test_run_ "$2"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites,
 		test_check_missing_external_prereqs_ "$@" ||
@@ -987,67 +969,8 @@ test_expect_code () {
 		then
 			test_ok_
 		else
-			test_failure_ "exit code $eval_ret, expected $1" "$3"
+			test_failure_ "exit code $eval_ret, expected $1" "$2"
 		fi
-	fi
-}
-
-# test_external runs external test scripts that provide continuous
-# test output about their progress, and succeeds/fails on
-# zero/non-zero exit code.  It outputs the test output on stdout even
-# in non-verbose mode, and announces the external script with "* run
-# <n>: ..." before running it.  When providing relative paths, keep in
-# mind that all scripts run in "trash directory".
-# Usage: test_external description command arguments...
-# Example: test_external 'Perl API' perl ../path/to/test.pl
-test_external () {
-	test "$#" = 4 && { prereq=$1; shift; } || prereq=
-	test "$#" = 3 ||
-	error >&6 "bug in the test script: not 3 or 4 parameters to test_external"
-	test_subtest_name="$1"
-	shift
-	test_reset_state_
-	if ! test_skip "$test_subtest_name" "$@"
-	then
-		# Announce the script to reduce confusion about the
-		# test output that follows.
-		say_color "" " run $test_count: $descr ($*)"
-		# Run command; redirect its stderr to &4 as in
-		# test_run_, but keep its stdout on our stdout even in
-		# non-verbose mode.
-		"$@" 2>&4
-		if [ "$?" = 0 ]
-		then
-			test_ok_
-		else
-			test_failure_ "$@"
-		fi
-	fi
-}
-
-# Like test_external, but in addition tests that the command generated
-# no output on stderr.
-test_external_without_stderr () {
-	# The temporary file has no (and must have no) security
-	# implications.
-	tmp="$TMPDIR"; if [ -z "$tmp" ]; then tmp=/tmp; fi
-	stderr="$tmp/git-external-stderr.$$.tmp"
-	test_external "$@" 4> "$stderr"
-	[ -f "$stderr" ] || error "Internal error: $stderr disappeared."
-	test_subtest_name="no stderr: $1"
-	shift
-	if [ ! -s "$stderr" ]; then
-		rm "$stderr"
-		test_ok_
-	else
-		if [ "$verbose" = t ]; then
-			output=`echo; echo Stderr is:; cat "$stderr"`
-		else
-			output=
-		fi
-		# rm first in case test_failure exits.
-		rm "$stderr"
-		test_failure_ "$@" "$output"
 	fi
 }
 
@@ -1209,7 +1132,7 @@ test_emacs () {
 test_python() {
     # Note: if there is need to print debug information from python program,
     # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
-    PYTHONPATH="$TEST_DIRECTORY/../bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+    PYTHONPATH="$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
 	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
@@ -1221,7 +1144,7 @@ test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
@@ -1278,6 +1201,22 @@ test_init_ () {
 
 
 . ./test-lib-common.sh || exit 1
+
+if [ "${NOTMUCH_GMIME_MAJOR}" = 3 ]; then
+    test_subtest_broken_gmime_3 () {
+	test_subtest_known_broken
+    }
+    test_subtest_broken_gmime_2 () {
+	true
+    }
+else
+    test_subtest_broken_gmime_3 () {
+	true
+    }
+    test_subtest_broken_gmime_2 () {
+	test_subtest_known_broken
+    }
+fi
 
 emacs_generate_script
 

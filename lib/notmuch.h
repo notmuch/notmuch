@@ -43,6 +43,8 @@ NOTMUCH_BEGIN_DECLS
 
 #include <time.h>
 
+#pragma GCC visibility push(default)
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -55,8 +57,8 @@ NOTMUCH_BEGIN_DECLS
  * The library version number.  This must agree with the soname
  * version in Makefile.local.
  */
-#define LIBNOTMUCH_MAJOR_VERSION	4
-#define LIBNOTMUCH_MINOR_VERSION	4
+#define LIBNOTMUCH_MAJOR_VERSION	5
+#define LIBNOTMUCH_MINOR_VERSION	0
 #define LIBNOTMUCH_MICRO_VERSION	0
 
 
@@ -179,6 +181,11 @@ typedef enum _notmuch_status {
      * passed to a function expecting an absolute path.
      */
     NOTMUCH_STATUS_PATH_ERROR,
+    /**
+     * The requested operation was ignored. Depending on the function,
+     * this may not be an actual error.
+     */
+    NOTMUCH_STATUS_IGNORED,
     /**
      * One of the arguments violates the preconditions for the
      * function, in a way not covered by a more specific argument.
@@ -812,10 +819,20 @@ notmuch_query_get_sort (const notmuch_query_t *query);
 
 /**
  * Add a tag that will be excluded from the query results by default.
- * This exclusion will be overridden if this tag appears explicitly in
+ * This exclusion will be ignored if this tag appears explicitly in
  * the query.
+ *
+ * @returns
+ *
+ * NOTMUCH_STATUS_SUCCESS: excluded was added successfully.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured.
+ *      Most likely a problem lazily parsing the query string.
+ *
+ * NOTMUCH_STATUS_IGNORED: tag is explicitly present in the query, so
+ *		not excluded.
  */
-void
+notmuch_status_t
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
 
 /**
@@ -855,24 +872,22 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  * notmuch_threads_destroy function, but there's no good reason
  * to call it if the query is about to be destroyed).
  *
- * @since libnotmuch 4.2 (notmuch 0.20)
+ * @since libnotmuch 5.0 (notmuch 0.25)
  */
 notmuch_status_t
-notmuch_query_search_threads_st (notmuch_query_t *query,
-				 notmuch_threads_t **out);
+notmuch_query_search_threads (notmuch_query_t *query,
+			      notmuch_threads_t **out);
 
 /**
- * Like notmuch_query_search_threads_st, but without a status return.
+ * Deprecated alias for notmuch_query_search_threads.
  *
- * If a Xapian exception occurs this function will return NULL.
- *
- * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please
- * use notmuch_query_search_threads_st instead.
+ * @deprecated Deprecated as of libnotmuch 5 (notmuch 0.25). Please
+ * use notmuch_query_search_threads instead.
  *
  */
-NOTMUCH_DEPRECATED(4,3)
-notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query);
+NOTMUCH_DEPRECATED(5,0)
+notmuch_status_t
+notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out);
 
 /**
  * Execute a query for messages, returning a notmuch_messages_t object
@@ -913,23 +928,23 @@ notmuch_query_search_threads (notmuch_query_t *query);
  *
  * If a Xapian exception occurs this function will return NULL.
  *
- * @since libnotmuch 4.2 (notmuch 0.20)
+ * @since libnotmuch 5 (notmuch 0.25)
  */
+notmuch_status_t
+notmuch_query_search_messages (notmuch_query_t *query,
+			       notmuch_messages_t **out);
+/**
+ * Deprecated alias for notmuch_query_search_messages
+ *
+ * @deprecated Deprecated as of libnotmuch 5 (notmuch 0.25). Please use
+ * notmuch_query_search_messages instead.
+ *
+ */
+
+NOTMUCH_DEPRECATED(5,0)
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out);
-/**
- * Like notmuch_query_search_messages, but without a status return.
- *
- * If a Xapian exception occurs this function will return NULL.
- *
- * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please use
- * notmuch_query_search_messages_st instead.
- *
- */
-NOTMUCH_DEPRECATED(4,3)
-notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query);
 
 /**
  * Destroy a notmuch_query_t along with any associated resources.
@@ -1010,22 +1025,21 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
  *      value of *count is not defined.
  *
- * @since libnotmuch 4.3 (notmuch 0.21)
+ * @since libnotmuch 5 (notmuch 0.25)
  */
 notmuch_status_t
-notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
+notmuch_query_count_messages (notmuch_query_t *query, unsigned int *count);
 
 /**
- * like notmuch_query_count_messages_st, but without a status return.
+ * Deprecated alias for notmuch_query_count_messages
  *
- * May return 0 in the case of errors.
  *
- * @deprecated Deprecated since libnotmuch 4.3 (notmuch 0.21). Please
- * use notmuch_query_count_messages_st instead.
+ * @deprecated Deprecated since libnotmuch 5.0 (notmuch 0.25). Please
+ * use notmuch_query_count_messages instead.
  */
-NOTMUCH_DEPRECATED(4,3)
-unsigned int
-notmuch_query_count_messages (notmuch_query_t *query);
+NOTMUCH_DEPRECATED(5,0)
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
 
 /**
  * Return the number of threads matching a search.
@@ -1047,22 +1061,20 @@ notmuch_query_count_messages (notmuch_query_t *query);
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
  *      value of *count is not defined.
  *
- * @since libnotmuch 4.3 (notmuch 0.21)
+ * @since libnotmuch 5 (notmuch 0.25)
  */
 notmuch_status_t
-notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
+notmuch_query_count_threads (notmuch_query_t *query, unsigned *count);
 
 /**
- * like notmuch_query_count_threads, but without a status return.
+ * Deprecated alias for notmuch_query_count_threads
  *
- * May return 0 in case of errors.
- *
- * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please
+ * @deprecated Deprecated as of libnotmuch 5.0 (notmuch 0.25). Please
  * use notmuch_query_count_threads_st instead.
  */
-NOTMUCH_DEPRECATED(4,3)
-unsigned int
-notmuch_query_count_threads (notmuch_query_t *query);
+NOTMUCH_DEPRECATED(5,0)
+notmuch_status_t
+notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
 
 /**
  * Get the thread ID of 'thread'.
@@ -1556,11 +1568,11 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * its filename ends with the sequence ":2," followed by zero or more
  * of the following single-character flags (in ASCII order):
  *
- *   'D' iff the message has the "draft" tag
- *   'F' iff the message has the "flagged" tag
- *   'P' iff the message has the "passed" tag
- *   'R' iff the message has the "replied" tag
- *   'S' iff the message does not have the "unread" tag
+ *   * flag 'D' iff the message has the "draft" tag
+ *   * flag 'F' iff the message has the "flagged" tag
+ *   * flag 'P' iff the message has the "passed" tag
+ *   * flag 'R' iff the message has the "replied" tag
+ *   * flag 'S' iff the message does not have the "unread" tag
  *
  * Any existing flags unmentioned in the list above will be preserved
  * in the renaming.
@@ -2109,6 +2121,8 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 notmuch_bool_t
 notmuch_built_with (const char *name);
 /* @} */
+
+#pragma GCC visibility pop
 
 NOTMUCH_END_DECLS
 

@@ -27,7 +27,7 @@ test_expect_equal "$result" "$output"
 
 test_begin_subtest 'comparing existing to exported symbols'
 nm -P $TEST_DIRECTORY/../lib/libnotmuch.so | awk '$2 == "T" && $1 ~ "^notmuch" {print $1}' | sort | uniq > ACTUAL
-sed -n 's/[[:blank:]]*\(notmuch_[^;]*\);/\1/p' $TEST_DIRECTORY/../notmuch.sym | sort | uniq > EXPORTED
+sed -n 's/^\(notmuch_[a-zA-Z0-9_]*\)[[:blank:]]*(.*/\1/p' $TEST_DIRECTORY/../lib/notmuch.h | sort | uniq > EXPORTED
 test_expect_equal_file EXPORTED ACTUAL
 
 test_done

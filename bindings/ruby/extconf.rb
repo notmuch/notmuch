@@ -5,7 +5,7 @@
 
 require 'mkmf'
 
-dir = File.join('..', '..', 'lib')
+dir = File.join(ENV['NOTMUCH_SRCDIR'], 'lib')
 
 # includes
 $INCFLAGS = "-I#{dir} #{$INCFLAGS}"
