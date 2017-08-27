@@ -2034,7 +2034,9 @@ notmuch_message_reindex (notmuch_message_t *message,
 	    thread_id = orig_thread_id;
 
 	_notmuch_message_add_term (message, "thread", thread_id);
-	_notmuch_message_set_header_values (message, date, from, subject);
+	/* Take header values only from first filename */
+	if (found == 0)
+	    _notmuch_message_set_header_values (message, date, from, subject);
 
 	ret = _notmuch_message_index_file (message, message_file);
 

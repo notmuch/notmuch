@@ -41,7 +41,6 @@ notmuch search --output=files "sekrit" | notmuch_dir_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest 'reindex choses subject from first filename'
-test_subtest_known_broken
 cat <<EOF > EXPECTED
 thread:XXX   2001-01-05 [1/1(3)] Notmuch Test Suite; message 0 (inbox unread)
 EOF
