@@ -39,23 +39,24 @@ test_expect_equal_file EXPECTED OUTPUT
 
 rm ${MAIL_DIR}/copy1
 test_begin_subtest 'Deleted first duplicate file does not stop notmuch show from working'
-output=$(notmuch show --body=false --format=json id:duplicate)
+output=$(notmuch show --body=false --format=json id:duplicate |
+	     notmuch_json_show_sanitize | sed 's/message [0-9]/A_SUBJECT/')
 expected='[[[{
-    "id": "'duplicate'",
+    "id": "XXXXX",
     "match": true,
     "excluded": false,
     "filename": [
         "'"${MAIL_DIR}"/copy1'",
         "'"${MAIL_DIR}"/copy2'"
     ],
-    "timestamp": 978709435,
+    "timestamp": 42,
     "date_relative": "2001-01-05",
     "tags": ["inbox","unread"],
     "headers": {
-        "Subject": "message 2",
+        "Subject": "A_SUBJECT",
         "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
         "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
-        "Date": "Fri, 05 Jan 2001 15:43:55 +0000"
+        "Date": "GENERATED_DATE"
     }
  },
 []]]]'
