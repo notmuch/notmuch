@@ -201,7 +201,7 @@ quiet ?= $($(word 1, $(1)))
 
 .PHONY : clean
 clean:
-	rm -rf $(CLEAN); rm -rf .deps
+	rm -rf $(CLEAN)
 
 .PHONY: distclean
 distclean: clean
@@ -280,6 +280,7 @@ endif
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
 CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
+CLEAN := $(CLEAN) .deps
 
 DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config
 
