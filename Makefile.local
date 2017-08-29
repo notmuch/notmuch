@@ -182,14 +182,14 @@ verify-newer:
 # user how to enable verbose compiles.
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
-quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$1 $@\n"; $($(shell echo $1 | sed -e s'/ .*//'))
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$1 $@\n"; $($(word 1, $(1)))
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
-quiet = @printf "$1 $@\n"; $($(shell echo $1 | sed -e s'/ .*//'))
+quiet = @printf "$1 $@\n"; $($(word 1, $(1)))
 endif
 # Otherwise, print the full command line.
-quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
+quiet ?= $($(word 1, $(1)))
 
 %.o: %.cc $(global_deps)
 	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
