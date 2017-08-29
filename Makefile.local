@@ -182,11 +182,11 @@ verify-newer:
 # user how to enable verbose compiles.
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
-quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$1 $@\n"; $($(word 1, $(1)))
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$(1) $(or $(2),$@)\n"; $($(word 1, $(1)))
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
-quiet = @printf "$1 $@\n"; $($(word 1, $(1)))
+quiet = @printf "$(1) $(or $(2),$@)\n"; $($(word 1, $(1)))
 endif
 # Otherwise, print the full command line.
 quiet ?= $($(word 1, $(1)))
