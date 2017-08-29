@@ -199,6 +199,14 @@ quiet ?= $($(word 1, $(1)))
 	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
 	$(call quiet,CC $(CPPFLAGS) $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
+CPPCHECK=cppcheck
+.stamps/cppcheck/%: %
+	@mkdir -p $(@D)
+	$(call quiet,CPPCHECK,$<) --template=gcc --error-exitcode=1 --quiet $<
+	@touch $@
+
+CLEAN := $(CLEAN) .stamps
+
 .PHONY : clean
 clean:
 	rm -rf $(CLEAN)
@@ -283,6 +291,16 @@ CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
 CLEAN := $(CLEAN) .deps
 
 DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config
+
+CPPCHECK_STAMPS := $(SRCS:%=.stamps/cppcheck/%)
+.PHONY: cppcheck
+ifeq ($(HAVE_CPPCHECK),1)
+cppcheck: ${CPPCHECK_STAMPS}
+else
+cppcheck:
+	@echo "No cppcheck found during configure; skipping static checking"
+endif
+
 
 DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)

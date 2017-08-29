@@ -646,6 +646,14 @@ if [ $WITH_DESKTOP = "1" ]; then
     fi
 fi
 
+printf "Checking for cppcheck... "
+if command -v cppcheck > /dev/null; then
+    have_cppcheck=1
+    printf "Yes.\n"
+else
+    printf "No.\n"
+fi
+
 libdir_in_ldconfig=0
 
 printf "Checking which platform we are on... "
@@ -1064,6 +1072,9 @@ zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completio
 # Whether the canonicalize_file_name function is available (if not, then notmuch will
 # build its own version)
 HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
+
+# Whether the cppcheck static checker is available
+HAVE_CPPCHECK = ${have_cppcheck}
 
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
