@@ -19,6 +19,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 
 import os
 import codecs
+import warnings
 from ctypes import c_char_p, c_void_p, c_uint, byref, POINTER
 from .compat import SafeConfigParser
 from .globals import (
@@ -471,7 +472,10 @@ class Database(object):
     def add_message(self, filename, sync_maildir_flags=False):
         """Deprecated alias for :meth:`index_file`
         """
-        self.index_file(self, filename, sync_maildir_flags=sync_maildir_flags)
+        warnings.warn(
+                "This function is deprecated and will be removed in the future, use index_file.", DeprecationWarning)
+
+        return self.index_file(filename, sync_maildir_flags=sync_maildir_flags)
 
     _remove_message = nmlib.notmuch_database_remove_message
     _remove_message.argtypes = [NotmuchDatabaseP, c_char_p]
