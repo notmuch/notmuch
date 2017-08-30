@@ -14,3 +14,4 @@ tags
 *~
 .*.swp
 /releases
+/.stamps
