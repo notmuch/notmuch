@@ -651,6 +651,7 @@ if command -v cppcheck > /dev/null; then
     have_cppcheck=1
     printf "Yes.\n"
 else
+    have_cppcheck=0
     printf "No.\n"
 fi
 
