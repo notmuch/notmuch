@@ -452,6 +452,10 @@ add_files (notmuch_database_t *notmuch,
     for (i = 0; i < num_fs_entries && ! interrupted; i++) {
 	entry = fs_entries[i];
 
+	/* Ignore special directories to avoid infinite recursion. */
+	if (_special_directory (entry->d_name))
+	    continue;
+
 	/* Ignore any files/directories the user has configured to
 	 * ignore.  We do this before dirent_type both for performance
 	 * and because we don't care if dirent_type fails on entries
@@ -477,12 +481,10 @@ add_files (notmuch_database_t *notmuch,
 	    continue;
 	}
 
-	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory and any "tmp" directory
+	/* Ignore the .notmuch directory and any "tmp" directory
 	 * that appears within a maildir.
 	 */
-	if (_special_directory (entry->d_name) ||
-	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
+	if ((is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
 	    strcmp (entry->d_name, ".notmuch") == 0)
 	    continue;
 
