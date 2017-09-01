@@ -507,6 +507,16 @@ NOTMUCH_DUMP_TAGS ()
     notmuch dump --include=tags "${@}" | sed '/^#/d' | sort
 }
 
+notmuch_drop_mail_headers ()
+{
+    $NOTMUCH_PYTHON -c "
+import email,sys
+msg=email.message_from_file(sys.stdin)
+for hdr in sys.argv[1:]: del msg[hdr]
+print(msg.as_string(False))
+" $*
+}
+
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
