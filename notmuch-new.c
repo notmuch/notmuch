@@ -521,6 +521,10 @@ add_files (notmuch_database_t *notmuch,
     for (i = 0; i < num_fs_entries && ! interrupted; i++) {
         entry = fs_entries[i];
 
+	/* Ignore special directories early. */
+	if (_special_directory (entry->d_name))
+	    continue;
+
 	/* Ignore files & directories user has configured to be ignored */
 	if (_entry_in_ignore_list (entry->d_name, state)) {
 	    if (state->debug)
