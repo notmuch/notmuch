@@ -443,10 +443,7 @@ add_files (notmuch_database_t *notmuch,
     /* Pass 1: Recurse into all sub-directories. */
     is_maildir = _entries_resemble_maildir (path, fs_entries, num_fs_entries);
 
-    for (i = 0; i < num_fs_entries; i++) {
-	if (interrupted)
-	    break;
-
+    for (i = 0; i < num_fs_entries && ! interrupted; i++) {
 	entry = fs_entries[i];
 
 	/* Ignore any files/directories the user has configured to
@@ -514,11 +511,7 @@ add_files (notmuch_database_t *notmuch,
     }
 
     /* Pass 2: Scan for new files, removed files, and removed directories. */
-    for (i = 0; i < num_fs_entries; i++)
-    {
-	if (interrupted)
-	    break;
-
+    for (i = 0; i < num_fs_entries && ! interrupted; i++) {
         entry = fs_entries[i];
 
 	/* Ignore files & directories user has configured to be ignored */
