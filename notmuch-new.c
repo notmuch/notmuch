@@ -234,6 +234,12 @@ _entries_resemble_maildir (const char *path, struct dirent **entries, int count)
     return 0;
 }
 
+static notmuch_bool_t
+_special_directory (const char *entry)
+{
+    return strcmp (entry, ".") == 0 || strcmp (entry, "..") == 0;
+}
+
 /* Test if the file/directory is to be ignored.
  */
 static notmuch_bool_t
@@ -475,8 +481,7 @@ add_files (notmuch_database_t *notmuch,
 	 * Also ignore the .notmuch directory and any "tmp" directory
 	 * that appears within a maildir.
 	 */
-	if (strcmp (entry->d_name, ".") == 0 ||
-	    strcmp (entry->d_name, "..") == 0 ||
+	if (_special_directory (entry->d_name) ||
 	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
 	    strcmp (entry->d_name, ".notmuch") == 0)
 	    continue;
@@ -738,8 +743,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
 	 */
-	if (strcmp (entry->d_name, ".") == 0 ||
-	    strcmp (entry->d_name, "..") == 0 ||
+	if (_special_directory (entry->d_name) ||
 	    strcmp (entry->d_name, ".notmuch") == 0)
 	    continue;
 
