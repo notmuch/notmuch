@@ -261,7 +261,7 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info, (GTypeFlags) 0);
     }
 
-    filter = (NotmuchFilterDiscardNonTerm *) g_object_newv (type, 0, NULL);
+    filter = (NotmuchFilterDiscardNonTerm *) g_object_new (type, NULL);
     filter->content_type = content_type;
     filter->state = 0;
     if (g_mime_content_type_is_type (content_type, "text", "html")) {

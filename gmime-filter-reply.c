@@ -201,7 +201,7 @@ g_mime_filter_reply_new (gboolean encode)
 {
 	GMimeFilterReply *new_reply;
 
-	new_reply = (GMimeFilterReply *) g_object_newv (GMIME_TYPE_FILTER_REPLY, 0, NULL);
+	new_reply = (GMimeFilterReply *) g_object_new (GMIME_TYPE_FILTER_REPLY, NULL);
 	new_reply->encode = encode;
 
 	return (GMimeFilter *) new_reply;
