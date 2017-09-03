@@ -509,12 +509,12 @@ NOTMUCH_DUMP_TAGS ()
 
 notmuch_drop_mail_headers ()
 {
-    $NOTMUCH_PYTHON -c "
-import email,sys
-msg=email.message_from_file(sys.stdin)
+    $NOTMUCH_PYTHON -c '
+import email, sys
+msg = email.message_from_file(sys.stdin)
 for hdr in sys.argv[1:]: del msg[hdr]
 print(msg.as_string(False))
-" $*
+' "$@"
 }
 
 notmuch_search_sanitize ()
