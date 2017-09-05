@@ -562,9 +562,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * terms from the identified file to the existing message's index, and
  * adds 'filename' to the list of filenames known for the message.
  *
- * 'indexopts' can be NULL (meaning, use the indexing defaults from
- * the database), or can be an explicit choice of indexing options
- * that should govern the indexing of this specific 'filename'.
+ * The 'indexopts' parameter can be NULL (meaning, use the indexing
+ * defaults from the database), or can be an explicit choice of
+ * indexing options that should govern the indexing of this specific
+ * 'filename'.
  *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
