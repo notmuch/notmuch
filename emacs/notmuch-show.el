@@ -773,6 +773,15 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
   (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
 
+;; https://bugs.gnu.org/28350
+(defun notmuch-show--enriched-decode-display-prop (start end &optional param)
+  (list start end))
+
+(defun notmuch-show-insert-part-text/enriched (msg part content-type nth depth button)
+  (advice-add 'enriched-decode-display-prop :override
+	      #'notmuch-show--enriched-decode-display-prop)
+  nil)
+
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
   ;; we return that.
