@@ -1,9 +1,10 @@
-notmuch (0.25-7) UNRELEASED; urgency=medium
+notmuch (0.25.1-1) unstable; urgency=medium
 
+  * new upstream bugfix release: mitigation for emacs bug 28350
   * remove obsolete lintian override
   * reformat debian/NEWS
 
- -- David Bremner <bremner@debian.org>  Wed, 16 Aug 2017 21:35:44 -0300
+ -- David Bremner <bremner@debian.org>  Mon, 11 Sep 2017 22:20:48 -0300
 
 notmuch (0.25-6) unstable; urgency=medium
 
