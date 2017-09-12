@@ -1,3 +1,12 @@
+Notmuch 0.25.1 (2017-09-11)
+===========================
+
+Emacs
+-----
+
+Disable handling x-display in text/enriched messages. Mitigation for
+Emacs bug #28350.
+
 Notmuch 0.25 (2017-07-25)
 =========================
 
