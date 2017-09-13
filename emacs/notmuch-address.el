@@ -159,7 +159,7 @@ matching `notmuch-address-completion-headers-regexp'.
 		       #'notmuch-address-expand-name)))
       (when setup-company
 	(notmuch-company-setup))
-      (unless (memq pair message-completion-alist)
+      (unless (member pair message-completion-alist)
 	(setq message-completion-alist
 	      (push pair message-completion-alist)))))
 
