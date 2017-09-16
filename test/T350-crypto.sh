@@ -37,6 +37,11 @@ test_expect_success \
     "This is a test signed message." \
     "(mml-secure-message-sign)"'
 
+test_begin_subtest "signed part content-type indexing"
+test_subtest_known_broken
+output=$(notmuch search mimetype:multipart/signed and mimetype:application/pgp-signature | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test signed message 001 (inbox signed)"
+
 test_begin_subtest "signature verification"
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
@@ -230,6 +235,11 @@ test_expect_success \
     "test encrypted message 001" \
     "This is a test encrypted message.\n" \
     "(mml-attach-file \"TESTATTACHMENT\") (mml-secure-message-encrypt)"'
+
+test_begin_subtest "encrypted part content-type indexing"
+test_subtest_known_broken
+output=$(notmuch search mimetype:multipart/encrypted and mimetype:application/pgp-encrypted and mimetype:application/octet-stream | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox)"
 
 test_begin_subtest "decryption, --format=text"
 output=$(notmuch show --format=text --decrypt subject:"test encrypted message 001" \
