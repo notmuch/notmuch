@@ -351,6 +351,19 @@ _index_address_list (notmuch_message_t *message,
     }
 }
 
+static void
+_index_content_type (notmuch_message_t *message, GMimeObject *part)
+{
+    GMimeContentType *content_type = g_mime_object_get_content_type (part);
+    if (content_type) {
+	char *mime_string = g_mime_content_type_to_string (content_type);
+	if (mime_string) {
+	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
+	    g_free (mime_string);
+	}
+    }
+}
+
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -361,6 +374,7 @@ _index_mime_part (notmuch_message_t *message,
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
     GMimeContentDisposition *disposition;
+    GMimeContentType *content_type;
     char *body;
     const char *charset;
 
@@ -370,15 +384,7 @@ _index_mime_part (notmuch_message_t *message,
 	return;
     }
 
-    GMimeContentType *content_type = g_mime_object_get_content_type(part);
-    if (content_type) {
-	char *mime_string = g_mime_content_type_to_string(content_type);
-	if (mime_string)
-	{
-	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
-	    g_free(mime_string);
-	}
-    }
+    _index_content_type (message, part);
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
@@ -447,6 +453,8 @@ _index_mime_part (notmuch_message_t *message,
     g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
 
     filter = g_mime_stream_filter_new (stream);
+
+    content_type = g_mime_object_get_content_type (part);
     discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
 
     g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
