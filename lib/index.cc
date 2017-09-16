@@ -398,12 +398,15 @@ _index_mime_part (notmuch_message_t *message,
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
-		/* Don't index the signature. */
-		if (i == 1)
+		/* Don't index the signature, but index its content type. */
+		if (i == GMIME_MULTIPART_SIGNED_SIGNATURE) {
+		    _index_content_type (message,
+					 g_mime_multipart_get_part (multipart, i));
 		    continue;
-		if (i > 1)
+		} else if (i != GMIME_MULTIPART_SIGNED_CONTENT) {
 		    _notmuch_database_log (_notmuch_message_database (message),
-					  "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+					   "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+		}
 	    }
 	    if (GMIME_IS_MULTIPART_ENCRYPTED (multipart)) {
 		/* Don't index encrypted parts. */

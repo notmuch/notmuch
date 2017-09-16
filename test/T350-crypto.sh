@@ -38,7 +38,6 @@ test_expect_success \
     "(mml-secure-message-sign)"'
 
 test_begin_subtest "signed part content-type indexing"
-test_subtest_known_broken
 output=$(notmuch search mimetype:multipart/signed and mimetype:application/pgp-signature | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test signed message 001 (inbox signed)"
 
