@@ -409,7 +409,14 @@ _index_mime_part (notmuch_message_t *message,
 		}
 	    }
 	    if (GMIME_IS_MULTIPART_ENCRYPTED (multipart)) {
-		/* Don't index encrypted parts. */
+		/* Don't index encrypted parts, but index their content type. */
+		_index_content_type (message,
+				     g_mime_multipart_get_part (multipart, i));
+		if ((i != GMIME_MULTIPART_ENCRYPTED_VERSION) &&
+		    (i != GMIME_MULTIPART_ENCRYPTED_CONTENT)) {
+		    _notmuch_database_log (_notmuch_message_database (message),
+					   "Warning: Unexpected extra parts of multipart/encrypted.\n");
+		}
 		continue;
 	    }
 	    _index_mime_part (message,

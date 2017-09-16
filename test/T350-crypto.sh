@@ -236,7 +236,6 @@ test_expect_success \
     "(mml-attach-file \"TESTATTACHMENT\") (mml-secure-message-encrypt)"'
 
 test_begin_subtest "encrypted part content-type indexing"
-test_subtest_known_broken
 output=$(notmuch search mimetype:multipart/encrypted and mimetype:application/pgp-encrypted and mimetype:application/octet-stream | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox)"
 
