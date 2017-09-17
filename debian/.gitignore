@@ -2,8 +2,8 @@
 /libnotmuch-dev/
 /libnotmuch*/
 /notmuch-emacs/
+/elpa-notmuch/
 /notmuch/
-/notmuch-dbg/
 /notmuch-mutt/
 /notmuch-vim/
 /ruby-notmuch/
