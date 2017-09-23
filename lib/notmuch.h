@@ -1856,7 +1856,7 @@ notmuch_message_get_properties (notmuch_message_t *message, const char *key, not
  * says. Whereas when this function returns FALSE, calling any of
  * these functions results in undefined behaviour.
  *
- * See the documentation of notmuch_message_properties_get for example
+ * See the documentation of notmuch_message_get_properties for example
  * code showing how to iterate over a notmuch_message_properties_t
  * object.
  *
