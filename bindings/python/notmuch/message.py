@@ -41,6 +41,7 @@ from .tag import Tags
 from .filenames import Filenames
 
 import email
+import sys
 
 
 class Message(Python3StringMixIn):
@@ -587,8 +588,11 @@ class Message(Python3StringMixIn):
 
     def get_message_parts(self):
         """Output like notmuch show"""
-        fp = open(self.get_filename())
-        email_msg = email.message_from_file(fp)
+        fp = open(self.get_filename(), 'rb')
+        if sys.version_info[0] < 3:
+            email_msg = email.message_from_file(fp)
+        else:
+            email_msg = email.message_from_binary_file(fp)
         fp.close()
 
         out = []
