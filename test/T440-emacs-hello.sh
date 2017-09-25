@@ -3,7 +3,7 @@
 test_description="emacs notmuch-hello view"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-EXPECTED=$TEST_DIRECTORY/emacs.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 
 add_email_corpus
 

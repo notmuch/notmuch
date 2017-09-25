@@ -3,7 +3,7 @@
 test_description="emacs tree view interface"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-EXPECTED=$TEST_DIRECTORY/tree.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/tree.expected-output
 
 add_email_corpus
 
