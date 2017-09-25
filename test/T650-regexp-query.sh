@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='regular expression searches'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
     test_done

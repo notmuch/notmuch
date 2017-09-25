@@ -5,7 +5,7 @@
 # - verification of signatures from expired/revoked keys
 
 test_description='PGP/MIME signature verification and decryption'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 ##################################################
 

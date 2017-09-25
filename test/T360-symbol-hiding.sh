@@ -9,7 +9,7 @@
 
 test_description='exception symbol hiding'
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest 'running test' run_test
 mkdir -p ${PWD}/fakedb/.notmuch

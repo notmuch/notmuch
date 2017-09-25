@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="duplicate message ids"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_message '[id]="duplicate"' '[subject]="message 1" [filename]=copy1'
 add_message '[id]="duplicate"' '[subject]="message 2" [filename]=copy2'

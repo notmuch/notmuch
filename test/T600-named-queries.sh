@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='named queries'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 QUERYSTR="date:2009-11-18..2009-11-18 and tag:unread"
 

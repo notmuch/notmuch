@@ -19,7 +19,7 @@ test_description='thread breakage during reindexing'
 # works properly and attempted fixes to threading issues do not break
 # the expected contents of the index.
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 message_a() {
     mkdir -p ${MAIL_DIR}/cur

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='hooks'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 HOOK_DIR=${MAIL_DIR}/.notmuch/hooks
 

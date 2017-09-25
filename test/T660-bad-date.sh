@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="parsing of bad dates"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_message [date]='"()"'
 

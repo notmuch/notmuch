@@ -14,7 +14,7 @@ then
 	exit 1
 fi
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 ################################################################
 # Test harness

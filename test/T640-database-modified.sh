@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="DatabaseModifiedError handling"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 # add enough messages to trigger the exception
 add_email_corpus

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="online help"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest 'notmuch --help'
 test_expect_success 'notmuch --help'

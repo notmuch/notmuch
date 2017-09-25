@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch search" in several variations'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_email_corpus
 

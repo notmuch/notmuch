@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch new" in several variations'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest "No new messages"
 output=$(NOTMUCH_NEW --debug)

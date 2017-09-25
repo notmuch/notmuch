@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch compact"'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_message '[subject]=One'
 add_message '[subject]=Two'

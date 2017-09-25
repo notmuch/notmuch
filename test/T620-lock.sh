@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="locking"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 if [ "${NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK}" = "0" ]; then
     test_subtest_missing_external_prereq_["lock retry support"]=t

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="emacs tree view interface"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 EXPECTED=$TEST_DIRECTORY/tree.expected-output
 
