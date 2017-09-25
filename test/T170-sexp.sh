@@ -37,13 +37,13 @@ id="sexp-show-inline-attachment-filename@notmuchmail.org"
 emacs_fcc_message \
     "$subject" \
     'This is a test message with inline attachment with a filename' \
-    "(mml-attach-file \"$TEST_DIRECTORY/README\" nil nil \"inline\")
+    "(mml-attach-file \"$NOTMUCH_SRCDIR/test/README\" nil nil \"inline\")
      (message-goto-eoh)
      (insert \"Message-ID: <$id>\n\")"
 output=$(notmuch show --format=sexp "id:$id")
 filename=$(notmuch search --output=files "id:$id")
 # Get length of README after base64-encoding, minus additional newline.
-attachment_length=$(( $(base64 $TEST_DIRECTORY/README | wc -c) - 1 ))
+attachment_length=$(( $(base64 $NOTMUCH_SRCDIR/test/README | wc -c) - 1 ))
 test_expect_equal "$output" "((((:id \"$id\" :match t :excluded nil :filename (\"$filename\") :timestamp 946728000 :date_relative \"2000-01-01\" :tags (\"inbox\") :headers (:Subject \"sexp-show-inline-attachment-filename\" :From \"Notmuch Test Suite <test_suite@notmuchmail.org>\" :To \"test_suite@notmuchmail.org\" :Date \"Sat, 01 Jan 2000 12:00:00 +0000\") :body ((:id 1 :content-type \"multipart/mixed\" :content ((:id 2 :content-type \"text/plain\" :content \"This is a test message with inline attachment with a filename\") (:id 3 :content-type \"application/octet-stream\" :content-disposition \"inline\" :filename \"README\" :content-transfer-encoding \"base64\" :content-length $attachment_length))))) ())))"
 
 test_done
