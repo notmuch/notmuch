@@ -3,7 +3,7 @@ test_description="hex encoding and decoding"
 . $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest "round trip"
-find $TEST_DIRECTORY/corpora/default -type f -print | sort | xargs cat > EXPECTED
+find $NOTMUCH_SRCDIR/test/corpora/default -type f -print | sort | xargs cat > EXPECTED
 $TEST_DIRECTORY/hex-xcode --direction=encode < EXPECTED | $TEST_DIRECTORY/hex-xcode --direction=decode > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -25,7 +25,7 @@ $TEST_DIRECTORY/hex-xcode --direction=decode  < EXPECTED.$test_count |\
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 test_begin_subtest "round trip (in-place)"
-find $TEST_DIRECTORY/corpora/default -type f -print | sort | xargs cat > EXPECTED
+find $NOTMUCH_SRCDIR/test/corpora/default -type f -print | sort | xargs cat > EXPECTED
 $TEST_DIRECTORY/hex-xcode --in-place --direction=encode < EXPECTED |\
      $TEST_DIRECTORY/hex-xcode --in-place --direction=decode > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
