@@ -329,7 +329,6 @@ mkdir -p "${HOME}"
 MAIL_DIR="${TMP_DIRECTORY}/mail"
 export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
-mkdir -p "${test}"
 mkdir -p "${MAIL_DIR}"
 
 cat <<EOF >"${NOTMUCH_CONFIG}"
