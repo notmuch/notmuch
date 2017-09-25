@@ -24,39 +24,26 @@
 #
 type die >/dev/null 2>&1 || die () { echo "$@" >&2; exit 1; }
 
-find_notmuch_path ()
-{
-    dir="$1"
-
-    while [ -n "$dir" ]; do
-	bin="$dir/notmuch"
-	if [ -x "$bin" ]; then
-	    echo "$dir"
-	    return
-	fi
-	dir="$(dirname "$dir")"
-	if [ "$dir" = "/" ]; then
-	    break
-	fi
-    done
-}
+if [[ -z "$NOTMUCH_SRCDIR" ]] || [[ -z "$NOTMUCH_BUILDDIR" ]]; then
+	echo "internal: srcdir or builddir not set" >&2
+	exit 1
+fi
 
 backup_database () {
     test_name=$(basename $0 .sh)
-    rm -rf notmuch-dir-backup."$test_name"
-    cp -pR ${MAIL_DIR}/.notmuch notmuch-dir-backup."${test_name}"
+    rm -rf $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."$test_name"
+    cp -pR ${MAIL_DIR}/.notmuch $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."${test_name}"
 }
 
 restore_database () {
     test_name=$(basename $0 .sh)
     rm -rf ${MAIL_DIR}/.notmuch
-    cp -pR notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
+    cp -pR $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
 }
 
 # Test the binaries we have just built.  The tests are kept in
 # test/ subdirectory and are run in 'trash directory' subdirectory.
-TEST_DIRECTORY=$(pwd -P)
-notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
+TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
 
 # Prepend $TEST_DIRECTORY/../lib to LD_LIBRARY_PATH, to make tests work
 # on systems where ../notmuch depends on LD_LIBRARY_PATH.
@@ -64,11 +51,11 @@ LD_LIBRARY_PATH=${TEST_DIRECTORY%/*}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 # configure output
-. $notmuch_path/sh.config || exit 1
+. "$NOTMUCH_BUILDDIR/sh.config" || exit 1
 
 # load OS specifics
-if [ -e ./test-lib-$PLATFORM.sh ]; then
-	. ./test-lib-$PLATFORM.sh || exit 1
+if [[ -e "$NOTMUCH_SRCDIR/test/test-lib-$PLATFORM.sh" ]]; then
+    . "$NOTMUCH_SRCDIR/test/test-lib-$PLATFORM.sh" || exit 1
 fi
 
 # Generate a new message in the mail directory, with a unique message
@@ -308,12 +295,12 @@ then
 	PATH=$GIT_VALGRIND/bin:$PATH
 	GIT_EXEC_PATH=$GIT_VALGRIND/bin
 	export GIT_VALGRIND
-	test -n "$notmuch_path" && MANPATH="$notmuch_path/doc/_build/man"
+	test -n "$NOTMUCH_BUILDDIR" && MANPATH="$NOTMUCH_BUILDDIR/doc/_build/man"
 else # normal case
-	if test -n "$notmuch_path"
+	if test -n "$NOTMUCH_BUILDDIR"
 		then
-			PATH="$notmuch_path:$PATH"
-			MANPATH="$notmuch_path/doc/_build/man"
+			PATH="$NOTMUCH_BUILDDIR:$PATH"
+			MANPATH="$NOTMUCH_BUILDDIR/doc/_build/man"
 		fi
 fi
 export PATH MANPATH
