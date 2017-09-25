@@ -4,16 +4,6 @@
 #
 
 test_description='the test framework itself.'
-
-################################################################
-# It appears that people try to run tests without building...
-
-if ! test -x ../notmuch
-then
-	echo >&2 'You do not seem to have built notmuch yet.'
-	exit 1
-fi
-
 . $(dirname "$0")/test-lib.sh || exit 1
 
 ################################################################

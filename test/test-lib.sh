@@ -26,6 +26,13 @@ fi
 # Make sure echo builtin does not expand backslash-escape sequences by default.
 shopt -u xpg_echo
 
+# It appears that people try to run tests without building...
+if ! test -x ../notmuch
+then
+	echo >&2 'You do not seem to have built notmuch yet.'
+	exit 1
+fi
+
 this_test=${0##*/}
 this_test=${this_test%.sh}
 this_test_bare=${this_test#T[0-9][0-9][0-9]-}
