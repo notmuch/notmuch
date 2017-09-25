@@ -66,7 +66,7 @@ test_thread_count() {
 
 test_ghost_count() {
     test_begin_subtest "${2:-Expecting $1 ghosts(s)}"
-    ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
+    ghosts=$($NOTMUCH_BUILDDIR/test/ghost-report ${MAIL_DIR}/.notmuch/xapian)
     test_expect_equal "$ghosts" "$1"
 }
 
@@ -111,7 +111,7 @@ test_content_count banana 0
 test_begin_subtest 'No ghosts should remain after deletion of second message'
 # this is known to fail; we are leaking ghost messages deliberately
 test_subtest_known_broken
-ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
+ghosts=$($NOTMUCH_BUILDDIR/test/ghost-report ${MAIL_DIR}/.notmuch/xapian)
 test_expect_equal "$ghosts" "0"
 
 rm -f ${MAIL_DIR}/cur/a
