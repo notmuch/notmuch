@@ -3,13 +3,13 @@
 test_description="emacs interface"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-EXPECTED=$TEST_DIRECTORY/emacs.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 
 add_email_corpus
 
 # syntax errors in test-lib.el cause mysterious failures
 test_begin_subtest "Syntax of emacs test library"
-test_expect_success "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
+test_expect_success "${TEST_EMACS} -Q --batch --load $NOTMUCH_SRCDIR/test/test-lib.el"
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
