@@ -26,9 +26,11 @@ fi
 # Make sure echo builtin does not expand backslash-escape sequences by default.
 shopt -u xpg_echo
 
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/export-dirs.sh || exit 1
+
 # It appears that people try to run tests without building...
-if ! test -x ../notmuch
-then
+if [[ ! -x "$NOTMUCH_BUILDDIR/notmuch" ]]; then
 	echo >&2 'You do not seem to have built notmuch yet.'
 	exit 1
 fi
@@ -386,7 +388,7 @@ add_email_corpus ()
     if [ -d $TEST_DIRECTORY/corpora.mail/$corpus ]; then
 	cp -a $TEST_DIRECTORY/corpora.mail/$corpus ${MAIL_DIR}
     else
-	cp -a $TEST_DIRECTORY/corpora/$corpus ${MAIL_DIR}
+	cp -a $NOTMUCH_SRCDIR/test/corpora/$corpus ${MAIL_DIR}
 	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
 	mkdir -p $TEST_DIRECTORY/corpora.mail
 	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpora.mail/$corpus
@@ -935,8 +937,8 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 # --load		Force loading of notmuch.el and test-lib.el
 
 exec ${TEST_EMACS} --quick \
-	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
-	--directory "$TEST_DIRECTORY" --load test-lib.el \
+	--directory "$NOTMUCH_SRCDIR/emacs" --load notmuch.el \
+	--directory "$NOTMUCH_SRCDIR/test" --load test-lib.el \
 	"\$@"
 EOF
 	chmod a+x "$TMP_DIRECTORY/run_emacs"
@@ -951,8 +953,8 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
-		emacs_tests="${this_test_bare}.el"
-		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
+		emacs_tests="$NOTMUCH_SRCDIR/test/${this_test_bare}.el"
+		if [ -f "$emacs_tests" ]; then
 			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
 		else
 			load_emacs_tests=
@@ -995,14 +997,14 @@ test_python() {
 }
 
 test_ruby() {
-    MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
+    MAIL_DIR=$MAIL_DIR ruby -I $NOTMUCH_SRCDIR/bindings/ruby> OUTPUT
 }
 
 test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${NOTMUCH_BUILDDIR}/lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
@@ -1058,7 +1060,7 @@ test_init_ () {
 }
 
 
-. ./test-lib-common.sh || exit 1
+. "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
 if [ "${NOTMUCH_GMIME_MAJOR}" = 3 ]; then
     test_subtest_broken_gmime_3 () {
