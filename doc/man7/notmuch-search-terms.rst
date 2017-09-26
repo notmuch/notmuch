@@ -237,7 +237,7 @@ Boolean and Probabilistic Prefixes
 Xapian (and hence notmuch) prefixes are either **boolean**, supporting
 exact matches like "tag:inbox" or **probabilistic**, supporting a more
 flexible **term** based searching. Certain **special** prefixes are
-processed by notmuch in a way not stricly fitting either of Xapian's
+processed by notmuch in a way not strictly fitting either of Xapian's
 built in styles. The prefixes currently supported by notmuch are as
 follows.
 
@@ -255,7 +255,7 @@ In general Xapian distinguishes between lists of terms and
 **phrases**. Phrases are indicated by double quotes (but beware you
 probably need to protect those from your shell) and insist that those
 unstemmed words occur in that order. One useful, but initially
-surprising feature is that the following are equivalant ways to write
+surprising feature is that the following are equivalent ways to write
 the same phrase.
 
 - "a list of words"
@@ -264,7 +264,7 @@ the same phrase.
 - a.list.of.words
 
 Both parenthesised lists of terms and quoted phrases are ok with
-probabilisitic prefixes such as **to:**, **from:**, and **subject:**. In particular
+probabilistic prefixes such as **to:**, **from:**, and **subject:**. In particular
 
 ::
 
