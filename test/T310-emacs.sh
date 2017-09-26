@@ -401,6 +401,29 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Reply within emacs to a message with TAB in subject"
+test_subtest_known_broken
+test_emacs '(let ((message-hidden-headers ''()))
+	    (notmuch-search "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net")
+	    (notmuch-test-wait)
+	    (notmuch-search-show-thread)
+	    (notmuch-test-wait)
+	    (notmuch-show-reply-sender)
+	    (test-output))'
+sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
+sed -i -e 's/^References: <.*>$/References: <XXX>/' OUTPUT
+sed -i -e '/^--text follows this line--$/q' OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Mikhail Gusarov <dottedmag@dottedmag.net>
+Subject: Re: [notmuch] [PATCH 1/2] Close message file after parsing message headers
+In-Reply-To: <XXX>
+Fcc: ${MAIL_DIR}/sent
+References: <XXX>
+--text follows this line--
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Reply from alternate address within emacs"
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite_other@notmuchmail.org
