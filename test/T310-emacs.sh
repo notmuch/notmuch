@@ -402,7 +402,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to a message with TAB in subject"
-test_subtest_known_broken
 test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-search "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net")
 	    (notmuch-test-wait)

@@ -218,7 +218,7 @@ mutiple parts get a header."
 		     else
 		     collect pair)))
 	  (notmuch-mua-mail (plist-get reply-headers :To)
-			    (plist-get reply-headers :Subject)
+			    (notmuch-sanitize (plist-get reply-headers :Subject))
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
 
