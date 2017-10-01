@@ -1085,7 +1085,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.output_body = TRUE,
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
-    int exclude = TRUE;
+    notmuch_bool_t exclude = TRUE;
     notmuch_bool_t entire_thread_set = FALSE;
     notmuch_bool_t single_message;
 
