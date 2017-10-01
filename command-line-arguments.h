@@ -27,6 +27,9 @@ typedef struct notmuch_opt_desc {
     /* Must be set except for opt_inherit and opt_position. */
     const char *name;
 
+    /* Optional, if non-NULL, set to TRUE if the option is present. */
+    notmuch_bool_t *present;
+
     /* Must be set for opt_keyword and opt_flags. */
     const struct notmuch_keyword *keywords;
 } notmuch_opt_desc_t;

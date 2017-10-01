@@ -128,6 +128,8 @@ parse_position_arg (const char *arg_str, int pos_arg_index,
 	if (arg_desc->opt_position) {
 	    if (pos_arg_counter == pos_arg_index) {
 		*arg_desc->opt_position = arg_str;
+		if (arg_desc->present)
+		    *arg_desc->present = TRUE;
 		return TRUE;
 	    }
 	    pos_arg_counter++;
@@ -202,10 +204,13 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	else
 	    INTERNAL_ERROR ("unknown or unhandled option \"%s\"", try->name);
 
-	if (opt_status)
-	    return opt_index+1;
-	else
+	if (! opt_status)
 	    return -1;
+
+	if (try->present)
+	    *try->present = TRUE;
+
+	return opt_index+1;
     }
     return -1;
 }
