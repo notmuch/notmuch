@@ -1086,10 +1086,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = TRUE;
-
-    /* This value corresponds to neither true nor false being passed
-     * on the command line */
-    int entire_thread = -1;
+    notmuch_bool_t entire_thread_set = FALSE;
     notmuch_bool_t single_message;
 
     notmuch_opt_desc_t options[] = {
@@ -1102,7 +1099,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ .opt_int = &notmuch_format_version, .name = "format-version" },
 	{ .opt_bool = &exclude, .name = "exclude" },
-	{ .opt_bool = &entire_thread, .name = "entire-thread" },
+	{ .opt_bool = &params.entire_thread, .name = "entire-thread",
+	  .present = &entire_thread_set },
 	{ .opt_int = &params.part, .name = "part" },
 	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
@@ -1147,14 +1145,9 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     /* Default is entire-thread = FALSE except for format=json and
      * format=sexp. */
-    if (entire_thread != FALSE && entire_thread != TRUE) {
-	if (format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP)
-	    params.entire_thread = TRUE;
-	else
-	    params.entire_thread = FALSE;
-    } else {
-	params.entire_thread = entire_thread;
-    }
+    if (! entire_thread_set &&
+	(format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP))
+	params.entire_thread = TRUE;
 
     if (!params.output_body) {
 	if (params.part > 0) {
