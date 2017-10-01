@@ -3,8 +3,9 @@ test_description="argument parsing"
 . ./test-lib.sh || exit 1
 
 test_begin_subtest "sanity check"
-$TEST_DIRECTORY/arg-test  pos1  --keyword=one --string=foo pos2 --int=7 --flag=one --flag=three > OUTPUT
+$TEST_DIRECTORY/arg-test  pos1  --keyword=one --boolean --string=foo pos2 --int=7 --flag=one --flag=three > OUTPUT
 cat <<EOF > EXPECTED
+boolean 1
 keyword 1
 flags 5
 int 7

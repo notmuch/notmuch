@@ -12,8 +12,10 @@ int main(int argc, char **argv){
     const char *pos_arg1=NULL;
     const char *pos_arg2=NULL;
     const char *string_val=NULL;
+    notmuch_bool_t bool_val = FALSE;
 
     notmuch_opt_desc_t options[] = {
+	{ .opt_bool = &bool_val, .name = "boolean" },
 	{ .opt_keyword = &kw_val, .name = "keyword", .keywords =
 	  (notmuch_keyword_t []){ { "one", 1 },
 				  { "two", 2 },
@@ -34,6 +36,9 @@ int main(int argc, char **argv){
 
     if (opt_index < 0)
 	return 1;
+
+    if (bool_val)
+	printf("boolean %d\n", bool_val);
 
     if (kw_val)
 	printf("keyword %d\n", kw_val);
