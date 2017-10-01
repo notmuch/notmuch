@@ -39,21 +39,20 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 
 static notmuch_bool_t
 _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+    notmuch_bool_t value;
 
-    if (next == '\0') {
-	*arg_desc->opt_bool = TRUE;
-	return TRUE;
+    if (next == '\0' || strcmp (arg_str, "true") == 0) {
+	value = TRUE;
+    } else if (strcmp (arg_str, "false") == 0) {
+	value = FALSE;
+    } else {
+	fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
+	return FALSE;
     }
-    if (strcmp (arg_str, "false") == 0) {
-	*arg_desc->opt_bool = FALSE;
-	return TRUE;
-    }
-    if (strcmp (arg_str, "true") == 0) {
-	*arg_desc->opt_bool = TRUE;
-	return TRUE;
-    }
-    fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
-    return FALSE;
+
+    *arg_desc->opt_bool = value;
+
+    return TRUE;
 }
 
 static notmuch_bool_t
