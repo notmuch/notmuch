@@ -369,7 +369,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-    char *output_file_name = NULL;
+    const char *output_file_name = NULL;
     int opt_index;
 
     int output_format = DUMP_FORMAT_BATCH_TAG;
@@ -377,18 +377,18 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t gzip_output = 0;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',
+	{ .opt_keyword = &output_format, .name = "format", .keywords =
 	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
 				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
+	{ .opt_flags = &include, .name = "include", .keywords =
 	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
 				  { "properties", DUMP_INCLUDE_PROPERTIES },
 				  { "tags", DUMP_INCLUDE_TAGS} } },
-	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
-	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &output_file_name, .name = "output" },
+	{ .opt_bool = &gzip_output, .name = "gzip" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

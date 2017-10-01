@@ -197,7 +197,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t batch = FALSE;
     notmuch_bool_t remove_all = FALSE;
     FILE *input = stdin;
-    char *input_file_name = NULL;
+    const char *input_file_name = NULL;
     int opt_index;
     int ret;
 
@@ -209,11 +209,11 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     sigaction (SIGINT, &action, NULL);
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
-	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &remove_all, "remove-all", 0, 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &batch, .name = "batch" },
+	{ .opt_string = &input_file_name, .name = "input" },
+	{ .opt_bool = &remove_all, .name = "remove-all" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

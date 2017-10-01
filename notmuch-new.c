@@ -959,12 +959,12 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_status_t status;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &verbose, "verbose", 'v', 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.debug, "debug", 'd', 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &quiet, .name = "quiet" },
+	{ .opt_bool = &verbose, .name = "verbose" },
+	{ .opt_bool = &add_files_state.debug, .name = "debug" },
+	{ .opt_bool = &no_hooks, .name = "no-hooks" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

@@ -508,7 +508,7 @@ status_to_exit (notmuch_status_t status);
 
 #include "command-line-arguments.h"
 
-extern char *notmuch_requested_db_uuid;
+extern const char *notmuch_requested_db_uuid;
 extern const notmuch_opt_desc_t  notmuch_shared_options [];
 void notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
 

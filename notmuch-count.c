@@ -166,24 +166,24 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t batch = FALSE;
     notmuch_bool_t print_lastmod = FALSE;
     FILE *input = stdin;
-    char *input_file_name = NULL;
+    const char *input_file_name = NULL;
     int ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
+	{ .opt_keyword = &output, .name = "output", .keywords =
 	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
 				  { "files", OUTPUT_FILES },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+	{ .opt_keyword = &exclude, .name = "exclude", .keywords =
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
 				  { "false", EXCLUDE_FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &print_lastmod, "lastmod", 'l', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
-	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &print_lastmod, .name = "lastmod" },
+	{ .opt_bool = &batch, .name = "batch" },
+	{ .opt_string = &input_file_name, .name = "input" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

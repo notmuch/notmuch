@@ -99,8 +99,8 @@ notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[])
     sigaction (SIGINT, &action, NULL);
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

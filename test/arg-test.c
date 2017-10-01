@@ -9,25 +9,26 @@ int main(int argc, char **argv){
     int kw_val=0;
     int fl_val=0;
     int int_val=0;
-    char *pos_arg1=NULL;
-    char *pos_arg2=NULL;
-    char *string_val=NULL;
+    const char *pos_arg1=NULL;
+    const char *pos_arg2=NULL;
+    const char *string_val=NULL;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &kw_val, "keyword", 'k',
+	{ .opt_keyword = &kw_val, .name = "keyword", .keywords =
 	  (notmuch_keyword_t []){ { "one", 1 },
 				  { "two", 2 },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &fl_val, "flag", 'f',
+	{ .opt_flags = &fl_val, .name = "flag", .keywords =
 	  (notmuch_keyword_t []){ { "one",   1 << 0},
 				  { "two",   1 << 1 },
 				  { "three", 1 << 2 },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &int_val, "int", 'i', 0},
-	{ NOTMUCH_OPT_STRING, &string_val, "string", 's', 0},
-	{ NOTMUCH_OPT_POSITION, &pos_arg1, 0,0, 0},
-	{ NOTMUCH_OPT_POSITION, &pos_arg2, 0,0, 0},
-	{ 0, 0, 0, 0, 0 } };
+	{ .opt_int = &int_val, .name = "int" },
+	{ .opt_string = &string_val, .name = "string" },
+	{ .opt_position = &pos_arg1 },
+	{ .opt_position = &pos_arg2 },
+	{ }
+    };
 
     opt_index = parse_arguments(argc, argv, options, 1);
 

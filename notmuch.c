@@ -47,13 +47,13 @@ static int
 _help_for (const char *topic);
 
 static notmuch_bool_t print_version = FALSE, print_help = FALSE;
-char *notmuch_requested_db_uuid = NULL;
+const char *notmuch_requested_db_uuid = NULL;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
-    { NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
-    { NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
-    { NOTMUCH_OPT_STRING, &notmuch_requested_db_uuid, "uuid", 'u', 0 },
-    {0, 0, 0, 0, 0}
+    { .opt_bool = &print_version, .name = "version" },
+    { .opt_bool = &print_help, .name = "help" },
+    { .opt_string = &notmuch_requested_db_uuid, .name = "uuid" },
+    { }
 };
 
 /* any subcommand wanting to support these options should call
@@ -82,8 +82,8 @@ int notmuch_minimal_options (const char *subcommand_name,
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
@@ -405,15 +405,15 @@ main (int argc, char *argv[])
     char *talloc_report;
     const char *command_name = NULL;
     command_t *command;
-    char *config_file_name = NULL;
+    const char *config_file_name = NULL;
     notmuch_config_t *config = NULL;
     int opt_index;
     int ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &config_file_name, .name = "config" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     talloc_enable_null_tracking ();

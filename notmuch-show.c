@@ -1093,23 +1093,23 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t single_message;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
+	{ .opt_keyword = &format, .name = "format", .keywords =
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				  { "text", NOTMUCH_FORMAT_TEXT },
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "mbox", NOTMUCH_FORMAT_MBOX },
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &exclude, "exclude", 'x', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &entire_thread, "entire-thread", 't', 0 },
-	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.output_body, "body", 'b', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.include_html, "include-html", 0, 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_int = &notmuch_format_version, .name = "format-version" },
+	{ .opt_bool = &exclude, .name = "exclude" },
+	{ .opt_bool = &entire_thread, .name = "entire-thread" },
+	{ .opt_int = &params.part, .name = "part" },
+	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
+	{ .opt_bool = &params.crypto.verify, .name = "verify" },
+	{ .opt_bool = &params.output_body, .name = "body" },
+	{ .opt_bool = &params.include_html, .name = "include-html" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

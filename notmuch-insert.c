@@ -463,12 +463,12 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &keep, "keep", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
+	{ .opt_string = &folder, .name = "folder" },
+	{ .opt_bool = &create_folder, .name = "create-folder" },
+	{ .opt_bool = &keep, .name = "keep" },
+	{ .opt_bool =  &no_hooks, .name = "no-hooks" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

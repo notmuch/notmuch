@@ -51,17 +51,17 @@ typedef enum {
 
 typedef struct {
     notmuch_database_t *notmuch;
-    format_sel_t format_sel;
+    int format_sel;
     sprinter_t *format;
-    notmuch_exclude_t exclude;
+    int exclude;
     notmuch_query_t *query;
-    notmuch_sort_t sort;
-    output_t output;
+    int sort;
+    int output;
     int offset;
     int limit;
     int dupe;
     GHashTable *addresses;
-    dedup_t dedup;
+    int dedup;
 } search_context_t;
 
 typedef struct {
@@ -786,18 +786,18 @@ static search_context_t search_context = {
 };
 
 static const notmuch_opt_desc_t common_options[] = {
-    { NOTMUCH_OPT_KEYWORD, &search_context.sort, "sort", 's',
+    { .opt_keyword = &search_context.sort, .name = "sort", .keywords =
       (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
 			      { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
 			      { 0, 0 } } },
-    { NOTMUCH_OPT_KEYWORD, &search_context.format_sel, "format", 'f',
+    { .opt_keyword = &search_context.format_sel, .name = "format", .keywords =
       (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 			      { "sexp", NOTMUCH_FORMAT_SEXP },
 			      { "text", NOTMUCH_FORMAT_TEXT },
 			      { "text0", NOTMUCH_FORMAT_TEXT0 },
 			      { 0, 0 } } },
-    { NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-    { 0, 0, 0, 0, 0 }
+    { .opt_int = &notmuch_format_version, .name = "format-version" },
+    { }
 };
 
 int
@@ -807,25 +807,25 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index, ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &ctx->output, "output", 'o',
+	{ .opt_keyword = &ctx->output, .name = "output", .keywords =
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
-        { NOTMUCH_OPT_KEYWORD, &ctx->exclude, "exclude", 'x',
+        { .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
           (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
                                   { "false", NOTMUCH_EXCLUDE_FALSE },
                                   { "flag", NOTMUCH_EXCLUDE_FLAG },
                                   { "all", NOTMUCH_EXCLUDE_ALL },
                                   { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &ctx->offset, "offset", 'O', 0 },
-	{ NOTMUCH_OPT_INT, &ctx->limit, "limit", 'L', 0  },
-	{ NOTMUCH_OPT_INT, &ctx->dupe, "duplicate", 'D', 0  },
-	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_int = &ctx->offset, .name = "offset" },
+	{ .opt_int = &ctx->limit, .name = "limit" },
+	{ .opt_int = &ctx->dupe, .name = "duplicate" },
+	{ .opt_inherit = common_options },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     ctx->output = OUTPUT_SUMMARY;
@@ -873,23 +873,23 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index, ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx->output, "output", 'o',
+	{ .opt_flags = &ctx->output, .name = "output", .keywords =
 	  (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
 				  { "recipients", OUTPUT_RECIPIENTS },
 				  { "count", OUTPUT_COUNT },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &ctx->exclude, "exclude", 'x',
+	{ .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
 				  { "false", NOTMUCH_EXCLUDE_FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &ctx->dedup, "deduplicate", 'D',
+	{ .opt_keyword = &ctx->dedup, .name = "deduplicate", .keywords =
 	  (notmuch_keyword_t []){ { "no", DEDUP_NONE },
 				  { "mailbox", DEDUP_MAILBOX },
 				  { "address", DEDUP_ADDRESS },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_inherit = common_options },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

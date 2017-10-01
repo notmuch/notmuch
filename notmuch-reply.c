@@ -705,20 +705,20 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     int reply_all = TRUE;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
+	{ .opt_keyword = &format, .name = "format", .keywords =
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
 				  { "json", FORMAT_JSON },
 				  { "sexp", FORMAT_SEXP },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
+	{ .opt_int = &notmuch_format_version, .name = "format-version" },
+	{ .opt_keyword = &reply_all, .name = "reply-to", .keywords =
 	  (notmuch_keyword_t []){ { "all", TRUE },
 				  { "sender", FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
