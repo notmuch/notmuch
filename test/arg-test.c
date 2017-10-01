@@ -13,27 +13,30 @@ int main(int argc, char **argv){
     const char *pos_arg2=NULL;
     const char *string_val=NULL;
     notmuch_bool_t bool_val = FALSE;
+    notmuch_bool_t fl_set = FALSE, int_set = FALSE, bool_set = FALSE,
+	kw_set = FALSE, string_set = FALSE, pos1_set = FALSE, pos2_set = FALSE;
 
     notmuch_opt_desc_t parent_options[] = {
-	{ .opt_flags = &fl_val, .name = "flag", .keywords =
+	{ .opt_flags = &fl_val, .name = "flag", .present = &fl_set, .keywords =
 	  (notmuch_keyword_t []){ { "one",   1 << 0},
 				  { "two",   1 << 1 },
 				  { "three", 1 << 2 },
 				  { 0, 0 } } },
-	{ .opt_int = &int_val, .name = "int" },
+	{ .opt_int = &int_val, .name = "int", .present = &int_set },
 	{ }
     };
 
     notmuch_opt_desc_t options[] = {
-	{ .opt_bool = &bool_val, .name = "boolean" },
-	{ .opt_keyword = &kw_val, .name = "keyword", .keywords =
-	  (notmuch_keyword_t []){ { "one", 1 },
+	{ .opt_bool = &bool_val, .name = "boolean", .present = &bool_set },
+	{ .opt_keyword = &kw_val, .name = "keyword", .present = &kw_set, .keywords =
+	  (notmuch_keyword_t []){ { "zero", 0 },
+				  { "one", 1 },
 				  { "two", 2 },
 				  { 0, 0 } } },
 	{ .opt_inherit = parent_options },
-	{ .opt_string = &string_val, .name = "string" },
-	{ .opt_position = &pos_arg1 },
-	{ .opt_position = &pos_arg2 },
+	{ .opt_string = &string_val, .name = "string", .present = &string_set },
+	{ .opt_position = &pos_arg1, .present = &pos1_set },
+	{ .opt_position = &pos_arg2, .present = &pos2_set },
 	{ }
     };
 
@@ -42,25 +45,25 @@ int main(int argc, char **argv){
     if (opt_index < 0)
 	return 1;
 
-    if (bool_val)
+    if (bool_set)
 	printf("boolean %d\n", bool_val);
 
-    if (kw_val)
+    if (kw_set)
 	printf("keyword %d\n", kw_val);
 
-    if (fl_val)
+    if (fl_set)
 	printf("flags %d\n", fl_val);
 
-    if (int_val)
+    if (int_set)
 	printf("int %d\n", int_val);
 
-    if (string_val)
+    if (string_set)
 	printf("string %s\n", string_val);
 
-    if (pos_arg1)
+    if (pos1_set)
 	printf("positional arg 1 %s\n", pos_arg1);
 
-    if (pos_arg2)
+    if (pos2_set)
 	printf("positional arg 2 %s\n", pos_arg2);
 
 
