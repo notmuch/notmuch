@@ -21,13 +21,15 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
     }
 
     for (keywords = arg_desc->keywords; keywords->name; keywords++) {
-	if (strcmp (arg_str, keywords->name) == 0) {
-	    if (arg_desc->opt_flags)
-		*arg_desc->opt_flags |= keywords->value;
-	    else
-		*arg_desc->opt_keyword = keywords->value;
-	    return TRUE;
-	}
+	if (strcmp (arg_str, keywords->name) != 0)
+	    continue;
+
+	if (arg_desc->opt_flags)
+	    *arg_desc->opt_flags |= keywords->value;
+	else
+	    *arg_desc->opt_keyword = keywords->value;
+
+	return TRUE;
     }
     if (next != '\0')
 	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str, arg_desc->name);
