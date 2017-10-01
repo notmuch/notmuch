@@ -13,14 +13,14 @@
 static notmuch_bool_t
 _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
-    const notmuch_keyword_t *keywords = arg_desc->keywords;
+    const notmuch_keyword_t *keywords;
 
     if (next == '\0') {
 	/* No keyword given */
 	arg_str = "";
     }
 
-    while (keywords->name) {
+    for (keywords = arg_desc->keywords; keywords->name; keywords++) {
 	if (strcmp (arg_str, keywords->name) == 0) {
 	    if (arg_desc->opt_flags)
 		*arg_desc->opt_flags |= keywords->value;
@@ -28,7 +28,6 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 		*arg_desc->opt_keyword = keywords->value;
 	    return TRUE;
 	}
-	keywords++;
     }
     if (next != '\0')
 	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str, arg_desc->name);
