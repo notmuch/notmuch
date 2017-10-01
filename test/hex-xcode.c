@@ -45,7 +45,7 @@ main (int argc, char **argv)
 {
 
     int dir = DECODE;
-    int omit_newline = FALSE;
+    notmuch_bool_t omit_newline = FALSE;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &dir, .name = "direction", .keywords =
