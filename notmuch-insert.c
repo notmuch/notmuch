@@ -452,12 +452,12 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     size_t new_tags_length;
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
-    char *folder = NULL;
+    const char *folder = "";
     notmuch_bool_t create_folder = FALSE;
     notmuch_bool_t keep = FALSE;
     notmuch_bool_t no_hooks = FALSE;
     notmuch_bool_t synchronize_flags;
-    const char *maildir;
+    char *maildir;
     char *newpath;
     int opt_index;
     unsigned int i;
@@ -509,22 +509,20 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (folder == NULL) {
-	maildir = db_path;
-    } else {
-	strip_trailing (folder, '/');
-	if (! is_valid_folder_name (folder)) {
-	    fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
-	    return EXIT_FAILURE;
-	}
-	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
-	if (! maildir) {
-	    fprintf (stderr, "Out of memory\n");
-	    return EXIT_FAILURE;
-	}
-	if (create_folder && ! maildir_create_folder (config, maildir))
-	    return EXIT_FAILURE;
+    if (! is_valid_folder_name (folder)) {
+	fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
+	return EXIT_FAILURE;
     }
+
+    maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
+    if (! maildir) {
+	fprintf (stderr, "Out of memory\n");
+	return EXIT_FAILURE;
+    }
+
+    strip_trailing (maildir, '/');
+    if (create_folder && ! maildir_create_folder (config, maildir))
+	return EXIT_FAILURE;
 
     /* Set up our handler for SIGINT. We do not set SA_RESTART so that copying
      * from standard input may be interrupted. */
