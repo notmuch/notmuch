@@ -14,18 +14,23 @@ int main(int argc, char **argv){
     const char *string_val=NULL;
     notmuch_bool_t bool_val = FALSE;
 
-    notmuch_opt_desc_t options[] = {
-	{ .opt_bool = &bool_val, .name = "boolean" },
-	{ .opt_keyword = &kw_val, .name = "keyword", .keywords =
-	  (notmuch_keyword_t []){ { "one", 1 },
-				  { "two", 2 },
-				  { 0, 0 } } },
+    notmuch_opt_desc_t parent_options[] = {
 	{ .opt_flags = &fl_val, .name = "flag", .keywords =
 	  (notmuch_keyword_t []){ { "one",   1 << 0},
 				  { "two",   1 << 1 },
 				  { "three", 1 << 2 },
 				  { 0, 0 } } },
 	{ .opt_int = &int_val, .name = "int" },
+	{ }
+    };
+
+    notmuch_opt_desc_t options[] = {
+	{ .opt_bool = &bool_val, .name = "boolean" },
+	{ .opt_keyword = &kw_val, .name = "keyword", .keywords =
+	  (notmuch_keyword_t []){ { "one", 1 },
+				  { "two", 2 },
+				  { 0, 0 } } },
+	{ .opt_inherit = parent_options },
 	{ .opt_string = &string_val, .name = "string" },
 	{ .opt_position = &pos_arg1 },
 	{ .opt_position = &pos_arg2 },
