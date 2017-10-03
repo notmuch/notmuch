@@ -4,12 +4,12 @@
 
 set -eu
 
-srcdir="$(cd "$(dirname "$0")"/.. && pwd)"
+srcdir=$(cd "$(dirname "$0")"/.. && pwd)
 builddir=$(mktemp -d)
 
-cd $builddir
+cd "$builddir"
 
-$srcdir/configure
+"$srcdir"/configure
 make "$@"
 
-rm -rf $builddir
+rm -rf "$builddir"
