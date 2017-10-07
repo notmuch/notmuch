@@ -38,7 +38,7 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
 
 static notmuch_status_t
 _notmuch_message_modify_property (notmuch_message_t *message, const char *key, const char *value,
-				  notmuch_bool_t delete_it)
+				  bool delete_it)
 {
     notmuch_private_status_t private_status;
     notmuch_status_t status;
@@ -76,13 +76,13 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
 notmuch_status_t
 notmuch_message_add_property (notmuch_message_t *message, const char *key, const char *value)
 {
-    return _notmuch_message_modify_property (message, key, value, FALSE);
+    return _notmuch_message_modify_property (message, key, value, false);
 }
 
 notmuch_status_t
 notmuch_message_remove_property (notmuch_message_t *message, const char *key, const char *value)
 {
-    return _notmuch_message_modify_property (message, key, value, TRUE);
+    return _notmuch_message_modify_property (message, key, value, true);
 }
 
 notmuch_status_t

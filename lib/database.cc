@@ -562,7 +562,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred finding message: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	*message_ret = NULL;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -691,7 +691,7 @@ _notmuch_database_new_revision (notmuch_database_t *notmuch)
      * committed revision number until we commit the atomic section.
      */
     if (notmuch->atomic_nesting)
-	notmuch->atomic_dirty = TRUE;
+	notmuch->atomic_dirty = true;
     else
 	notmuch->revision = new_revision;
 
@@ -854,7 +854,7 @@ notmuch_database_open_verbose (const char *path,
     }
 
     notmuch = talloc_zero (NULL, notmuch_database_t);
-    notmuch->exception_reported = FALSE;
+    notmuch->exception_reported = false;
     notmuch->status_string = NULL;
     notmuch->path = talloc_strdup (notmuch, path);
 
@@ -1040,7 +1040,7 @@ _notmuch_database_reopen (notmuch_database_t *notmuch)
 	if (! notmuch->exception_reported) {
 	    _notmuch_database_log (notmuch, "Error: A Xapian exception reopening database: %s\n",
 				   error.get_msg ().c_str ());
-	    notmuch->exception_reported = TRUE;
+	    notmuch->exception_reported = true;
 	}
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -1118,7 +1118,7 @@ notmuch_database_compact (const char *path,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     struct stat statbuf;
-    notmuch_bool_t keep_backup;
+    bool keep_backup;
     char *message = NULL;
 
     local = talloc_new (NULL);
@@ -1154,10 +1154,10 @@ notmuch_database_compact (const char *path,
 	    ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	    goto DONE;
 	}
-	keep_backup = FALSE;
+	keep_backup = false;
     }
     else {
-	keep_backup = TRUE;
+	keep_backup = true;
     }
 
     if (stat (backup_path, &statbuf) != -1) {
@@ -1313,7 +1313,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     Xapian::WritableDatabase *db;
     struct sigaction action;
     struct itimerval timerval;
-    notmuch_bool_t timer_is_active = FALSE;
+    bool timer_is_active = false;
     enum _notmuch_features target_features, new_features;
     notmuch_status_t status;
     notmuch_private_status_t private_status;
@@ -1347,7 +1347,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	timerval.it_value.tv_usec = 0;
 	setitimer (ITIMER_REAL, &timerval, NULL);
 
-	timer_is_active = TRUE;
+	timer_is_active = true;
     }
 
     /* Figure out how much total work we need to do. */
@@ -1588,7 +1588,7 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred beginning transaction: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
@@ -1622,13 +1622,13 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
     if (notmuch->atomic_dirty) {
 	++notmuch->revision;
-	notmuch->atomic_dirty = FALSE;
+	notmuch->atomic_dirty = false;
     }
 
 DONE:
@@ -1871,7 +1871,7 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
     return status;
@@ -1968,7 +1968,7 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred finding message by filename: %s\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
@@ -2021,7 +2021,7 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (db, "A Xapian exception occurred getting tags: %s.\n",
 		 error.get_msg().c_str());
-	db->exception_reported = TRUE;
+	db->exception_reported = true;
 	return NULL;
     }
 }

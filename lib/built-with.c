@@ -31,6 +31,6 @@ notmuch_built_with (const char *name)
     } else if (STRNCMP_LITERAL (name, "retry_lock") == 0) {
 	return HAVE_XAPIAN_DB_RETRY_LOCK;
     } else {
-	return FALSE;
+	return false;
     }
 }

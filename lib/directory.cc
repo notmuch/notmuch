@@ -103,7 +103,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
     notmuch_directory_t *directory;
     notmuch_private_status_t private_status;
     const char *db_path;
-    notmuch_bool_t create = (flags & NOTMUCH_FIND_CREATE);
+    bool create = (flags & NOTMUCH_FIND_CREATE);
 
     if (! (notmuch->features & NOTMUCH_FEATURE_DIRECTORY_DOCS)) {
 	*status_ret = NOTMUCH_STATUS_UPGRADE_REQUIRED;
@@ -189,7 +189,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred creating a directory: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	notmuch_directory_destroy (directory);
 	directory = NULL;
 	*status_ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -234,7 +234,7 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred setting directory mtime: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
@@ -301,7 +301,7 @@ notmuch_directory_delete (notmuch_directory_t *directory)
 	_notmuch_database_log (directory->notmuch,
 			       "A Xapian exception occurred deleting directory entry: %s.\n",
 			       error.get_msg().c_str());
-	directory->notmuch->exception_reported = TRUE;
+	directory->notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
     notmuch_directory_destroy (directory);

@@ -59,12 +59,12 @@ _notmuch_thread_destructor (notmuch_thread_t *thread)
     g_hash_table_unref (thread->message_hash);
 
     if (thread->authors_array) {
-	g_ptr_array_free (thread->authors_array, TRUE);
+	g_ptr_array_free (thread->authors_array, true);
 	thread->authors_array = NULL;
     }
 
     if (thread->matched_authors_array) {
-	g_ptr_array_free (thread->matched_authors_array, TRUE);
+	g_ptr_array_free (thread->matched_authors_array, true);
 	thread->matched_authors_array = NULL;
     }
 
@@ -156,9 +156,9 @@ _resolve_thread_authors_string (notmuch_thread_t *thread)
 	first_non_matched_author = 0;
     }
 
-    g_ptr_array_free (thread->authors_array, TRUE);
+    g_ptr_array_free (thread->authors_array, true);
     thread->authors_array = NULL;
-    g_ptr_array_free (thread->matched_authors_array, TRUE);
+    g_ptr_array_free (thread->matched_authors_array, true);
     thread->matched_authors_array = NULL;
 }
 
@@ -239,7 +239,7 @@ _thread_add_message (notmuch_thread_t *thread,
     InternetAddress *address;
     const char *from, *author;
     char *clean_author;
-    notmuch_bool_t message_excluded = FALSE;
+    bool message_excluded = false;
 
     if (omit_exclude != NOTMUCH_EXCLUDE_FALSE) {
 	for (tags = notmuch_message_get_tags (message);
@@ -254,7 +254,7 @@ _thread_add_message (notmuch_thread_t *thread,
 	    {
 		/* Check for an empty string, and then ignore initial 'K'. */
 		if (*(term->string) && strcmp(tag, (term->string + 1)) == 0) {
-		    message_excluded = TRUE;
+		    message_excluded = true;
 		    break;
 		}
 	    }
@@ -310,7 +310,7 @@ _thread_add_message (notmuch_thread_t *thread,
 
     /* Mark excluded messages. */
     if (message_excluded)
-	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, true);
 }
 
 static void

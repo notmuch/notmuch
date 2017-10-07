@@ -404,7 +404,7 @@ static notmuch_status_t
 _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
 				notmuch_message_file_t *message_file,
-				notmuch_bool_t is_ghost)
+				bool is_ghost)
 {
     void *local = talloc_new (NULL);
     notmuch_status_t status;
@@ -467,7 +467,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
     notmuch_message_t *message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
-    notmuch_bool_t is_ghost = FALSE, is_new = FALSE;
+    bool is_ghost = false, is_new = false;
 
     const char *date;
     const char *from, *to, *subject;
@@ -510,12 +510,12 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	/* We cannot call notmuch_message_get_flag for a new message */
 	switch (private_status) {
 	case NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND:
-	    is_ghost = FALSE;
-	    is_new = TRUE;
+	    is_ghost = false;
+	    is_new = true;
 	    break;
 	case NOTMUCH_PRIVATE_STATUS_SUCCESS:
 	    is_ghost = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_GHOST);
-	    is_new = FALSE;
+	    is_new = false;
 	    break;
 	default:
 	    ret = COERCE_STATUS (private_status,
@@ -551,7 +551,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred adding message: %s.\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }

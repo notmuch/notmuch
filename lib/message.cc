@@ -48,7 +48,7 @@ struct _notmuch_message {
     unsigned long lazy_flags;
 
     /* Message document modified since last sync */
-    notmuch_bool_t modified;
+    bool modified;
 
     /* last view of database the struct is synced with */
     unsigned long last_view;
@@ -62,16 +62,16 @@ struct _notmuch_message {
 struct maildir_flag_tag {
     char flag;
     const char *tag;
-    notmuch_bool_t inverse;
+    bool inverse;
 };
 
 /* ASCII ordered table of Maildir flags and associated tags */
 static struct maildir_flag_tag flag2tag[] = {
-    { 'D', "draft",   FALSE},
-    { 'F', "flagged", FALSE},
-    { 'P', "passed",  FALSE},
-    { 'R', "replied", FALSE},
-    { 'S', "unread",  TRUE }
+    { 'D', "draft",   false},
+    { 'F', "flagged", false},
+    { 'P', "passed",  false},
+    { 'R', "replied", false},
+    { 'S', "unread",  true }
 };
 
 /* We end up having to call the destructor explicitly because we had
@@ -270,7 +270,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred creating message: %s\n",
 		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	return NULL;
     }
@@ -527,7 +527,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 	} catch (Xapian::Error &error) {
 	    _notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading header: %s\n",
 		     error.get_msg().c_str());
-	    message->notmuch->exception_reported = TRUE;
+	    message->notmuch->exception_reported = true;
 	    return NULL;
 	}
     }
@@ -596,7 +596,7 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 
 	try {
 	    message->doc.remove_term ((*i));
-	    message->modified = TRUE;
+	    message->modified = true;
 	} catch (const Xapian::InvalidArgumentError) {
 	    /* Ignore failure to remove non-existent term. */
 	}
@@ -639,7 +639,7 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 
 	try {
 	    message->doc.remove_term ((*i));
-	    message->modified = TRUE;
+	    message->modified = true;
 	} catch (const Xapian::InvalidArgumentError) {
 	    /* Ignore failure to remove non-existent term. */
 	} catch (const Xapian::Error &error) {
@@ -648,7 +648,7 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 	    if (!notmuch->exception_reported) {
 		_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred creating message: %s\n",
 				      error.get_msg().c_str());
-		notmuch->exception_reported = TRUE;
+		notmuch->exception_reported = true;
 	    }
 	    return NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	}
@@ -703,7 +703,7 @@ _notmuch_message_add_folder_terms (notmuch_message_t *message,
 
     talloc_free (folder);
 
-    message->modified = TRUE;
+    message->modified = true;
     return NOTMUCH_STATUS_SUCCESS;
 }
 
@@ -905,7 +905,7 @@ void
 _notmuch_message_clear_data (notmuch_message_t *message)
 {
     message->doc.set_data ("");
-    message->modified = TRUE;
+    message->modified = true;
 }
 
 static void
@@ -1044,7 +1044,7 @@ notmuch_message_get_date (notmuch_message_t *message)
     } catch (Xapian::Error &error) {
 	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading date: %s\n",
 		 error.get_msg().c_str());
-	message->notmuch->exception_reported = TRUE;
+	message->notmuch->exception_reported = true;
 	return 0;
     }
 
@@ -1115,7 +1115,7 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 			    Xapian::sortable_serialise (time_value));
     message->doc.add_value (NOTMUCH_VALUE_FROM, from);
     message->doc.add_value (NOTMUCH_VALUE_SUBJECT, subject);
-    message->modified = TRUE;
+    message->modified = true;
 }
 
 /* Upgrade a message to support NOTMUCH_FEATURE_LAST_MOD.  The caller
@@ -1125,7 +1125,7 @@ _notmuch_message_upgrade_last_mod (notmuch_message_t *message)
 {
     /* _notmuch_message_sync will update the last modification
      * revision; we just have to ask it to. */
-    message->modified = TRUE;
+    message->modified = true;
 }
 
 /* Synchronize changes made to message->doc out into the database. */
@@ -1154,7 +1154,7 @@ _notmuch_message_sync (notmuch_message_t *message)
 
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
-    message->modified = FALSE;
+    message->modified = false;
 }
 
 /* Delete a message document from the database, leaving a ghost
@@ -1170,7 +1170,7 @@ _notmuch_message_delete (notmuch_message_t *message)
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     unsigned int count = 0;
-    notmuch_bool_t is_ghost;
+    bool is_ghost;
 
     mid = notmuch_message_get_message_id (message);
     tid = notmuch_message_get_thread_id (message);
@@ -1299,7 +1299,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
     message->doc.add_term (term, 0);
-    message->modified = TRUE;
+    message->modified = true;
 
     talloc_free (term);
 
@@ -1368,7 +1368,7 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 
     try {
 	message->doc.remove_term (term);
-	message->modified = TRUE;
+	message->modified = true;
     } catch (const Xapian::InvalidArgumentError) {
 	/* We'll let the philosophers try to wrestle with the
 	 * question of whether failing to remove that which was not
@@ -1387,10 +1387,10 @@ notmuch_private_status_t
 _notmuch_message_has_term (notmuch_message_t *message,
 			   const char *prefix_name,
 			   const char *value,
-			   notmuch_bool_t *result)
+			   bool *result)
 {
     char *term;
-    notmuch_bool_t out = FALSE;
+    bool out = false;
     notmuch_private_status_t status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     if (value == NULL)
@@ -1408,7 +1408,7 @@ _notmuch_message_has_term (notmuch_message_t *message,
 	i.skip_to (term);
 	if (i != message->doc.termlist_end () &&
 	    !strcmp ((*i).c_str (), term))
-	    out = TRUE;
+	    out = true;
     } catch (Xapian::Error &error) {
 	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
     }
@@ -1516,7 +1516,7 @@ _filename_is_in_maildir (const char *filename)
 }
 
 static void
-_ensure_maildir_flags (notmuch_message_t *message, notmuch_bool_t force)
+_ensure_maildir_flags (notmuch_message_t *message, bool force)
 {
     const char *flags;
     notmuch_filenames_t *filenames;
@@ -1563,7 +1563,7 @@ _ensure_maildir_flags (notmuch_message_t *message, notmuch_bool_t force)
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag)
 {
-    _ensure_maildir_flags (message, FALSE);
+    _ensure_maildir_flags (message, false);
     return message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
 }
 
@@ -1573,7 +1573,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     notmuch_status_t status;
     unsigned i;
 
-    _ensure_maildir_flags (message, TRUE);
+    _ensure_maildir_flags (message, true);
     /* If none of the filenames have any maildir info field (not even
      * an empty info with no flags set) then there's no information to
      * go on, so do nothing. */
@@ -1685,7 +1685,7 @@ _new_maildir_filename (void *ctx,
     char *filename_new, *dir;
     char flag_map[128];
     int flags_in_map = 0;
-    notmuch_bool_t flags_changed = FALSE;
+    bool flags_changed = false;
     unsigned int i;
     char *s;
 
@@ -1726,7 +1726,7 @@ _new_maildir_filename (void *ctx,
 	if (flag_map[flag] == 0) {
 	    flag_map[flag] = 1;
 	    flags_in_map++;
-	    flags_changed = TRUE;
+	    flags_changed = true;
 	}
     }
 
@@ -1735,7 +1735,7 @@ _new_maildir_filename (void *ctx,
 	if (flag_map[flag]) {
 	    flag_map[flag] = 0;
 	    flags_in_map--;
-	    flags_changed = TRUE;
+	    flags_changed = true;
 	}
     }
 
@@ -1953,7 +1953,7 @@ _notmuch_message_property_map (notmuch_message_t *message)
     return message->property_map;
 }
 
-notmuch_bool_t
+bool
 _notmuch_message_frozen (notmuch_message_t *message)
 {
     return message->frozen;

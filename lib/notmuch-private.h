@@ -24,6 +24,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* For getline and asprintf */
 #endif
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "compat.h"
@@ -282,7 +283,7 @@ notmuch_private_status_t
 _notmuch_message_has_term (notmuch_message_t *message,
 			   const char *prefix_name,
 			   const char *value,
-			   notmuch_bool_t *result);
+			   bool *result);
 
 notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
@@ -465,7 +466,7 @@ typedef struct _notmuch_message_list {
  * ignorance of that here. (See notmuch_mset_messages_t in query.cc)
  */
 struct _notmuch_messages {
-    notmuch_bool_t is_of_list_type;
+    bool is_of_list_type;
     notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
 };
@@ -482,7 +483,7 @@ _notmuch_messages_create (notmuch_message_list_t *list);
 
 /* query.cc */
 
-notmuch_bool_t
+bool
 _notmuch_mset_messages_valid (notmuch_messages_t *messages);
 
 notmuch_message_t *
@@ -491,7 +492,7 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages);
 void
 _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages);
 
-notmuch_bool_t
+bool
 _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 			      unsigned int doc_id);
 
@@ -591,9 +592,9 @@ _notmuch_string_map_get (notmuch_string_map_t *map, const char *key);
 
 notmuch_string_map_iterator_t *
 _notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
-				     notmuch_bool_t exact);
+				     bool exact);
 
-notmuch_bool_t
+bool
 _notmuch_string_map_iterator_valid (notmuch_string_map_iterator_t *iter);
 
 void

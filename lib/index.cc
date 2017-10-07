@@ -184,7 +184,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 
     int next;
 
-    g_mime_filter_set_size (gmime_filter, inlen, FALSE);
+    g_mime_filter_set_size (gmime_filter, inlen, false);
     outptr = gmime_filter->outbuf;
 
     next = filter->state;
@@ -460,7 +460,7 @@ _index_mime_part (notmuch_message_t *message,
     byte_array = g_byte_array_new ();
 
     stream = g_mime_stream_mem_new_with_byte_array (byte_array);
-    g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
+    g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), false);
 
     filter = g_mime_stream_filter_new (stream);
 
@@ -493,7 +493,7 @@ _index_mime_part (notmuch_message_t *message,
     g_object_unref (discard_non_term_filter);
 
     g_byte_array_append (byte_array, (guint8 *) "\0", 1);
-    body = (char *) g_byte_array_free (byte_array, FALSE);
+    body = (char *) g_byte_array_free (byte_array, false);
 
     if (body) {
 	_notmuch_message_gen_terms (message, NULL, body);

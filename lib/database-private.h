@@ -179,14 +179,14 @@ operator&(notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
 struct _notmuch_database {
-    notmuch_bool_t exception_reported;
+    bool exception_reported;
 
     char *path;
 
     notmuch_database_mode_t mode;
     int atomic_nesting;
-    /* TRUE if changes have been made in this atomic section */
-    notmuch_bool_t atomic_dirty;
+    /* true if changes have been made in this atomic section */
+    bool atomic_dirty;
     Xapian::Database *xapian_db;
 
     /* Bit mask of features used by this database.  This is a

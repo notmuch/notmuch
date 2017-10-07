@@ -104,16 +104,16 @@ _notmuch_message_file_close (notmuch_message_file_t *message)
     talloc_free (message);
 }
 
-static notmuch_bool_t
+static bool
 _is_mbox (FILE *file)
 {
     char from_buf[5];
-    notmuch_bool_t ret = FALSE;
+    bool ret = false;
 
     /* Is this mbox? */
     if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
 	strncmp (from_buf, "From ", 5) == 0)
-	ret = TRUE;
+	ret = true;
 
     rewind (file);
 
@@ -127,7 +127,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     GMimeParser *parser;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
-    notmuch_bool_t is_mbox;
+    bool is_mbox;
 
     if (message->message)
 	return NOTMUCH_STATUS_SUCCESS;
@@ -147,7 +147,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     stream = g_mime_stream_file_new (message->file);
 
     /* We'll own and fclose the FILE* ourselves. */
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), false);
 
     parser = g_mime_parser_new_with_stream (stream);
     g_mime_parser_set_scan_from (parser, is_mbox);
