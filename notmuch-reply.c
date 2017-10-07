@@ -93,7 +93,7 @@ typedef enum {
 } address_match_t;
 
 /* Match given string against given address according to mode. */
-static notmuch_bool_t
+static bool
 match_address (const char *str, const char *address, address_match_t mode)
 {
     switch (mode) {
@@ -105,7 +105,7 @@ match_address (const char *str, const char *address, address_match_t mode)
 	return strcasecmp (address, str) == 0;
     }
 
-    return FALSE;
+    return false;
 }
 
 /* Match given string against user's configured "primary" and "other"
@@ -153,7 +153,7 @@ string_in_user_address (const char *str, notmuch_config_t *config)
 
 /* Is the given address configured as one of the user's "primary" or
  * "other" addresses. */
-static notmuch_bool_t
+static bool
 address_is_users (const char *address, notmuch_config_t *config)
 {
     return address_match (address, config, STRING_IS_USER_ADDRESS) != NULL;
@@ -221,7 +221,7 @@ scan_address_list (InternetAddressList *list,
 /* Does the address in the Reply-To header of 'message' already appear
  * in either the 'To' or 'Cc' header of the message?
  */
-static notmuch_bool_t
+static bool
 reply_to_header_is_redundant (GMimeMessage *message,
 			      InternetAddressList *reply_to_list)
 {
@@ -229,7 +229,7 @@ reply_to_header_is_redundant (GMimeMessage *message,
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
     InternetAddressList *recipients;
-    notmuch_bool_t ret = FALSE;
+    bool ret = false;
     int i;
 
     if (reply_to_list == NULL ||
@@ -253,7 +253,7 @@ reply_to_header_is_redundant (GMimeMessage *message,
 	mailbox = INTERNET_ADDRESS_MAILBOX (address);
 	addr = internet_address_mailbox_get_addr (mailbox);
 	if (strcmp (addr, reply_to) == 0) {
-	    ret = TRUE;
+	    ret = true;
 	    break;
 	}
     }
@@ -323,7 +323,7 @@ static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
 			     GMimeMessage *message,
-			     notmuch_bool_t reply_all)
+			     bool reply_all)
 {
 
     /* There is a memory leak here with gmime-2.6 because get_sender
@@ -522,8 +522,8 @@ create_reply_message(void *ctx,
 		     notmuch_config_t *config,
 		     notmuch_message_t *message,
 		     GMimeMessage *mime_message,
-		     notmuch_bool_t reply_all,
-		     notmuch_bool_t limited)
+		     bool reply_all,
+		     bool limited)
 {
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
@@ -612,7 +612,7 @@ static int do_reply(notmuch_config_t *config,
 		    notmuch_query_t *query,
 		    notmuch_show_params_t *params,
 		    int format,
-		    notmuch_bool_t reply_all)
+		    bool reply_all)
 {
     GMimeMessage *reply;
     mime_node_t *node;
@@ -663,11 +663,11 @@ static int do_reply(notmuch_config_t *config,
 
 	    /* The headers of the reply message we've created */
 	    sp->map_key (sp, "reply-headers");
-	    format_headers_sprinter (sp, reply, TRUE);
+	    format_headers_sprinter (sp, reply, true);
 
 	    /* Start the original */
 	    sp->map_key (sp, "original");
-	    format_part_sprinter (config, sp, node, TRUE, FALSE);
+	    format_part_sprinter (config, sp, node, true, false);
 
 	    /* End */
 	    sp->end (sp);
@@ -702,7 +702,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	.part = -1,
     };
     int format = FORMAT_DEFAULT;
-    int reply_all = TRUE;
+    int reply_all = true;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -713,8 +713,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ .opt_int = &notmuch_format_version, .name = "format-version" },
 	{ .opt_keyword = &reply_all, .name = "reply-to", .keywords =
-	  (notmuch_keyword_t []){ { "all", TRUE },
-				  { "sender", FALSE },
+	  (notmuch_keyword_t []){ { "all", true },
+				  { "sender", false },
 				  { 0, 0 } } },
 	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
 	{ .opt_inherit = notmuch_shared_options },

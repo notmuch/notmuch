@@ -37,8 +37,8 @@ create_gpg_context (notmuch_crypto_t *crypto)
     }
     crypto->gpgctx = gpgctx;
 
-    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
-    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
+    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, true);
+    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, false);
 
     return gpgctx;
 }
@@ -61,7 +61,7 @@ create_pkcs7_context (notmuch_crypto_t *crypto)
     crypto->pkcs7ctx = pkcs7ctx;
 
     g_mime_pkcs7_context_set_always_trust ((GMimePkcs7Context *) pkcs7ctx,
-					   FALSE);
+					   false);
 
     return pkcs7ctx;
 }

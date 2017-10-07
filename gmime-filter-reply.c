@@ -16,6 +16,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
+#include <stdbool.h>
+
 #include "gmime-filter-reply.h"
 
 /**
@@ -87,8 +89,8 @@ static void
 g_mime_filter_reply_init (GMimeFilterReply *filter, GMimeFilterReplyClass *klass)
 {
 	(void) klass;
-	filter->saw_nl = TRUE;
-	filter->saw_angle = FALSE;
+	filter->saw_nl = true;
+	filter->saw_angle = false;
 }
 
 static void
@@ -117,43 +119,43 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 
 	(void) prespace;
 	if (reply->encode) {
-		g_mime_filter_set_size (filter, 3 * inlen, FALSE);
+		g_mime_filter_set_size (filter, 3 * inlen, false);
 
 		outptr = filter->outbuf;
 		while (inptr < inend) {
 			if (reply->saw_nl) {
 				*outptr++ = '>';
 				*outptr++ = ' ';
-				reply->saw_nl = FALSE;
+				reply->saw_nl = false;
 			}
 			if (*inptr == '\n')
-				reply->saw_nl = TRUE;
+				reply->saw_nl = true;
 			else
-				reply->saw_nl = FALSE;
+				reply->saw_nl = false;
 			if (*inptr != '\r')
 				*outptr++ = *inptr;
 			inptr++;
 		}
 	} else {
-		g_mime_filter_set_size (filter, inlen + 1, FALSE);
+		g_mime_filter_set_size (filter, inlen + 1, false);
 
 		outptr = filter->outbuf;
 		while (inptr < inend) {
 			if (reply->saw_nl) {
 				if (*inptr == '>')
-					reply->saw_angle = TRUE;
+					reply->saw_angle = true;
 				else
 					*outptr++ = *inptr;
-				reply->saw_nl = FALSE;
+				reply->saw_nl = false;
 			} else if (reply->saw_angle) {
 				if (*inptr == ' ')
 					;
 				else
 					*outptr++ = *inptr;
-				reply->saw_angle = FALSE;
+				reply->saw_angle = false;
 			} else if (*inptr != '\r') {
 				if (*inptr == '\n')
-					reply->saw_nl = TRUE;
+					reply->saw_nl = true;
 				*outptr++ = *inptr;
 			}
 
@@ -179,19 +181,19 @@ filter_reset (GMimeFilter *filter)
 {
 	GMimeFilterReply *reply = (GMimeFilterReply *) filter;
 
-	reply->saw_nl = TRUE;
-	reply->saw_angle = FALSE;
+	reply->saw_nl = true;
+	reply->saw_angle = false;
 }
 
 
 /**
  * g_mime_filter_reply_new:
- * @encode: %TRUE if the filter should encode or %FALSE otherwise
+ * @encode: %true if the filter should encode or %false otherwise
  * @dots: encode/decode dots (as for SMTP)
  *
  * Creates a new #GMimeFilterReply filter.
  *
- * If @encode is %TRUE, then all lines will be prefixed by "> ",
+ * If @encode is %true, then all lines will be prefixed by "> ",
  * otherwise any lines starting with "> " will have that removed
  *
  * Returns: a new #GMimeFilterReply filter.

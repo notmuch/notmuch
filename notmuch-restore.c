@@ -211,7 +211,7 @@ parse_sup_line (void *ctx, char *line,
 	    tok_len++;
 	}
 
-	if (tag_op_list_append (tag_ops, tok, FALSE))
+	if (tag_op_list_append (tag_ops, tok, false))
 	    return -1;
     }
 
@@ -223,7 +223,7 @@ int
 notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    notmuch_bool_t accumulate = FALSE;
+    bool accumulate = false;
     tag_op_flag_t flags = 0;
     tag_op_list_t *tag_ops;
 

@@ -24,6 +24,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* for getline */
 #endif
+#include <stdbool.h>
 #include <stdio.h>
 #include <sysexits.h>
 
@@ -72,8 +73,8 @@ typedef struct notmuch_show_format {
 } notmuch_show_format_t;
 
 typedef struct notmuch_crypto {
-    notmuch_bool_t verify;
-    notmuch_bool_t decrypt;
+    bool verify;
+    bool decrypt;
 #if (GMIME_MAJOR_VERSION < 3)
     notmuch_crypto_context_t* gpgctx;
     notmuch_crypto_context_t* pkcs7ctx;
@@ -82,12 +83,12 @@ typedef struct notmuch_crypto {
 } notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
-    notmuch_bool_t entire_thread;
-    notmuch_bool_t omit_excluded;
-    notmuch_bool_t output_body;
+    bool entire_thread;
+    bool omit_excluded;
+    bool output_body;
     int part;
     notmuch_crypto_t crypto;
-    notmuch_bool_t include_html;
+    bool include_html;
     GMimeStream *out_stream;
 } notmuch_show_params_t;
 
@@ -247,12 +248,12 @@ show_one_part (const char *filename, int part);
 
 void
 format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
-		      notmuch_bool_t output_body,
-		      notmuch_bool_t include_html);
+		      bool output_body,
+		      bool include_html);
 
 void
 format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,
-			 notmuch_bool_t reply);
+			 bool reply);
 
 typedef enum {
     NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
@@ -286,7 +287,7 @@ notmuch_config_close (notmuch_config_t *config);
 int
 notmuch_config_save (notmuch_config_t *config);
 
-notmuch_bool_t
+bool
 notmuch_config_is_new (notmuch_config_t *config);
 
 const char *
@@ -345,12 +346,12 @@ notmuch_config_set_new_ignore (notmuch_config_t *config,
 			       const char *new_ignore[],
 			       size_t length);
 
-notmuch_bool_t
+bool
 notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config);
 
 void
 notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
-					      notmuch_bool_t synchronize_flags);
+					      bool synchronize_flags);
 
 const char **
 notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length);
@@ -363,7 +364,7 @@ notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
 int
 notmuch_run_hook (const char *db_path, const char *hook);
 
-notmuch_bool_t
+bool
 debugger_is_active (void);
 
 /* mime-node.c */
@@ -406,14 +407,14 @@ struct mime_node {
     int part_num;
 
     /* True if decryption of this part was attempted. */
-    notmuch_bool_t decrypt_attempted;
+    bool decrypt_attempted;
     /* True if decryption of this part's child succeeded.  In this
      * case, the decrypted part is substituted for the second child of
      * this part (which would usually be the encrypted data). */
-    notmuch_bool_t decrypt_success;
+    bool decrypt_success;
 
     /* True if signature verification on this part was attempted. */
-    notmuch_bool_t verify_attempted;
+    bool verify_attempted;
 
     /* The list of signatures for signed or encrypted containers. If
      * there are no signatures, this will be NULL. */
@@ -487,7 +488,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *query_str,
 		       dump_format_t output_format,
 		       dump_include_t include,
-		       notmuch_bool_t gzip_output);
+		       bool gzip_output);
 
 /* If status is non-zero (i.e. error) print appropriate
    messages to stderr.

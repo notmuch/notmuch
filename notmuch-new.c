@@ -44,7 +44,7 @@ enum verbosity {
 typedef struct {
     int output_is_a_tty;
     enum verbosity verbosity;
-    notmuch_bool_t debug;
+    bool debug;
     const char **new_tags;
     size_t new_tags_length;
     const char **new_ignore;
@@ -60,7 +60,7 @@ typedef struct {
     _filename_list_t *removed_directories;
     _filename_list_t *directory_mtimes;
 
-    notmuch_bool_t synchronize_flags;
+    bool synchronize_flags;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_print_progress = 0;
@@ -234,7 +234,7 @@ _entries_resemble_maildir (const char *path, struct dirent **entries, int count)
     return 0;
 }
 
-static notmuch_bool_t
+static bool
 _special_directory (const char *entry)
 {
     return strcmp (entry, ".") == 0 || strcmp (entry, "..") == 0;
@@ -242,16 +242,16 @@ _special_directory (const char *entry)
 
 /* Test if the file/directory is to be ignored.
  */
-static notmuch_bool_t
+static bool
 _entry_in_ignore_list (const char *entry, add_files_state_t *state)
 {
     size_t i;
 
     for (i = 0; i < state->new_ignore_length; i++)
 	if (strcmp (entry, state->new_ignore[i]) == 0)
-	    return TRUE;
+	    return true;
 
-    return FALSE;
+    return false;
 }
 
 /* Add a single file to the database. */
@@ -376,7 +376,7 @@ add_files (notmuch_database_t *notmuch,
     notmuch_filenames_t *db_subdirs = NULL;
     time_t stat_time;
     struct stat st;
-    notmuch_bool_t is_maildir;
+    bool is_maildir;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -837,7 +837,7 @@ remove_filename (notmuch_database_t *notmuch,
     status = notmuch_database_remove_message (notmuch, path);
     if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 	add_files_state->renamed_messages++;
-	if (add_files_state->synchronize_flags == TRUE)
+	if (add_files_state->synchronize_flags == true)
 	    notmuch_message_maildir_flags_to_tags (message);
 	status = NOTMUCH_STATUS_SUCCESS;
     } else if (status == NOTMUCH_STATUS_SUCCESS) {
@@ -941,7 +941,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     add_files_state_t add_files_state = {
 	.verbosity = VERBOSITY_NORMAL,
-	.debug = FALSE,
+	.debug = false,
 	.output_is_a_tty = isatty (fileno (stdout)),
     };
     struct timeval tv_start;
@@ -953,9 +953,9 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     _filename_node_t *f;
     int opt_index;
     unsigned int i;
-    notmuch_bool_t timer_is_active = FALSE;
-    notmuch_bool_t no_hooks = FALSE;
-    notmuch_bool_t quiet = FALSE, verbose = FALSE;
+    bool timer_is_active = false;
+    bool no_hooks = false;
+    bool quiet = false, verbose = false;
     notmuch_status_t status;
 
     notmuch_opt_desc_t options[] = {
@@ -987,7 +987,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     for (i = 0; i < add_files_state.new_tags_length; i++) {
 	const char *error_msg;
 
-	error_msg = illegal_tag (add_files_state.new_tags[i], FALSE);
+	error_msg = illegal_tag (add_files_state.new_tags[i], false);
 	if (error_msg) {
 	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n",
 		     add_files_state.new_tags[i], error_msg);
@@ -1054,7 +1054,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 
 	    if (notmuch_database_dump (notmuch, backup_name, "",
-				       DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_DEFAULT, TRUE)) {
+				       DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_DEFAULT, true)) {
 		fprintf (stderr, "Backup failed. Aborting upgrade.");
 		return EXIT_FAILURE;
 	    }
@@ -1101,7 +1101,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (add_files_state.verbosity == VERBOSITY_NORMAL &&
 	add_files_state.output_is_a_tty && ! debugger_is_active ()) {
 	setup_progress_printing_timer ();
-	timer_is_active = TRUE;
+	timer_is_active = true;
     }
 
     ret = add_files (notmuch, db_path, &add_files_state);

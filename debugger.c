@@ -28,20 +28,20 @@
 #define RUNNING_ON_VALGRIND 0
 #endif
 
-notmuch_bool_t
+bool
 debugger_is_active (void)
 {
     char buf[1024];
 
     if (RUNNING_ON_VALGRIND)
-	return TRUE;
+	return true;
 
     sprintf (buf, "/proc/%d/exe", getppid ());
     if (readlink (buf, buf, sizeof (buf)) != -1 &&
 	strncmp (basename (buf), "gdb", 3) == 0)
     {
-	return TRUE;
+	return true;
     }
 
-    return FALSE;
+    return false;
 }

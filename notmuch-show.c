@@ -196,7 +196,7 @@ _is_from_line (const char *line)
 
 void
 format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
-			 notmuch_bool_t reply)
+			 bool reply)
 {
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
@@ -283,7 +283,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	return;
 
     stream_filter = g_mime_stream_filter_new (stream_out);
-    crlf_filter = g_mime_filter_crlf_new (FALSE, FALSE);
+    crlf_filter = g_mime_filter_crlf_new (false, false);
     g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
 			     crlf_filter);
     g_object_unref (crlf_filter);
@@ -305,7 +305,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 
     if (flags & NOTMUCH_SHOW_TEXT_PART_REPLY) {
 	GMimeFilter *reply_filter;
-	reply_filter = g_mime_filter_reply_new (TRUE);
+	reply_filter = g_mime_filter_reply_new (true);
 	if (reply_filter) {
 	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (stream_filter),
 				      reply_filter);
@@ -350,7 +350,7 @@ do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
     for (unsigned int i = 0; i < array_map_len; i++) {
 	if (errors & key_map[i].bit) {
 	    sp->map_key (sp, key_map[i].string);
-	    sp->boolean (sp, TRUE);
+	    sp->boolean (sp, true);
 	}
     }
 
@@ -490,7 +490,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
     GMimeObject *meta = node->envelope_part ?
 	GMIME_OBJECT (node->envelope_part) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
-    const notmuch_bool_t leaf = GMIME_IS_PART (node->part);
+    const bool leaf = GMIME_IS_PART (node->part);
     GMimeStream *stream = params->out_stream;
     const char *part_type;
     int i;
@@ -603,8 +603,8 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		      notmuch_bool_t output_body,
-		      notmuch_bool_t include_html)
+		      bool output_body,
+		      bool include_html)
 {
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
@@ -614,12 +614,12 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	format_message_sprinter (sp, node->envelope_file);
 
 	sp->map_key (sp, "headers");
-	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
 
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), TRUE, include_html);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), true, include_html);
 	    sp->end (sp);
 	}
 	sp->end (sp);
@@ -713,7 +713,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 
 	sp->map_key (sp, "headers");
-	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
 
 	sp->map_key (sp, "body");
 	sp->begin_list (sp);
@@ -721,7 +721,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), TRUE, include_html);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), true, include_html);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -898,8 +898,8 @@ show_messages (void *ctx,
 	       notmuch_show_params_t *params)
 {
     notmuch_message_t *message;
-    notmuch_bool_t match;
-    notmuch_bool_t excluded;
+    bool match;
+    bool excluded;
     int next_indent;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
@@ -1081,13 +1081,13 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     sprinter_t *sprinter;
     notmuch_show_params_t params = {
 	.part = -1,
-	.omit_excluded = TRUE,
-	.output_body = TRUE,
+	.omit_excluded = true,
+	.output_body = true,
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
-    notmuch_bool_t exclude = TRUE;
-    notmuch_bool_t entire_thread_set = FALSE;
-    notmuch_bool_t single_message;
+    bool exclude = true;
+    bool entire_thread_set = false;
+    bool single_message;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1118,7 +1118,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     /* decryption implies verification */
     if (params.crypto.decrypt)
-	params.crypto.verify = TRUE;
+	params.crypto.verify = true;
 
     /* specifying a part implies single message display */
     single_message = params.part >= 0;
@@ -1138,21 +1138,21 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	}
     } else if (format == NOTMUCH_FORMAT_RAW) {
 	/* raw format only supports single message display */
-	single_message = TRUE;
+	single_message = true;
     }
 
     notmuch_exit_if_unsupported_format ();
 
-    /* Default is entire-thread = FALSE except for format=json and
+    /* Default is entire-thread = false except for format=json and
      * format=sexp. */
     if (! entire_thread_set &&
 	(format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP))
-	params.entire_thread = TRUE;
+	params.entire_thread = true;
 
     if (!params.output_body) {
 	if (params.part > 0) {
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
-	    params.output_body = TRUE;
+	    params.output_body = true;
 	} else {
 	    if (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)
 		fprintf (stderr,
@@ -1222,9 +1222,9 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 	}
 
-	if (exclude == FALSE) {
-	    notmuch_query_set_omit_excluded (query, FALSE);
-	    params.omit_excluded = FALSE;
+	if (exclude == false) {
+	    notmuch_query_set_omit_excluded (query, false);
+	    params.omit_excluded = false;
 	}
 
 	ret = do_show (config, query, formatter, sprinter, &params);

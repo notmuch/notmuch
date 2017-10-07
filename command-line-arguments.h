@@ -1,6 +1,8 @@
 #ifndef NOTMUCH_OPTS_H
 #define NOTMUCH_OPTS_H
 
+#include <stdbool.h>
+
 #include "notmuch.h"
 
 /*
@@ -17,7 +19,7 @@ typedef struct notmuch_keyword {
 typedef struct notmuch_opt_desc {
     /* One and only one of opt_* must be set. */
     const struct notmuch_opt_desc *opt_inherit;
-    notmuch_bool_t *opt_bool;
+    bool *opt_bool;
     int *opt_int;
     int *opt_keyword;
     int *opt_flags;
@@ -27,8 +29,8 @@ typedef struct notmuch_opt_desc {
     /* Must be set except for opt_inherit and opt_position. */
     const char *name;
 
-    /* Optional, if non-NULL, set to TRUE if the option is present. */
-    notmuch_bool_t *present;
+    /* Optional, if non-NULL, set to true if the option is present. */
+    bool *present;
 
     /* Must be set for opt_keyword and opt_flags. */
     const struct notmuch_keyword *keywords;
@@ -64,7 +66,7 @@ parse_arguments (int argc, char **argv, const notmuch_opt_desc_t *options, int o
 int
 parse_option (int argc, char **argv, const notmuch_opt_desc_t* options, int opt_index);
 
-notmuch_bool_t
+bool
 parse_position_arg (const char *arg,
 		    int position_arg_index,
 		    const notmuch_opt_desc_t* options);

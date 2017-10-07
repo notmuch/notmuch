@@ -13,14 +13,14 @@ struct sprinter_json {
     /* A flag to signify that a separator should be inserted in the
      * output as soon as possible.
      */
-    notmuch_bool_t insert_separator;
+    bool insert_separator;
 };
 
 struct json_state {
     struct json_state *parent;
     /* True if nothing has been printed in this aggregate yet.
      * Suppresses the comma before a value. */
-    notmuch_bool_t first;
+    bool first;
     /* The character that closes the current aggregate. */
     char close;
 };
@@ -37,12 +37,12 @@ json_begin_value (struct sprinter *sp)
 	    fputc (',', spj->stream);
 	    if (spj->insert_separator) {
 		fputc ('\n', spj->stream);
-		spj->insert_separator = FALSE;
+		spj->insert_separator = false;
 	    } else {
 		fputc (' ', spj->stream);
 	    }
 	} else {
-	    spj->state->first = FALSE;
+	    spj->state->first = false;
 	}
     }
     return spj;
@@ -58,7 +58,7 @@ json_begin_aggregate (struct sprinter *sp, char open, char close)
 
     fputc (open, spj->stream);
     state->parent = spj->state;
-    state->first = TRUE;
+    state->first = true;
     state->close = close;
     spj->state = state;
 }
@@ -132,7 +132,7 @@ json_integer (struct sprinter *sp, int val)
 }
 
 static void
-json_boolean (struct sprinter *sp, notmuch_bool_t val)
+json_boolean (struct sprinter *sp, bool val)
 {
     struct sprinter_json *spj = json_begin_value (sp);
 
@@ -154,7 +154,7 @@ json_map_key (struct sprinter *sp, const char *key)
 
     json_string (sp, key);
     fputs (": ", spj->stream);
-    spj->state->first = TRUE;
+    spj->state->first = true;
 }
 
 static void
@@ -167,7 +167,7 @@ json_separator (struct sprinter *sp)
 {
     struct sprinter_json *spj = (struct sprinter_json *) sp;
 
-    spj->insert_separator = TRUE;
+    spj->insert_separator = true;
 }
 
 struct sprinter *
@@ -186,7 +186,7 @@ sprinter_json_create (const void *ctx, FILE *stream)
 	    .map_key = json_map_key,
 	    .separator = json_separator,
 	    .set_prefix = json_set_prefix,
-	    .is_text_printer = FALSE,
+	    .is_text_printer = false,
 	}
     };
     struct sprinter_json *res;

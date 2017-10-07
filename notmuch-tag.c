@@ -194,8 +194,8 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     struct sigaction action;
     tag_op_flag_t tag_flags = TAG_FLAG_NONE;
-    notmuch_bool_t batch = FALSE;
-    notmuch_bool_t remove_all = FALSE;
+    bool batch = false;
+    bool remove_all = false;
     FILE *input = stdin;
     const char *input_file_name = NULL;
     int opt_index;
@@ -223,7 +223,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     if (input_file_name) {
-	batch = TRUE;
+	batch = true;
 	input = fopen (input_file_name, "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",

@@ -46,7 +46,7 @@ notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 static int
 _help_for (const char *topic);
 
-static notmuch_bool_t print_version = FALSE, print_help = FALSE;
+static bool print_version = false, print_help = false;
 const char *notmuch_requested_db_uuid = NULL;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
@@ -371,13 +371,13 @@ notmuch_command (notmuch_config_t *config,
  * is).
  *
  * Does not return if the external command is found and
- * executed. Return TRUE if external command is not found. Return
- * FALSE on errors.
+ * executed. Return true if external command is not found. Return
+ * false on errors.
  */
-static notmuch_bool_t try_external_command(char *argv[])
+static bool try_external_command(char *argv[])
 {
     char *old_argv0 = argv[0];
-    notmuch_bool_t ret = TRUE;
+    bool ret = true;
 
     argv[0] = talloc_asprintf (NULL, "notmuch-%s", old_argv0);
 
@@ -389,7 +389,7 @@ static notmuch_bool_t try_external_command(char *argv[])
     if (errno != ENOENT) {
 	fprintf (stderr, "Error: Running external command '%s' failed: %s\n",
 		 argv[0], strerror(errno));
-	ret = FALSE;
+	ret = false;
     }
 
     talloc_free (argv[0]);

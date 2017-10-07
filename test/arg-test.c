@@ -12,9 +12,9 @@ int main(int argc, char **argv){
     const char *pos_arg1=NULL;
     const char *pos_arg2=NULL;
     const char *string_val=NULL;
-    notmuch_bool_t bool_val = FALSE;
-    notmuch_bool_t fl_set = FALSE, int_set = FALSE, bool_set = FALSE,
-	kw_set = FALSE, string_set = FALSE, pos1_set = FALSE, pos2_set = FALSE;
+    bool bool_val = false;
+    bool fl_set = false, int_set = false, bool_set = false,
+	kw_set = false, string_set = false, pos1_set = false, pos2_set = false;
 
     notmuch_opt_desc_t parent_options[] = {
 	{ .opt_flags = &fl_val, .name = "flag", .present = &fl_set, .keywords =

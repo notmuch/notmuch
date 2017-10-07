@@ -33,7 +33,7 @@ struct sprinter_sexp {
 
     /* A flag to signify that a separator should be inserted in the
      * output as soon as possible. */
-    notmuch_bool_t insert_separator;
+    bool insert_separator;
 };
 
 struct sexp_state {
@@ -41,7 +41,7 @@ struct sexp_state {
 
     /* True if nothing has been printed in this aggregate yet.
      * Suppresses the space before a value. */
-    notmuch_bool_t first;
+    bool first;
 };
 
 /* Helper function to set up the stream to print a value.  If this
@@ -55,12 +55,12 @@ sexp_begin_value (struct sprinter *sp)
 	if (! sps->state->first) {
 	    if (sps->insert_separator) {
 		fputc ('\n', sps->stream);
-		sps->insert_separator = FALSE;
+		sps->insert_separator = false;
 	    } else {
 		fputc (' ', sps->stream);
 	    }
 	} else {
-	    sps->state->first = FALSE;
+	    sps->state->first = false;
 	}
     }
     return sps;
@@ -76,7 +76,7 @@ sexp_begin_aggregate (struct sprinter *sp)
 
     fputc ('(', sps->stream);
     state->parent = sps->state;
-    state->first = TRUE;
+    state->first = true;
     sps->state = state;
 }
 
@@ -169,7 +169,7 @@ sexp_integer (struct sprinter *sp, int val)
 }
 
 static void
-sexp_boolean (struct sprinter *sp, notmuch_bool_t val)
+sexp_boolean (struct sprinter *sp, bool val)
 {
     struct sprinter_sexp *sps = sexp_begin_value (sp);
 
@@ -202,7 +202,7 @@ sexp_separator (struct sprinter *sp)
 {
     struct sprinter_sexp *sps = (struct sprinter_sexp *) sp;
 
-    sps->insert_separator = TRUE;
+    sps->insert_separator = true;
 }
 
 struct sprinter *
@@ -221,7 +221,7 @@ sprinter_sexp_create (const void *ctx, FILE *stream)
 	    .map_key = sexp_map_key,
 	    .separator = sexp_separator,
 	    .set_prefix = sexp_set_prefix,
-	    .is_text_printer = FALSE,
+	    .is_text_printer = false,
 	}
     };
     struct sprinter_sexp *res;

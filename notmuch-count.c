@@ -29,8 +29,8 @@ enum {
 
 /* The following is to allow future options to be added more easily */
 enum {
-    EXCLUDE_TRUE,
-    EXCLUDE_FALSE,
+    EXCLUDE_true,
+    EXCLUDE_false,
 };
 
 /* Return the number of files matching the query, or -1 for an error */
@@ -160,11 +160,11 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
-    int exclude = EXCLUDE_TRUE;
+    int exclude = EXCLUDE_true;
     const char **search_exclude_tags = NULL;
     size_t search_exclude_tags_length = 0;
-    notmuch_bool_t batch = FALSE;
-    notmuch_bool_t print_lastmod = FALSE;
+    bool batch = false;
+    bool print_lastmod = false;
     FILE *input = stdin;
     const char *input_file_name = NULL;
     int ret;
@@ -176,8 +176,8 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "files", OUTPUT_FILES },
 				  { 0, 0 } } },
 	{ .opt_keyword = &exclude, .name = "exclude", .keywords =
-	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
-				  { "false", EXCLUDE_FALSE },
+	  (notmuch_keyword_t []){ { "true", EXCLUDE_true },
+				  { "false", EXCLUDE_false },
 				  { 0, 0 } } },
 	{ .opt_bool = &print_lastmod, .name = "lastmod" },
 	{ .opt_bool = &batch, .name = "batch" },
@@ -193,7 +193,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     if (input_file_name) {
-	batch = TRUE;
+	batch = true;
 	input = fopen (input_file_name, "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
@@ -221,7 +221,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (exclude == EXCLUDE_TRUE) {
+    if (exclude == EXCLUDE_true) {
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
     }

@@ -163,7 +163,7 @@ do_search_threads (search_context_t *ctx)
 	    int files = notmuch_thread_get_total_files (thread);
 	    int total = notmuch_thread_get_total_messages (thread);
 	    const char *relative_date = NULL;
-	    notmuch_bool_t first_tag = TRUE;
+	    bool first_tag = true;
 
 	    format->begin_map (format);
 
@@ -243,7 +243,7 @@ do_search_threads (search_context_t *ctx)
 		if (format->is_text_printer) {
                   /* Special case for the text formatter */
 		    if (first_tag)
-			first_tag = FALSE;
+			first_tag = false;
 		    else
 			fputc (' ', stdout);
 		    fputs (tag, stdout);
@@ -295,9 +295,9 @@ static int mailbox_compare (const void *v1, const void *v2)
     return ret;
 }
 
-/* Returns TRUE iff name and addr is duplicate. If not, stores the
+/* Returns true iff name and addr is duplicate. If not, stores the
  * name/addr pair in order to detect subsequent duplicates. */
-static notmuch_bool_t
+static bool
 is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 {
     char *key;
@@ -315,12 +315,12 @@ is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 	if (l) {
 	    mailbox = l->data;
 	    mailbox->count++;
-	    return TRUE;
+	    return true;
 	}
 
 	mailbox = new_mailbox (ctx->format, name, addr);
 	if (! mailbox)
-	    return FALSE;
+	    return false;
 
 	/*
 	 * XXX: It would be more efficient to prepend to the list, but
@@ -331,24 +331,24 @@ is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 	if (list != g_list_append (list, mailbox))
 	    INTERNAL_ERROR ("appending to list changed list head\n");
 
-	return FALSE;
+	return false;
     }
 
     key = talloc_strdup (ctx->format, addr);
     if (! key)
-	return FALSE;
+	return false;
 
     mailbox = new_mailbox (ctx->format, name, addr);
     if (! mailbox)
-	return FALSE;
+	return false;
 
     list = g_list_append (NULL, mailbox);
     if (! list)
-	return FALSE;
+	return false;
 
     g_hash_table_insert (ctx->addresses, key, list);
 
-    return FALSE;
+    return false;
 }
 
 static void
@@ -363,7 +363,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 
     /* name_addr has the name part quoted if necessary. Compare
      * 'John Doe <john@doe.com>' vs. '"Doe, John" <john@doe.com>' */
-    name_addr = internet_address_to_string (ia, FALSE);
+    name_addr = internet_address_to_string (ia, false);
 
     if (format->is_text_printer) {
 	if (ctx->output & OUTPUT_COUNT) {

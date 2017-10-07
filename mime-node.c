@@ -112,7 +112,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (mctx->stream), FALSE);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (mctx->stream), false);
 
     mctx->parser = g_mime_parser_new_with_stream (mctx->stream);
     if (!mctx->parser) {
@@ -175,7 +175,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 {
     GError *err = NULL;
 
-    node->verify_attempted = TRUE;
+    node->verify_attempted = true;
     node->sig_list = g_mime_multipart_signed_verify
 	(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
 
@@ -198,7 +198,7 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
     GMimeDecryptResult *decrypt_result = NULL;
     GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
 
-    node->decrypt_attempted = TRUE;
+    node->decrypt_attempted = true;
     node->decrypted_child = g_mime_multipart_encrypted_decrypt
 	(encrypteddata, cryptoctx, &decrypt_result, &err);
     if (! node->decrypted_child) {
@@ -207,8 +207,8 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 	goto DONE;
     }
 
-    node->decrypt_success = TRUE;
-    node->verify_attempted = TRUE;
+    node->decrypt_success = true;
+    node->verify_attempted = true;
 
     /* This may be NULL if the part is not signed. */
     node->sig_list = g_mime_decrypt_result_get_signatures (decrypt_result);
