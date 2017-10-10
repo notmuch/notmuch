@@ -308,7 +308,7 @@ def clone(repository):
                 'git', 'clone', '--no-checkout', '--separate-git-dir', NMBGIT,
                 repository, workdir],
             wait=True)
-    _git(args=['config', '--unset', 'core.worktree'], wait=True)
+    _git(args=['config', '--unset', 'core.worktree'], wait=True, expect=(0, 5))
     _git(args=['config', 'core.bare', 'true'], wait=True)
     _git(args=['branch', 'config', 'origin/config'], wait=True)
 
