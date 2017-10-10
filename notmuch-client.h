@@ -185,7 +185,7 @@ GMimeCryptoContext *
 _notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol);
 #endif
 
-int
+void
 _notmuch_crypto_cleanup (_notmuch_crypto_t *crypto);
 
 int

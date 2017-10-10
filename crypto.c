@@ -117,7 +117,7 @@ _notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protoc
     return NULL;
 }
 
-int
+void
 _notmuch_crypto_cleanup (_notmuch_crypto_t *crypto)
 {
     if (crypto->gpgctx) {
@@ -129,12 +129,9 @@ _notmuch_crypto_cleanup (_notmuch_crypto_t *crypto)
 	g_object_unref (crypto->pkcs7ctx);
 	crypto->pkcs7ctx = NULL;
     }
-
-    return 0;
 }
 #else
-int _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
+void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 {
-    return 0;
 }
 #endif
