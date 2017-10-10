@@ -169,8 +169,9 @@ class _SubprocessContextManager(object):
                 stream.close()
                 setattr(self._process, name, None)
         status = self._process.wait()
-        _LOG.debug('collect {args} with status {status}'.format(
-            args=self._args, status=status))
+        _LOG.debug(
+            'collect {args} with status {status} (expected {expect})'.format(
+                args=self._args, status=status, expect=self._expect))
         if status not in self._expect:
             raise SubprocessError(args=self._args, status=status)
 
@@ -211,13 +212,14 @@ def _spawn(args, input=None, additional_env=None, wait=False, stdin=None,
             input = input.encode(encoding)
         (stdout, stderr) = p.communicate(input=input)
         status = p.wait()
-        _LOG.debug('collect {args} with status {status}'.format(
-            args=args, status=status))
+        _LOG.debug(
+            'collect {args} with status {status} (expected {expect})'.format(
+                args=args, status=status, expect=expect))
         if stdout is not None:
             stdout = stdout.decode(encoding)
         if stderr is not None:
             stderr = stderr.decode(encoding)
-        if status:
+        if status not in expect:
             raise SubprocessError(
                 args=args, status=status, stdout=stdout, stderr=stderr)
         return (status, stdout, stderr)
