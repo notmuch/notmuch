@@ -171,7 +171,7 @@ set_signature_list_destructor (mime_node_t *node)
 /* Verify a signed mime node (GMime 2.6) */
 static void
 node_verify (mime_node_t *node, GMimeObject *part,
-	     g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
+	     g_mime_3_unused(GMimeCryptoContext *cryptoctx))
 {
     GError *err = NULL;
 
@@ -192,7 +192,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 /* Decrypt and optionally verify an encrypted mime node (GMime 2.6) */
 static void
 node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
-			 g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
+			 g_mime_3_unused(GMimeCryptoContext *cryptoctx))
 {
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
@@ -227,7 +227,7 @@ static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
-    notmuch_crypto_context_t *cryptoctx = NULL;
+    GMimeCryptoContext *cryptoctx = NULL;
 
     /* Set basic node properties */
     node->part = part;
@@ -265,7 +265,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
 	GMimeContentType *content_type = g_mime_object_get_content_type (part);
 	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-	cryptoctx = _notmuch_crypto_get_context (node->ctx->crypto, protocol);
+	cryptoctx = _notmuch_crypto_get_gmime_context (node->ctx->crypto, protocol);
 	if (!cryptoctx)
 	    return NULL;
     }

@@ -21,10 +21,10 @@
 #include "notmuch-client.h"
 #if (GMIME_MAJOR_VERSION < 3)
 /* Create a GPG context (GMime 2.6) */
-static notmuch_crypto_context_t *
+static GMimeCryptoContext *
 create_gpg_context (_notmuch_crypto_t *crypto)
 {
-    notmuch_crypto_context_t *gpgctx;
+    GMimeCryptoContext *gpgctx;
 
     if (crypto->gpgctx)
 	return crypto->gpgctx;
@@ -44,10 +44,10 @@ create_gpg_context (_notmuch_crypto_t *crypto)
 }
 
 /* Create a PKCS7 context (GMime 2.6) */
-static notmuch_crypto_context_t *
+static GMimeCryptoContext *
 create_pkcs7_context (_notmuch_crypto_t *crypto)
 {
-    notmuch_crypto_context_t *pkcs7ctx;
+    GMimeCryptoContext *pkcs7ctx;
 
     if (crypto->pkcs7ctx)
 	return crypto->pkcs7ctx;
@@ -67,7 +67,7 @@ create_pkcs7_context (_notmuch_crypto_t *crypto)
 }
 static const struct {
     const char *protocol;
-    notmuch_crypto_context_t *(*get_context) (_notmuch_crypto_t *crypto);
+    GMimeCryptoContext *(*get_context) (_notmuch_crypto_t *crypto);
 } protocols[] = {
     {
 	.protocol = "application/pgp-signature",
@@ -89,10 +89,10 @@ static const struct {
 
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
-notmuch_crypto_context_t *
-_notmuch_crypto_get_context (_notmuch_crypto_t *crypto, const char *protocol)
+GMimeCryptoContext *
+_notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol)
 {
-    notmuch_crypto_context_t *cryptoctx = NULL;
+    GMimeCryptoContext *cryptoctx = NULL;
     size_t i;
 
     if (! protocol) {

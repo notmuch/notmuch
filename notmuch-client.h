@@ -32,7 +32,6 @@
 
 #include "gmime-extra.h"
 
-typedef GMimeCryptoContext notmuch_crypto_context_t;
 /* This is automatically included only since gmime 2.6.10 */
 #include <gmime/gmime-pkcs7-context.h>
 
@@ -76,8 +75,8 @@ typedef struct _notmuch_crypto {
     bool verify;
     bool decrypt;
 #if (GMIME_MAJOR_VERSION < 3)
-    notmuch_crypto_context_t* gpgctx;
-    notmuch_crypto_context_t* pkcs7ctx;
+    GMimeCryptoContext* gpgctx;
+    GMimeCryptoContext* pkcs7ctx;
     const char *gpgpath;
 #endif
 } _notmuch_crypto_t;
@@ -182,8 +181,8 @@ void
 notmuch_exit_if_unsupported_format (void);
 
 #if (GMIME_MAJOR_VERSION <3)
-notmuch_crypto_context_t *
-_notmuch_crypto_get_context (_notmuch_crypto_t *crypto, const char *protocol);
+GMimeCryptoContext *
+_notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol);
 #endif
 
 int
