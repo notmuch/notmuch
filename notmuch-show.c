@@ -1234,7 +1234,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     g_mime_stream_flush (params.out_stream);
     g_object_unref (params.out_stream);
 
-    notmuch_crypto_cleanup (&params.crypto);
+    _notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 

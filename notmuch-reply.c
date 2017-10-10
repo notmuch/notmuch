@@ -759,7 +759,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     if (do_reply (config, query, &params, format, reply_all) != 0)
 	return EXIT_FAILURE;
 
-    notmuch_crypto_cleanup (&params.crypto);
+    _notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 

@@ -33,7 +33,7 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
 
     /* Context provided by the caller. */
-    notmuch_crypto_t *crypto;
+    _notmuch_crypto_t *crypto;
 } mime_node_context_t;
 
 static int
@@ -56,7 +56,7 @@ _mime_node_context_free (mime_node_context_t *res)
 
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-		notmuch_crypto_t *crypto, mime_node_t **root_out)
+		_notmuch_crypto_t *crypto, mime_node_t **root_out)
 {
     const char *filename = notmuch_message_get_filename (message);
     mime_node_context_t *mctx;
@@ -265,7 +265,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
 	GMimeContentType *content_type = g_mime_object_get_content_type (part);
 	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-	cryptoctx = notmuch_crypto_get_context (node->ctx->crypto, protocol);
+	cryptoctx = _notmuch_crypto_get_context (node->ctx->crypto, protocol);
 	if (!cryptoctx)
 	    return NULL;
     }

@@ -22,7 +22,7 @@
 #if (GMIME_MAJOR_VERSION < 3)
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
-create_gpg_context (notmuch_crypto_t *crypto)
+create_gpg_context (_notmuch_crypto_t *crypto)
 {
     notmuch_crypto_context_t *gpgctx;
 
@@ -45,7 +45,7 @@ create_gpg_context (notmuch_crypto_t *crypto)
 
 /* Create a PKCS7 context (GMime 2.6) */
 static notmuch_crypto_context_t *
-create_pkcs7_context (notmuch_crypto_t *crypto)
+create_pkcs7_context (_notmuch_crypto_t *crypto)
 {
     notmuch_crypto_context_t *pkcs7ctx;
 
@@ -67,7 +67,7 @@ create_pkcs7_context (notmuch_crypto_t *crypto)
 }
 static const struct {
     const char *protocol;
-    notmuch_crypto_context_t *(*get_context) (notmuch_crypto_t *crypto);
+    notmuch_crypto_context_t *(*get_context) (_notmuch_crypto_t *crypto);
 } protocols[] = {
     {
 	.protocol = "application/pgp-signature",
@@ -90,7 +90,7 @@ static const struct {
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
 notmuch_crypto_context_t *
-notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
+_notmuch_crypto_get_context (_notmuch_crypto_t *crypto, const char *protocol)
 {
     notmuch_crypto_context_t *cryptoctx = NULL;
     size_t i;
@@ -118,7 +118,7 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 }
 
 int
-notmuch_crypto_cleanup (notmuch_crypto_t *crypto)
+_notmuch_crypto_cleanup (_notmuch_crypto_t *crypto)
 {
     if (crypto->gpgctx) {
 	g_object_unref (crypto->gpgctx);
@@ -133,7 +133,7 @@ notmuch_crypto_cleanup (notmuch_crypto_t *crypto)
     return 0;
 }
 #else
-int notmuch_crypto_cleanup (unused(notmuch_crypto_t *crypto))
+int _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 {
     return 0;
 }

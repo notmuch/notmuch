@@ -72,7 +72,7 @@ typedef struct notmuch_show_format {
 			      const struct notmuch_show_params *params);
 } notmuch_show_format_t;
 
-typedef struct notmuch_crypto {
+typedef struct _notmuch_crypto {
     bool verify;
     bool decrypt;
 #if (GMIME_MAJOR_VERSION < 3)
@@ -80,14 +80,14 @@ typedef struct notmuch_crypto {
     notmuch_crypto_context_t* pkcs7ctx;
     const char *gpgpath;
 #endif
-} notmuch_crypto_t;
+} _notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
     bool entire_thread;
     bool omit_excluded;
     bool output_body;
     int part;
-    notmuch_crypto_t crypto;
+    _notmuch_crypto_t crypto;
     bool include_html;
     GMimeStream *out_stream;
 } notmuch_show_params_t;
@@ -183,11 +183,11 @@ notmuch_exit_if_unsupported_format (void);
 
 #if (GMIME_MAJOR_VERSION <3)
 notmuch_crypto_context_t *
-notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
+_notmuch_crypto_get_context (_notmuch_crypto_t *crypto, const char *protocol);
 #endif
 
 int
-notmuch_crypto_cleanup (notmuch_crypto_t *crypto);
+_notmuch_crypto_cleanup (_notmuch_crypto_t *crypto);
 
 int
 notmuch_count_command (notmuch_config_t *config, int argc, char *argv[]);
@@ -449,7 +449,7 @@ struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-		notmuch_crypto_t *crypto, mime_node_t **node_out);
+		_notmuch_crypto_t *crypto, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.
  * parent will be used as the talloc context for the returned child
