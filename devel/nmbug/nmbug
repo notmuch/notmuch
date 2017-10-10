@@ -54,7 +54,7 @@ except ImportError:  # Python 2
 __version__ = '0.2'
 
 _LOG = _logging.getLogger('nmbug')
-_LOG.setLevel(_logging.ERROR)
+_LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
 
 NMBGIT = _os.path.expanduser(
@@ -311,6 +311,13 @@ def clone(repository):
     _git(args=['config', '--unset', 'core.worktree'], wait=True, expect=(0, 5))
     _git(args=['config', 'core.bare', 'true'], wait=True)
     _git(args=['branch', 'config', 'origin/config'], wait=True)
+    existing_tags = get_tags()
+    if existing_tags:
+        _LOG.warning(
+            'Not checking out to avoid clobbering existing tags: {}'.format(
+            ', '.join(existing_tags)))
+    else:
+        checkout()
 
 
 def _is_committed(status):
