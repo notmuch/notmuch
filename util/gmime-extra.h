@@ -29,7 +29,6 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define g_mime_init(flags) g_mime_init()
 #define g_mime_message_add_recipient(m,t,n,a) g_mime_message_add_mailbox (m,t,n,a)
 #define g_mime_message_set_subject(m,s) g_mime_message_set_subject(m,s,NULL)
-#define g_mime_multipart_encrypted_decrypt(mpe,ctx,out,err) g_mime_multipart_encrypted_decrypt(mpe, GMIME_DECRYPT_NONE, NULL, out, err)
 #define g_mime_multipart_signed_verify(mps,ctx,err) g_mime_multipart_signed_verify(mps, GMIME_ENCRYPT_NONE, err)
 #define g_mime_object_write_to_stream(o,s) g_mime_object_write_to_stream (o,NULL,s)
 #define g_mime_object_set_header(o,h,v) g_mime_object_set_header (o,h,v,NULL)
