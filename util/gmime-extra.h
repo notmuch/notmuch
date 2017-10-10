@@ -18,7 +18,6 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define g_mime_certificate_get_fpr16(cert) g_mime_certificate_get_key_id (cert)
 #define g_mime_certificate_get_uid(cert) g_mime_certificate_get_name (cert);
 #else /* GMime >= 3.0 */
-typedef GMimeAddressType GMimeRecipientType;
 
 #define GMIME_ENABLE_RFC_2047_WORKAROUNDS 0xdeadbeef
 #define g_mime_certificate_get_uid(cert) g_mime_certificate_get_key_id (cert);
