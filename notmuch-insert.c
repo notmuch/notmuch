@@ -456,7 +456,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     const char *folder = "";
     bool create_folder = false;
     bool keep = false;
-    bool no_hooks = false;
+    bool hooks = true;
     bool synchronize_flags;
     char *maildir;
     char *newpath;
@@ -467,7 +467,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_string = &folder, .name = "folder", .allow_empty = true },
 	{ .opt_bool = &create_folder, .name = "create-folder" },
 	{ .opt_bool = &keep, .name = "keep" },
-	{ .opt_bool =  &no_hooks, .name = "no-hooks" },
+	{ .opt_bool =  &hooks, .name = "hooks" },
 	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
@@ -581,7 +581,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	}
     }
 
-    if (! no_hooks && status == NOTMUCH_STATUS_SUCCESS) {
+    if (hooks && status == NOTMUCH_STATUS_SUCCESS) {
 	/* Ignore hook failures. */
 	notmuch_run_hook (db_path, "post-insert");
     }

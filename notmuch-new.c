@@ -954,7 +954,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     unsigned int i;
     bool timer_is_active = false;
-    bool no_hooks = false;
+    bool hooks = true;
     bool quiet = false, verbose = false;
     notmuch_status_t status;
 
@@ -962,7 +962,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &quiet, .name = "quiet" },
 	{ .opt_bool = &verbose, .name = "verbose" },
 	{ .opt_bool = &add_files_state.debug, .name = "debug" },
-	{ .opt_bool = &no_hooks, .name = "no-hooks" },
+	{ .opt_bool = &hooks, .name = "hooks" },
 	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
@@ -996,7 +996,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	}
     }
 
-    if (!no_hooks) {
+    if (hooks) {
 	ret = notmuch_run_hook (db_path, "pre-new");
 	if (ret)
 	    return EXIT_FAILURE;
@@ -1168,7 +1168,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_database_destroy (notmuch);
 
-    if (!no_hooks && !ret && !interrupted)
+    if (hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
 
     if (ret || interrupted)
