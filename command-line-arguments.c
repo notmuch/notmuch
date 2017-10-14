@@ -11,8 +11,9 @@
 */
 
 static bool
-_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
-
+_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next,
+		      const char *arg_str, bool negate)
+{
     const notmuch_keyword_t *keywords;
 
     if (next == '\0') {
@@ -24,7 +25,9 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 	if (strcmp (arg_str, keywords->name) != 0)
 	    continue;
 
-	if (arg_desc->opt_flags)
+	if (arg_desc->opt_flags && negate)
+	    *arg_desc->opt_flags &= ~keywords->value;
+	else if (arg_desc->opt_flags)
 	    *arg_desc->opt_flags |= keywords->value;
 	else
 	    *arg_desc->opt_keyword = keywords->value;
@@ -39,7 +42,9 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 }
 
 static bool
-_process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+_process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next,
+		      const char *arg_str, bool negate)
+{
     bool value;
 
     if (next == '\0' || strcmp (arg_str, "true") == 0) {
@@ -51,7 +56,7 @@ _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 	return false;
     }
 
-    *arg_desc->opt_bool = value;
+    *arg_desc->opt_bool = negate ? !value : value;
 
     return true;
 }
@@ -139,6 +144,8 @@ parse_position_arg (const char *arg_str, int pos_arg_index,
     return false;
 }
 
+#define NEGATIVE_PREFIX "no-"
+
 /*
  * Search for a non-positional (i.e. starting with --) argument matching arg,
  * parse a possible value, and assign to *output_var
@@ -155,6 +162,14 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
     assert(options);
 
     const char *arg = _arg + 2; /* _arg starts with -- */
+    const char *negative_arg = NULL;
+
+    /* See if this is a --no-argument */
+    if (strlen (arg) > strlen (NEGATIVE_PREFIX) &&
+	strncmp (arg, NEGATIVE_PREFIX, strlen (NEGATIVE_PREFIX)) == 0) {
+	negative_arg = arg + strlen (NEGATIVE_PREFIX);
+    }
+
     const notmuch_opt_desc_t *try;
 
     const char *next_arg = NULL;
@@ -171,11 +186,22 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	if (! try->name)
 	    continue;
 
-	if (strncmp (arg, try->name, strlen (try->name)) != 0)
-	    continue;
+	char next;
+	const char *value;
+	bool negate = false;
 
-	char next = arg[strlen (try->name)];
-	const char *value = arg + strlen(try->name) + 1;
+	if (strncmp (arg, try->name, strlen (try->name)) == 0) {
+	    next = arg[strlen (try->name)];
+	    value = arg + strlen (try->name) + 1;
+	} else if (negative_arg && (try->opt_bool || try->opt_flags) &&
+		   strncmp (negative_arg, try->name, strlen (try->name)) == 0) {
+	    next = negative_arg[strlen (try->name)];
+	    value = negative_arg + strlen (try->name) + 1;
+	    /* The argument part of --no-argument matches, negate the result. */
+	    negate = true;
+	} else {
+	    continue;
+	}
 
 	/*
 	 * If we have not reached the end of the argument (i.e. the
@@ -194,9 +220,9 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 
 	bool opt_status = false;
 	if (try->opt_keyword || try->opt_flags)
-	    opt_status = _process_keyword_arg (try, next, value);
+	    opt_status = _process_keyword_arg (try, next, value, negate);
 	else if (try->opt_bool)
-	    opt_status = _process_boolean_arg (try, next, value);
+	    opt_status = _process_boolean_arg (try, next, value, negate);
 	else if (try->opt_int)
 	    opt_status = _process_int_arg (try, next, value);
 	else if (try->opt_string)
