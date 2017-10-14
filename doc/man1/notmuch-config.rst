@@ -79,11 +79,22 @@ The available configuration items are described below.
         Default: ``unread;inbox``.
 
     **new.ignore**
-        A list of file and directory names, without path, that will not
-        be searched for messages by **notmuch new**. All the files and
-        directories matching any of the names specified here will be
-        ignored, regardless of the location in the mail store directory
-        hierarchy.
+        A list to specify files and directories that will not be
+        searched for messages by **notmuch new**. Each entry in the
+        list is either:
+
+          A file or a directory name, without path, that will be
+          ignored, regardless of the location in the mail store
+          directory hierarchy.
+
+        Or:
+
+          A regular expression delimited with // that will be matched
+          against the path of the file or directory relative to the
+          database path. Matching files and directories will be
+          ignored. The beginning and end of string must be explictly
+          anchored. For example, /.*/foo$/ would match "bar/foo" and
+          "bar/baz/foo", but not "foo" or "bar/foobar".
 
         Default: empty list.
 

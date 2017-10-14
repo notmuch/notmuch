@@ -42,13 +42,17 @@ enum verbosity {
 };
 
 typedef struct {
+    const char *db_path;
+
     int output_is_a_tty;
     enum verbosity verbosity;
     bool debug;
     const char **new_tags;
     size_t new_tags_length;
-    const char **new_ignore;
-    size_t new_ignore_length;
+    const char **ignore_verbatim;
+    size_t ignore_verbatim_length;
+    regex_t *ignore_regex;
+    size_t ignore_regex_length;
 
     int total_files;
     int processed_files;
@@ -240,18 +244,125 @@ _special_directory (const char *entry)
     return strcmp (entry, ".") == 0 || strcmp (entry, "..") == 0;
 }
 
+static bool
+_setup_ignore (notmuch_config_t *config, add_files_state_t *state)
+{
+    const char **ignore_list, **ignore;
+    int nregex = 0, nverbatim = 0;
+    const char **verbatim = NULL;
+    regex_t *regex = NULL;
+
+    ignore_list = notmuch_config_get_new_ignore (config, NULL);
+    if (! ignore_list)
+	return true;
+
+    for (ignore = ignore_list; *ignore; ignore++) {
+	const char *s = *ignore;
+	size_t len = strlen (s);
+
+	if (len == 0) {
+	    fprintf (stderr, "Error: Empty string in new.ignore list\n");
+	    return false;
+	}
+
+	if (s[0] == '/') {
+	    regex_t *preg;
+	    char *r;
+	    int rerr;
+
+	    if (len < 3 || s[len - 1] != '/') {
+		fprintf (stderr, "Error: Malformed pattern '%s' in new.ignore\n",
+			 s);
+		return false;
+	    }
+
+	    r = talloc_strndup (config, s + 1, len - 2);
+	    regex = talloc_realloc (config, regex, regex_t, nregex + 1);
+	    preg = &regex[nregex];
+
+	    rerr = regcomp (preg, r, REG_EXTENDED | REG_NOSUB);
+	    if (rerr) {
+		size_t error_size = regerror (rerr, preg, NULL, 0);
+		char *error = talloc_size (r, error_size);
+
+		regerror (rerr, preg, error, error_size);
+
+		fprintf (stderr, "Error: Invalid regex '%s' in new.ignore: %s\n",
+			 r, error);
+		return false;
+	    }
+	    nregex++;
+
+	    talloc_free (r);
+	} else {
+	    verbatim = talloc_realloc (config, verbatim, const char *,
+				       nverbatim + 1);
+	    verbatim[nverbatim++] = s;
+	}
+    }
+
+    state->ignore_regex = regex;
+    state->ignore_regex_length = nregex;
+    state->ignore_verbatim = verbatim;
+    state->ignore_verbatim_length = nverbatim;
+
+    return true;
+}
+
+static char *
+_get_relative_path (const char *db_path, const char *dirpath, const char *entry)
+{
+    size_t db_path_len = strlen (db_path);
+
+    /* paranoia? */
+    if (strncmp (dirpath, db_path, db_path_len) != 0) {
+	fprintf (stderr, "Warning: '%s' is not a subdirectory of '%s'\n",
+		 dirpath, db_path);
+	return NULL;
+    }
+
+    dirpath += db_path_len;
+    while (*dirpath == '/')
+	dirpath++;
+
+    if (*dirpath)
+	return talloc_asprintf (NULL, "%s/%s", dirpath, entry);
+    else
+	return talloc_strdup (NULL, entry);
+}
+
 /* Test if the file/directory is to be ignored.
  */
 static bool
-_entry_in_ignore_list (const char *entry, add_files_state_t *state)
+_entry_in_ignore_list (add_files_state_t *state, const char *dirpath,
+		       const char *entry)
 {
+    bool ret = false;
     size_t i;
+    char *path;
 
-    for (i = 0; i < state->new_ignore_length; i++)
-	if (strcmp (entry, state->new_ignore[i]) == 0)
+    for (i = 0; i < state->ignore_verbatim_length; i++) {
+	if (strcmp (entry, state->ignore_verbatim[i]) == 0)
 	    return true;
+    }
 
-    return false;
+    if (state->ignore_regex_length == 0)
+	return false;
+
+    path = _get_relative_path (state->db_path, dirpath, entry);
+    if (! path)
+	return false;
+
+    for (i = 0; i < state->ignore_regex_length; i++) {
+	if (regexec (&state->ignore_regex[i], path, 0, NULL, 0) == 0) {
+	    ret = true;
+	    break;
+	}
+    }
+
+    talloc_free (path);
+
+    return ret;
 }
 
 /* Add a single file to the database. */
@@ -461,7 +572,7 @@ add_files (notmuch_database_t *notmuch,
 	 * and because we don't care if dirent_type fails on entries
 	 * that are explicitly ignored.
 	 */
-	if (_entry_in_ignore_list (entry->d_name, state)) {
+	if (_entry_in_ignore_list (state, path, entry->d_name)) {
 	    if (state->debug)
 		printf ("(D) add_files, pass 1: explicitly ignoring %s/%s\n",
 			path, entry->d_name);
@@ -526,7 +637,7 @@ add_files (notmuch_database_t *notmuch,
 	    continue;
 
 	/* Ignore files & directories user has configured to be ignored */
-	if (_entry_in_ignore_list (entry->d_name, state)) {
+	if (_entry_in_ignore_list (state, path, entry->d_name)) {
 	    if (state->debug)
 		printf ("(D) add_files, pass 2: explicitly ignoring %s/%s\n",
 			path, entry->d_name);
@@ -756,7 +867,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	/* Ignore any files/directories the user has configured to be
 	 * ignored
 	 */
-	if (_entry_in_ignore_list (entry->d_name, state)) {
+	if (_entry_in_ignore_list (state, path, entry->d_name)) {
 	    if (state->debug)
 		printf ("(D) count_files: explicitly ignoring %s/%s\n",
 			path, entry->d_name);
@@ -981,9 +1092,12 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	add_files_state.verbosity = VERBOSITY_VERBOSE;
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
-    add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
+    add_files_state.db_path = db_path;
+
+    if (! _setup_ignore (config, &add_files_state))
+	return EXIT_FAILURE;
 
     for (i = 0; i < add_files_state.new_tags_length; i++) {
 	const char *error_msg;
