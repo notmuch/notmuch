@@ -27,12 +27,6 @@ enum {
     OUTPUT_FILES,
 };
 
-/* The following is to allow future options to be added more easily */
-enum {
-    EXCLUDE_true,
-    EXCLUDE_false,
-};
-
 /* Return the number of files matching the query, or -1 for an error */
 static int
 count_files (notmuch_query_t *query)
@@ -160,7 +154,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
-    int exclude = EXCLUDE_true;
+    bool exclude = true;
     const char **search_exclude_tags = NULL;
     size_t search_exclude_tags_length = 0;
     bool batch = false;
@@ -175,10 +169,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "messages", OUTPUT_MESSAGES },
 				  { "files", OUTPUT_FILES },
 				  { 0, 0 } } },
-	{ .opt_keyword = &exclude, .name = "exclude", .keywords =
-	  (notmuch_keyword_t []){ { "true", EXCLUDE_true },
-				  { "false", EXCLUDE_false },
-				  { 0, 0 } } },
+	{ .opt_bool = &exclude, .name = "exclude" },
 	{ .opt_bool = &print_lastmod, .name = "lastmod" },
 	{ .opt_bool = &batch, .name = "batch" },
 	{ .opt_string = &input_file_name, .name = "input" },
@@ -221,7 +212,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (exclude == EXCLUDE_true) {
+    if (exclude) {
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
     }
