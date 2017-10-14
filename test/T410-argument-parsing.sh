@@ -37,4 +37,32 @@ positional arg 1 false
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "--boolean=true"
+$TEST_DIRECTORY/arg-test --boolean=true > OUTPUT
+cat <<EOF > EXPECTED
+boolean 1
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "--boolean=false"
+$TEST_DIRECTORY/arg-test --boolean=false > OUTPUT
+cat <<EOF > EXPECTED
+boolean 0
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "--no-boolean"
+$TEST_DIRECTORY/arg-test --no-boolean > OUTPUT
+cat <<EOF > EXPECTED
+boolean 0
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "--no-flag"
+$TEST_DIRECTORY/arg-test --flag=one --flag=three --no-flag=three > OUTPUT
+cat <<EOF > EXPECTED
+flags 1
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
