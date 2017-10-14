@@ -259,6 +259,28 @@ ln -s i_do_not_exist "${MAIL_DIR}"/broken_link
 output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" "No new mail."
 
+test_begin_subtest "Ignore files and directories specified in new.ignore (regexp)"
+notmuch config set new.ignore ".git" "/^bro.*ink\$/" "/ignored.*file/"
+output=$(NOTMUCH_NEW --debug 2>&1 | sort)
+test_expect_equal "$output" \
+"(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/broken_link
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/broken_link
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
+No new mail."
+
 test_begin_subtest "Quiet: No new mail."
 output=$(NOTMUCH_NEW --quiet)
 test_expect_equal "$output" ""
