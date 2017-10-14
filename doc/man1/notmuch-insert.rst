@@ -34,7 +34,8 @@ Supported options for **insert** include
     ``--folder=<``\ folder\ **>**
         Deliver the message to the specified folder, relative to the
         top-level directory given by the value of **database.path**. The
-        default is to deliver to the top-level directory.
+        default is the empty string, which means delivering to the
+        top-level directory.
 
     ``--create-folder``
         Try to create the folder named by the ``--folder`` option, if it

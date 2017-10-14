@@ -32,6 +32,9 @@ typedef struct notmuch_opt_desc {
     /* Optional, if non-NULL, set to true if the option is present. */
     bool *present;
 
+    /* Optional, allow empty strings for opt_string. */
+    bool allow_empty;
+
     /* Must be set for opt_keyword and opt_flags. */
     const struct notmuch_keyword *keywords;
 } notmuch_opt_desc_t;

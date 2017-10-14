@@ -81,7 +81,7 @@ _process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *
 	fprintf (stderr, "Option \"%s\" needs a string argument.\n", arg_desc->name);
 	return false;
     }
-    if (arg_str[0] == '\0') {
+    if (arg_str[0] == '\0' && ! arg_desc->allow_empty) {
 	fprintf (stderr, "String argument for option \"%s\" must be non-empty.\n", arg_desc->name);
 	return false;
     }

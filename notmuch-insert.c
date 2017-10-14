@@ -464,7 +464,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
-	{ .opt_string = &folder, .name = "folder" },
+	{ .opt_string = &folder, .name = "folder", .allow_empty = true },
 	{ .opt_bool = &create_folder, .name = "create-folder" },
 	{ .opt_bool = &keep, .name = "keep" },
 	{ .opt_bool =  &no_hooks, .name = "no-hooks" },
