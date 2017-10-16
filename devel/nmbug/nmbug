@@ -65,7 +65,8 @@ if _os.path.isdir(_NMBGIT):
 
 TAG_PREFIX = _os.getenv('NMBPREFIX', 'notmuch::')
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
-_TAG_FILE_REGEX = _re.compile('tags/(?P<id>[^/]*)/(?P<tag>[^/]*)')
+_TAG_DIRECTORY = 'tags/'
+_TAG_FILE_REGEX = _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)')
 
 # magic hash for Git (git hash-object -t blob /dev/null)
 _EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
@@ -683,8 +684,11 @@ def _unpack_diff_lines(stream):
     for line in stream:
         match = _TAG_FILE_REGEX.match(line.strip())
         if not match:
-            raise ValueError(
-                'Invalid line in diff: {!r}'.format(line.strip()))
+            message = 'non-tag line in diff: {!r}'.format(line.strip())
+            if line.startswith(_TAG_DIRECTORY):
+                raise ValueError(message)
+            _LOG.info(message)
+            continue
         id = _unquote(match.group('id'))
         tag = _unquote(match.group('tag'))
         yield (id, tag)
