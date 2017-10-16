@@ -247,7 +247,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
 	cryptoctx = notmuch_crypto_get_context (node->ctx->crypto, protocol);
 	if (!cryptoctx)
-	    return NULL;
+	    return node;
     }
 #endif
 
