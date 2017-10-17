@@ -32,9 +32,6 @@
 
 #include "gmime-extra.h"
 
-/* This is automatically included only since gmime 2.6.10 */
-#include <gmime/gmime-pkcs7-context.h>
-
 #include "notmuch.h"
 
 /* This is separate from notmuch-private.h because we're trying to
@@ -54,6 +51,7 @@
 #include <ctype.h>
 
 #include "talloc-extra.h"
+#include "crypto.h"
 
 #define unused(x) x __attribute__ ((unused))
 
@@ -70,16 +68,6 @@ typedef struct notmuch_show_format {
 			      struct mime_node *node, int indent,
 			      const struct notmuch_show_params *params);
 } notmuch_show_format_t;
-
-typedef struct _notmuch_crypto {
-    bool verify;
-    bool decrypt;
-#if (GMIME_MAJOR_VERSION < 3)
-    GMimeCryptoContext* gpgctx;
-    GMimeCryptoContext* pkcs7ctx;
-    const char *gpgpath;
-#endif
-} _notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
     bool entire_thread;
@@ -179,14 +167,6 @@ typedef struct _notmuch_config notmuch_config_t;
  */
 void
 notmuch_exit_if_unsupported_format (void);
-
-#if (GMIME_MAJOR_VERSION <3)
-GMimeCryptoContext *
-_notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol);
-#endif
-
-void
-_notmuch_crypto_cleanup (_notmuch_crypto_t *crypto);
 
 int
 notmuch_count_command (notmuch_config_t *config, int argc, char *argv[]);

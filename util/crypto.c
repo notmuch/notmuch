@@ -18,7 +18,12 @@
  * Authors: Jameson Rollins <jrollins@finestructure.net>
  */
 
-#include "notmuch-client.h"
+#include "crypto.h"
+#include <strings.h>
+#define unused(x) x __attribute__ ((unused))
+
+#define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
+
 #if (GMIME_MAJOR_VERSION < 3)
 /* Create a GPG context (GMime 2.6) */
 static GMimeCryptoContext *
