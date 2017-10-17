@@ -1824,6 +1824,22 @@ notmuch_status_t
 notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key);
 
 /**
+ * Remove all (prefix*,value) pairs from the given message
+ *
+ * @param[in,out] message  message to operate on.
+ * @param[in]     prefix   delete properties with keys that start with prefix.
+ *			   If NULL, delete all properties
+ * @returns
+ * - NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *   read-only mode so message cannot be modified.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_status_t
+notmuch_message_remove_all_properties_with_prefix (notmuch_message_t *message, const char *prefix);
+
+/**
  * Opaque message property iterator
  */
 typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
