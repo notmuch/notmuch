@@ -192,6 +192,23 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_ILLEGAL_ARGUMENT,
     /**
+     * A MIME object claimed to have cryptographic protection which
+     * notmuch tried to handle, but the protocol was not specified in
+     * an intelligible way.
+     */
+    NOTMUCH_STATUS_MALFORMED_CRYPTO_PROTOCOL,
+    /**
+     * Notmuch attempted to do crypto processing, but could not
+     * initialize the engine needed to do so.
+     */
+    NOTMUCH_STATUS_FAILED_CRYPTO_CONTEXT_CREATION,
+    /**
+     * A MIME object claimed to have cryptographic protection, and
+     * notmuch attempted to process it, but the specific protocol was
+     * something that notmuch doesn't know how to handle.
+     */
+    NOTMUCH_STATUS_UNKNOWN_CRYPTO_PROTOCOL,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */

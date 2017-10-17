@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #if (GMIME_MAJOR_VERSION < 3)
 #include "gmime-extra.h"
+#include "notmuch.h"
 #endif
 
 typedef struct _notmuch_crypto {
@@ -18,8 +19,10 @@ typedef struct _notmuch_crypto {
 
 
 #if (GMIME_MAJOR_VERSION < 3)
-GMimeCryptoContext *
-_notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol);
+notmuch_status_t
+_notmuch_crypto_get_gmime_ctx_for_protocol (_notmuch_crypto_t *crypto,
+					    const char *protocol,
+					    GMimeCryptoContext **ctx);
 #endif
 
 void

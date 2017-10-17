@@ -25,85 +25,86 @@
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 #if (GMIME_MAJOR_VERSION < 3)
-/* Create a GPG context (GMime 2.6) */
-static GMimeCryptoContext *
-create_gpg_context (_notmuch_crypto_t *crypto)
+/* Create or pass on a GPG context (GMime 2.6) */
+static notmuch_status_t
+get_gpg_context (_notmuch_crypto_t *crypto, GMimeCryptoContext **ctx)
 {
-    GMimeCryptoContext *gpgctx;
+    if (ctx == NULL || crypto == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (crypto->gpgctx)
-	return crypto->gpgctx;
+    if (crypto->gpgctx) {
+	*ctx = crypto->gpgctx;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
 
     /* TODO: GMimePasswordRequestFunc */
-    gpgctx = g_mime_gpg_context_new (NULL, crypto->gpgpath ? crypto->gpgpath : "gpg");
-    if (! gpgctx) {
-	fprintf (stderr, "Failed to construct gpg context.\n");
-	return NULL;
+    crypto->gpgctx = g_mime_gpg_context_new (NULL, crypto->gpgpath ? crypto->gpgpath : "gpg");
+    if (! crypto->gpgctx) {
+	return NOTMUCH_STATUS_FAILED_CRYPTO_CONTEXT_CREATION;
     }
-    crypto->gpgctx = gpgctx;
 
-    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, true);
-    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, false);
+    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) crypto->gpgctx, true);
+    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) crypto->gpgctx, false);
 
-    return gpgctx;
+    *ctx = crypto->gpgctx;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-/* Create a PKCS7 context (GMime 2.6) */
-static GMimeCryptoContext *
-create_pkcs7_context (_notmuch_crypto_t *crypto)
+/* Create or pass on a PKCS7 context (GMime 2.6) */
+static notmuch_status_t
+get_pkcs7_context (_notmuch_crypto_t *crypto, GMimeCryptoContext **ctx)
 {
-    GMimeCryptoContext *pkcs7ctx;
+    if (ctx == NULL || crypto == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (crypto->pkcs7ctx)
-	return crypto->pkcs7ctx;
+    if (crypto->pkcs7ctx) {
+	*ctx = crypto->pkcs7ctx;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
 
     /* TODO: GMimePasswordRequestFunc */
-    pkcs7ctx = g_mime_pkcs7_context_new (NULL);
-    if (! pkcs7ctx) {
-	fprintf (stderr, "Failed to construct pkcs7 context.\n");
-	return NULL;
+    crypto->pkcs7ctx = g_mime_pkcs7_context_new (NULL);
+    if (! crypto->pkcs7ctx) {
+	return NOTMUCH_STATUS_FAILED_CRYPTO_CONTEXT_CREATION;
     }
-    crypto->pkcs7ctx = pkcs7ctx;
 
-    g_mime_pkcs7_context_set_always_trust ((GMimePkcs7Context *) pkcs7ctx,
+    g_mime_pkcs7_context_set_always_trust ((GMimePkcs7Context *) crypto->pkcs7ctx,
 					   false);
 
-    return pkcs7ctx;
+    *ctx = crypto->pkcs7ctx;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 static const struct {
     const char *protocol;
-    GMimeCryptoContext *(*get_context) (_notmuch_crypto_t *crypto);
+    notmuch_status_t (*get_context) (_notmuch_crypto_t *crypto, GMimeCryptoContext **ctx);
 } protocols[] = {
     {
 	.protocol = "application/pgp-signature",
-	.get_context = create_gpg_context,
+	.get_context = get_gpg_context,
     },
     {
 	.protocol = "application/pgp-encrypted",
-	.get_context = create_gpg_context,
+	.get_context = get_gpg_context,
     },
     {
 	.protocol = "application/pkcs7-signature",
-	.get_context = create_pkcs7_context,
+	.get_context = get_pkcs7_context,
     },
     {
 	.protocol = "application/x-pkcs7-signature",
-	.get_context = create_pkcs7_context,
+	.get_context = get_pkcs7_context,
     },
 };
 
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
-GMimeCryptoContext *
-_notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protocol)
+notmuch_status_t
+_notmuch_crypto_get_gmime_ctx_for_protocol (_notmuch_crypto_t *crypto,
+					    const char *protocol,
+					    GMimeCryptoContext **ctx)
 {
-    GMimeCryptoContext *cryptoctx = NULL;
-    size_t i;
-
-    if (! protocol) {
-	fprintf (stderr, "Cryptographic protocol is empty.\n");
-	return cryptoctx;
-    }
+    if (! protocol)
+	return NOTMUCH_STATUS_MALFORMED_CRYPTO_PROTOCOL;
 
     /* As per RFC 1847 section 2.1: "the [protocol] value token is
      * comprised of the type and sub-type tokens of the Content-Type".
@@ -111,15 +112,12 @@ _notmuch_crypto_get_gmime_context (_notmuch_crypto_t *crypto, const char *protoc
      * parameter names as defined in this document are
      * case-insensitive."  Thus, we use strcasecmp for the protocol.
      */
-    for (i = 0; i < ARRAY_SIZE (protocols); i++) {
+    for (size_t i = 0; i < ARRAY_SIZE (protocols); i++) {
 	if (strcasecmp (protocol, protocols[i].protocol) == 0)
-	    return protocols[i].get_context (crypto);
+	    return protocols[i].get_context (crypto, ctx);
     }
 
-    fprintf (stderr, "Unknown or unsupported cryptographic protocol %s.\n",
-	     protocol);
-
-    return NULL;
+    return NOTMUCH_STATUS_UNKNOWN_CRYPTO_PROTOCOL;
 }
 
 void
