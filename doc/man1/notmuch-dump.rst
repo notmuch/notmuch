@@ -85,7 +85,7 @@ Supported options for **dump** include
 
         Output per-message (key,value) metadata.  Each line starts
         with "#= ", followed by a message id, and a space separated
-        list of key=value pairs.  pair.  Ids, keys and values are hex
+        list of key=value pairs.  Ids, keys and values are hex
         encoded if needed.
 
       **tags**

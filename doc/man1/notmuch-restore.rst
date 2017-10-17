@@ -62,14 +62,14 @@ Supported options for **restore** include
 
         **properties**
 
-          Output per-message (key,value) metadata.  Each line starts
+          Restore per-message (key,value) metadata.  Each line starts
           with "#= ", followed by a message id, and a space separated
-          list of key=value pairs.  pair.  Ids, keys and values are
-          hex encoded if needed.
+          list of key=value pairs.  Ids, keys and values are hex
+          encoded if needed.
 
         **tags**
 
-          Output per-message metadata, namely tags. See *format* above
+          Restore per-message metadata, namely tags. See *format* above
           for more details.
 
       The default is to restore all available types of data.  The
