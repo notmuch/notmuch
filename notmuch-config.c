@@ -808,7 +808,14 @@ _item_split (char *item, char **group, char **key)
 }
 
 #define BUILT_WITH_PREFIX "built_with."
-#define QUERY_PREFIX "query."
+
+static bool
+_stored_in_db (const char *item)
+{
+    if (STRNCMP_LITERAL (item, "query.") == 0)
+	return true;
+    return false;
+}
 
 static int
 _print_db_config(notmuch_config_t *config, const char *name)
@@ -857,7 +864,7 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
     } else if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
 	printf ("%s\n",
 		notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)) ? "true" : "false");
-    } else if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+    } else if (_stored_in_db (item)) {
 	return _print_db_config (config, item);
     } else {
 	char **value;
@@ -928,7 +935,7 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
 	return 1;
     }
 
-    if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+    if (_stored_in_db (item)) {
 	return _set_db_config (config, item, argc, argv);
     }
 

@@ -15,7 +15,11 @@ DESCRIPTION
 ===========
 
 The **config** command can be used to get or set settings in the notmuch
-configuration file.
+configuration file and corresponding database.
+
+Items marked **[STORED IN DATABASE]** are only in the database.  They
+should not be placed in the configuration file, and should be accessed
+programmatically as described in the SYNOPSIS above.
 
     **get**
         The value of the specified configuration item is printed to
@@ -142,6 +146,7 @@ The available configuration items are described below.
 
     **query.<name>**
 
+        **[STORED IN DATABASE]**
         Expansion for named query called <name>. See
         **notmuch-search-terms(7)** for more information about named
         queries.
