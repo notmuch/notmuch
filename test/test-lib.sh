@@ -160,9 +160,6 @@ do
 		valgrind=t; verbose=t; shift ;;
 	--tee)
 		shift ;; # was handled already
-	--root=*)
-		root=$(expr "z$1" : 'z[^=]*=\(.*\)')
-		shift ;;
 	*)
 		echo "error: unknown test option '$1'" >&2; exit 1 ;;
 	esac

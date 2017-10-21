@@ -307,13 +307,9 @@ export PATH MANPATH
 
 # Test repository
 test="tmp.$(basename "$0" .sh)"
-test -n "$root" && test="$root/$test"
-case "$test" in
-/*) TMP_DIRECTORY="$test" ;;
- *) TMP_DIRECTORY="$TEST_DIRECTORY/$test" ;;
-esac
+TMP_DIRECTORY="$TEST_DIRECTORY/$test"
 test ! -z "$debug" || remove_tmp=$TMP_DIRECTORY
-rm -fr "$test" || {
+rm -rf "$TMP_DIRECTORY" || {
 	GIT_EXIT_OK=t
 	echo >&6 "FATAL: Cannot prepare test area"
 	exit 1
