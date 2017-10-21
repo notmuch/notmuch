@@ -109,7 +109,7 @@ add_gnupg_home ()
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
-    gpg --no-tty --import <$TEST_DIRECTORY/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
+    gpg --no-tty --import <$NOTMUCH_SRCDIR/test/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
     if (gpg --quick-random --version >/dev/null 2>&1) ; then
 	echo quick-random >> "$GNUPGHOME"/gpg.conf
