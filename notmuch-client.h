@@ -495,4 +495,18 @@ void notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
 void notmuch_process_shared_options (const char* subcommand_name);
 int notmuch_minimal_options (const char* subcommand_name,
 			     int argc, char **argv);
+
+
+/* the state chosen by the user invoking one of the notmuch
+ * subcommands that does indexing */
+struct _notmuch_client_indexing_cli_choices {
+    bool try_decrypt;
+    bool try_decrypt_set;
+    notmuch_indexopts_t * opts;
+};
+extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;
+extern const notmuch_opt_desc_t  notmuch_shared_indexing_options [];
+notmuch_status_t
+notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, notmuch_config_t *config);
+
 #endif

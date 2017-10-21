@@ -96,6 +96,46 @@ int notmuch_minimal_options (const char *subcommand_name,
     return opt_index;
 }
 
+
+struct _notmuch_client_indexing_cli_choices indexing_cli_choices = { };
+const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
+    { .opt_bool = &indexing_cli_choices.try_decrypt,
+      .present = &indexing_cli_choices.try_decrypt_set,
+      .name = "try-decrypt" },
+    { }
+};
+
+
+notmuch_status_t
+notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, g_mime_3_unused(notmuch_config_t *config))
+{
+    if (indexing_cli_choices.opts == NULL)
+	indexing_cli_choices.opts = notmuch_database_get_default_indexopts (notmuch);
+    if (indexing_cli_choices.try_decrypt_set) {
+	notmuch_status_t status;
+	if (indexing_cli_choices.opts == NULL)
+	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+	status = notmuch_indexopts_set_try_decrypt (indexing_cli_choices.opts, indexing_cli_choices.try_decrypt);
+	if (status != NOTMUCH_STATUS_SUCCESS) {
+	    fprintf (stderr, "Error: Failed to set try_decrypt to %s. (%s)\n",
+		     indexing_cli_choices.try_decrypt ? "True" : "False", notmuch_status_to_string (status));
+	    notmuch_indexopts_destroy (indexing_cli_choices.opts);
+	    indexing_cli_choices.opts = NULL;
+	    return status;
+	}
+    }
+#if (GMIME_MAJOR_VERSION < 3)
+    if (indexing_cli_choices.opts && notmuch_indexopts_get_try_decrypt (indexing_cli_choices.opts)) {
+	const char* gpg_path = notmuch_config_get_crypto_gpg_path (config);
+	if (gpg_path && strcmp(gpg_path, "gpg"))
+	    fprintf (stderr, "Warning: deprecated crypto.gpg_path is set to '%s'\n"
+		     "\tbut ignoring (use $PATH instead)\n", gpg_path);
+    }
+#endif
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+
 static command_t commands[] = {
     { NULL, notmuch_command, NOTMUCH_CONFIG_OPEN | NOTMUCH_CONFIG_CREATE,
       "Notmuch main command." },
