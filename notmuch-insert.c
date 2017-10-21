@@ -379,12 +379,13 @@ FAIL:
  */
 static notmuch_status_t
 add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
-	  bool synchronize_flags, bool keep)
+	  bool synchronize_flags, bool keep,
+	  notmuch_indexopts_t *indexopts)
 {
     notmuch_message_t *message;
     notmuch_status_t status;
 
-    status = notmuch_database_index_file (notmuch, path, NULL, &message);
+    status = notmuch_database_index_file (notmuch, path, indexopts, &message);
     if (status == NOTMUCH_STATUS_SUCCESS) {
 	status = tag_op_list_apply (message, tag_ops, 0);
 	if (status) {
@@ -467,6 +468,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &create_folder, .name = "create-folder" },
 	{ .opt_bool = &keep, .name = "keep" },
 	{ .opt_bool =  &no_hooks, .name = "no-hooks" },
+	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -545,9 +547,15 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
+    status = notmuch_process_shared_indexing_options (notmuch, config);
+    if (status != NOTMUCH_STATUS_SUCCESS) {
+	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
+		 notmuch_status_to_string (status));
+	return EXIT_FAILURE;
+    }
 
     /* Index the message. */
-    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep);
+    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep, indexing_cli_choices.opts);
 
     /* Commit changes. */
     close_status = notmuch_database_destroy (notmuch);

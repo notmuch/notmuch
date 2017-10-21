@@ -50,6 +50,20 @@ Supported options for **insert** include
     ``--no-hooks``
         Prevent hooks from being run.
 
+    ``--try-decrypt=(true|false)``
+
+        If true and the message is encrypted, try to decrypt the
+        message while indexing.  If decryption is successful, index
+        the cleartext itself.  Either way, the message is always
+        stored to disk in its original form (ciphertext).  Be aware
+        that the index is likely sufficient to reconstruct the
+        cleartext of the message itself, so please ensure that the
+        notmuch message index is adequately protected. DO NOT USE
+        ``--try-decrypt=true`` without considering the security of
+        your index.
+
+        See also ``index.try_decrypt`` in **notmuch-config(1)**.
+
 EXIT STATUS
 ===========
 

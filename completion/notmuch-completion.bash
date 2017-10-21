@@ -287,12 +287,16 @@ _notmuch_insert()
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
 	    return
 	    ;;
+	--try-decrypt)
+	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--create-folder --folder= --keep --no-hooks ${_notmuch_shared_options}"
+	    local options="--create-folder --folder= --keep --no-hooks --try-decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
