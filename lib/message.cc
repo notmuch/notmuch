@@ -1999,6 +1999,10 @@ notmuch_message_reindex (notmuch_message_t *message,
 	goto DONE;
     }
 
+    ret = notmuch_message_remove_all_properties_with_prefix (message, "index.");
+    if (ret)
+	goto DONE; /* XXX TODO: distinguish from other error returns above? */
+
     /* re-add the filenames with the associated indexopts */
     for (; notmuch_filenames_valid (orig_filenames);
 	 notmuch_filenames_move_to_next (orig_filenames)) {

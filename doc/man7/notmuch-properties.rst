@@ -41,6 +41,12 @@ Extensions to notmuch which make use of properties are encouraged to
 report the specific properties used to the upstream notmuch project,
 as a way of avoiding collisions in the property namespace.
 
+CONVENTIONS
+===========
+
+Any property with a key that starts with "index." will be removed (and
+possibly re-set) upon reindexing (see **notmuch-reindex(1)**).
+
 SEE ALSO
 ========
 

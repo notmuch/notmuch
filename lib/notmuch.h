@@ -1764,6 +1764,9 @@ notmuch_message_destroy (notmuch_message_t *message);
  * add or delete values for, as other subsystems or extensions may
  * depend on these properties.
  *
+ * Please see notmuch-properties(7) for more details about specific
+ * properties and conventions around their use.
+ *
  */
 /**@{*/
 /**
