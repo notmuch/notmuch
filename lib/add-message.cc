@@ -460,7 +460,7 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 notmuch_status_t
 notmuch_database_index_file (notmuch_database_t *notmuch,
 			     const char *filename,
-			     notmuch_indexopts_t unused (*indexopts),
+			     notmuch_indexopts_t *indexopts,
 			     notmuch_message_t **message_ret)
 {
     notmuch_message_file_t *message_file;
@@ -468,6 +468,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
     bool is_ghost = false, is_new = false;
+    notmuch_indexopts_t *def_indexopts = NULL;
 
     const char *date;
     const char *from, *to, *subject;
@@ -540,6 +541,11 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	if (is_new || is_ghost)
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
+	if (!indexopts) {
+	    def_indexopts = notmuch_database_get_default_indexopts (notmuch);
+	    indexopts = def_indexopts;
+	}
+
 	ret = _notmuch_message_index_file (message, message_file);
 	if (ret)
 	    goto DONE;
@@ -557,6 +563,9 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
     }
 
   DONE:
+    if (def_indexopts)
+	notmuch_indexopts_destroy (def_indexopts);
+
     if (message) {
 	if ((ret == NOTMUCH_STATUS_SUCCESS ||
 	     ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) && message_ret)

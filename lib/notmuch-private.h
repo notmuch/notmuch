@@ -52,6 +52,7 @@ NOTMUCH_BEGIN_DECLS
 #include "xutil.h"
 #include "error_util.h"
 #include "string-util.h"
+#include "crypto.h"
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
@@ -632,6 +633,12 @@ _notmuch_thread_create (void *ctx,
 			notmuch_string_list_t *excluded_terms,
 			notmuch_exclude_t omit_exclude,
 			notmuch_sort_t sort);
+
+/* indexopts.c */
+
+struct _notmuch_indexopts {
+    _notmuch_crypto_t crypto;
+};
 
 NOTMUCH_END_DECLS
 

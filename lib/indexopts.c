@@ -21,9 +21,27 @@
 #include "notmuch-private.h"
 
 notmuch_indexopts_t *
-notmuch_database_get_default_indexopts (notmuch_database_t unused (*db))
+notmuch_database_get_default_indexopts (notmuch_database_t *db)
 {
-    return NULL;
+    return talloc_zero (db, notmuch_indexopts_t);
+}
+
+notmuch_status_t
+notmuch_indexopts_set_try_decrypt (notmuch_indexopts_t *indexopts,
+				   notmuch_bool_t try_decrypt)
+{
+    if (!indexopts)
+	return NOTMUCH_STATUS_NULL_POINTER;
+    indexopts->crypto.decrypt = try_decrypt;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_bool_t
+notmuch_indexopts_get_try_decrypt (const notmuch_indexopts_t *indexopts)
+{
+    if (!indexopts)
+	return false;
+    return indexopts->crypto.decrypt;
 }
 
 void

@@ -2231,6 +2231,29 @@ notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db);
 
 /**
+ * Specify whether to decrypt encrypted parts while indexing.
+ *
+ * Be aware that the index is likely sufficient to reconstruct the
+ * cleartext of the message itself, so please ensure that the notmuch
+ * message index is adequately protected. DO NOT SET THIS FLAG TO TRUE
+ * without considering the security of your index.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_status_t
+notmuch_indexopts_set_try_decrypt (notmuch_indexopts_t *indexopts,
+				   notmuch_bool_t try_decrypt);
+
+/**
+ * Return whether to decrypt encrypted parts while indexing.
+ * see notmuch_indexopts_set_try_decrypt.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_bool_t
+notmuch_indexopts_get_try_decrypt (const notmuch_indexopts_t *indexopts);
+
+/**
  * Destroy a notmuch_indexopts_t object.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
