@@ -267,7 +267,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     if (status)
 	goto DONE;
 
-    status = notmuch_database_index_file (notmuch, filename, NULL, &message);
+    status = notmuch_database_index_file (notmuch, filename, indexing_cli_choices.opts, &message);
     switch (status) {
     /* Success. */
     case NOTMUCH_STATUS_SUCCESS:
@@ -963,6 +963,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &verbose, .name = "verbose" },
 	{ .opt_bool = &add_files_state.debug, .name = "debug" },
 	{ .opt_bool = &no_hooks, .name = "no-hooks" },
+	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -1079,6 +1080,13 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch == NULL)
 	return EXIT_FAILURE;
+
+    status = notmuch_process_shared_indexing_options (notmuch, config);
+    if (status != NOTMUCH_STATUS_SUCCESS) {
+	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
+		 notmuch_status_to_string (status));
+	return EXIT_FAILURE;
+    }
 
     /* Set up our handler for SIGINT. We do this after having
      * potentially done a database upgrade we this interrupt handler

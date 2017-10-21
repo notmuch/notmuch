@@ -311,11 +311,20 @@ _notmuch_insert()
 _notmuch_new()
 {
     local cur prev words cword split
-    _init_completion || return
+    _init_completion -s || return
 
+    $split &&
+    case "${prev}" in
+	--try-decrypt)
+	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
+    esac
+
+    ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--no-hooks --quiet ${_notmuch_shared_options}"
+	    local options="--no-hooks --try-decrypt= --quiet ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
 	    ;;
