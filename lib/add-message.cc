@@ -546,7 +546,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	    indexopts = def_indexopts;
 	}
 
-	ret = _notmuch_message_index_file (message, message_file);
+	ret = _notmuch_message_index_file (message, indexopts, message_file);
 	if (ret)
 	    goto DONE;
 

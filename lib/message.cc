@@ -1961,7 +1961,7 @@ _notmuch_message_frozen (notmuch_message_t *message)
 
 notmuch_status_t
 notmuch_message_reindex (notmuch_message_t *message,
-			 notmuch_indexopts_t unused (*indexopts))
+			 notmuch_indexopts_t *indexopts)
 {
     notmuch_database_t *notmuch = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
@@ -2042,7 +2042,7 @@ notmuch_message_reindex (notmuch_message_t *message,
 	if (found == 0)
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
-	ret = _notmuch_message_index_file (message, message_file);
+	ret = _notmuch_message_index_file (message, indexopts, message_file);
 
 	if (ret == NOTMUCH_STATUS_FILE_ERROR)
 	    continue;

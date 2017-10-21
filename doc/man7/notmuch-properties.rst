@@ -47,6 +47,32 @@ CONVENTIONS
 Any property with a key that starts with "index." will be removed (and
 possibly re-set) upon reindexing (see **notmuch-reindex(1)**).
 
+MESSAGE PROPERTIES
+==================
+
+The following properties are set by notmuch internally in the course
+of its normal activity.
+
+**index.decryption**
+
+    If a message contains encrypted content, and notmuch tries to
+    decrypt that content during indexing, it will add the property
+    ``index.decryption=success`` when the cleartext was successfully
+    indexed.  If notmuch attempts to decrypt any part of a message
+    during indexing and that decryption attempt fails, it will add the
+    property ``index.decryption=failure`` to the message.
+
+    Note that it's possible for a single message to have both
+    ``index.decryption=success`` and ``index.decryption=failure``.
+    Consider an encrypted e-mail message that contains another
+    encrypted e-mail message as an attachment -- if the outer message
+    can be decrypted, but the attached part cannot, then both
+    properties will be set on the message as a whole.
+
+    If notmuch never tried to decrypt an encrypted message during
+    indexing (which is the default), then this property will not be
+    set on that message.
+
 SEE ALSO
 ========
 
