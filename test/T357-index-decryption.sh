@@ -102,6 +102,69 @@ test_expect_equal \
     "$expected"
 
 
+# add a tag to all messages to ensure that it stays after reindexing
+test_begin_subtest 'tagging all messages'
+test_expect_success 'notmuch tag +blarney "encrypted message"'
+test_begin_subtest "verify that tags have not changed"
+output=$(notmuch search tag:blarney)
+expected='thread:0000000000000001   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
+thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
+test_expect_equal \
+    "$output" \
+    "$expected"
 
+# see if first message shows up after reindexing with --try-decrypt=true (same $expected, untouched):
+test_begin_subtest 'reindex old messages'
+test_expect_success 'notmuch reindex --try-decrypt=true tag:encrypted and not property:index.decryption=success'
+test_begin_subtest "reindexed encrypted message, including cleartext"
+output=$(notmuch search wumpus)
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+# and the same search, but by property ($expected is untouched):
+test_begin_subtest "emacs search by property for both messages"
+output=$(notmuch search property:index.decryption=success)
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+
+# try to remove cleartext indexing
+test_begin_subtest 'reindex without cleartext'
+test_expect_success 'notmuch reindex tag:encrypted and property:index.decryption=success'
+test_begin_subtest "reindexed encrypted messages, without cleartext"
+output=$(notmuch search wumpus)
+expected=''
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+# and the same search, but by property ($expected is untouched):
+test_begin_subtest "emacs search by property with both messages unindexed"
+output=$(notmuch search property:index.decryption=success)
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+# ensure that the tags remain even when we are dropping the cleartext.
+test_begin_subtest "verify that tags remain without cleartext"
+output=$(notmuch search tag:blarney)
+expected='thread:0000000000000001   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
+thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+
+# TODO: test removal of a message from the message store between
+# indexing and reindexing.
+
+# TODO: insert the same message into the message store twice, index,
+# remove one of them from the message store, and then reindex.
+# reindexing should return a failure but the message should still be
+# present? -- or what should the semantics be if you ask to reindex a
+# message whose underlying files have been renamed or moved or
+# removed?
 
 test_done

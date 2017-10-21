@@ -435,10 +435,18 @@ _notmuch_reindex()
     local cur prev words cword split
     _init_completion -s || return
 
+    $split &&
+    case "${prev}" in
+	--try-decrypt)
+	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
+    esac
+
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="${_notmuch_shared_options}"
+	    local options="--try-decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
