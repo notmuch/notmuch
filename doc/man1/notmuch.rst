@@ -169,6 +169,7 @@ SEE ALSO
 **notmuch-hooks(5)**,
 **notmuch-insert(1)**,
 **notmuch-new(1)**,
+**notmuch-properties(7)**,
 **notmuch-reindex(1)**,
 **notmuch-reply(1)**,
 **notmuch-restore(1)**,

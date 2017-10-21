@@ -99,6 +99,10 @@ man_pages = [
      u'incorporate new mail into the notmuch database',
      [notmuch_authors], 1),
 
+    ('man7/notmuch-properties', 'notmuch-properties',
+     u'notmuch message property conventions and documentation',
+     [notmuch_authors], 7),
+
     ('man1/notmuch-reindex', 'notmuch-reindex',
      u're-index matching messages',
      [notmuch_authors], 1),

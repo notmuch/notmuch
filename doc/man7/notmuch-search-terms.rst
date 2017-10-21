@@ -159,7 +159,8 @@ below).
 The **property:** prefix searches for messages with a particular
 <key>=<value> property pair. Properties are used internally by notmuch
 (and extensions) to add metadata to messages. A given key can be
-present on a given message with several different values.
+present on a given message with several different values.  See
+**notmuch-properties(7)** for more details.
 
 Operators
 ---------
@@ -429,6 +430,7 @@ SEE ALSO
 **notmuch-insert(1)**,
 **notmuch-new(1)**,
 **notmuch-reindex(1)**,
+**notmuch-properties(1)**,
 ***notmuch-reply(1)**,
 **notmuch-restore(1)**,
 **notmuch-search(1)**,

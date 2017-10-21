@@ -85,8 +85,8 @@ Supported options for **dump** include
 
         Output per-message (key,value) metadata.  Each line starts
         with "#= ", followed by a message id, and a space separated
-        list of key=value pairs.  Ids, keys and values are hex
-        encoded if needed.
+        list of key=value pairs.  Ids, keys and values are hex encoded
+        if needed.  See **notmuch-properties(7)** for more details.
 
       **tags**
 
@@ -116,6 +116,7 @@ SEE ALSO
 **notmuch-hooks(5)**,
 **notmuch-insert(1)**,
 **notmuch-new(1)**,
+**notmuch-properties(7)**,
 **notmuch-reply(1)**,
 **notmuch-restore(1)**,
 **notmuch-search(1)**,
