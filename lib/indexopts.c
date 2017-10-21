@@ -23,7 +23,23 @@
 notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db)
 {
-    return talloc_zero (db, notmuch_indexopts_t);
+    notmuch_indexopts_t *ret = talloc_zero (db, notmuch_indexopts_t);
+    if (!ret)
+	return ret;
+
+    char * try_decrypt;
+    notmuch_status_t err = notmuch_database_get_config (db, "index.try_decrypt", &try_decrypt);
+    if (err)
+	return ret;
+
+    if (try_decrypt &&
+	((!(strcasecmp(try_decrypt, "true"))) ||
+	 (!(strcasecmp(try_decrypt, "yes"))) ||
+	 (!(strcasecmp(try_decrypt, "1")))))
+	notmuch_indexopts_set_try_decrypt (ret, true);
+
+    free (try_decrypt);
+    return ret;
 }
 
 notmuch_status_t

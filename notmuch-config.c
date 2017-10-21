@@ -812,8 +812,14 @@ _item_split (char *item, char **group, char **key)
 static bool
 _stored_in_db (const char *item)
 {
+    const char * db_configs[] = {
+	"index.try_decrypt",
+    };
     if (STRNCMP_LITERAL (item, "query.") == 0)
 	return true;
+    for (size_t i = 0; i < ARRAY_SIZE (db_configs); i++)
+	if (strcmp (item, db_configs[i]) == 0)
+	    return true;
     return false;
 }
 

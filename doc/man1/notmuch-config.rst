@@ -138,6 +138,19 @@ The available configuration items are described below.
 
         Default: ``gpg``.
 
+    **index.try_decrypt**
+
+        **[STORED IN DATABASE]**
+        When indexing an encrypted e-mail message, if this variable is
+        set to true, notmuch will try to decrypt the message and index
+        the cleartext.  Be aware that the index is likely sufficient
+        to reconstruct the cleartext of the message itself, so please
+        ensure that the notmuch message index is adequately protected.
+        DO NOT USE ``index.try_decrypt=true`` without considering the
+        security of your index.
+
+        Default: ``false``.
+
     **built_with.<name>**
 
         Compile time feature <name>. Current possibilities include
