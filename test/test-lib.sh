@@ -346,8 +346,17 @@ emacs_deliver_message ()
 # Accepts arbitrary extra emacs/elisp functions to modify the message
 # before sending, which is useful to doing things like attaching files
 # to the message and encrypting/signing.
+#
+# If any GNU-style long-arguments (like --quiet or --try-decrypt=true) are
+# at the head of the argument list, they are sent directly to "notmuch
+# new" after message delivery
 emacs_fcc_message ()
 {
+    local nmn_args=''
+    while [[ "$1" =~ ^-- ]]; do
+        nmn_args="$nmn_args $1"
+        shift
+    done
     local subject="$1"
     local body="$2"
     shift 2
@@ -366,7 +375,7 @@ emacs_fcc_message ()
 	   (insert \"${body}\")
 	   $@
 	   (notmuch-mua-send-and-exit))" || return 1
-    notmuch new >/dev/null
+    notmuch new $nmn_args >/dev/null
 }
 
 # Add an existing, fixed corpus of email to the database.
