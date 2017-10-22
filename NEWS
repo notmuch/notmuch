@@ -11,6 +11,19 @@ Out-of-tree builds
   has been dropped. The same can now be achieved more reliably using
   out-of-tree builds.
 
+Command Line Interface
+----------------------
+
+Support for re-indexing existing messages
+
+  There is a new subcommand, `notmuch reindex`, which re-indexes all
+  messages matching supplied search terms.  This permits users to
+  change the way specific messages are indexed.
+
+  Note that for messages with multiple variants in the message
+  archive, the recorded Subject: of may change upon reindexing,
+  depending on the order in which the variants are indexed.
+
 Encrypted Mail
 --------------
 
