@@ -11,6 +11,24 @@ Out-of-tree builds
   has been dropped. The same can now be achieved more reliably using
   out-of-tree builds.
 
+Encrypted Mail
+--------------
+
+Indexing cleartext of encrypted e-mails
+
+  It's now possible to include the cleartext of encrypted e-mails in
+  the notmuch index.  This makes it possible to search your encrypted
+  e-mails with the same ease as searching cleartext.  This can be done
+  on a per-message basis with the --try-decrypt argument to indexing
+  commands (new, insert, reindex), or by default by running "notmuch
+  config set index.try_decrypt true".
+
+  Note that the contents of the index are sufficient to roughly
+  reconstruct the cleartext of the message itself, so please ensure
+  that the notmuch index itself is adequately protected.  DO NOT USE
+  this feature without considering the security of your index.
+
+
 Notmuch 0.25.1 (2017-09-11)
 ===========================
 
