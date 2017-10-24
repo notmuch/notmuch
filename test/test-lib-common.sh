@@ -31,14 +31,14 @@ fi
 
 backup_database () {
     test_name=$(basename $0 .sh)
-    rm -rf $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."$test_name"
-    cp -pR ${MAIL_DIR}/.notmuch $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."${test_name}"
+    rm -rf $TMP_DIRECTORY/notmuch-dir-backup."$test_name"
+    cp -pR ${MAIL_DIR}/.notmuch $TMP_DIRECTORY/notmuch-dir-backup."${test_name}"
 }
 
 restore_database () {
     test_name=$(basename $0 .sh)
     rm -rf ${MAIL_DIR}/.notmuch
-    cp -pR $NOTMUCH_BUILDDIR/test/notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
+    cp -pR $TMP_DIRECTORY/notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
 }
 
 # Test the binaries we have just built.  The tests are kept in
