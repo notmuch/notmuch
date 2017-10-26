@@ -607,7 +607,7 @@ _notmuch()
 	esac
     elif [ "${arg}" = "help" ]; then
 	# handle help command specially due to _notmuch_commands usage
-	local help_topics="$_notmuch_commands hooks search-terms"
+	local help_topics="$_notmuch_commands hooks search-terms properties"
 	COMPREPLY=( $(compgen -W "${help_topics}" -- ${cur}) )
     else
 	# complete using _notmuch_subcommand if one exist

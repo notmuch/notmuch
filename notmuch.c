@@ -190,6 +190,8 @@ static help_topic_t help_topics[] = {
       "Common search term syntax." },
     { "hooks",
       "Hooks that will be run before or after certain commands." },
+    { "properties",
+      "Message property conventions and documentation." },
 };
 
 static command_t *
