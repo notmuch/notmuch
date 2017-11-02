@@ -34,6 +34,7 @@ typedef enum {
     OUTPUT_SENDER	= 1 << 5,
     OUTPUT_RECIPIENTS	= 1 << 6,
     OUTPUT_COUNT	= 1 << 7,
+    OUTPUT_ADDRESS	= 1 << 8,
 } output_t;
 
 typedef enum {
@@ -370,7 +371,10 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 	    format->integer (format, count);
 	    format->string (format, "\t");
 	}
-	format->string (format, name_addr);
+	if (ctx->output & OUTPUT_ADDRESS)
+	    format->string (format, addr);
+	else
+	    format->string (format, name_addr);
 	format->separator (format);
     } else {
 	format->begin_map (format);
@@ -877,6 +881,7 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
 				  { "recipients", OUTPUT_RECIPIENTS },
 				  { "count", OUTPUT_COUNT },
+				  { "address", OUTPUT_ADDRESS },
 				  { 0, 0 } } },
 	{ .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },

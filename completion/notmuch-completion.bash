@@ -472,7 +472,7 @@ _notmuch_address()
 	    return
 	    ;;
 	--output)
-	    COMPREPLY=( $( compgen -W "sender recipients count" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "sender recipients count address" -- "${cur}" ) )
 	    return
 	    ;;
 	--sort)

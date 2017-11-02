@@ -29,7 +29,7 @@ Supported options for **address** include
         intended for programs that invoke **notmuch(1)** internally. If
         omitted, the latest supported version will be used.
 
-    ``--output=(sender|recipients|count)``
+    ``--output=(sender|recipients|count|address)``
 
         Controls which information appears in the output. This option
         can be given multiple times to combine different outputs.
@@ -54,6 +54,11 @@ Supported options for **address** include
 
             Note: With this option, addresses are printed only after
             the whole search is finished. This may take long time.
+
+        **address**
+            Output only the email addresses instead of the full
+            mailboxes with names and email addresses. This option has
+            no effect on the JSON or S-Expression output formats.
 
     ``--deduplicate=(no|mailbox|address)``
 
