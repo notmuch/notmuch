@@ -132,6 +132,13 @@ output=$(notmuch search --output=files path:Drafts/new)
 dirname=$(dirname "$output")
 test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 
+test_begin_subtest "Insert message into top level folder"
+gen_insert_msg
+notmuch insert --folder="" < "$gen_msg_filename"
+output=$(notmuch search --output=files id:${gen_msg_id})
+dirname=$(dirname "$output")
+test_expect_equal "$dirname" "$MAIL_DIR/new"
+
 test_begin_subtest "Insert message into folder with trailing /"
 gen_insert_msg
 notmuch insert --folder=Drafts/ < "$gen_msg_filename"
