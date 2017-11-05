@@ -1,3 +1,18 @@
+Notmuch 0.25.2 (2017-11-05)
+===========================
+
+Command Line Interface
+----------------------
+
+Fix segfault in notmuch-show crypto handling when compiled against
+GMime 2.6; this was a regression in 0.25.
+
+General
+-------
+
+Support for GMime before 3.0 is now deprecated, and will be removed in
+a future release.
+
 Notmuch 0.25.1 (2017-09-11)
 ===========================
 
