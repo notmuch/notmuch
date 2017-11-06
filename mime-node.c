@@ -276,7 +276,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	    fprintf (stderr, "Warning: %s (%s).\n", notmuch_status_to_string (status),
 		     protocol ? protocol : "NULL");
 	if (!cryptoctx)
-	    return NULL;
+	    return node;
     }
 #endif
 
