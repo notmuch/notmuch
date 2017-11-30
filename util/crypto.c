@@ -140,13 +140,50 @@ void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 #endif
 
 GMimeObject *
-_notmuch_crypto_decrypt (g_mime_3_unused(GMimeCryptoContext* crypto_ctx),
+_notmuch_crypto_decrypt (notmuch_message_t *message,
+			 g_mime_3_unused(GMimeCryptoContext* crypto_ctx),
 			 GMimeMultipartEncrypted *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err)
 {
     GMimeObject *ret = NULL;
 
+    /* the versions of notmuch that can support session key decryption */
+#if HAVE_GMIME_SESSION_KEYS
+    if (message) {
+	notmuch_message_properties_t *list = NULL;
+
+	for (list = notmuch_message_get_properties (message, "session-key", TRUE);
+	     notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
+	    if (err && *err) {
+		g_error_free (*err);
+		*err = NULL;
+	    }
+#if (GMIME_MAJOR_VERSION < 3)
+	    ret = g_mime_multipart_encrypted_decrypt_session (part,
+							      crypto_ctx,
+							      notmuch_message_properties_value (list),
+							      decrypt_result, err);
+#else
+	    ret = g_mime_multipart_encrypted_decrypt (part,
+						      GMIME_DECRYPT_NONE,
+						      notmuch_message_properties_value (list),
+						      decrypt_result, err);
+#endif
+	    if (ret)
+		break;
+	}
+	if (list)
+	    notmuch_message_properties_destroy (list);
+	if (ret)
+	    return ret;
+    }
+#endif
+
+    if (err && *err) {
+	g_error_free (*err);
+	*err = NULL;
+    }
 #if (GMIME_MAJOR_VERSION < 3)
     ret = g_mime_multipart_encrypted_decrypt(part, crypto_ctx,
 					     decrypt_result, err);

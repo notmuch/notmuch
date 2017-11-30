@@ -74,6 +74,35 @@ of its normal activity.
     **notmuch-config(1)**), then this property will not be set on that
     message.
 
+**session-key**
+
+    When **notmuch-show(1)** or **nomtuch-reply** encounters a message
+    with an encrypted part and ``--decrypt`` is set, if notmuch finds a
+    ``session-key`` property associated with the message, it will try
+    that stashed session key for decryption.
+
+    Using a stashed session key with "notmuch show" will speed up
+    rendering of long encrypted threads.  It also allows the user to
+    destroy the secret part of any expired encryption-capable subkey
+    while still being able to read any retained messages for which
+    they have stashed the session key.  This enables truly deletable
+    e-mail, since (once the session key and asymmetric subkey are both
+    destroyed) there are no keys left that can be used to decrypt any
+    copy of the original message previously stored by an adversary.
+
+    However, access to the stashed session key for an encrypted message
+    permits full byte-for-byte reconstruction of the cleartext
+    message.  This includes attachments, cryptographic signatures, and
+    other material that cannot be reconstructed from the index alone.
+
+    The session key should be in the ASCII text form produced by
+    GnuPG.  For OpenPGP, that consists of a decimal representation of
+    the hash algorithm used (identified by number from RFC 4880,
+    e.g. 9 means AES-256) followed by a colon, followed by a
+    hexadecimal representation of the algorithm-specific key.  For
+    example, an AES-128 key might be stashed in a notmuch property as:
+    ``session-key=7:14B16AF65536C28AF209828DFE34C9E0``.
+
 SEE ALSO
 ========
 
@@ -83,5 +112,7 @@ SEE ALSO
 **notmuch-insert(1)**,
 **notmuch-new(1)**,
 **notmuch-reindex(1)**,
+**notmuch-reply(1)**,
 **notmuch-restore(1)**,
+**notmuch-show(1)**,
 ***notmuch-search-terms(7)**
