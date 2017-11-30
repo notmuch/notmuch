@@ -138,3 +138,21 @@ void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 {
 }
 #endif
+
+GMimeObject *
+_notmuch_crypto_decrypt (g_mime_3_unused(GMimeCryptoContext* crypto_ctx),
+			 GMimeMultipartEncrypted *part,
+			 GMimeDecryptResult **decrypt_result,
+			 GError **err)
+{
+    GMimeObject *ret = NULL;
+
+#if (GMIME_MAJOR_VERSION < 3)
+    ret = g_mime_multipart_encrypted_decrypt(part, crypto_ctx,
+					     decrypt_result, err);
+#else
+    ret = g_mime_multipart_encrypted_decrypt(part, GMIME_DECRYPT_NONE, NULL,
+					     decrypt_result, err);
+#endif
+    return ret;
+}

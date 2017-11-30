@@ -530,9 +530,9 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 
     notmuch = _notmuch_message_database (message);
 
+    GMimeCryptoContext* crypto_ctx = NULL;
 #if (GMIME_MAJOR_VERSION < 3)
     {
-	GMimeCryptoContext* crypto_ctx = NULL;
 	const char *protocol = NULL;
 	protocol = g_mime_content_type_get_parameter (content_type, "protocol");
 	status = _notmuch_crypto_get_gmime_ctx_for_protocol (&(indexopts->crypto),
@@ -546,13 +546,9 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 					      "property (%d)\n", status);
 	    return;
 	}
-	clear = g_mime_multipart_encrypted_decrypt(encrypted_data, crypto_ctx,
-						   NULL, &err);
     }
-#else
-    clear = g_mime_multipart_encrypted_decrypt(encrypted_data, GMIME_DECRYPT_NONE, NULL,
-					       NULL, &err);
 #endif
+    clear = _notmuch_crypto_decrypt (crypto_ctx, encrypted_data, NULL, &err);
     if (err) {
 	_notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
 			       err->domain, err->code, err->message);

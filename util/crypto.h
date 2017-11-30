@@ -2,10 +2,8 @@
 #define _CRYPTO_H
 
 #include <stdbool.h>
-#if (GMIME_MAJOR_VERSION < 3)
 #include "gmime-extra.h"
 #include "notmuch.h"
-#endif
 
 typedef struct _notmuch_crypto {
     bool verify;
@@ -17,6 +15,11 @@ typedef struct _notmuch_crypto {
 #endif
 } _notmuch_crypto_t;
 
+GMimeObject *
+_notmuch_crypto_decrypt (GMimeCryptoContext* crypto_ctx,
+			 GMimeMultipartEncrypted *part,
+			 GMimeDecryptResult **decrypt_result,
+			 GError **err);
 
 #if (GMIME_MAJOR_VERSION < 3)
 notmuch_status_t
