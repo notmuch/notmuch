@@ -486,14 +486,21 @@ if pkg-config --exists "gmime-3.0"; then
     gmime_cflags=$(pkg-config --cflags gmime-3.0)
     gmime_ldflags=$(pkg-config --libs gmime-3.0)
     gmime_major=3
+    have_gmime_session_keys=1
 elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
     printf "Yes (2.6).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-2.6)
     gmime_ldflags=$(pkg-config --libs gmime-2.6)
     gmime_major=2
+    if pkg-config --exists "gmime-2.6 >= 2.6.21"; then
+        have_gmime_session_keys=1
+    else
+        have_gmime_session_keys=0
+    fi
 else
     have_gmime=0
+    have_gmime_session_keys=0
     printf "No.\n"
     errors=$((errors + 1))
 fi
@@ -1096,6 +1103,9 @@ HAVE_TIMEGM = ${have_timegm}
 # Whether struct dirent has d_type (if not, then notmuch will use stat)
 HAVE_D_TYPE = ${have_d_type}
 
+# Whether the GMime version can handle extraction and reuse of session keys
+HAVE_GMIME_SESSION_KEYS = ${have_gmime_session_keys}
+
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
 
@@ -1181,6 +1191,7 @@ COMMON_CONFIGURE_CFLAGS = \\
 	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
 	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
 	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
+	-DHAVE_GMIME_SESSION_KEYS=\$(HAVE_GMIME_SESSION_KEYS)	\\
 	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
 	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
 	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
@@ -1208,6 +1219,9 @@ NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
 
 # Whether the Xapian version in use supports lock retry
 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${have_xapian_db_retry_lock}
+
+# Whether the GMime version can handle extraction and reuse of session keys
+NOTMUCH_HAVE_GMIME_SESSION_KEYS=${have_gmime_session_keys}
 
 # Which backend will Xapian use by default?
 NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
