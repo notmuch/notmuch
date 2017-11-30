@@ -12,3 +12,8 @@ broken
 
 html
   The html corpus contains html parts
+
+crypto
+  The crypto corpus contains encrypted messages for testing.
+  It should probably also contain signed messages in the future.
+  Please add them!

@@ -1,0 +1,36 @@
+From: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
+To: dkg@fifthhorseman.net
+Subject: encrypted message
+Date: Mon, 22 Dec 2016 08:34:56 -0400
+Message-ID: <simple-encrypted@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hQIMAzt6p/AU5ptaAQ/+IDRx5dZWKjUz9qITP76w8OvtmTV9p871UoGWil1DSd3J
+dHgf56rXDWS73dzJ5EigevxLVMD3Xv8QEJBgMWb6yC+uR8ZdJ8h7hlE2lYyEg3Ch
+smqzcaYp2nKWw9JZQqubsMaeIgVu0exb4YE8g/qlUOL2mD64dXhnkJ68GGMmiEPJ
++d0H7fTMwstbxvKPKDmFJUztH43V2NSfxpeQUTi4iWmQtUGw6THYjjAWNFy7jVEE
+ozloT9W3ER5cRaXyKE4GWMBlUAOB0YwwsVnBU2JGUtTBzNHxQAbeoKrG6myrzmnC
+LhUNag0gMuNEbGR78XfWKpCbccEC1VLf9uUXze6yeuRXDuhfsvilKOH9MpaR9n+G
+JuYVAAobDc5wGOt5VGMka50ToaALrNt3FrWqni/0jqwqshEVKM3Kqzq6cSjh1TPf
+pfxE9aUDdvf+Nn16ZBGgyLox2NV4GkSQYq2ySzAk3XwLU80F0nCmtOV3EH+OMrv6
+sZI/Svwzaqzrs/w17cvpf0czXjE/N9V1MHdNtIkfb707WkO0l9/wtYvlrg/KyrU2
+FH5aecEO9VpMumgzBqP1MrrnzVlSM3kgRLIu06oshQYD+jjFn2YzvkwZ+pWoAxsQ
+ninQxoF8Ck2D7s8uGzx+HSQQpRVBM5AGfVdEkmzW/sZrlz63ZGUFh0FYqLl30rfS
+cQGqSoZz0ugTSxnTlg0nuzFmG7ylC1cx3dlSrnfv+l1azwLAr58ptoYZ0mO+D+Fy
+bePpCGoFAPKi0cZ/4eFlLKL7uYPmGeEo5Ku2wXU/SXtPfl4vRxzvPXTJTvD06vIx
+Dh1P0ChAJtxUjGGY6xkCHMY0
+=frmz
+-----END PGP MESSAGE-----
+--=-=-=--
