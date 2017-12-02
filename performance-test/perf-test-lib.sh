@@ -29,6 +29,9 @@ done
 # Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
 . $(dirname "$0")/../test/export-dirs.sh || exit 1
 
+# Where to run the tests
+TEST_DIRECTORY=$NOTMUCH_BUILDDIR/performance-test
+
 . "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
 set -e

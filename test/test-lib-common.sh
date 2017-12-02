@@ -41,10 +41,6 @@ restore_database () {
     cp -pR $TMP_DIRECTORY/notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
 }
 
-# Test the binaries we have just built.  The tests are kept in
-# test/ subdirectory and are run in 'trash directory' subdirectory.
-TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
-
 # Prepend $TEST_DIRECTORY/../lib to LD_LIBRARY_PATH, to make tests work
 # on systems where ../notmuch depends on LD_LIBRARY_PATH.
 LD_LIBRARY_PATH=${TEST_DIRECTORY%/*}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}

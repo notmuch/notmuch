@@ -1066,6 +1066,9 @@ test_init_ () {
 }
 
 
+# Where to run the tests
+TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+
 . "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
 if [ "${NOTMUCH_GMIME_MAJOR}" = 3 ]; then
