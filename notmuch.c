@@ -167,6 +167,10 @@ static command_t commands[] = {
       "Re-index all messages matching the search terms." },
     { "config", notmuch_config_command, NOTMUCH_CONFIG_OPEN,
       "Get or set settings in the notmuch configuration file." },
+#if WITH_EMACS
+    { "emacs-mua", NULL, 0,
+      "send mail with notmuch and emacs." },
+#endif
     { "help", notmuch_help_command, NOTMUCH_CONFIG_CREATE, /* create but don't save config */
       "This message, or more detailed help for the named command." }
 };
@@ -480,7 +484,8 @@ main (int argc, char *argv[])
     notmuch_process_shared_options (command_name);
 
     command = find_command (command_name);
-    if (!command) {
+    /* if command->function is NULL, try external command */
+    if (!command || !command->function) {
 	/* This won't return if the external command is found. */
 	if (try_external_command(argv + opt_index))
 	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
