@@ -183,6 +183,9 @@ EOF
 notmuch reindex --try-decrypt id:simple-encrypted@crypto.notmuchmail.org
 output=$(notmuch search sekrit)
 expected='thread:0000000000000001   2016-12-22 [1/1] Daniel Kahn Gillmor; encrypted message (encrypted inbox unread)'
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
 test_expect_equal \
     "$output" \
     "$expected"
