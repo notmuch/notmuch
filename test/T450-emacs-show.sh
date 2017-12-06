@@ -198,5 +198,14 @@ This is an error
 stdout:
 This is output"
 
+test_begin_subtest "text/enriched exploit mitigation"
+add_message '[content-type]="text/enriched"
+             [body]="
+<x-display><param>(when (progn (read-only-mode -1) (insert ?p ?0 ?w ?n ?e ?d)) nil)</param>test</x-display>
+"'
+test_emacs '(notmuch-show "id:'$gen_msg_id'")
+	(test-visible-output "OUTPUT.raw")'
+output=$(head -1 OUTPUT.raw|cut -f1-4 -d' ')
+test_expect_equal "$output" "Notmuch Test Suite <test_suite@notmuchmail.org>"
 
 test_done
