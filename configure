@@ -556,7 +556,7 @@ fi
 printf "Checking for python... "
 have_python=0
 
-for name in ${PYTHON} python python2 python3; do
+for name in ${PYTHON} python3 python python2; do
     if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
