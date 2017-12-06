@@ -2,13 +2,12 @@
 test_description="locking"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ "${NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK}" = "0" ]; then
-    test_subtest_missing_external_prereq_["lock retry support"]=t
-fi
-
 add_email_corpus
 
 test_begin_subtest "blocking open"
+if [ $NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK -ne 1 ]; then
+    test_subtest_known_broken
+fi
 test_C ${MAIL_DIR} <<'EOF'
 #include <unistd.h>
 #include <stdlib.h>
@@ -70,6 +69,9 @@ inbox
 parent
 unread
 EOF
+if [ $NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK -ne 1 ]; then
+    test_subtest_known_broken
+fi
 test_expect_equal_file EXPECTED OUTPUT
 
 test_done
