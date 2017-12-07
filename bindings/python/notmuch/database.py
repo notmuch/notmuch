@@ -313,7 +313,7 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         status = Database._upgrade(self._db, None, None)
-        #TODO: catch exceptions, document return values and etc
+        # TODO: catch exceptions, document return values and etc
         return status
 
     _begin_atomic = nmlib.notmuch_database_begin_atomic
@@ -689,12 +689,19 @@ class Database(object):
     _config_list_destroy.argtypes = [NotmuchConfigListP]
     _config_list_destroy.restype = None
 
-    def get_config_list(self, prefix):
+    def get_config_list(self, prefix=''):
         """Return a list of key, value pairs where the start of key matches the
         given prefix
 
         Note that only config values that are stored in the database are
-        searched and returned.  The config file is not read.
+        searched and returned.  The config file is not read.  If no `prefix` is
+        given all config values are returned.
+
+        This could be used to get all config values or all named queries into a
+        dict for example::
+
+            config = {k: v for k, v in db.get_config_list()}
+            queries = {k[6:]: v for k, v in db.get_config_list('query.')}
 
         :param prefix: a string by which the keys should be selected
         :type prefix:  str
