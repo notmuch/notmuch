@@ -690,24 +690,22 @@ class Database(object):
     _config_list_destroy.restype = None
 
     def get_config_list(self, prefix=''):
-        """Return a list of key, value pairs where the start of key matches the
-        given prefix
+        """Return a generator of key, value pairs where the start of key
+        matches the given prefix
 
         Note that only config values that are stored in the database are
         searched and returned.  The config file is not read.  If no `prefix` is
         given all config values are returned.
 
-        This could be used to get all config values or all named queries into a
-        dict for example::
+        This could be used to get all named queries into a dict for example::
 
-            config = {k: v for k, v in db.get_config_list()}
             queries = {k[6:]: v for k, v in db.get_config_list('query.')}
 
         :param prefix: a string by which the keys should be selected
         :type prefix:  str
-        :returns:      all key-value pairs where `prefix` matches the beginning
+        :yields:       all key-value pairs where `prefix` matches the beginning
                        of the key
-        :rtype:        a list of pairs of str
+        :ytype:        pairs of str
         :raises:      :exc:`NotmuchError` in case of failure.
 
         """
@@ -717,13 +715,25 @@ class Database(object):
                                        byref(config_list_p))
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
-        config_list = []
         while self._config_list_valid(config_list_p):
             key = self._config_list_key(config_list_p).decode('utf-8')
             value = self._config_list_value(config_list_p).decode('utf-8')
-            config_list.append((key, value))
+            yield key, value
             self._config_list_move_to_next(config_list_p)
-        return config_list
+
+    def get_configs(self, prefix=''):
+        """Return a dict of key, value pairs where the start of key matches the
+        given prefix
+
+        :param prefix: a string by which the keys should be selected
+        :type prefix:  str
+        :returns:      all key-value pairs where `prefix` matches the beginning
+                       of the key
+        :rtype:        a dict of str: str
+        :raises:      :exc:`NotmuchError` in case of failure.
+
+        """
+        return dict(self.get_config_list(prefix))
 
     """notmuch_database_set_config"""
     _set_config = nmlib.notmuch_database_set_config
