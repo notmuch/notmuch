@@ -142,4 +142,17 @@ cat <<'EOF' >EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "set_config with no value will unset config entries"
+test_python <<'EOF'
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+db.set_config('testkey1', '')
+db.set_config('testkey2', '')
+db.set_config("zzzafter", '')
+db.set_config("aaabefore", '')
+v = db.get_configs()
+print(list(v) == [])
+EOF
+test_expect_equal "$(cat OUTPUT)" "True"
+
 test_done
