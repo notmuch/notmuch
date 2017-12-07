@@ -37,6 +37,12 @@
 
    .. automethod:: create_query
 
+   .. automethod:: get_config
+
+   .. automethod:: get_config_list
+
+   .. automethod:: set_config
+
    .. attribute:: Database.MODE
 
      Defines constants that are used as the mode in which to open a database.

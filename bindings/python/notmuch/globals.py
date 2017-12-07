@@ -88,3 +88,8 @@ NotmuchDirectoryP = POINTER(NotmuchDirectoryS)
 class NotmuchFilenamesS(Structure):
     pass
 NotmuchFilenamesP = POINTER(NotmuchFilenamesS)
+
+
+class NotmuchConfigListS(Structure):
+    pass
+NotmuchConfigListP = POINTER(NotmuchConfigListS)

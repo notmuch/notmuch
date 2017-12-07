@@ -26,6 +26,7 @@ from .globals import (
     nmlib,
     Enum,
     _str,
+    NotmuchConfigListP,
     NotmuchDatabaseP,
     NotmuchDirectoryP,
     NotmuchMessageP,
@@ -634,3 +635,108 @@ class Database(object):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
         return config.get('database', 'path')
+
+    """notmuch_database_get_config"""
+    _get_config = nmlib.notmuch_database_get_config
+    _get_config.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(c_char_p)]
+    _get_config.restype = c_uint
+
+    def get_config(self, key):
+        """Return the value of the given config key.
+
+        Note that only config values that are stored in the database are
+        searched and returned.  The config file is not read.
+
+        :param key: the config key under which a value should be looked up, it
+                    should probably be in the form "section.key"
+        :type key:  str
+        :returns:   the config value or the empty string if no value is present
+                    for that key
+        :rtype:     str
+        :raises:    :exc:`NotmuchError` in case of failure.
+
+        """
+        self._assert_db_is_initialized()
+        return_string = c_char_p()
+        status = self._get_config(self._db, _str(key), byref(return_string))
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        return return_string.value.decode('utf-8')
+
+    """notmuch_database_get_config_list"""
+    _get_config_list = nmlib.notmuch_database_get_config_list
+    _get_config_list.argtypes = [NotmuchDatabaseP, c_char_p,
+                                 POINTER(NotmuchConfigListP)]
+    _get_config_list.restype = c_uint
+
+    _config_list_valid = nmlib.notmuch_config_list_valid
+    _config_list_valid.argtypes = [NotmuchConfigListP]
+    _config_list_valid.restype = bool
+
+    _config_list_key = nmlib.notmuch_config_list_key
+    _config_list_key.argtypes = [NotmuchConfigListP]
+    _config_list_key.restype = c_char_p
+
+    _config_list_value = nmlib.notmuch_config_list_value
+    _config_list_value.argtypes = [NotmuchConfigListP]
+    _config_list_value.restype = c_char_p
+
+    _config_list_move_to_next = nmlib.notmuch_config_list_move_to_next
+    _config_list_move_to_next.argtypes = [NotmuchConfigListP]
+    _config_list_move_to_next.restype = None
+
+    _config_list_destroy = nmlib.notmuch_config_list_destroy
+    _config_list_destroy.argtypes = [NotmuchConfigListP]
+    _config_list_destroy.restype = None
+
+    def get_config_list(self, prefix):
+        """Return a list of key, value pairs where the start of key matches the
+        given prefix
+
+        Note that only config values that are stored in the database are
+        searched and returned.  The config file is not read.
+
+        :param prefix: a string by which the keys should be selected
+        :type prefix:  str
+        :returns:      all key-value pairs where `prefix` matches the beginning
+                       of the key
+        :rtype:        a list of pairs of str
+        :raises:      :exc:`NotmuchError` in case of failure.
+
+        """
+        self._assert_db_is_initialized()
+        config_list_p = NotmuchConfigListP()
+        status = self._get_config_list(self._db, _str(prefix),
+                                       byref(config_list_p))
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        config_list = []
+        while self._config_list_valid(config_list_p):
+            key = self._config_list_key(config_list_p).decode('utf-8')
+            value = self._config_list_value(config_list_p).decode('utf-8')
+            config_list.append((key, value))
+            self._config_list_move_to_next(config_list_p)
+        return config_list
+
+    """notmuch_database_set_config"""
+    _set_config = nmlib.notmuch_database_set_config
+    _set_config.argtypes = [NotmuchDatabaseP, c_char_p, c_char_p]
+    _set_config.restype = c_uint
+
+    def set_config(self, key, value):
+        """Set a config value in the notmuch database.
+
+        If an empty string is provided as `value` the `key` is unset!
+
+        :param key:   the key to set
+        :type key:    str
+        :param value: the value to store under `key`
+        :type value:  str
+        :returns:     None
+        :raises:      :exc:`NotmuchError` in case of failure.
+
+        """
+        self._assert_db_is_initialized()
+        status = self._set_config(self._db, _str(key), _str(value))
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
