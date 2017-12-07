@@ -74,4 +74,72 @@ EOF
 notmuch search --sort=oldest-first --output=messages "tučňáččí" | sed s/^id:// > EXPECTED
 test_expect_equal_file EXPECTED OUTPUT
 
+# TODO currently these tests for setting and getting config values are
+# somewhat interdependent.  This is because the config values stored in the
+# database are not cleaned up after each test, so they remain there for the
+# next test.  The ./README file states that this can happen so it seems kind
+# of ok.
+
+test_begin_subtest "set and get config values"
+test_python <<'EOF'
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+db.set_config('testkey1', 'testvalue1')
+db.set_config('testkey2', 'testvalue2')
+v1 = db.get_config('testkey1')
+v2 = db.get_config('testkey2')
+print('testkey1 = ' + v1)
+print('testkey2 = ' + v2)
+EOF
+cat <<'EOF' >EXPECTED
+testkey1 = testvalue1
+testkey2 = testvalue2
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get_config_list with no match returns empty generator"
+test_python <<'EOF'
+import notmuch
+db = notmuch.Database()
+v = db.get_config_list('nonexistent')
+print(list(v) == [])
+EOF
+test_expect_equal "$(cat OUTPUT)" "True"
+
+test_begin_subtest "get_config_list with no arguments returns all pairs"
+test_python <<'EOF'
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+db.set_config("zzzafter", "afterval")
+db.set_config("aaabefore", "beforeval")
+v = db.get_config_list()
+for index, keyval in enumerate(v):
+    key, val = keyval
+    print('{}: {} => {}'.format(index, key, val))
+EOF
+cat <<'EOF' >EXPECTED
+0: aaabefore => beforeval
+1: testkey1 => testvalue1
+2: testkey2 => testvalue2
+3: zzzafter => afterval
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get_config_list prefix is used to match keys"
+test_python <<'EOF'
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+db.set_config('testkey1', 'testvalue1')
+db.set_config('testkey2', 'testvalue2')
+v = db.get_config_list('testkey')
+for index, keyval in enumerate(v):
+    key, val = keyval
+    print('{}: {} => {}'.format(index, key, val))
+EOF
+cat <<'EOF' >EXPECTED
+0: testkey1 => testvalue1
+1: testkey2 => testvalue2
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
