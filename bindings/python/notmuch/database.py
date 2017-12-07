@@ -689,7 +689,7 @@ class Database(object):
     _config_list_destroy.argtypes = [NotmuchConfigListP]
     _config_list_destroy.restype = None
 
-    def get_config_list(self, prefix=''):
+    def get_configs(self, prefix=''):
         """Return a generator of key, value pairs where the start of key
         matches the given prefix
 
@@ -699,7 +699,7 @@ class Database(object):
 
         This could be used to get all named queries into a dict for example::
 
-            queries = {k[6:]: v for k, v in db.get_config_list('query.')}
+            queries = {k[6:]: v for k, v in db.get_configs('query.')}
 
         :param prefix: a string by which the keys should be selected
         :type prefix:  str
@@ -720,20 +720,6 @@ class Database(object):
             value = self._config_list_value(config_list_p).decode('utf-8')
             yield key, value
             self._config_list_move_to_next(config_list_p)
-
-    def get_configs(self, prefix=''):
-        """Return a dict of key, value pairs where the start of key matches the
-        given prefix
-
-        :param prefix: a string by which the keys should be selected
-        :type prefix:  str
-        :returns:      all key-value pairs where `prefix` matches the beginning
-                       of the key
-        :rtype:        a dict of str: str
-        :raises:      :exc:`NotmuchError` in case of failure.
-
-        """
-        return dict(self.get_config_list(prefix))
 
     """notmuch_database_set_config"""
     _set_config = nmlib.notmuch_database_set_config

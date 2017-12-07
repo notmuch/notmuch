@@ -97,22 +97,22 @@ testkey2 = testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "get_config_list with no match returns empty generator"
+test_begin_subtest "get_configs with no match returns empty generator"
 test_python <<'EOF'
 import notmuch
 db = notmuch.Database()
-v = db.get_config_list('nonexistent')
+v = db.get_configs('nonexistent')
 print(list(v) == [])
 EOF
 test_expect_equal "$(cat OUTPUT)" "True"
 
-test_begin_subtest "get_config_list with no arguments returns all pairs"
+test_begin_subtest "get_configs with no arguments returns all pairs"
 test_python <<'EOF'
 import notmuch
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
 db.set_config("zzzafter", "afterval")
 db.set_config("aaabefore", "beforeval")
-v = db.get_config_list()
+v = db.get_configs()
 for index, keyval in enumerate(v):
     key, val = keyval
     print('{}: {} => {}'.format(index, key, val))
@@ -125,13 +125,13 @@ cat <<'EOF' >EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "get_config_list prefix is used to match keys"
+test_begin_subtest "get_configs prefix is used to match keys"
 test_python <<'EOF'
 import notmuch
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
 db.set_config('testkey1', 'testvalue1')
 db.set_config('testkey2', 'testvalue2')
-v = db.get_config_list('testkey')
+v = db.get_configs('testkey')
 for index, keyval in enumerate(v):
     key, val = keyval
     print('{}: {} => {}'.format(index, key, val))
