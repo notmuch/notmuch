@@ -142,7 +142,9 @@ The available configuration items are described below.
 
         **[STORED IN DATABASE]**
 
-        One of ``false``, ``auto``, ``nostash``, or ``true``.
+        Policy for decrypting encrypted messages during indexing.
+        Must be one of: ``false``, ``auto``, ``nostash``, or
+        ``true``.
 
         When indexing an encrypted e-mail message, if this variable is
         set to ``true``, notmuch will try to decrypt the message and
@@ -155,6 +157,34 @@ The available configuration items are described below.
 
         ``nostash`` is the same as ``true`` except that it will not
         stash newly-discovered session keys in the database.
+
+        From the command line (i.e. during **notmuch-new(1)**,
+        **notmuch-insert(1)**, or **notmuch-reindex(1)**), the user
+        can override the database's stored decryption policy with the
+        ``--decrypt=`` option.
+
+        Here is a table that summarizes the functionality of each of
+        these policies:
+
+        +------------------------+-------+------+---------+------+
+        |                        | false | auto | nostash | true |
+        +========================+=======+======+=========+======+
+        | Index cleartext using  |       |  X   |    X    |  X   |
+        | stashed session keys   |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+        | Index cleartext        |       |      |    X    |  X   |
+        | using secret keys      |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+        | Stash session keys     |       |      |         |  X   |
+        +------------------------+-------+------+---------+------+
+        | Delete stashed session |   X   |      |         |      |
+        | keys on reindex        |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+
+        Stashed session keys are kept in the database as properties
+        associated with the message.  See ``session-key`` in
+        **notmuch-properties(7)** for more details about how they can
+        be useful.
 
         Be aware that the notmuch index is likely sufficient (and a
         stashed session key is certainly sufficient) to reconstruct
@@ -201,5 +231,6 @@ SEE ALSO
 **notmuch-restore(1)**,
 **notmuch-search(1)**,
 **notmuch-search-terms(7)**,
+**notmuch-properties(7)**,
 **notmuch-show(1)**,
 **notmuch-tag(1)**
