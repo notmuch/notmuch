@@ -446,15 +446,11 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 		sp->map_key (sp, "expires");
 		sp->integer (sp, expires);
 	    }
-	    /* output user id only if validity is FULL or ULTIMATE. */
-	    /* note that gmime is using the term "trust" here, which
-	     * is WRONG.  It's actually user id "validity". */
 	    if (certificate) {
-		const char *name = g_mime_certificate_get_uid (certificate);
-		GMimeCertificateTrust trust = g_mime_certificate_get_trust (certificate);
-		if (name && (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE)) {
+		const char *uid = g_mime_certificate_get_valid_userid (certificate);
+		if (uid) {
 		    sp->map_key (sp, "userid");
-		    sp->string (sp, name);
+		    sp->string (sp, uid);
 		}
 	    }
 	} else if (certificate) {
