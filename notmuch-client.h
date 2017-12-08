@@ -500,8 +500,8 @@ int notmuch_minimal_options (const char* subcommand_name,
 /* the state chosen by the user invoking one of the notmuch
  * subcommands that does indexing */
 struct _notmuch_client_indexing_cli_choices {
-    bool try_decrypt;
-    bool try_decrypt_set;
+    bool decrypt_policy;
+    bool decrypt_policy_set;
     notmuch_indexopts_t * opts;
 };
 extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;

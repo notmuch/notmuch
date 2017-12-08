@@ -525,7 +525,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     notmuch_database_t * notmuch = NULL;
     GMimeObject *clear = NULL;
 
-    if (!indexopts || !notmuch_indexopts_get_try_decrypt (indexopts))
+    if (!indexopts || !notmuch_indexopts_get_decrypt_policy (indexopts))
 	return;
 
     notmuch = _notmuch_message_database (message);

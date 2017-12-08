@@ -36,24 +36,24 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
 	((!(strcasecmp(decrypt, "true"))) ||
 	 (!(strcasecmp(decrypt, "yes"))) ||
 	 (!(strcasecmp(decrypt, "1")))))
-	notmuch_indexopts_set_try_decrypt (ret, true);
+	notmuch_indexopts_set_decrypt_policy (ret, true);
 
     free (decrypt);
     return ret;
 }
 
 notmuch_status_t
-notmuch_indexopts_set_try_decrypt (notmuch_indexopts_t *indexopts,
-				   notmuch_bool_t try_decrypt)
+notmuch_indexopts_set_decrypt_policy (notmuch_indexopts_t *indexopts,
+				      notmuch_bool_t decrypt_policy)
 {
     if (!indexopts)
 	return NOTMUCH_STATUS_NULL_POINTER;
-    indexopts->crypto.decrypt = try_decrypt;
+    indexopts->crypto.decrypt = decrypt_policy;
     return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_bool_t
-notmuch_indexopts_get_try_decrypt (const notmuch_indexopts_t *indexopts)
+notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts)
 {
     if (!indexopts)
 	return false;
