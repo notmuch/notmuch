@@ -154,7 +154,7 @@ The available configuration items are described below.
         DO NOT USE ``index.decrypt=true`` without considering the
         security of your index.
 
-        Default: ``false``.
+        Default: ``auto``.
 
     **built_with.<name>**
 
