@@ -350,12 +350,16 @@ _notmuch_reply()
 	    COMPREPLY=( $( compgen -W "all sender" -- "${cur}" ) )
 	    return
 	    ;;
+	--decrypt)
+	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --format-version= --reply-to= --decrypt ${_notmuch_shared_options}"
+	    local options="--format= --format-version= --reply-to= --decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;

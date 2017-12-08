@@ -200,6 +200,16 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "notmuch reply should show cleartext if session key is present"
+output=$(notmuch reply id:simple-encrypted@crypto.notmuchmail.org | grep '^>')
+expected='> This is a top sekrit message.'
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 
 # TODO: test removal of a message from the message store between
 # indexing and reindexing.

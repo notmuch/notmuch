@@ -80,8 +80,12 @@ Supported options for **reply** include
         multipart/encrypted part will be replaced by the decrypted
         content.
 
+        If a session key is already known for the message, then it
+        will be decrypted automatically unless the user explicitly
+        sets ``--decrypt=false``.
+
         Decryption expects a functioning **gpg-agent(1)** to provide any
-        needed credentials. Without one, the decryption will fail.
+        needed credentials. Without one, the decryption will likely fail.
 
 See **notmuch-search-terms(7)** for details of the supported syntax for
 <search-terms>.
