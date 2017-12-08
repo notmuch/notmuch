@@ -33,11 +33,14 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
     if (err)
 	return ret;
 
-    if (decrypt_policy &&
-	((!(strcasecmp(decrypt_policy, "true"))) ||
-	 (!(strcasecmp(decrypt_policy, "yes"))) ||
-	 (!(strcasecmp(decrypt_policy, "1")))))
-	notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_TRUE);
+    if (decrypt_policy) {
+	if ((!(strcasecmp(decrypt_policy, "true"))) ||
+	    (!(strcasecmp(decrypt_policy, "yes"))) ||
+	    (!(strcasecmp(decrypt_policy, "1"))))
+	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_TRUE);
+	else if (!strcasecmp(decrypt_policy, "auto"))
+	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_AUTO);
+    }
 
     free (decrypt_policy);
     return ret;

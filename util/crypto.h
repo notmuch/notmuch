@@ -16,7 +16,8 @@ typedef struct _notmuch_crypto {
 } _notmuch_crypto_t;
 
 GMimeObject *
-_notmuch_crypto_decrypt (notmuch_message_t *message,
+_notmuch_crypto_decrypt (notmuch_decryption_policy_t decrypt,
+			 notmuch_message_t *message,
 			 GMimeCryptoContext* crypto_ctx,
 			 GMimeMultipartEncrypted *part,
 			 GMimeDecryptResult **decrypt_result,

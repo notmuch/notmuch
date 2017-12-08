@@ -140,13 +140,16 @@ void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 #endif
 
 GMimeObject *
-_notmuch_crypto_decrypt (notmuch_message_t *message,
+_notmuch_crypto_decrypt (notmuch_decryption_policy_t decrypt,
+			 notmuch_message_t *message,
 			 g_mime_3_unused(GMimeCryptoContext* crypto_ctx),
 			 GMimeMultipartEncrypted *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err)
 {
     GMimeObject *ret = NULL;
+    if (decrypt == NOTMUCH_DECRYPT_FALSE)
+	return NULL;
 
     /* the versions of notmuch that can support session key decryption */
 #if HAVE_GMIME_SESSION_KEYS
@@ -184,6 +187,10 @@ _notmuch_crypto_decrypt (notmuch_message_t *message,
 	g_error_free (*err);
 	*err = NULL;
     }
+
+    if (decrypt == NOTMUCH_DECRYPT_AUTO)
+	return ret;
+
 #if (GMIME_MAJOR_VERSION < 3)
     ret = g_mime_multipart_encrypted_decrypt(part, crypto_ctx,
 					     decrypt_result, err);

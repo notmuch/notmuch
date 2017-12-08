@@ -548,7 +548,8 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
     }
 #endif
-    clear = _notmuch_crypto_decrypt (message, crypto_ctx, encrypted_data, NULL, &err);
+    clear = _notmuch_crypto_decrypt (notmuch_indexopts_get_decrypt_policy (indexopts),
+				     message, crypto_ctx, encrypted_data, NULL, &err);
     if (err) {
 	_notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
 			       err->domain, err->code, err->message);

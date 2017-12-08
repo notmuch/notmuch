@@ -142,9 +142,14 @@ The available configuration items are described below.
 
         **[STORED IN DATABASE]**
         When indexing an encrypted e-mail message, if this variable is
-        set to true, notmuch will try to decrypt the message and index
-        the cleartext.  Be aware that the index is likely sufficient
-        to reconstruct the cleartext of the message itself, so please
+        set to ``true``, notmuch will try to decrypt the message and
+        index the cleartext.  If ``auto``, it will try to index the
+        cleartext if a stashed session key is already known for the message,
+        but will not try to access your secret keys.  Use ``false`` to
+        avoid decrypting even when a session key is already known.
+
+        Be aware that the notmuch index is likely sufficient to
+        reconstruct the cleartext of the message itself, so please
         ensure that the notmuch message index is adequately protected.
         DO NOT USE ``index.decrypt=true`` without considering the
         security of your index.

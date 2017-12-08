@@ -2241,6 +2241,7 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db);
 typedef enum {
     NOTMUCH_DECRYPT_FALSE,
     NOTMUCH_DECRYPT_TRUE,
+    NOTMUCH_DECRYPT_AUTO,
 } notmuch_decryption_policy_t;
 
 /**

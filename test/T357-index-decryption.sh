@@ -140,6 +140,16 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+# ensure no session keys are present:
+test_begin_subtest 'reindex using only session keys'
+test_expect_success 'notmuch reindex --decrypt=auto tag:encrypted and property:index.decryption=success'
+test_begin_subtest "reindexed encrypted messages, decrypting only with session keys"
+output=$(notmuch search wumpus)
+expected=''
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 # and the same search, but by property ($expected is untouched):
 test_begin_subtest "emacs search by property with both messages unindexed"
 output=$(notmuch search property:index.decryption=success)
@@ -180,7 +190,7 @@ notmuch restore <<EOF
 #notmuch-dump batch-tag:3 config,properties,tags
 #= simple-encrypted@crypto.notmuchmail.org session-key=9%3AFC09987F5F927CC0CC0EE80A96E4C5BBF4A499818FB591207705DFDDD6112CF9
 EOF
-notmuch reindex --decrypt=true id:simple-encrypted@crypto.notmuchmail.org
+notmuch reindex --decrypt=auto id:simple-encrypted@crypto.notmuchmail.org
 output=$(notmuch search sekrit)
 expected='thread:0000000000000001   2016-12-22 [1/1] Daniel Kahn Gillmor; encrypted message (encrypted inbox unread)'
 if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
