@@ -70,7 +70,7 @@ of its normal activity.
     properties will be set on the message as a whole.
 
     If notmuch never tried to decrypt an encrypted message during
-    indexing (which is the default, see ``index.try_decrypt`` in
+    indexing (which is the default, see ``index.decrypt`` in
     **notmuch-config(1)**), then this property will not be set on that
     message.
 

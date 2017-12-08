@@ -19,9 +19,9 @@ Indexing cleartext of encrypted e-mails
   It's now possible to include the cleartext of encrypted e-mails in
   the notmuch index.  This makes it possible to search your encrypted
   e-mails with the same ease as searching cleartext.  This can be done
-  on a per-message basis with the --try-decrypt argument to indexing
+  on a per-message basis with the --decrypt argument to indexing
   commands (new, insert, reindex), or by default by running "notmuch
-  config set index.try_decrypt true".
+  config set index.decrypt true".
 
   Note that the contents of the index are sufficient to roughly
   reconstruct the cleartext of the message itself, so please ensure

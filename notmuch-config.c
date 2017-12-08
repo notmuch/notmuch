@@ -813,7 +813,7 @@ static bool
 _stored_in_db (const char *item)
 {
     const char * db_configs[] = {
-	"index.try_decrypt",
+	"index.decrypt",
     };
     if (STRNCMP_LITERAL (item, "query.") == 0)
 	return true;

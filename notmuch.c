@@ -101,7 +101,7 @@ struct _notmuch_client_indexing_cli_choices indexing_cli_choices = { };
 const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
     { .opt_bool = &indexing_cli_choices.try_decrypt,
       .present = &indexing_cli_choices.try_decrypt_set,
-      .name = "try-decrypt" },
+      .name = "decrypt" },
     { }
 };
 
@@ -117,7 +117,7 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, g_mime_3_u
 	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
 	status = notmuch_indexopts_set_try_decrypt (indexing_cli_choices.opts, indexing_cli_choices.try_decrypt);
 	if (status != NOTMUCH_STATUS_SUCCESS) {
-	    fprintf (stderr, "Error: Failed to set try_decrypt to %s. (%s)\n",
+	    fprintf (stderr, "Error: Failed to set index decryption policy to %s. (%s)\n",
 		     indexing_cli_choices.try_decrypt ? "True" : "False", notmuch_status_to_string (status));
 	    notmuch_indexopts_destroy (indexing_cli_choices.opts);
 	    indexing_cli_choices.opts = NULL;

@@ -287,7 +287,7 @@ _notmuch_insert()
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
 	    return
 	    ;;
-	--try-decrypt)
+	--decrypt)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
 	    return
 	    ;;
@@ -296,7 +296,7 @@ _notmuch_insert()
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--create-folder --folder= --keep --no-hooks --try-decrypt= ${_notmuch_shared_options}"
+	    local options="--create-folder --folder= --keep --no-hooks --decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
@@ -319,7 +319,7 @@ _notmuch_new()
 
     $split &&
     case "${prev}" in
-	--try-decrypt)
+	--decrypt)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
 	    return
 	    ;;
@@ -328,7 +328,7 @@ _notmuch_new()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--no-hooks --try-decrypt= --quiet ${_notmuch_shared_options}"
+	    local options="--no-hooks --decrypt= --quiet ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
 	    ;;
@@ -437,7 +437,7 @@ _notmuch_reindex()
 
     $split &&
     case "${prev}" in
-	--try-decrypt)
+	--decrypt)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
 	    return
 	    ;;
@@ -446,7 +446,7 @@ _notmuch_reindex()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--try-decrypt= ${_notmuch_shared_options}"
+	    local options="--decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;

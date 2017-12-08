@@ -138,7 +138,7 @@ The available configuration items are described below.
 
         Default: ``gpg``.
 
-    **index.try_decrypt**
+    **index.decrypt**
 
         **[STORED IN DATABASE]**
         When indexing an encrypted e-mail message, if this variable is
@@ -146,7 +146,7 @@ The available configuration items are described below.
         the cleartext.  Be aware that the index is likely sufficient
         to reconstruct the cleartext of the message itself, so please
         ensure that the notmuch message index is adequately protected.
-        DO NOT USE ``index.try_decrypt=true`` without considering the
+        DO NOT USE ``index.decrypt=true`` without considering the
         security of your index.
 
         Default: ``false``.

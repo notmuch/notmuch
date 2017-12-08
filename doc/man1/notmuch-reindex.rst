@@ -21,17 +21,17 @@ messages using the supplied options.
 
 Supported options for **reindex** include
 
-    ``--try-decrypt=(true|false)``
+    ``--decrypt=(true|false)``
 
         If true, when encountering an encrypted message, try to
         decrypt it while reindexing.  If decryption is successful,
         index the cleartext itself.  Be aware that the index is likely
         sufficient to reconstruct the cleartext of the message itself,
         so please ensure that the notmuch message index is adequately
-        protected. DO NOT USE ``--try-decrypt=true`` without
+        protected. DO NOT USE ``--decrypt=true`` without
         considering the security of your index.
 
-        See also ``index.try_decrypt`` in **notmuch-config(1)**.
+        See also ``index.decrypt`` in **notmuch-config(1)**.
 
 SEE ALSO
 ========

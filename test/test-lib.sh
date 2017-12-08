@@ -347,7 +347,7 @@ emacs_deliver_message ()
 # before sending, which is useful to doing things like attaching files
 # to the message and encrypting/signing.
 #
-# If any GNU-style long-arguments (like --quiet or --try-decrypt=true) are
+# If any GNU-style long-arguments (like --quiet or --decrypt=true) are
 # at the head of the argument list, they are sent directly to "notmuch
 # new" after message delivery
 emacs_fcc_message ()

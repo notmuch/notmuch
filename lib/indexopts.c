@@ -27,18 +27,18 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
     if (!ret)
 	return ret;
 
-    char * try_decrypt;
-    notmuch_status_t err = notmuch_database_get_config (db, "index.try_decrypt", &try_decrypt);
+    char * decrypt;
+    notmuch_status_t err = notmuch_database_get_config (db, "index.decrypt", &decrypt);
     if (err)
 	return ret;
 
-    if (try_decrypt &&
-	((!(strcasecmp(try_decrypt, "true"))) ||
-	 (!(strcasecmp(try_decrypt, "yes"))) ||
-	 (!(strcasecmp(try_decrypt, "1")))))
+    if (decrypt &&
+	((!(strcasecmp(decrypt, "true"))) ||
+	 (!(strcasecmp(decrypt, "yes"))) ||
+	 (!(strcasecmp(decrypt, "1")))))
 	notmuch_indexopts_set_try_decrypt (ret, true);
 
-    free (try_decrypt);
+    free (decrypt);
     return ret;
 }
 
