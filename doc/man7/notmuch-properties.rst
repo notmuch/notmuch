@@ -77,9 +77,12 @@ of its normal activity.
 **session-key**
 
     When **notmuch-show(1)** or **nomtuch-reply** encounters a message
-    with an encrypted part and ``--decrypt`` is set, if notmuch finds a
-    ``session-key`` property associated with the message, it will try
-    that stashed session key for decryption.
+    with an encrypted part, if notmuch finds a ``session-key``
+    property associated with the message, it will try that stashed
+    session key for decryption.
+
+    If you do not want to use any stashed session keys that might be
+    present, you should pass those programs ``--decrypt=false``.
 
     Using a stashed session key with "notmuch show" will speed up
     rendering of long encrypted threads.  It also allows the user to
