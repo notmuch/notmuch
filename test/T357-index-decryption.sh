@@ -71,8 +71,8 @@ test_expect_equal \
 
 # try reinserting it with decryption, should appear again, but now we
 # have two copies of the message:
-test_begin_subtest "message cleartext is present after reinserting with --decrypt"
-notmuch insert --folder=sent --decrypt <<<"$contents"
+test_begin_subtest "message cleartext is present after reinserting with --decrypt=true"
+notmuch insert --folder=sent --decrypt=true <<<"$contents"
 output=$(notmuch search wumpus)
 expected='thread:0000000000000003   2000-01-01 [1/1(2)] Notmuch Test Suite; test encrypted message for cleartext index 002 (encrypted inbox unread)'
 test_expect_equal \
@@ -93,8 +93,8 @@ test_expect_equal \
 # try inserting it with decryption, should appear as a single copy
 # (note: i think thread id skips 4 because of duplicate message-id
 # insertion, above)
-test_begin_subtest "message cleartext is present with insert --decrypt"
-notmuch insert --folder=sent --decrypt <<<"$contents"
+test_begin_subtest "message cleartext is present with insert --decrypt=true"
+notmuch insert --folder=sent --decrypt=true <<<"$contents"
 output=$(notmuch search wumpus)
 expected='thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (encrypted inbox unread)'
 test_expect_equal \
@@ -159,7 +159,7 @@ test_expect_equal \
 add_email_corpus crypto
 
 test_begin_subtest "indexing message fails when secret key not available"
-notmuch reindex --decrypt id:simple-encrypted@crypto.notmuchmail.org
+notmuch reindex --decrypt=true id:simple-encrypted@crypto.notmuchmail.org
 output=$(notmuch dump )
 expected='#notmuch-dump batch-tag:3 config,properties,tags
 +encrypted +inbox +unread -- id:simple-encrypted@crypto.notmuchmail.org
@@ -180,7 +180,7 @@ notmuch restore <<EOF
 #notmuch-dump batch-tag:3 config,properties,tags
 #= simple-encrypted@crypto.notmuchmail.org session-key=9%3AFC09987F5F927CC0CC0EE80A96E4C5BBF4A499818FB591207705DFDDD6112CF9
 EOF
-notmuch reindex --decrypt id:simple-encrypted@crypto.notmuchmail.org
+notmuch reindex --decrypt=true id:simple-encrypted@crypto.notmuchmail.org
 output=$(notmuch search sekrit)
 expected='thread:0000000000000001   2016-12-22 [1/1] Daniel Kahn Gillmor; encrypted message (encrypted inbox unread)'
 if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then

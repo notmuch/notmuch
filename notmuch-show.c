@@ -1083,11 +1083,13 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.part = -1,
 	.omit_excluded = true,
 	.output_body = true,
+	.crypto = { .decrypt = NOTMUCH_DECRYPT_FALSE },
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
     bool exclude = true;
     bool entire_thread_set = false;
     bool single_message;
+    bool decrypt = false;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1102,7 +1104,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &params.entire_thread, .name = "entire-thread",
 	  .present = &entire_thread_set },
 	{ .opt_int = &params.part, .name = "part" },
-	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
+	{ .opt_bool = &decrypt, .name = "decrypt" },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
@@ -1116,9 +1118,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_process_shared_options (argv[0]);
 
-    /* decryption implies verification */
-    if (params.crypto.decrypt)
+    if (decrypt) {
+	params.crypto.decrypt = NOTMUCH_DECRYPT_TRUE;
+	/* decryption implies verification */
 	params.crypto.verify = true;
+    }
 
     /* specifying a part implies single message display */
     single_message = params.part >= 0;

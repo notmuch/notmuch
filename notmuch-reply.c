@@ -700,9 +700,11 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     notmuch_show_params_t params = {
 	.part = -1,
+	.crypto = { .decrypt = NOTMUCH_DECRYPT_FALSE },
     };
     int format = FORMAT_DEFAULT;
     int reply_all = true;
+    bool decrypt = false;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -716,7 +718,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "all", true },
 				  { "sender", false },
 				  { 0, 0 } } },
-	{ .opt_bool = &params.crypto.decrypt, .name = "decrypt" },
+	{ .opt_bool = &decrypt, .name = "decrypt" },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -726,6 +728,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
 
     notmuch_process_shared_options (argv[0]);
+    if (decrypt)
+	params.crypto.decrypt = NOTMUCH_DECRYPT_TRUE;
 
     notmuch_exit_if_unsupported_format ();
 
