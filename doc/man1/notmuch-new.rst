@@ -46,16 +46,17 @@ Supported options for **new** include
     ``--decrypt=(true|auto|false)``
 
         If ``true``, when encountering an encrypted message, try to
-        decrypt it while indexing.  If decryption is successful, index
-        the cleartext itself.  If ``auto``, try to use any session key
-        already known to belong to this message, but do not attempt to
-        use the user's secret keys.
+        decrypt it while indexing, and store any discovered session
+        keys.  If ``auto``, try to use any session key already known
+        to belong to this message, but do not attempt to use the
+        user's secret keys.  If decryption is successful, index the
+        cleartext of the message.
 
-        Be aware that the index is likely
-        sufficient to reconstruct the cleartext of the message itself,
-        so please ensure that the notmuch message index is adequately
-        protected.  DO NOT USE ``--decrypt=true`` without
-        considering the security of your index.
+        Be aware that the index is likely sufficient (and the session
+        key is certainly sufficient) to reconstruct the cleartext of
+        the message itself, so please ensure that the notmuch message
+        index is adequately protected.  DO NOT USE ``--decrypt=true``
+        without considering the security of your index.
 
         See also ``index.decrypt`` in **notmuch-config(1)**.
 

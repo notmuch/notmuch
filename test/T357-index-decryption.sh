@@ -48,6 +48,17 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "show the message body of the encrypted message"
+notmuch dump wumpus
+output=$(notmuch show wumpus | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+expected='This is a test encrypted message with a wumpus.'
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 
 test_begin_subtest "message should go away after deletion"
 # cache the message in an env var and remove it:
@@ -129,10 +140,21 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+# try a simple reindex
+test_begin_subtest 'reindex in auto mode'
+test_expect_success 'notmuch reindex tag:encrypted and property:index.decryption=success'
+test_begin_subtest "reindexed encrypted messages, should not have changed"
+output=$(notmuch search wumpus)
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal \
+    "$output" \
+    "$expected"
 
 # try to remove cleartext indexing
 test_begin_subtest 'reindex without cleartext'
-test_expect_success 'notmuch reindex tag:encrypted and property:index.decryption=success'
+test_expect_success 'notmuch reindex --decrypt=false tag:encrypted and property:index.decryption=success'
 test_begin_subtest "reindexed encrypted messages, without cleartext"
 output=$(notmuch search wumpus)
 expected=''

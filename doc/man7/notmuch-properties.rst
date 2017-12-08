@@ -98,6 +98,10 @@ of its normal activity.
     message.  This includes attachments, cryptographic signatures, and
     other material that cannot be reconstructed from the index alone.
 
+    See ``index.decrypt`` in **notmuch-config(1)** for more
+    details about how to set notmuch's policy on when to store session
+    keys.
+
     The session key should be in the ASCII text form produced by
     GnuPG.  For OpenPGP, that consists of a decimal representation of
     the hash algorithm used (identified by number from RFC 4880,

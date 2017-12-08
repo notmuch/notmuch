@@ -24,11 +24,11 @@ Supported options for **reindex** include
     ``--decrypt=(true|auto|false)``
 
         If ``true``, when encountering an encrypted message, try to
-        decrypt it while reindexing.  If ``auto``, and notmuch already
-        knows about a session key for the message, it will try
-        decrypting using that session key but will not try to access
-        the user's secret keys.  If decryption is successful, index
-        the cleartext itself.
+        decrypt it while reindexing, storing any session keys
+        discovered.  If ``auto``, and notmuch already knows about a
+        session key for the message, it will try decrypting using that
+        session key but will not try to access the user's secret keys.
+        If decryption is successful, index the cleartext itself.
 
         If ``false``, notmuch reindex will also delete any stashed
         session keys for all messages matching the search terms.
