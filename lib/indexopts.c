@@ -42,6 +42,8 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
 		 (!(strcasecmp(decrypt_policy, "no"))) ||
 		 (!(strcasecmp(decrypt_policy, "0"))))
 	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_FALSE);
+	else if (!strcasecmp(decrypt_policy, "nostash"))
+	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_NOSTASH);
     }
 
     free (decrypt_policy);

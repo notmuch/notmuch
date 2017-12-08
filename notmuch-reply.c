@@ -730,7 +730,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_process_shared_options (argv[0]);
     if (decrypt_set)
-	params.crypto.decrypt = decrypt ? NOTMUCH_DECRYPT_TRUE : NOTMUCH_DECRYPT_FALSE;
+	params.crypto.decrypt = decrypt ? NOTMUCH_DECRYPT_NOSTASH : NOTMUCH_DECRYPT_FALSE;
 
     notmuch_exit_if_unsupported_format ();
 

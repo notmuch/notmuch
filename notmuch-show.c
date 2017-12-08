@@ -1121,7 +1121,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (decrypt_set) {
 	if (decrypt) {
-	    params.crypto.decrypt = NOTMUCH_DECRYPT_TRUE;
+	    /* we do not need or want to ask for session keys */
+	    params.crypto.decrypt = NOTMUCH_DECRYPT_NOSTASH;
 	    /* decryption implies verification */
 	    params.crypto.verify = true;
 	} else {

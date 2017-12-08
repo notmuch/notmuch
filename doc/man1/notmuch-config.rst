@@ -141,6 +141,9 @@ The available configuration items are described below.
     **index.decrypt**
 
         **[STORED IN DATABASE]**
+
+        One of ``false``, ``auto``, ``nostash``, or ``true``.
+
         When indexing an encrypted e-mail message, if this variable is
         set to ``true``, notmuch will try to decrypt the message and
         index the cleartext, stashing a copy of any discovered session
@@ -150,11 +153,15 @@ The available configuration items are described below.
         secret keys.  Use ``false`` to avoid decrypting even when a
         stashed session key is already present.
 
-        Be aware that the notmuch index is likely sufficient to
-        reconstruct the cleartext of the message itself, so please
-        ensure that the notmuch message index is adequately protected.
-        DO NOT USE ``index.decrypt=true`` without considering the
-        security of your index.
+        ``nostash`` is the same as ``true`` except that it will not
+        stash newly-discovered session keys in the database.
+
+        Be aware that the notmuch index is likely sufficient (and a
+        stashed session key is certainly sufficient) to reconstruct
+        the cleartext of the message itself, so please ensure that the
+        notmuch message index is adequately protected.  DO NOT USE
+        ``index.decrypt=true`` or ``index.decrypt=nostash`` without
+        considering the security of your index.
 
         Default: ``auto``.
 

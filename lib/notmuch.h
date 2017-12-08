@@ -2242,6 +2242,7 @@ typedef enum {
     NOTMUCH_DECRYPT_FALSE,
     NOTMUCH_DECRYPT_TRUE,
     NOTMUCH_DECRYPT_AUTO,
+    NOTMUCH_DECRYPT_NOSTASH,
 } notmuch_decryption_policy_t;
 
 /**

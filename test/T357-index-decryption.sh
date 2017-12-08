@@ -188,6 +188,29 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "index cleartext without keeping session keys"
+test_expect_success "notmuch reindex --decrypt=nostash tag:blarney"
+
+test_begin_subtest "Ensure that the indexed terms are present"
+output=$(notmuch search wumpus)
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "show one of the messages with --decrypt"
+output=$(notmuch show --decrypt thread:0000000000000001 | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+expected='This is a test encrypted message with a wumpus.'
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "Ensure that we cannot show the message without --decrypt"
+output=$(notmuch show thread:0000000000000001 | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+expected='Non-text part: application/octet-stream'
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 add_email_corpus crypto
 
 test_begin_subtest "indexing message fails when secret key not available"

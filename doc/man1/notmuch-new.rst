@@ -43,10 +43,10 @@ Supported options for **new** include
     ``--quiet``
         Do not print progress or results.
 
-    ``--decrypt=(true|auto|false)``
+    ``--decrypt=(true|nostash|auto|false)``
 
         If ``true``, when encountering an encrypted message, try to
-        decrypt it while indexing, and store any discovered session
+        decrypt it while indexing, and stash any discovered session
         keys.  If ``auto``, try to use any session key already known
         to belong to this message, but do not attempt to use the
         user's secret keys.  If decryption is successful, index the
@@ -56,7 +56,8 @@ Supported options for **new** include
         key is certainly sufficient) to reconstruct the cleartext of
         the message itself, so please ensure that the notmuch message
         index is adequately protected.  DO NOT USE ``--decrypt=true``
-        without considering the security of your index.
+        or ``--decrypt=nostash`` without considering the security of
+        your index.
 
         See also ``index.decrypt`` in **notmuch-config(1)**.
 

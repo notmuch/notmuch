@@ -104,6 +104,7 @@ const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
       (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
 			      { "true", NOTMUCH_DECRYPT_TRUE },
 			      { "auto", NOTMUCH_DECRYPT_AUTO },
+			      { "nostash", NOTMUCH_DECRYPT_NOSTASH },
 			      { 0, 0 } },
       .name = "decrypt" },
     { }
