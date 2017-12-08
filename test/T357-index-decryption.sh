@@ -210,6 +210,23 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "notmuch show should show cleartext if session key is present"
+output=$(notmuch show id:simple-encrypted@crypto.notmuchmail.org | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+expected='This is a top sekrit message.'
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "notmuch show should show nothing if decryption is explicitly disallowed"
+output=$(notmuch show --decrypt=false id:simple-encrypted@crypto.notmuchmail.org | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+expected='Non-text part: application/octet-stream'
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 
 # TODO: test removal of a message from the message store between
 # indexing and reindexing.

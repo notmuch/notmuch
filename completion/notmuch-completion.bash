@@ -517,7 +517,7 @@ _notmuch_show()
 	    COMPREPLY=( $( compgen -W "text json sexp mbox raw" -- "${cur}" ) )
 	    return
 	    ;;
-	--exclude|--body)
+	--exclude|--body|--decrypt)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
 	    return
 	    ;;
@@ -526,7 +526,7 @@ _notmuch_show()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt --include-html ${_notmuch_shared_options}"
+	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt= --include-html ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
