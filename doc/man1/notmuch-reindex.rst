@@ -21,15 +21,20 @@ messages using the supplied options.
 
 Supported options for **reindex** include
 
-    ``--decrypt=(true|false)``
+    ``--decrypt=(true|auto|false)``
 
-        If true, when encountering an encrypted message, try to
-        decrypt it while reindexing.  If decryption is successful,
-        index the cleartext itself.  Be aware that the index is likely
-        sufficient to reconstruct the cleartext of the message itself,
-        so please ensure that the notmuch message index is adequately
-        protected. DO NOT USE ``--decrypt=true`` without
-        considering the security of your index.
+        If ``true``, when encountering an encrypted message, try to
+        decrypt it while reindexing.  If ``auto``, and notmuch already
+        knows about a session key for the message, it will try
+        decrypting using that session key but will not try to access
+        the user's secret keys.  If decryption is successful, index
+        the cleartext itself.
+
+        Be aware that the index is likely sufficient to reconstruct
+        the cleartext of the message itself, so please ensure that the
+        notmuch message index is adequately protected. DO NOT USE
+        ``--decrypt=true`` without considering the security of your
+        index.
 
         See also ``index.decrypt`` in **notmuch-config(1)**.
 

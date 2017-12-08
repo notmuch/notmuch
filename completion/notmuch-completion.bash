@@ -288,7 +288,7 @@ _notmuch_insert()
 	    return
 	    ;;
 	--decrypt)
-	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true false auto" -- "${cur}" ) )
 	    return
 	    ;;
     esac
@@ -320,7 +320,7 @@ _notmuch_new()
     $split &&
     case "${prev}" in
 	--decrypt)
-	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true false auto" -- "${cur}" ) )
 	    return
 	    ;;
     esac
@@ -442,7 +442,7 @@ _notmuch_reindex()
     $split &&
     case "${prev}" in
 	--decrypt)
-	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true false auto" -- "${cur}" ) )
 	    return
 	    ;;
     esac

@@ -43,11 +43,15 @@ Supported options for **new** include
     ``--quiet``
         Do not print progress or results.
 
-    ``--decrypt=(true|false)``
+    ``--decrypt=(true|auto|false)``
 
-        If true, when encountering an encrypted message, try to
+        If ``true``, when encountering an encrypted message, try to
         decrypt it while indexing.  If decryption is successful, index
-        the cleartext itself.  Be aware that the index is likely
+        the cleartext itself.  If ``auto``, try to use any session key
+        already known to belong to this message, but do not attempt to
+        use the user's secret keys.
+
+        Be aware that the index is likely
         sufficient to reconstruct the cleartext of the message itself,
         so please ensure that the notmuch message index is adequately
         protected.  DO NOT USE ``--decrypt=true`` without

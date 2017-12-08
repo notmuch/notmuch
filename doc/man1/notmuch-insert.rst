@@ -51,14 +51,18 @@ Supported options for **insert** include
     ``--no-hooks``
         Prevent hooks from being run.
 
-    ``--decrypt=(true|false)``
+    ``--decrypt=(true|auto|false)``
 
-        If true and the message is encrypted, try to decrypt the
-        message while indexing.  If decryption is successful, index
+        If ``true`` and the message is encrypted, try to decrypt the
+        message while indexing.  If ``auto``, and notmuch already
+        knows about a session key for the message, it will try
+        decrypting using that session key but will not try to access
+        the user's secret keys.  If decryption is successful, index
         the cleartext itself.  Either way, the message is always
-        stored to disk in its original form (ciphertext).  Be aware
-        that the index is likely sufficient to reconstruct the
-        cleartext of the message itself, so please ensure that the
+        stored to disk in its original form (ciphertext).
+
+        Be aware that the index is likely sufficient to reconstruct
+        the cleartext of the message itself, so please ensure that the
         notmuch message index is adequately protected. DO NOT USE
         ``--decrypt=true`` without considering the security of
         your index.
