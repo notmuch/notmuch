@@ -204,8 +204,8 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 	    if (parent->envelope_file)
 		break;
 
-	node->decrypt_attempted = true;
-	node->decrypted_child = _notmuch_crypto_decrypt (node->ctx->crypto->decrypt,
+	node->decrypted_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
+							 node->ctx->crypto->decrypt,
 							 parent ? parent->envelope_file : NULL,
 							 cryptoctx, encrypteddata, &decrypt_result, &err);
     }

@@ -140,7 +140,8 @@ void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 #endif
 
 GMimeObject *
-_notmuch_crypto_decrypt (notmuch_decryption_policy_t decrypt,
+_notmuch_crypto_decrypt (bool *attempted,
+			 notmuch_decryption_policy_t decrypt,
 			 notmuch_message_t *message,
 			 g_mime_3_unused(GMimeCryptoContext* crypto_ctx),
 			 GMimeMultipartEncrypted *part,
@@ -162,6 +163,8 @@ _notmuch_crypto_decrypt (notmuch_decryption_policy_t decrypt,
 		g_error_free (*err);
 		*err = NULL;
 	    }
+	    if (attempted)
+		*attempted = true;
 #if (GMIME_MAJOR_VERSION < 3)
 	    ret = g_mime_multipart_encrypted_decrypt_session (part,
 							      crypto_ctx,
@@ -191,6 +194,8 @@ _notmuch_crypto_decrypt (notmuch_decryption_policy_t decrypt,
     if (decrypt == NOTMUCH_DECRYPT_AUTO)
 	return ret;
 
+    if (attempted)
+	*attempted = true;
 #if (GMIME_MAJOR_VERSION < 3)
     ret = g_mime_multipart_encrypted_decrypt(part, crypto_ctx,
 					     decrypt_result, err);

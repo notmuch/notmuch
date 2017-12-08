@@ -548,12 +548,19 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
     }
 #endif
-    clear = _notmuch_crypto_decrypt (notmuch_indexopts_get_decrypt_policy (indexopts),
+    bool attempted = false;
+    clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
 				     message, crypto_ctx, encrypted_data, NULL, &err);
-    if (err) {
-	_notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
-			       err->domain, err->code, err->message);
-	g_error_free(err);
+    if (!attempted)
+	return;
+    if (err || !clear) {
+	if (err) {
+	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
+				   err->domain, err->code, err->message);
+	    g_error_free(err);
+	} else {
+	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (unknown error)\n");
+	}
 	/* Indicate that we failed to decrypt during indexing */
 	status = notmuch_message_add_property (message, "index.decryption", "failure");
 	if (status)
