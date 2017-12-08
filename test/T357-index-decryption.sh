@@ -227,6 +227,23 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "purging stashed session keys should lose access to the cleartext"
+notmuch reindex --decrypt=false id:simple-encrypted@crypto.notmuchmail.org
+output=$(notmuch search sekrit)
+expected=''
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "and cleartext should be unrecoverable now that there are no stashed session keys"
+notmuch dump
+notmuch reindex --decrypt=true id:simple-encrypted@crypto.notmuchmail.org
+output=$(notmuch search sekrit)
+expected=''
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 
 # TODO: test removal of a message from the message store between
 # indexing and reindexing.

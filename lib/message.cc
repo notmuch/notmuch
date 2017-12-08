@@ -2002,6 +2002,11 @@ notmuch_message_reindex (notmuch_message_t *message,
     ret = notmuch_message_remove_all_properties_with_prefix (message, "index.");
     if (ret)
 	goto DONE; /* XXX TODO: distinguish from other error returns above? */
+    if (indexopts && notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_FALSE) {
+	ret = notmuch_message_remove_all_properties (message, "session-key");
+	if (ret)
+	    goto DONE;
+    }
 
     /* re-add the filenames with the associated indexopts */
     for (; notmuch_filenames_valid (orig_filenames);

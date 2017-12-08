@@ -30,6 +30,9 @@ Supported options for **reindex** include
         the user's secret keys.  If decryption is successful, index
         the cleartext itself.
 
+        If ``false``, notmuch reindex will also delete any stashed
+        session keys for all messages matching the search terms.
+
         Be aware that the index is likely sufficient to reconstruct
         the cleartext of the message itself, so please ensure that the
         notmuch message index is adequately protected. DO NOT USE
