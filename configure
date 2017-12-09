@@ -478,9 +478,10 @@ fi
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
+GMIME3_MINVER=3.0.3
 
 printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-3.0"; then
+if pkg-config --exists "gmime-3.0 > $GMIME3_MINVER"; then
     printf "Yes (3.0).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-3.0)

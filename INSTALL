@@ -39,8 +39,8 @@ Talloc, and zlib which are each described below:
 	reading mail while notmuch would wait for Xapian when removing
 	the "inbox" and "unread" tags from messages in a thread.
 
-	GMime  2.6
-	----------
+	GMime
+	-----
 	GMime provides decoding of MIME email messages for Notmuch.
 
 	Without GMime, Notmuch would not be able to extract and index
@@ -88,7 +88,7 @@ dependencies with a simple simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev python-sphinx
+        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python-sphinx
 
   For Fedora and similar:
 
