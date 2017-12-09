@@ -1,3 +1,20 @@
+Notmuch 0.25.3 (2017-12-08)
+===========================
+
+Emacs
+-----
+
+Extend mitigation (disabling handling x-display in text/enriched) for
+Emacs bug #28350 to Emacs versions before 24.4 (i.e. without
+`advice-add`).
+
+Command Line Interface
+----------------------
+
+Correctly report userid validity. Fix test suite failure for GMime >=
+3.0.3. This change raises the minimum supported version of GMime 3.x
+to 3.0.3.
+
 Notmuch 0.25.2 (2017-11-05)
 ===========================
 
