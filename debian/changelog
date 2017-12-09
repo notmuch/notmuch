@@ -1,3 +1,12 @@
+notmuch (0.25.3-1) unstable; urgency=medium
+
+  * Upstream bugfix release. Fix for OpenPGP UID validity reporting,
+    and build failure with GMime 3.0.3+.
+  * Bug fix: "notmuch FTBFS on Alpha due to broken gdb", thanks to
+    Michael Cree (Closes: #881028).
+
+ -- David Bremner <bremner@debian.org>  Fri, 08 Dec 2017 21:08:00 -0400
+
 notmuch (0.25.2-1) unstable; urgency=medium
 
   * New upstream bugfix release: fix for segfault when compiled
