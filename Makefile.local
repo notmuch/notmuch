@@ -31,11 +31,12 @@ $(TAR_FILE):
 	fi ; \
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
+	ct=`git --no-pager log -1 --pretty=format:%ct $$ref` ; \
 	tar --owner root --group root --append -f $(TAR_FILE).tmp \
 		--transform s_^_$(PACKAGE)-$(VERSION)/_  \
-		--transform 's_.tmp$$__' version.tmp
+		--transform 's_.tmp$$__' --mtime=@$$ct version.tmp
 	rm version.tmp
-	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
+	gzip -n < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
 $(SHA256_FILE): $(TAR_FILE)
