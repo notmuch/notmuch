@@ -25,7 +25,7 @@ NOTMUCH_NEW >/dev/null
 test_begin_subtest "Search: text"
 output=$(notmuch search '*' | notmuch_search_sanitize)
 test_expect_equal "$output" "\
-thread:XXX   2001-01-05 [1/1] (null);  (inbox unread)
+thread:XXX   2001-01-05 [1/1] ;  (inbox unread)
 thread:XXX   1970-01-01 [1/1] Notmuch Test Suite;  (inbox unread)"
 
 test_begin_subtest "Search: json"

@@ -160,6 +160,9 @@ _resolve_thread_authors_string (notmuch_thread_t *thread)
     thread->authors_array = NULL;
     g_ptr_array_free (thread->matched_authors_array, true);
     thread->matched_authors_array = NULL;
+
+    if (!thread->authors)
+	thread->authors = talloc_strdup(thread, "");
 }
 
 /* clean up the ugly "Lastname, Firstname" format that some mail systems
