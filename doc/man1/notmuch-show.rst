@@ -115,22 +115,27 @@ Supported options for **show** include
         supported with --format=json and --format=sexp), and the
         multipart/signed part will be replaced by the signed data.
 
-    ``--decrypt``
-        Decrypt any MIME encrypted parts found in the selected content
-        (ie. "multipart/encrypted" parts). Status of the decryption will
-        be reported (currently only supported with --format=json and
-        --format=sexp) and on successful decryption the
-        multipart/encrypted part will be replaced by the decrypted
-        content.
+    ``--decrypt=(false|auto|true)``
+        If ``true``, decrypt any MIME encrypted parts found in the
+        selected content (i.e. "multipart/encrypted" parts). Status of
+        the decryption will be reported (currently only supported
+        with --format=json and --format=sexp) and on successful
+        decryption the multipart/encrypted part will be replaced by
+        the decrypted content.
 
-        If a session key is already known for the message, then it
-        will be decrypted automatically unless the user explicitly
-        sets ``--decrypt=false``.
+        If ``auto``, and a session key is already known for the
+        message, then it will be decrypted, but notmuch will not try
+        to access the user's keys.
 
-        Decryption expects a functioning **gpg-agent(1)** to provide any
-        needed credentials. Without one, the decryption will fail.
+        Use ``false`` to avoid even automatic decryption.
 
-        Implies --verify.
+        Non-automatic decryption expects a functioning
+        **gpg-agent(1)** to provide any needed credentials. Without
+        one, the decryption will fail.
+
+        Note: ``true`` implies --verify.
+
+        Default: ``auto``
 
     ``--exclude=(true|false)``
         Specify whether to omit threads only matching

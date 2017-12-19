@@ -517,8 +517,12 @@ _notmuch_show()
 	    COMPREPLY=( $( compgen -W "text json sexp mbox raw" -- "${cur}" ) )
 	    return
 	    ;;
-	--exclude|--body|--decrypt)
+	--exclude|--body)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
+        --decrypt)
+	    COMPREPLY=( $( compgen -W "true auto false" -- "${cur}" ) )
 	    return
 	    ;;
     esac

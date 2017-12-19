@@ -1085,8 +1085,6 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     bool exclude = true;
     bool entire_thread_set = false;
     bool single_message;
-    bool decrypt = false;
-    bool decrypt_set = false;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1101,7 +1099,12 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &params.entire_thread, .name = "entire-thread",
 	  .present = &entire_thread_set },
 	{ .opt_int = &params.part, .name = "part" },
-	{ .opt_bool = &decrypt, .name = "decrypt", .present = &decrypt_set },
+	{ .opt_keyword = (int*)(&params.crypto.decrypt), .name = "decrypt",
+	  .keyword_no_arg_value = "true", .keywords =
+	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
+				  { "auto", NOTMUCH_DECRYPT_AUTO },
+				  { "true", NOTMUCH_DECRYPT_NOSTASH },
+				  { 0, 0 } } },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
@@ -1115,16 +1118,9 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_process_shared_options (argv[0]);
 
-    if (decrypt_set) {
-	if (decrypt) {
-	    /* we do not need or want to ask for session keys */
-	    params.crypto.decrypt = NOTMUCH_DECRYPT_NOSTASH;
-	    /* decryption implies verification */
-	    params.crypto.verify = true;
-	} else {
-	    params.crypto.decrypt = NOTMUCH_DECRYPT_FALSE;
-	}
-    }
+    /* explicit decryption implies verification */
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH)
+	params.crypto.verify = true;
 
     /* specifying a part implies single message display */
     single_message = params.part >= 0;
