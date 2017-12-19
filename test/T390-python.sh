@@ -5,6 +5,7 @@ test_description="python bindings"
 test_require_external_prereq ${NOTMUCH_PYTHON}
 
 add_email_corpus
+add_gnupg_home
 
 test_begin_subtest "compare thread ids"
 test_python <<EOF
@@ -154,5 +155,43 @@ v = db.get_configs()
 print(list(v) == [])
 EOF
 test_expect_equal "$(cat OUTPUT)" "True"
+
+mkdir -p "${MAIL_DIR}/cur"
+fname="${MAIL_DIR}/cur/simplemsg.eml"
+cat <<EOF > "$fname"
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: encrypted message
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <simplemsg@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+$(printf 'Content-Type: text/plain\n\nThis is the sekrit message\n' | gpg --no-tty --batch --quiet --trust-model=always --encrypt --armor --recipient test_suite@notmuchmail.org)
+--=-=-=--
+EOF
+
+test_begin_subtest "index message with decryption"
+test_python <<EOF
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+(m, status) = db.index_file('$fname', decrypt_policy=notmuch.Database.DECRYPTION_POLICY.TRUE)
+if status == notmuch.errors.STATUS.DUPLICATE_MESSAGE_ID:
+   print("got duplicate message")
+q_new = notmuch.Query(db, 'sekrit')
+for m in q_new.search_messages():
+    print(m.get_filename())
+EOF
+echo "$fname" > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

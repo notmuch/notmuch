@@ -29,6 +29,7 @@ from .globals import (
     NotmuchConfigListP,
     NotmuchDatabaseP,
     NotmuchDirectoryP,
+    NotmuchIndexoptsP,
     NotmuchMessageP,
     NotmuchTagsP,
 )
@@ -72,6 +73,9 @@ class Database(object):
 
     MODE = Enum(['READ_ONLY', 'READ_WRITE'])
     """Constants: Mode in which to open the database"""
+
+    DECRYPTION_POLICY = Enum(['FALSE', 'TRUE', 'AUTO', 'NOSTASH'])
+    """Constants: policies for decrypting messages during indexing"""
 
     """notmuch_database_get_directory"""
     _get_directory = nmlib.notmuch_database_get_directory
@@ -401,13 +405,25 @@ class Database(object):
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
 
+    _get_default_indexopts = nmlib.notmuch_database_get_default_indexopts
+    _get_default_indexopts.argtypes = [NotmuchDatabaseP]
+    _get_default_indexopts.restype = NotmuchIndexoptsP
+
+    _indexopts_set_decrypt_policy = nmlib.notmuch_indexopts_set_decrypt_policy
+    _indexopts_set_decrypt_policy.argtypes = [NotmuchIndexoptsP, c_uint]
+    _indexopts_set_decrypt_policy.restype = None
+
+    _indexopts_destroy = nmlib.notmuch_indexopts_destroy
+    _indexopts_destroy.argtypes = [NotmuchIndexoptsP]
+    _indexopts_destroy.restype = None
+
     _index_file = nmlib.notmuch_database_index_file
     _index_file.argtypes = [NotmuchDatabaseP, c_char_p,
                              c_void_p,
                              POINTER(NotmuchMessageP)]
     _index_file.restype = c_uint
 
-    def index_file(self, filename, sync_maildir_flags=False):
+    def index_file(self, filename, sync_maildir_flags=False, decrypt_policy=None):
         """Adds a new message to the database
 
         :param filename: should be a path relative to the path of the
@@ -427,6 +443,23 @@ class Database(object):
             `False` by default to remain consistent with the libnotmuch
             API. You might want to look into the underlying method
             :meth:`Message.maildir_flags_to_tags`.
+
+        :param decrypt_policy: If the message contains any encrypted
+            parts, and decrypt_policy is set to
+            :attr:`DECRYPTION_POLICY`.TRUE, notmuch will try to
+            decrypt the message and index the cleartext, stashing any
+            discovered session keys.  If it is set to
+            :attr:`DECRYPTION_POLICY`.FALSE, it will never try to
+            decrypt during indexing.  If it is set to
+            :attr:`DECRYPTION_POLICY`.AUTO, then it will try to use
+            any stashed session keys it knows about, but will not try
+            to access the user's secret keys.
+            :attr:`DECRYPTION_POLICY`.NOSTASH behaves the same as
+            :attr:`DECRYPTION_POLICY`.TRUE except that no session keys
+            are stashed in the database.  If decrypt_policy is set to
+            None (the default), then the database itself will decide
+            whether to decrypt, based on the `index.decrypt`
+            configuration setting (see notmuch-config(1)).
 
         :returns: On success, we return
 
@@ -458,7 +491,15 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         msg_p = NotmuchMessageP()
-        status = self._index_file(self._db, _str(filename), c_void_p(None), byref(msg_p))
+        indexopts = c_void_p(None)
+        if decrypt_policy is not None:
+            indexopts = self._get_default_indexopts(self._db)
+            self._indexopts_set_decrypt_policy(indexopts, decrypt_policy)
+
+        status = self._index_file(self._db, _str(filename), indexopts, byref(msg_p))
+
+        if indexopts:
+            self._indexopts_destroy(indexopts)
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
