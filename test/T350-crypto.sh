@@ -384,7 +384,7 @@ test_expect_equal_json \
     "$expected"
 
 test_begin_subtest "reply to encrypted message"
-output=$(notmuch reply --decrypt subject:"test encrypted message 002" \
+output=$(notmuch reply --decrypt=true subject:"test encrypted message 002" \
     | notmuch_drop_mail_headers In-Reply-To References)
 expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002

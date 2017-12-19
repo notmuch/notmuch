@@ -351,7 +351,7 @@ _notmuch_reply()
 	    return
 	    ;;
 	--decrypt)
-	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true auto false" -- "${cur}" ) )
 	    return
 	    ;;
     esac
