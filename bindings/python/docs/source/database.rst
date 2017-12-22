@@ -39,7 +39,7 @@
 
    .. automethod:: get_config
 
-   .. automethod:: get_config_list
+   .. automethod:: get_configs
 
    .. automethod:: set_config
 
