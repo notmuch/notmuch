@@ -65,4 +65,36 @@ flags 1
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "test keyword arguments without value"
+$TEST_DIRECTORY/arg-test --boolkeyword bananas > OUTPUT
+cat <<EOF > EXPECTED
+boolkeyword 1
+positional arg 1 bananas
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "test keyword arguments with non-default value separted by a space"
+$TEST_DIRECTORY/arg-test --boolkeyword false bananas > OUTPUT
+cat <<EOF > EXPECTED
+boolkeyword 0
+positional arg 1 bananas
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "test keyword arguments without value at the end"
+$TEST_DIRECTORY/arg-test bananas --boolkeyword > OUTPUT
+cat <<EOF > EXPECTED
+boolkeyword 1
+positional arg 1 bananas
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "test keyword arguments without value but with = (should be an error)"
+$TEST_DIRECTORY/arg-test bananas --boolkeyword= > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+Unknown keyword argument "" for option "boolkeyword".
+Unrecognized option: --boolkeyword=
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

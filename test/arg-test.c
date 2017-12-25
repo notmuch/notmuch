@@ -7,13 +7,14 @@ int main(int argc, char **argv){
     int opt_index=1;
 
     int kw_val=0;
+    int kwb_val=0;
     int fl_val=0;
     int int_val=0;
     const char *pos_arg1=NULL;
     const char *pos_arg2=NULL;
     const char *string_val=NULL;
     bool bool_val = false;
-    bool fl_set = false, int_set = false, bool_set = false,
+    bool fl_set = false, int_set = false, bool_set = false, kwb_set = false,
 	kw_set = false, string_set = false, pos1_set = false, pos2_set = false;
 
     notmuch_opt_desc_t parent_options[] = {
@@ -33,6 +34,12 @@ int main(int argc, char **argv){
 				  { "one", 1 },
 				  { "two", 2 },
 				  { 0, 0 } } },
+	{ .opt_keyword = &kwb_val, .name = "boolkeyword", .present = &kwb_set,
+	  .keyword_no_arg_value = "true", .keywords =
+	  (notmuch_keyword_t []){ { "false", 0 },
+				  { "true", 1 },
+				  { "auto", 2 },
+				  { 0, 0 } } },
 	{ .opt_inherit = parent_options },
 	{ .opt_string = &string_val, .name = "string", .present = &string_set },
 	{ .opt_position = &pos_arg1, .present = &pos1_set },
@@ -50,6 +57,9 @@ int main(int argc, char **argv){
 
     if (kw_set)
 	printf("keyword %d\n", kw_val);
+
+    if (kwb_set)
+	printf("boolkeyword %d\n", kwb_val);
 
     if (fl_set)
 	printf("flags %d\n", fl_val);
