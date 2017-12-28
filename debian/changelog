@@ -1,3 +1,9 @@
+notmuch (0.26~rc0-1) experimental; urgency=medium
+
+  * Upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Thu, 28 Dec 2017 10:21:08 -0400
+
 notmuch (0.25.3-1) unstable; urgency=medium
 
   * Upstream bugfix release. Fix for OpenPGP UID validity reporting,
