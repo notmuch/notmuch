@@ -41,6 +41,19 @@ Indexing cleartext of encrypted e-mails
   that the notmuch index itself is adequately protected.  DO NOT USE
   this feature without considering the security of your index.
 
+nmbug
+-----
+
+nmbug's internal version increases to 0.3 in this notmuch release.
+User-facing changes with this notmuch release:
+
+* Accept failures to unset `core.worktree` in `clone`, which allows
+  nmbug to be used with Git 2.11.0 and later.
+* Auto-checkout in `clone` if it wouldn't clobber existing content,
+  which makes the initial clone more convenient.
+* Only error for invalid diff lines in `tags/`, which allows for
+  `README`s and similar in nmbug repositories.
+
 Notmuch 0.25.3 (2017-12-08)
 ===========================
 
