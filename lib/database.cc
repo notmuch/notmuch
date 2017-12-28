@@ -21,7 +21,6 @@
 #include "database-private.h"
 #include "parse-time-vrp.h"
 #include "query-fp.h"
-#include "thread-fp.h"
 #include "regexp-fields.h"
 #include "string-util.h"
 
@@ -259,8 +258,7 @@ prefix_t prefix_table[] = {
     { "directory",		"XDIRECTORY",	NOTMUCH_FIELD_NO_FLAGS },
     { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
-    { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
+    { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL },
     { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROCESSOR },
     { "is",			"K",		NOTMUCH_FIELD_EXTERNAL |
@@ -319,8 +317,6 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	    fp = (new DateFieldProcessor())->release ();
 	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
-	else if (STRNCMP_LITERAL(prefix->name, "thread") == 0)
-	    fp = (new ThreadFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else
 	    fp = (new RegexpFieldProcessor (prefix->name, prefix->flags,
 					    *notmuch->query_parser, notmuch))->release ();

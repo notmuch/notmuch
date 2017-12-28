@@ -58,8 +58,7 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/query-fp.cc      \
 	$(dir)/config.cc	\
 	$(dir)/regexp-fields.cc	\
-	$(dir)/thread.cc \
-	$(dir)/thread-fp.cc
+	$(dir)/thread.cc
 
 libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 
