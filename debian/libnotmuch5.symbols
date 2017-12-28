@@ -18,10 +18,12 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_database_get_all_tags@Base 0.3
  notmuch_database_get_config@Base 0.23~rc0
  notmuch_database_get_config_list@Base 0.23~rc0
+ notmuch_database_get_default_indexopts@Base 0.26~rc0
  notmuch_database_get_directory@Base 0.3
  notmuch_database_get_path@Base 0.3
  notmuch_database_get_revision@Base 0.21~rc1
  notmuch_database_get_version@Base 0.3
+ notmuch_database_index_file@Base 0.26~rc0
  notmuch_database_needs_upgrade@Base 0.3
  notmuch_database_open@Base 0.3
  notmuch_database_open_verbose@Base 0.20~rc1
@@ -39,8 +41,12 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_filenames_get@Base 0.3
  notmuch_filenames_move_to_next@Base 0.3
  notmuch_filenames_valid@Base 0.3
+ notmuch_indexopts_destroy@Base 0.26~rc0
+ notmuch_indexopts_get_decrypt_policy@Base 0.26~rc0
+ notmuch_indexopts_set_decrypt_policy@Base 0.26~rc0
  notmuch_message_add_property@Base 0.23~rc0
  notmuch_message_add_tag@Base 0.3
+ notmuch_message_count_files@Base 0.26~rc0
  notmuch_message_destroy@Base 0.3
  notmuch_message_freeze@Base 0.3
  notmuch_message_get_date@Base 0.3
@@ -54,13 +60,16 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_message_get_replies@Base 0.3
  notmuch_message_get_tags@Base 0.3
  notmuch_message_get_thread_id@Base 0.3
+ notmuch_message_has_maildir_flag@Base 0.26~rc0
  notmuch_message_maildir_flags_to_tags@Base 0.5
  notmuch_message_properties_destroy@Base 0.23~rc0
  notmuch_message_properties_key@Base 0.23~rc0
  notmuch_message_properties_move_to_next@Base 0.23~rc0
  notmuch_message_properties_valid@Base 0.23~rc0
  notmuch_message_properties_value@Base 0.23~rc0
+ notmuch_message_reindex@Base 0.26~rc0
  notmuch_message_remove_all_properties@Base 0.23~rc0
+ notmuch_message_remove_all_properties_with_prefix@Base 0.26~rc0
  notmuch_message_remove_all_tags@Base 0.3
  notmuch_message_remove_property@Base 0.23~rc0
  notmuch_message_remove_tag@Base 0.3
@@ -103,6 +112,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_thread_get_tags@Base 0.3
  notmuch_thread_get_thread_id@Base 0.3
  notmuch_thread_get_toplevel_messages@Base 0.3
+ notmuch_thread_get_total_files@Base 0.26~rc0
  notmuch_thread_get_total_messages@Base 0.3
  notmuch_threads_destroy@Base 0.3
  notmuch_threads_get@Base 0.3
