@@ -17,34 +17,33 @@ have executable permissions.
 
 The currently available hooks are described below.
 
-    **pre-new**
-        This hook is invoked by the **new** command before scanning or
-        importing new messages into the database. If this hook exits
-        with a non-zero status, notmuch will abort further processing of
-        the **new** command.
+**pre-new**
+    This hook is invoked by the **new** command before scanning or
+    importing new messages into the database. If this hook exits with
+    a non-zero status, notmuch will abort further processing of the
+    **new** command.
 
-        Typically this hook is used for fetching or delivering new mail
-        to be imported into the database.
+    Typically this hook is used for fetching or delivering new mail to
+    be imported into the database.
 
-    **post-new**
-        This hook is invoked by the **new** command after new messages
-        have been imported into the database and initial tags have been
-        applied. The hook will not be run if there have been any errors
-        during the scan or import.
+**post-new**
+    This hook is invoked by the **new** command after new messages
+    have been imported into the database and initial tags have been
+    applied. The hook will not be run if there have been any errors
+    during the scan or import.
 
-        Typically this hook is used to perform additional query-based
-        tagging on the imported messages.
+    Typically this hook is used to perform additional query-based
+    tagging on the imported messages.
 
-    **post-insert**
+**post-insert**
+    This hook is invoked by the **insert** command after the message
+    has been delivered, added to the database, and initial tags have
+    been applied. The hook will not be run if there have been any
+    errors during the message delivery; what is regarded as successful
+    delivery depends on the ``--keep`` option.
 
-        This hook is invoked by the **insert** command after the
-        message has been delivered, added to the database, and initial
-        tags have been applied. The hook will not be run if there have
-        been any errors during the message delivery; what is regarded
-        as successful delivery depends on the ``--keep`` option.
-
-        Typically this hook is used to perform additional query-based
-        tagging on the delivered messages.
+    Typically this hook is used to perform additional query-based
+    tagging on the delivered messages.
 
 SEE ALSO
 ========

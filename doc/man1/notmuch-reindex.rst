@@ -21,29 +21,28 @@ messages using the supplied options.
 
 Supported options for **reindex** include
 
-    ``--decrypt=(true|nostash|auto|false)``
+``--decrypt=(true|nostash|auto|false)``
+    If ``true``, when encountering an encrypted message, try to
+    decrypt it while reindexing, stashing any session keys discovered.
+    If ``auto``, and notmuch already knows about a session key for the
+    message, it will try decrypting using that session key but will
+    not try to access the user's secret keys.  If decryption is
+    successful, index the cleartext itself.
 
-        If ``true``, when encountering an encrypted message, try to
-        decrypt it while reindexing, stashing any session keys
-        discovered.  If ``auto``, and notmuch already knows about a
-        session key for the message, it will try decrypting using that
-        session key but will not try to access the user's secret keys.
-        If decryption is successful, index the cleartext itself.
+    ``nostash`` is the same as ``true`` except that it will not stash
+    newly-discovered session keys in the database.
 
-        ``nostash`` is the same as ``true`` except that it will not
-        stash newly-discovered session keys in the database.
+    If ``false``, notmuch reindex will also delete any stashed session
+    keys for all messages matching the search terms.
 
-        If ``false``, notmuch reindex will also delete any stashed
-        session keys for all messages matching the search terms.
+    Be aware that the index is likely sufficient (and a stashed
+    session key is certainly sufficient) to reconstruct the cleartext
+    of the message itself, so please ensure that the notmuch message
+    index is adequately protected. DO NOT USE ``--decrypt=true`` or
+    ``--decrypt=nostash`` without considering the security of your
+    index.
 
-        Be aware that the index is likely sufficient (and a stashed
-        session key is certainly sufficient) to reconstruct the
-        cleartext of the message itself, so please ensure that the
-        notmuch message index is adequately protected. DO NOT USE
-        ``--decrypt=true`` or ``--decrypt=nostash`` without
-        considering the security of your index.
-
-        See also ``index.decrypt`` in **notmuch-config(1)**.
+    See also ``index.decrypt`` in **notmuch-config(1)**.
 
 SEE ALSO
 ========

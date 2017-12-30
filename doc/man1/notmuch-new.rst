@@ -37,29 +37,27 @@ details on hooks.
 
 Supported options for **new** include
 
-    ``--no-hooks``
-        Prevents hooks from being run.
+``--no-hooks``
+    Prevents hooks from being run.
 
-    ``--quiet``
-        Do not print progress or results.
+``--quiet``
+    Do not print progress or results.
 
-    ``--decrypt=(true|nostash|auto|false)``
+``--decrypt=(true|nostash|auto|false)``
+    If ``true``, when encountering an encrypted message, try to
+    decrypt it while indexing, and stash any discovered session keys.
+    If ``auto``, try to use any session key already known to belong to
+    this message, but do not attempt to use the user's secret keys.
+    If decryption is successful, index the cleartext of the message.
 
-        If ``true``, when encountering an encrypted message, try to
-        decrypt it while indexing, and stash any discovered session
-        keys.  If ``auto``, try to use any session key already known
-        to belong to this message, but do not attempt to use the
-        user's secret keys.  If decryption is successful, index the
-        cleartext of the message.
+    Be aware that the index is likely sufficient (and the session key
+    is certainly sufficient) to reconstruct the cleartext of the
+    message itself, so please ensure that the notmuch message index is
+    adequately protected.  DO NOT USE ``--decrypt=true`` or
+    ``--decrypt=nostash`` without considering the security of your
+    index.
 
-        Be aware that the index is likely sufficient (and the session
-        key is certainly sufficient) to reconstruct the cleartext of
-        the message itself, so please ensure that the notmuch message
-        index is adequately protected.  DO NOT USE ``--decrypt=true``
-        or ``--decrypt=nostash`` without considering the security of
-        your index.
-
-        See also ``index.decrypt`` in **notmuch-config(1)**.
+    See also ``index.decrypt`` in **notmuch-config(1)**.
 
 EXIT STATUS
 ===========

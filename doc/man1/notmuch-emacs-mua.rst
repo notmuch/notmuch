@@ -15,49 +15,49 @@ subject, recipients, and message body, or mailto: URL.
 
 Supported options for **emacs-mua** include
 
-    ``-h, --help``
-        Display help.
+``-h, --help``
+    Display help.
 
-    ``-s, --subject=``\ <subject>
-        Specify the subject of the message.
+``-s, --subject=``\ <subject>
+    Specify the subject of the message.
 
-    ``--to=``\ <to-address>
-        Specify a recipient (To).
+``--to=``\ <to-address>
+    Specify a recipient (To).
 
-    ``-c, --cc=``\ <cc-address>
-        Specify a carbon-copy (Cc) recipient.
+``-c, --cc=``\ <cc-address>
+    Specify a carbon-copy (Cc) recipient.
 
-    ``-b, --bcc=``\ <bcc-address>
-        Specify a blind-carbon-copy (Bcc) recipient.
+``-b, --bcc=``\ <bcc-address>
+    Specify a blind-carbon-copy (Bcc) recipient.
 
-    ``-i, --body=``\ <file>
-        Specify a file to include into the body of the message.
+``-i, --body=``\ <file>
+    Specify a file to include into the body of the message.
 
-    ``--hello``
-        Go to the Notmuch hello screen instead of the message composition
-        window if no message composition parameters are given.
+``--hello``
+    Go to the Notmuch hello screen instead of the message composition
+    window if no message composition parameters are given.
 
-    ``--no-window-system``
-        Even if a window system is available, use the current terminal.
+``--no-window-system``
+    Even if a window system is available, use the current terminal.
 
-    ``--client``
-        Use **emacsclient**, rather than **emacs**. For
-        **emacsclient** to work, you need an already running Emacs
-        with a server, or use ``--auto-daemon``.
+``--client``
+    Use **emacsclient**, rather than **emacs**. For **emacsclient** to
+    work, you need an already running Emacs with a server, or use
+    ``--auto-daemon``.
 
-    ``--auto-daemon``
-        Automatically start Emacs in daemon mode, if the Emacs server
-        is not running. Applicable with ``--client``. Implies
-        ``--create-frame``.
+``--auto-daemon``
+    Automatically start Emacs in daemon mode, if the Emacs server is
+    not running. Applicable with ``--client``. Implies
+    ``--create-frame``.
 
-    ``--create-frame``
-        Create a new frame instead of trying to use the current Emacs
-        frame. Applicable with ``--client``. This will be required
-        when Emacs is running (or automatically started with
-        ``--auto-daemon``) in daemon mode.
+``--create-frame``
+    Create a new frame instead of trying to use the current Emacs
+    frame. Applicable with ``--client``. This will be required when
+    Emacs is running (or automatically started with ``--auto-daemon``)
+    in daemon mode.
 
-    ``--print``
-        Output the resulting elisp to stdout instead of evaluating it.
+``--print``
+    Output the resulting elisp to stdout instead of evaluating it.
 
 The supported positional parameters and short options are a compatible
 subset of the **mutt** MUA command-line options. The options and

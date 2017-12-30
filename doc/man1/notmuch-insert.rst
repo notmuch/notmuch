@@ -31,48 +31,46 @@ more details on hooks.
 Option arguments must appear before any tag operation arguments.
 Supported options for **insert** include
 
-    ``--folder=<``\ folder\ **>**
-        Deliver the message to the specified folder, relative to the
-        top-level directory given by the value of **database.path**. The
-        default is the empty string, which means delivering to the
-        top-level directory.
+``--folder=<``\ folder\ **>**
+    Deliver the message to the specified folder, relative to the
+    top-level directory given by the value of **database.path**. The
+    default is the empty string, which means delivering to the
+    top-level directory.
 
-    ``--create-folder``
-        Try to create the folder named by the ``--folder`` option, if it
-        does not exist. Otherwise the folder must already exist for mail
-        delivery to succeed.
+``--create-folder``
+    Try to create the folder named by the ``--folder`` option, if it
+    does not exist. Otherwise the folder must already exist for mail
+    delivery to succeed.
 
-    ``--keep``
-        Keep the message file if indexing fails, and keep the message
-        indexed if applying tags or maildir flag synchronization
-        fails. Ignore these errors and return exit status 0 to
-        indicate successful mail delivery.
+``--keep``
+    Keep the message file if indexing fails, and keep the message
+    indexed if applying tags or maildir flag synchronization
+    fails. Ignore these errors and return exit status 0 to indicate
+    successful mail delivery.
 
-    ``--no-hooks``
-        Prevent hooks from being run.
+``--no-hooks``
+    Prevent hooks from being run.
 
-    ``--decrypt=(true|nostash|auto|false)``
+``--decrypt=(true|nostash|auto|false)``
+    If ``true`` and the message is encrypted, try to decrypt the
+    message while indexing, stashing any session keys discovered.  If
+    ``auto``, and notmuch already knows about a session key for the
+    message, it will try decrypting using that session key but will
+    not try to access the user's secret keys.  If decryption is
+    successful, index the cleartext itself.  Either way, the message
+    is always stored to disk in its original form (ciphertext).
 
-        If ``true`` and the message is encrypted, try to decrypt the
-        message while indexing, stashing any session keys discovered.
-        If ``auto``, and notmuch already knows about a session key for
-        the message, it will try decrypting using that session key but
-        will not try to access the user's secret keys.  If decryption
-        is successful, index the cleartext itself.  Either way, the
-        message is always stored to disk in its original form
-        (ciphertext).
+    ``nostash`` is the same as ``true`` except that it will not stash
+    newly-discovered session keys in the database.
 
-        ``nostash`` is the same as ``true`` except that it will not
-        stash newly-discovered session keys in the database.
+    Be aware that the index is likely sufficient (and a stashed
+    session key is certainly sufficient) to reconstruct the cleartext
+    of the message itself, so please ensure that the notmuch message
+    index is adequately protected. DO NOT USE ``--decrypt=true`` or
+    ``--decrypt=nostash`` without considering the security of your
+    index.
 
-        Be aware that the index is likely sufficient (and a stashed
-        session key is certainly sufficient) to reconstruct the
-        cleartext of the message itself, so please ensure that the
-        notmuch message index is adequately protected. DO NOT USE
-        ``--decrypt=true`` or ``--decrypt=nostash`` without
-        considering the security of your index.
-
-        See also ``index.decrypt`` in **notmuch-config(1)**.
+    See also ``index.decrypt`` in **notmuch-config(1)**.
 
 EXIT STATUS
 ===========
