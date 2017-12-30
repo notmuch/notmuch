@@ -73,6 +73,20 @@ Change of return value of `notmuch_thread_get_authors`
   returned NULL.  This has been replaced by an empty string, since the
   possibility of NULL was not documented.
 
+Python Bindings
+---------------
+
+Python bindings specific Debian packaging is removed
+
+  The bindings have been build by the top level Debian packaging for a
+  long time, and `bindings/python/debian` has bit-rotted.
+
+Open mail files in binary mode when using Python 3
+
+  This avoids certain encoding related crashes under Python 3.
+
+Add python bindings for notmuch_database_{get,set}_config*
+
 nmbug
 -----
 
