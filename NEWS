@@ -24,6 +24,17 @@ Support for re-indexing existing messages
   archive, the recorded Subject: of may change upon reindexing,
   depending on the order in which the variants are indexed.
 
+Improved error reporting in notmuch new
+
+  Give more details when reporting certain Xapian exceptions.
+
+Support maildir synced tags in `new.tags`
+
+  Tags `draft`, `flagged`, `passed`, and `replied` are now supported
+  in `new.tags`. The tag `unread` is still special in the presence of
+  maildir syncing, and will be added for files in `new/` regardless of
+  the setting of `new.tags`.
+
 Encrypted Mail
 --------------
 
