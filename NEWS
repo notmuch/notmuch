@@ -41,6 +41,27 @@ Indexing cleartext of encrypted e-mails
   that the notmuch index itself is adequately protected.  DO NOT USE
   this feature without considering the security of your index.
 
+Library Changes
+---------------
+
+Indexing files with duplicate message-id
+
+  Files with duplicate message-id's are now indexed, and searchable
+  via terms and phrases. There are known issues related to
+  presentation of results and regular-expression search, but in
+  principle no mail file should be completely unsearchable now.
+
+New functions to count files
+
+  Two new functions in the libnotmuch API:
+  `notmuch_message_count_files`, and `notmuch_thread_get_total_files`.
+
+Change of return value of `notmuch_thread_get_authors`
+
+  In certain corner cases, `notmuch_thread_get_authors` previously
+  returned NULL.  This has been replaced by an empty string, since the
+  possibility of NULL was not documented.
+
 nmbug
 -----
 
