@@ -131,6 +131,16 @@ User-facing changes with this notmuch release:
 * Only error for invalid diff lines in `tags/`, which allows for
   `README`s and similar in nmbug repositories.
 
+Documentation
+-------------
+
+New man page: notmuch-properties(7)
+
+  This new page to the manual describes common conventions for how
+  properties are used by libnotmuch, the CLI, and associated programs.
+  External projects that use properties are encouraged to claim their
+  properties and conventions here to avoid collisions.
+
 Notmuch 0.25.3 (2017-12-08)
 ===========================
 
