@@ -223,7 +223,7 @@ output=$(notmuch search mimetype:multipart/encrypted and mimetype:application/pg
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox)"
 
 test_begin_subtest "decryption, --format=text"
-output=$(notmuch show --format=text --decrypt subject:"test encrypted message 001" \
+output=$(notmuch show --format=text --decrypt=true subject:"test encrypted message 001" \
     | notmuch_show_sanitize_all \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='message{ id:XXXXX depth:0 match:1 excluded:0 filename:XXXXX
@@ -255,7 +255,7 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "decryption, --format=json"
-output=$(notmuch show --format=json --decrypt subject:"test encrypted message 001" \
+output=$(notmuch show --format=json --decrypt=true subject:"test encrypted message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
@@ -293,7 +293,7 @@ test_expect_equal_json \
     "$expected"
 
 test_begin_subtest "decryption, --format=json, --part=4"
-output=$(notmuch show --format=json --part=4 --decrypt subject:"test encrypted message 001" \
+output=$(notmuch show --format=json --part=4 --decrypt=true subject:"test encrypted message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='{"id": 4,
@@ -307,13 +307,13 @@ test_begin_subtest "decrypt attachment (--part=5 --format=raw)"
 notmuch show \
     --format=raw \
     --part=5 \
-    --decrypt \
+    --decrypt=true \
     subject:"test encrypted message 001" >OUTPUT
 test_expect_equal_file TESTATTACHMENT OUTPUT
 
 test_begin_subtest "decryption failure with missing key"
 mv "${GNUPGHOME}"{,.bak}
-output=$(notmuch show --format=json --decrypt subject:"test encrypted message 001" \
+output=$(notmuch show --format=json --decrypt=true subject:"test encrypted message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
@@ -351,7 +351,7 @@ test_expect_success \
 
 test_begin_subtest "decryption + signature verification"
 test_subtest_broken_gmime_2
-output=$(notmuch show --format=json --decrypt subject:"test encrypted message 002" \
+output=$(notmuch show --format=json --decrypt=true subject:"test encrypted message 002" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
@@ -384,7 +384,7 @@ test_expect_equal_json \
     "$expected"
 
 test_begin_subtest "reply to encrypted message"
-output=$(notmuch reply --decrypt subject:"test encrypted message 002" \
+output=$(notmuch reply --decrypt=true subject:"test encrypted message 002" \
     | notmuch_drop_mail_headers In-Reply-To References)
 expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002

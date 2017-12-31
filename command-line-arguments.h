@@ -26,6 +26,10 @@ typedef struct notmuch_opt_desc {
     const char **opt_string;
     const char **opt_position;
 
+    /* for opt_keyword only: if no matching arguments were found, and
+     * keyword_no_arg_value is set, then use keyword_no_arg_value instead. */
+    const char *keyword_no_arg_value;
+
     /* Must be set except for opt_inherit and opt_position. */
     const char *name;
 

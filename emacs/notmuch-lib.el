@@ -593,7 +593,7 @@ the given type."
 		       (set-buffer-multibyte nil))
 		     (let ((args `("show" "--format=raw"
 				   ,(format "--part=%s" (plist-get part :id))
-				   ,@(when process-crypto '("--decrypt"))
+				   ,@(when process-crypto '("--decrypt=true"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
 			    (if binaryp 'no-conversion

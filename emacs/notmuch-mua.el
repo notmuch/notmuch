@@ -181,7 +181,7 @@ mutiple parts get a header."
 	reply
 	original)
     (when process-crypto
-      (setq args (append args '("--decrypt"))))
+      (setq args (append args '("--decrypt=true"))))
 
     (if reply-all
 	(setq args (append args '("--reply-to=all")))

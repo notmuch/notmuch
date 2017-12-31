@@ -24,6 +24,17 @@ Support for re-indexing existing messages
   archive, the recorded Subject: of may change upon reindexing,
   depending on the order in which the variants are indexed.
 
+Improved error reporting in notmuch new
+
+  Give more details when reporting certain Xapian exceptions.
+
+Support maildir synced tags in `new.tags`
+
+  Tags `draft`, `flagged`, `passed`, and `replied` are now supported
+  in `new.tags`. The tag `unread` is still special in the presence of
+  maildir syncing, and will be added for files in `new/` regardless of
+  the setting of `new.tags`.
+
 Encrypted Mail
 --------------
 
@@ -40,6 +51,54 @@ Indexing cleartext of encrypted e-mails
   reconstruct the cleartext of the message itself, so please ensure
   that the notmuch index itself is adequately protected.  DO NOT USE
   this feature without considering the security of your index.
+
+Library Changes
+---------------
+
+Indexing files with duplicate message-id
+
+  Files with duplicate message-id's are now indexed, and searchable
+  via terms and phrases. There are known issues related to
+  presentation of results and regular-expression search, but in
+  principle no mail file should be completely unsearchable now.
+
+New functions to count files
+
+  Two new functions in the libnotmuch API:
+  `notmuch_message_count_files`, and `notmuch_thread_get_total_files`.
+
+Change of return value of `notmuch_thread_get_authors`
+
+  In certain corner cases, `notmuch_thread_get_authors` previously
+  returned NULL.  This has been replaced by an empty string, since the
+  possibility of NULL was not documented.
+
+Python Bindings
+---------------
+
+Python bindings specific Debian packaging is removed
+
+  The bindings have been build by the top level Debian packaging for a
+  long time, and `bindings/python/debian` has bit-rotted.
+
+Open mail files in binary mode when using Python 3
+
+  This avoids certain encoding related crashes under Python 3.
+
+Add python bindings for notmuch_database_{get,set}_config*
+
+nmbug
+-----
+
+nmbug's internal version increases to 0.3 in this notmuch release.
+User-facing changes with this notmuch release:
+
+* Accept failures to unset `core.worktree` in `clone`, which allows
+  nmbug to be used with Git 2.11.0 and later.
+* Auto-checkout in `clone` if it wouldn't clobber existing content,
+  which makes the initial clone more convenient.
+* Only error for invalid diff lines in `tags/`, which allows for
+  `README`s and similar in nmbug repositories.
 
 Notmuch 0.25.3 (2017-12-08)
 ===========================
