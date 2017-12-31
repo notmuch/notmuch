@@ -82,6 +82,14 @@ Change of return value of `notmuch_thread_get_authors`
   returned NULL.  This has been replaced by an empty string, since the
   possibility of NULL was not documented.
 
+Transition `notmuch_database_add_message` to `notmuch_database_index_file`
+
+   When indexing an e-mail message, the new
+   `notmuch_database_index_file` function is the preferred form, and
+   the old `notmuch_database_add_message` is deprecated.  The new form
+   allows passing a set of options to the indexing engine, which the
+   operator may decide to change from message to message.
+
 Python Bindings
 ---------------
 
