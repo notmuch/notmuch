@@ -104,6 +104,8 @@ Open mail files in binary mode when using Python 3
 
 Add python bindings for notmuch_database_{get,set}_config*
 
+Optional `decrypt_policy` flag is available for notmuch.database().index_file()
+
 nmbug
 -----
 
