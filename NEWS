@@ -43,13 +43,22 @@ Indexing cleartext of encrypted e-mails
   It's now possible to include the cleartext of encrypted e-mails in
   the notmuch index.  This makes it possible to search your encrypted
   e-mails with the same ease as searching cleartext.  This can be done
-  on a per-message basis with the --decrypt argument to indexing
+  on a per-message basis by passing --decrypt=true to indexing
   commands (new, insert, reindex), or by default by running "notmuch
   config set index.decrypt true".
 
-  Note that the contents of the index are sufficient to roughly
-  reconstruct the cleartext of the message itself, so please ensure
-  that the notmuch index itself is adequately protected.  DO NOT USE
+  Encrypted messages whose cleartext is indexed will typically also
+  have their session keys stashed as properties associated with the
+  message.  Stashed session keys permit rapid rendering of long
+  encrypted threads, and disposal of expired encryption-capable keys.
+  If for some reason you want cleartext indexing without stashed
+  session keys, use --decrypt=nostash for your indexing commands (or
+  run "notmuch config set index.decrypt nostash"). See `index.decrypt`
+  in notmuch-config(1) for more details.
+
+  Note that stashed session keys permit reconstruction of the
+  cleartext of the encrypted message itself, and the contents of the
+  index are roughly equivalent to the cleartext as well.  DO NOT USE
   this feature without considering the security of your index.
 
 Library Changes
