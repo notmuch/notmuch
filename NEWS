@@ -35,6 +35,12 @@ Support maildir synced tags in `new.tags`
   maildir syncing, and will be added for files in `new/` regardless of
   the setting of `new.tags`.
 
+--decrypt now takes an explicit argument
+
+  The --decrypt option to `notmuch show` and `notmuch reply` now takes
+  an explicit argument.  If you were used to invoking `notmuch show
+  --decrypt`, you should switch to `notmuch show --decrypt=true`.
+
 Encrypted Mail
 --------------
 
