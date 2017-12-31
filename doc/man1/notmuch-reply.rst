@@ -70,26 +70,26 @@ Supported options for **reply** include
         order, and copy values from the first that contains something
         other than only the user's addresses.
 
-    ``--decrypt=(false|auto|true)``
+``--decrypt=(false|auto|true)``
 
-        If ``true``, decrypt any MIME encrypted parts found in the
-        selected content (i.e., "multipart/encrypted" parts). Status
-        of the decryption will be reported (currently only supported
-        with --format=json and --format=sexp), and on successful
-        decryption the multipart/encrypted part will be replaced by
-        the decrypted content.
+    If ``true``, decrypt any MIME encrypted parts found in the
+    selected content (i.e., "multipart/encrypted" parts). Status
+    of the decryption will be reported (currently only supported
+    with --format=json and --format=sexp), and on successful
+    decryption the multipart/encrypted part will be replaced by
+    the decrypted content.
 
-        If ``auto``, and a session key is already known for the
-        message, then it will be decrypted, but notmuch will not try
-        to access the user's secret keys.
+    If ``auto``, and a session key is already known for the
+    message, then it will be decrypted, but notmuch will not try
+    to access the user's secret keys.
 
-        Use ``false`` to avoid even automatic decryption.
+    Use ``false`` to avoid even automatic decryption.
 
-        Non-automatic decryption expects a functioning
-        **gpg-agent(1)** to provide any needed credentials. Without
-        one, the decryption will likely fail.
+    Non-automatic decryption expects a functioning
+    **gpg-agent(1)** to provide any needed credentials. Without
+    one, the decryption will likely fail.
 
-        Default: ``auto``
+    Default: ``auto``
 
 See **notmuch-search-terms(7)** for details of the supported syntax for
 <search-terms>.
