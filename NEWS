@@ -82,6 +82,12 @@ New functions to count files
   Two new functions in the libnotmuch API:
   `notmuch_message_count_files`, and `notmuch_thread_get_total_files`.
 
+New function to remove properties
+
+  A new function was added to the libnotmuch API to make it easier to
+  drop all properties with a common pattern:
+  `notmuch_message_remove_all_properties_with_prefix`
+
 Change of return value of `notmuch_thread_get_authors`
 
   In certain corner cases, `notmuch_thread_get_authors` previously
