@@ -35,6 +35,12 @@ Support maildir synced tags in `new.tags`
   maildir syncing, and will be added for files in `new/` regardless of
   the setting of `new.tags`.
 
+--decrypt now takes an explicit argument
+
+  The --decrypt option to `notmuch show` and `notmuch reply` now takes
+  an explicit argument.  If you were used to invoking `notmuch show
+  --decrypt`, you should switch to `notmuch show --decrypt=true`.
+
 Encrypted Mail
 --------------
 
@@ -43,13 +49,22 @@ Indexing cleartext of encrypted e-mails
   It's now possible to include the cleartext of encrypted e-mails in
   the notmuch index.  This makes it possible to search your encrypted
   e-mails with the same ease as searching cleartext.  This can be done
-  on a per-message basis with the --decrypt argument to indexing
+  on a per-message basis by passing --decrypt=true to indexing
   commands (new, insert, reindex), or by default by running "notmuch
   config set index.decrypt true".
 
-  Note that the contents of the index are sufficient to roughly
-  reconstruct the cleartext of the message itself, so please ensure
-  that the notmuch index itself is adequately protected.  DO NOT USE
+  Encrypted messages whose cleartext is indexed will typically also
+  have their session keys stashed as properties associated with the
+  message.  Stashed session keys permit rapid rendering of long
+  encrypted threads, and disposal of expired encryption-capable keys.
+  If for some reason you want cleartext indexing without stashed
+  session keys, use --decrypt=nostash for your indexing commands (or
+  run "notmuch config set index.decrypt nostash"). See `index.decrypt`
+  in notmuch-config(1) for more details.
+
+  Note that stashed session keys permit reconstruction of the
+  cleartext of the encrypted message itself, and the contents of the
+  index are roughly equivalent to the cleartext as well.  DO NOT USE
   this feature without considering the security of your index.
 
 Library Changes
@@ -67,11 +82,25 @@ New functions to count files
   Two new functions in the libnotmuch API:
   `notmuch_message_count_files`, and `notmuch_thread_get_total_files`.
 
+New function to remove properties
+
+  A new function was added to the libnotmuch API to make it easier to
+  drop all properties with a common pattern:
+  `notmuch_message_remove_all_properties_with_prefix`
+
 Change of return value of `notmuch_thread_get_authors`
 
   In certain corner cases, `notmuch_thread_get_authors` previously
   returned NULL.  This has been replaced by an empty string, since the
   possibility of NULL was not documented.
+
+Transition `notmuch_database_add_message` to `notmuch_database_index_file`
+
+   When indexing an e-mail message, the new
+   `notmuch_database_index_file` function is the preferred form, and
+   the old `notmuch_database_add_message` is deprecated.  The new form
+   allows passing a set of options to the indexing engine, which the
+   operator may decide to change from message to message.
 
 Python Bindings
 ---------------
@@ -87,6 +116,8 @@ Open mail files in binary mode when using Python 3
 
 Add python bindings for notmuch_database_{get,set}_config*
 
+Optional `decrypt_policy` flag is available for notmuch.database().index_file()
+
 nmbug
 -----
 
@@ -99,6 +130,16 @@ User-facing changes with this notmuch release:
   which makes the initial clone more convenient.
 * Only error for invalid diff lines in `tags/`, which allows for
   `README`s and similar in nmbug repositories.
+
+Documentation
+-------------
+
+New man page: notmuch-properties(7)
+
+  This new page to the manual describes common conventions for how
+  properties are used by libnotmuch, the CLI, and associated programs.
+  External projects that use properties are encouraged to claim their
+  properties and conventions here to avoid collisions.
 
 Notmuch 0.25.3 (2017-12-08)
 ===========================

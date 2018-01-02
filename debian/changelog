@@ -2,7 +2,7 @@ notmuch (0.26~rc1-1) experimental; urgency=medium
 
   * Second upstream release candidate
 
- -- David Bremner <bremner@debian.org>  Fri, 29 Dec 2017 16:49:37 -0400
+ -- David Bremner <bremner@debian.org>  Mon, 01 Jan 2018 21:17:39 -0400
 
 notmuch (0.26~rc0-1) experimental; urgency=medium
 
