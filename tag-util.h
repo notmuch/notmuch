@@ -36,7 +36,7 @@ typedef enum {
 typedef enum {
     TAG_PARSE_OUT_OF_MEMORY = -1,
 
-    /* Line parsed successfuly. */
+    /* Line parsed successfully. */
     TAG_PARSE_SUCCESS = 0,
 
     /* Line has a syntax error */

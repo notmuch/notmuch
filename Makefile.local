@@ -176,7 +176,7 @@ verify-newer:
 	     echo "Refusing to replace an existing release."; \
 	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
 	     false ;; \
-	  *) echo "An unexpected error occured"; \
+	  *) echo "An unexpected error occurred"; \
 	     false;; esac
 
 # The user has not set any verbosity, default to quiet mode and inform the

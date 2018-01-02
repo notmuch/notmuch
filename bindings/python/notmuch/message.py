@@ -223,7 +223,7 @@ class Message(Python3StringMixIn):
         :returns: The header value as string
         :raises: :exc:`NotInitializedError` if the message is not
                  initialized
-        :raises: :exc:`NullPointerError` if any error occured
+        :raises: :exc:`NullPointerError` if any error occurred
         """
         if not self._msg:
             raise NotInitializedError()
@@ -295,7 +295,7 @@ class Message(Python3StringMixIn):
         :returns: A :class:`Tags` iterator.
         :raises: :exc:`NotInitializedError` if the message is not
                  initialized
-        :raises: :exc:`NullPointerError` if any error occured
+        :raises: :exc:`NullPointerError` if any error occurred
         """
         if not self._msg:
             raise NotInitializedError()

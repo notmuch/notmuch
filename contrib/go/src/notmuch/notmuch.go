@@ -937,7 +937,7 @@ func (self *Message) GetMessageId() string {
 		return ""
 	}
 	id := C.notmuch_message_get_message_id(self.message)
-	// we dont own id
+	// we don't own id
 	// defer C.free(unsafe.Pointer(id))
 	if id == nil {
 		return ""
@@ -962,7 +962,7 @@ func (self *Message) GetThreadId() string {
 		return ""
 	}
 	id := C.notmuch_message_get_thread_id(self.message)
-	// we dont own id
+	// we don't own id
 	// defer C.free(unsafe.Pointer(id))
 
 	if id == nil {
@@ -1019,7 +1019,7 @@ func (self *Message) GetFileName() string {
 		return ""
 	}
 	fname := C.notmuch_message_get_filename(self.message)
-	// we dont own fname
+	// we don't own fname
 	// defer C.free(unsafe.Pointer(fname))
 
 	if fname == nil {
@@ -1096,7 +1096,7 @@ func (self *Message) GetHeader(header string) string {
 	var c_header *C.char = C.CString(header)
 	defer C.free(unsafe.Pointer(c_header))
 
-	/* we dont own value */
+	/* we don't own value */
 	value := C.notmuch_message_get_header(self.message, c_header)
 	if value == nil {
 		return ""
@@ -1335,7 +1335,7 @@ func (self *Tags) Get() string {
 		return ""
 	}
 	s := C.notmuch_tags_get(self.tags)
-	// we dont own 's'
+	// we don't own 's'
 
 	return C.GoString(s)
 }

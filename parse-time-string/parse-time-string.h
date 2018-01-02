@@ -90,7 +90,7 @@ enum {
  *   seconds. This is useful for callers that require a value for
  *   inclusive comparison of the result.
  *
- * Return 0 (PARSE_TIME_OK) for succesfully parsed date/time, or one
+ * Return 0 (PARSE_TIME_OK) for successfully parsed date/time, or one
  * of PARSE_TIME_ERR_* on error. 't' is not modified on error.
  */
 int parse_time_string (const char *s, time_t *t, const time_t *ref, int round);

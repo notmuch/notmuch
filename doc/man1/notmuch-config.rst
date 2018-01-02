@@ -89,7 +89,7 @@ The available configuration items are described below.
     A regular expression delimited with // that will be matched
     against the path of the file or directory relative to the database
     path. Matching files and directories will be ignored. The
-    beginning and end of string must be explictly anchored. For
+    beginning and end of string must be explicitly anchored. For
     example, /.*/foo$/ would match "bar/foo" and "bar/baz/foo", but
     not "foo" or "bar/foobar".
 

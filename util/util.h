@@ -15,11 +15,11 @@ typedef enum util_status {
      */
     UTIL_EOF,
     /**
-     * Low level error occured, consult errno.
+     * Low level error occurred, consult errno.
      */
     UTIL_ERRNO,
     /**
-     * Zlib error occured, call gzerror for details.
+     * Zlib error occurred, call gzerror for details.
      */
     UTIL_GZERROR
 } util_status_t;
