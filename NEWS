@@ -25,11 +25,23 @@ Support maildir synced tags in `new.tags`
   maildir syncing, and will be added for files in `new/` regardless of
   the setting of `new.tags`.
 
+Support /regex/ in new.ignore
+
+  Files and directories may be ignored based on regular expressions.
+
+Allow `notmuch insert --folder=""`
+
+  This inserts into the top level folder.
+
+New option --output=address for notmuch address
+
 --decrypt now takes an explicit argument
 
   The --decrypt option to `notmuch show` and `notmuch reply` now takes
   an explicit argument.  If you were used to invoking `notmuch show
   --decrypt`, you should switch to `notmuch show --decrypt=true`.
+
+--no-<arg> may be used to negate boolean and keyword arguments
 
 Encrypted Mail
 --------------
