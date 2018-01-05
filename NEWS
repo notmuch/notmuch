@@ -75,6 +75,16 @@ Indexing cleartext of encrypted e-mails
   index are roughly equivalent to the cleartext as well.  DO NOT USE
   this feature without considering the security of your index.
 
+Emacs
+-----
+
+Guard against concurrent searches in notmuch-tree
+
+Use make-process when available
+
+  This allows newer Emacs to separate stdout and stderr from the
+  notmuch command without using temporary files.
+
 Library Changes
 ---------------
 
