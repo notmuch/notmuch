@@ -1,16 +1,6 @@
 Notmuch 0.26 (UNRELEASED)
 =========================
 
-Test Suite
-----------
-
-Out-of-tree builds
-
-  The test suite now works properly with out-of-tree builds, i.e. with
-  separate source and build directories. The --root option to tests
-  has been dropped. The same can now be achieved more reliably using
-  out-of-tree builds.
-
 Command Line Interface
 ----------------------
 
@@ -101,6 +91,16 @@ Transition `notmuch_database_add_message` to `notmuch_database_index_file`
    the old `notmuch_database_add_message` is deprecated.  The new form
    allows passing a set of options to the indexing engine, which the
    operator may decide to change from message to message.
+
+Test Suite
+----------
+
+Out-of-tree builds
+
+  The test suite now works properly with out-of-tree builds, i.e. with
+  separate source and build directories. The --root option to tests
+  has been dropped. The same can now be achieved more reliably using
+  out-of-tree builds.
 
 Python Bindings
 ---------------
