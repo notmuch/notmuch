@@ -41,13 +41,13 @@ New option --output=address for notmuch address
 
 Make `notmuch show` more robust against deleting duplicate files
 
---decrypt now takes an explicit argument
+The option --decrypt now takes an explicit argument
 
   The --decrypt option to `notmuch show` and `notmuch reply` now takes
   an explicit argument.  If you were used to invoking `notmuch show
   --decrypt`, you should switch to `notmuch show --decrypt=true`.
 
---no-<arg> may be used to negate boolean and keyword arguments
+Boolean and keyword arguments now take a `--no-` prefix
 
 Encrypted Mail
 --------------
