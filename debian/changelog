@@ -1,3 +1,15 @@
+notmuch (0.26-1) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * build against python3-sphinx instead of python-sphinx
+  * d/changelog: strip trailing whitespace
+  * move to debhelper 10
+  * Standards-Version: bump to 4.1.3 (drop priority: extra
+    from transitional packages)
+  * update symbols
+
+ -- Daniel Kahn Gillmor <dkg@fifthhorseman.net>  Sun, 07 Jan 2018 09:36:24 -0500
+
 notmuch (0.26~rc2-1) experimental; urgency=medium
 
   * Third upstream release candidate
