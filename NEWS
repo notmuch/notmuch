@@ -142,7 +142,7 @@ Open mail files in binary mode when using Python 3
 
   This avoids certain encoding related crashes under Python 3.
 
-Add python bindings for notmuch_database_{get,set}_config*
+Add python bindings for `notmuch_database_{get,set}_config*`
 
 Optional `decrypt_policy` flag is available for notmuch.database().index_file()
 
