@@ -1,15 +1,5 @@
-Notmuch 0.26 (UNRELEASED)
+Notmuch 0.26 (2018-01-09)
 =========================
-
-Test Suite
-----------
-
-Out-of-tree builds
-
-  The test suite now works properly with out-of-tree builds, i.e. with
-  separate source and build directories. The --root option to tests
-  has been dropped. The same can now be achieved more reliably using
-  out-of-tree builds.
 
 Command Line Interface
 ----------------------
@@ -35,11 +25,29 @@ Support maildir synced tags in `new.tags`
   maildir syncing, and will be added for files in `new/` regardless of
   the setting of `new.tags`.
 
---decrypt now takes an explicit argument
+Support /regex/ in new.ignore
+
+  Files and directories may be ignored based on regular expressions.
+
+Allow `notmuch insert --folder=""`
+
+  This inserts into the top level folder.
+
+Strip trailing '/' from folder path for notmuch insert
+
+  This prevents a potential problem with duplicated database records.
+
+New option --output=address for notmuch address
+
+Make `notmuch show` more robust against deleting duplicate files
+
+The option --decrypt now takes an explicit argument
 
   The --decrypt option to `notmuch show` and `notmuch reply` now takes
   an explicit argument.  If you were used to invoking `notmuch show
   --decrypt`, you should switch to `notmuch show --decrypt=true`.
+
+Boolean and keyword arguments now take a `--no-` prefix
 
 Encrypted Mail
 --------------
@@ -66,6 +74,16 @@ Indexing cleartext of encrypted e-mails
   cleartext of the encrypted message itself, and the contents of the
   index are roughly equivalent to the cleartext as well.  DO NOT USE
   this feature without considering the security of your index.
+
+Emacs
+-----
+
+Guard against concurrent searches in notmuch-tree
+
+Use make-process when available
+
+  This allows newer Emacs to separate stdout and stderr from the
+  notmuch command without using temporary files.
 
 Library Changes
 ---------------
@@ -102,6 +120,16 @@ Transition `notmuch_database_add_message` to `notmuch_database_index_file`
    allows passing a set of options to the indexing engine, which the
    operator may decide to change from message to message.
 
+Test Suite
+----------
+
+Out-of-tree builds
+
+  The test suite now works properly with out-of-tree builds, i.e. with
+  separate source and build directories. The --root option to tests
+  has been dropped. The same can now be achieved more reliably using
+  out-of-tree builds.
+
 Python Bindings
 ---------------
 
@@ -114,7 +142,7 @@ Open mail files in binary mode when using Python 3
 
   This avoids certain encoding related crashes under Python 3.
 
-Add python bindings for notmuch_database_{get,set}_config*
+Add python bindings for `notmuch_database_{get,set}_config*`
 
 Optional `decrypt_policy` flag is available for notmuch.database().index_file()
 
