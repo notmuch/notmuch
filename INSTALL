@@ -88,11 +88,11 @@ dependencies with a simple simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python-sphinx
+        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python3-sphinx
 
   For Fedora and similar:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python-sphinx
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python3-sphinx
 
 On other systems, a similar command can be used, but the details of
 the package names may be different.
