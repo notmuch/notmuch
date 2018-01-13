@@ -84,7 +84,7 @@ Installing Dependencies from Packages
 -------------------------------------
 
 On a modern, package-based operating system you can install all of the
-dependencies with a simple simple command line. For example:
+dependencies with a single simple command line. For example:
 
   For Debian and similar:
 
