@@ -52,7 +52,7 @@ ThreadFieldProcessor::operator() (const std::string & str)
 		std::string term = thread_prefix;
 		notmuch_message_t *message;
 		message = notmuch_messages_get (messages);
-		term += notmuch_message_get_thread_id (message);
+		term += _notmuch_message_get_thread_id_only (message);
 		terms.insert (term);
 	    }
 	    return Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());

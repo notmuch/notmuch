@@ -537,6 +537,10 @@ _notmuch_message_database (notmuch_message_t *message);
 
 void
 _notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
+
+const char *
+_notmuch_message_get_thread_id_only(notmuch_message_t *message);
+
 /* sha1.c */
 
 char *
