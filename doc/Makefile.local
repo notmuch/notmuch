@@ -89,9 +89,9 @@ install-man:
 else
 build-man: ${MAN_GZIP_FILES}
 install-man: ${MAN_GZIP_FILES}
-	mkdir -p "$(DESTDIR)$(mandir)/man1"
-	mkdir -p "$(DESTDIR)$(mandir)/man5"
-	mkdir -p "$(DESTDIR)$(mandir)/man7"
+	mkdir -m0755 -p "$(DESTDIR)$(mandir)/man1"
+	mkdir -m0755 -p "$(DESTDIR)$(mandir)/man5"
+	mkdir -m0755 -p "$(DESTDIR)$(mandir)/man7"
 	install -m0644 $(filter %.1.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man1
 	install -m0644 $(filter %.5.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(filter %.7.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man7
