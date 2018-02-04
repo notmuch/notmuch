@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 test_description="emacs interface"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
-EXPECTED=$TEST_DIRECTORY/emacs.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 
 add_email_corpus
 
 # syntax errors in test-lib.el cause mysterious failures
 test_begin_subtest "Syntax of emacs test library"
-test_expect_success "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
+test_expect_success "${TEST_EMACS} -Q --batch --load $NOTMUCH_SRCDIR/test/test-lib.el"
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
@@ -398,6 +398,28 @@ References: <XXX>
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
 > This is a test that messages are sent via SMTP
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Reply within emacs to a message with TAB in subject"
+test_emacs '(let ((message-hidden-headers ''()))
+	    (notmuch-search "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net")
+	    (notmuch-test-wait)
+	    (notmuch-search-show-thread)
+	    (notmuch-test-wait)
+	    (notmuch-show-reply-sender)
+	    (test-output))'
+sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
+sed -i -e 's/^References: <.*>$/References: <XXX>/' OUTPUT
+sed -i -e '/^--text follows this line--$/q' OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Mikhail Gusarov <dottedmag@dottedmag.net>
+Subject: Re: [notmuch] [PATCH 1/2] Close message file after parsing message headers
+In-Reply-To: <XXX>
+Fcc: ${MAIL_DIR}/sent
+References: <XXX>
+--text follows this line--
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

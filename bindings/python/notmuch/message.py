@@ -41,6 +41,7 @@ from .tag import Tags
 from .filenames import Filenames
 
 import email
+import sys
 
 
 class Message(Python3StringMixIn):
@@ -566,7 +567,7 @@ class Message(Python3StringMixIn):
         logical OR operator.)
 
         As a convenience, you can set the sync_maildir_flags parameter in
-        :meth:`Database.add_message` to implicitly call this.
+        :meth:`Database.index_file` to implicitly call this.
 
         :returns: a :class:`STATUS`. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
@@ -587,8 +588,11 @@ class Message(Python3StringMixIn):
 
     def get_message_parts(self):
         """Output like notmuch show"""
-        fp = open(self.get_filename())
-        email_msg = email.message_from_file(fp)
+        fp = open(self.get_filename(), 'rb')
+        if sys.version_info[0] < 3:
+            email_msg = email.message_from_file(fp)
+        else:
+            email_msg = email.message_from_binary_file(fp)
         fp.close()
 
         out = []

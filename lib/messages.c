@@ -68,7 +68,7 @@ _notmuch_messages_create (notmuch_message_list_t *list)
     if (unlikely (messages == NULL))
 	return NULL;
 
-    messages->is_of_list_type = TRUE;
+    messages->is_of_list_type = true;
     messages->iterator = list->head;
 
     return messages;
@@ -93,7 +93,7 @@ notmuch_bool_t
 notmuch_messages_valid (notmuch_messages_t *messages)
 {
     if (messages == NULL)
-	return FALSE;
+	return false;
 
     if (! messages->is_of_list_type)
 	return _notmuch_mset_messages_valid (messages);

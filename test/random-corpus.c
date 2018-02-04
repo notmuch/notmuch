@@ -116,10 +116,10 @@ random_utf8_string (void *ctx, size_t char_count)
 
 /* stubs since we cannot link with notmuch.o */
 const notmuch_opt_desc_t notmuch_shared_options[] = {
-	{ 0, 0, 0, 0, 0 }
+	{ }
 };
 
-char *notmuch_requested_db_uuid = NULL;
+const char *notmuch_requested_db_uuid = NULL;
 
 void
 notmuch_process_shared_options (unused (const char *dummy))
@@ -140,7 +140,7 @@ main (int argc, char **argv)
 
     void *ctx = talloc_new (NULL);
 
-    char *config_path  = NULL;
+    const char *config_path = NULL;
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
 
@@ -155,13 +155,13 @@ main (int argc, char **argv)
     int seed = 734569;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &config_path, "config-path", 'c', 0 },
-	{ NOTMUCH_OPT_INT, &num_messages, "num-messages", 'n', 0 },
-	{ NOTMUCH_OPT_INT, &max_tags, "max-tags", 'm', 0 },
-	{ NOTMUCH_OPT_INT, &message_id_len, "message-id-len", 'M', 0 },
-	{ NOTMUCH_OPT_INT, &tag_len, "tag-len", 't', 0 },
-	{ NOTMUCH_OPT_INT, &seed, "seed", 's', 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &config_path, .name = "config-path" },
+	{ .opt_int = &num_messages, .name = "num-messages" },
+	{ .opt_int = &max_tags, .name = "max-tags" },
+	{ .opt_int = &message_id_len, .name = "message-id-len" },
+	{ .opt_int = &tag_len, .name = "tag-len" },
+	{ .opt_int = &seed, .name = "seed" },
+	{ }
     };
 
     int opt_index = parse_arguments (argc, argv, options, 1);
@@ -179,7 +179,7 @@ main (int argc, char **argv)
 	exit (1);
     }
 
-    config = notmuch_config_open (ctx, config_path, FALSE);
+    config = notmuch_config_open (ctx, config_path, false);
     if (config == NULL)
 	return 1;
 

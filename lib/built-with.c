@@ -30,7 +30,9 @@ notmuch_built_with (const char *name)
 	return HAVE_XAPIAN_FIELD_PROCESSOR;
     } else if (STRNCMP_LITERAL (name, "retry_lock") == 0) {
 	return HAVE_XAPIAN_DB_RETRY_LOCK;
+    } else if (STRNCMP_LITERAL (name, "session_key") == 0) {
+	return HAVE_GMIME_SESSION_KEYS;
     } else {
-	return FALSE;
+	return false;
     }
 }

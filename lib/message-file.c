@@ -92,22 +92,28 @@ _notmuch_message_file_open (notmuch_database_t *notmuch,
     return _notmuch_message_file_open_ctx (notmuch, NULL, filename);
 }
 
+const char *
+_notmuch_message_file_get_filename (notmuch_message_file_t *message_file)
+{
+    return message_file->filename;
+}
+
 void
 _notmuch_message_file_close (notmuch_message_file_t *message)
 {
     talloc_free (message);
 }
 
-static notmuch_bool_t
+static bool
 _is_mbox (FILE *file)
 {
     char from_buf[5];
-    notmuch_bool_t ret = FALSE;
+    bool ret = false;
 
     /* Is this mbox? */
     if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
 	strncmp (from_buf, "From ", 5) == 0)
-	ret = TRUE;
+	ret = true;
 
     rewind (file);
 
@@ -121,7 +127,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     GMimeParser *parser;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
-    notmuch_bool_t is_mbox;
+    bool is_mbox;
 
     if (message->message)
 	return NOTMUCH_STATUS_SUCCESS;
@@ -141,7 +147,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     stream = g_mime_stream_file_new (message->file);
 
     /* We'll own and fclose the FILE* ourselves. */
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), false);
 
     parser = g_mime_parser_new_with_stream (stream);
     g_mime_parser_set_scan_from (parser, is_mbox);
@@ -344,4 +350,84 @@ _notmuch_message_file_get_header (notmuch_message_file_t *message,
     g_hash_table_insert (message->headers, xstrdup (header), decoded);
 
     return decoded;
+}
+
+notmuch_status_t
+_notmuch_message_file_get_headers (notmuch_message_file_t *message_file,
+				   const char **from_out,
+				   const char **subject_out,
+				   const char **to_out,
+				   const char **date_out,
+				   char **message_id_out)
+{
+    notmuch_status_t ret;
+    const char *header;
+    const char *from, *to, *subject, *date;
+    char *message_id = NULL;
+
+    /* Parse message up front to get better error status. */
+    ret = _notmuch_message_file_parse (message_file);
+    if (ret)
+	goto DONE;
+
+    /* Before we do any real work, (especially before doing a
+     * potential SHA-1 computation on the entire file's contents),
+     * let's make sure that what we're looking at looks like an
+     * actual email message.
+     */
+    from = _notmuch_message_file_get_header (message_file, "from");
+    subject = _notmuch_message_file_get_header (message_file, "subject");
+    to = _notmuch_message_file_get_header (message_file, "to");
+    date = _notmuch_message_file_get_header (message_file, "date");
+
+    if ((from == NULL || *from == '\0') &&
+	(subject == NULL || *subject == '\0') &&
+	(to == NULL || *to == '\0')) {
+	ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	goto DONE;
+    }
+
+    /* Now that we're sure it's mail, the first order of business
+     * is to find a message ID (or else create one ourselves).
+     */
+    header = _notmuch_message_file_get_header (message_file, "message-id");
+    if (header && *header != '\0') {
+	message_id = _notmuch_message_id_parse (message_file, header, NULL);
+
+	/* So the header value isn't RFC-compliant, but it's
+	 * better than no message-id at all.
+	 */
+	if (message_id == NULL)
+	    message_id = talloc_strdup (message_file, header);
+    }
+
+    if (message_id == NULL ) {
+	/* No message-id at all, let's generate one by taking a
+	 * hash over the file's contents.
+	 */
+	char *sha1 = _notmuch_sha1_of_file (_notmuch_message_file_get_filename (message_file));
+
+	/* If that failed too, something is really wrong. Give up. */
+	if (sha1 == NULL) {
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+
+	message_id = talloc_asprintf (message_file, "notmuch-sha1-%s", sha1);
+	free (sha1);
+    }
+ DONE:
+    if (ret == NOTMUCH_STATUS_SUCCESS) {
+	if (from_out)
+	    *from_out = from;
+	if (subject_out)
+	    *subject_out = subject;
+	if (to_out)
+	    *to_out = to;
+	if (date_out)
+	    *date_out = date;
+	if (message_id_out)
+	    *message_id_out = message_id;
+    }
+    return ret;
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 test_description="threading when messages received out of order"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 # Generate all single-root four message thread structures.  We'll use
 # this for multiple tests below.
-THREADS=$($NOTMUCH_PYTHON ${TEST_DIRECTORY}/gen-threads.py 4)
+THREADS=$($NOTMUCH_PYTHON ${NOTMUCH_SRCDIR}/test/gen-threads.py 4)
 nthreads=$(wc -l <<< "$THREADS")
 
 test_begin_subtest "Messages with one parent get linked in all delivery orders"

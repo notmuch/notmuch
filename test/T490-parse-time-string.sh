@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="date/time parser module"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 # Sanity/smoke tests for the date/time parser independent of notmuch
 

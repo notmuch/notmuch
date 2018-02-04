@@ -287,12 +287,16 @@ _notmuch_insert()
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
 	    return
 	    ;;
+	--decrypt)
+	    COMPREPLY=( $( compgen -W "true false auto nostash" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--create-folder --folder= --keep --no-hooks ${_notmuch_shared_options}"
+	    local options="--create-folder --folder= --keep --no-hooks --decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
@@ -311,11 +315,20 @@ _notmuch_insert()
 _notmuch_new()
 {
     local cur prev words cword split
-    _init_completion || return
+    _init_completion -s || return
 
+    $split &&
+    case "${prev}" in
+	--decrypt)
+	    COMPREPLY=( $( compgen -W "true false auto nostash" -- "${cur}" ) )
+	    return
+	    ;;
+    esac
+
+    ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--no-hooks --quiet ${_notmuch_shared_options}"
+	    local options="--no-hooks --decrypt= --quiet ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
 	    ;;
@@ -337,12 +350,16 @@ _notmuch_reply()
 	    COMPREPLY=( $( compgen -W "all sender" -- "${cur}" ) )
 	    return
 	    ;;
+	--decrypt)
+	    COMPREPLY=( $( compgen -W "true auto false" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --format-version= --reply-to= --decrypt ${_notmuch_shared_options}"
+	    local options="--format= --format-version= --reply-to= --decrypt= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -417,6 +434,32 @@ _notmuch_search()
     esac
 }
 
+_notmuch_reindex()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    $split &&
+    case "${prev}" in
+	--decrypt)
+	    COMPREPLY=( $( compgen -W "true false auto nostash" -- "${cur}" ) )
+	    return
+	    ;;
+    esac
+
+    ! $split &&
+    case "${cur}" in
+	-*)
+	    local options="--decrypt= ${_notmuch_shared_options}"
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    ;;
+	*)
+	    _notmuch_search_terms
+	    ;;
+    esac
+}
+
 _notmuch_address()
 {
     local cur prev words cword split
@@ -429,7 +472,7 @@ _notmuch_address()
 	    return
 	    ;;
 	--output)
-	    COMPREPLY=( $( compgen -W "sender recipients count" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "sender recipients count address" -- "${cur}" ) )
 	    return
 	    ;;
 	--sort)
@@ -478,12 +521,16 @@ _notmuch_show()
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
 	    return
 	    ;;
+        --decrypt)
+	    COMPREPLY=( $( compgen -W "true auto false" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt --include-html ${_notmuch_shared_options}"
+	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt= --include-html ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -532,7 +579,7 @@ _notmuch_tag()
 
 _notmuch()
 {
-    local _notmuch_commands="compact config count dump help insert new reply restore search address setup show tag emacs-mua"
+    local _notmuch_commands="compact config count dump help insert new reply restore reindex search address setup show tag emacs-mua"
     local arg cur prev words cword split
 
     # require bash-completion with _init_completion
@@ -564,7 +611,7 @@ _notmuch()
 	esac
     elif [ "${arg}" = "help" ]; then
 	# handle help command specially due to _notmuch_commands usage
-	local help_topics="$_notmuch_commands hooks search-terms"
+	local help_topics="$_notmuch_commands hooks search-terms properties"
 	COMPREPLY=( $(compgen -W "${help_topics}" -- ${cur}) )
     else
 	# complete using _notmuch_subcommand if one exist

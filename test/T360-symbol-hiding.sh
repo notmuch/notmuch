@@ -9,7 +9,7 @@
 
 test_description='exception symbol hiding'
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest 'running test' run_test
 mkdir -p ${PWD}/fakedb/.notmuch
@@ -26,8 +26,8 @@ test_begin_subtest 'checking output'
 test_expect_equal "$result" "$output"
 
 test_begin_subtest 'comparing existing to exported symbols'
-nm -P $TEST_DIRECTORY/../lib/libnotmuch.so | awk '$2 == "T" && $1 ~ "^notmuch" {print $1}' | sort | uniq > ACTUAL
-sed -n 's/^\(notmuch_[a-zA-Z0-9_]*\)[[:blank:]]*(.*/\1/p' $TEST_DIRECTORY/../lib/notmuch.h | sort | uniq > EXPORTED
+nm -P $NOTMUCH_BUILDDIR/lib/libnotmuch.so | awk '$2 == "T" && $1 ~ "^notmuch" {print $1}' | sort | uniq > ACTUAL
+sed -n 's/^\(notmuch_[a-zA-Z0-9_]*\)[[:blank:]]*(.*/\1/p' $NOTMUCH_SRCDIR/lib/notmuch.h | sort | uniq > EXPORTED
 test_expect_equal_file EXPORTED ACTUAL
 
 test_done

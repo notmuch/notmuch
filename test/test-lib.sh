@@ -26,6 +26,15 @@ fi
 # Make sure echo builtin does not expand backslash-escape sequences by default.
 shopt -u xpg_echo
 
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/export-dirs.sh || exit 1
+
+# It appears that people try to run tests without building...
+if [[ ! -x "$NOTMUCH_BUILDDIR/notmuch" ]]; then
+	echo >&2 'You do not seem to have built notmuch yet.'
+	exit 1
+fi
+
 this_test=${0##*/}
 this_test=${this_test%.sh}
 this_test_bare=${this_test#T[0-9][0-9][0-9]-}
@@ -93,6 +102,23 @@ unset GREP_OPTIONS
 # For emacsclient
 unset ALTERNATE_EDITOR
 
+add_gnupg_home ()
+{
+    local output
+    [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
+    mkdir -m 0700 "$GNUPGHOME"
+    gpg --no-tty --import <$NOTMUCH_SRCDIR/test/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
+    test_debug "cat $GNUPGHOME/import.log"
+    if (gpg --quick-random --version >/dev/null 2>&1) ; then
+	echo quick-random >> "$GNUPGHOME"/gpg.conf
+    elif (gpg --debug-quick-random --version >/dev/null 2>&1) ; then
+	echo debug-quick-random >> "$GNUPGHOME"/gpg.conf
+    fi
+    echo no-emit-version >> "$GNUPGHOME"/gpg.conf
+}
+
 # Each test should start with something like this, after copyright notices:
 #
 # test_description='Description of this test...
@@ -134,9 +160,6 @@ do
 		valgrind=t; verbose=t; shift ;;
 	--tee)
 		shift ;; # was handled already
-	--root=*)
-		root=$(expr "z$1" : 'z[^=]*=\(.*\)')
-		shift ;;
 	*)
 		echo "error: unknown test option '$1'" >&2; exit 1 ;;
 	esac
@@ -276,183 +299,6 @@ export GNUPGHOME="${TEST_TMPDIR}/gnupg"
 trap 'trap_exit' EXIT
 trap 'trap_signal' HUP INT TERM
 
-# Generate a new message in the mail directory, with a unique message
-# ID and subject. The message is not added to the index.
-#
-# After this function returns, the filename of the generated message
-# is available as $gen_msg_filename and the message ID is available as
-# $gen_msg_id .
-#
-# This function supports named parameters with the bash syntax for
-# assigning a value to an associative array ([name]=value). The
-# supported parameters are:
-#
-#  [dir]=directory/of/choice
-#
-#	Generate the message in directory 'directory/of/choice' within
-#	the mail store. The directory will be created if necessary.
-#
-#  [filename]=name
-#
-#	Store the message in file 'name'. The default is to store it
-#	in 'msg-<count>', where <count> is three-digit number of the
-#	message.
-#
-#  [body]=text
-#
-#	Text to use as the body of the email message
-#
-#  '[from]="Some User <user@example.com>"'
-#  '[to]="Some User <user@example.com>"'
-#  '[subject]="Subject of email message"'
-#  '[date]="RFC 822 Date"'
-#
-#	Values for email headers. If not provided, default values will
-#	be generated instead.
-#
-#  '[cc]="Some User <user@example.com>"'
-#  [reply-to]=some-address
-#  [in-reply-to]=<message-id>
-#  [references]=<message-id>
-#  [content-type]=content-type-specification
-#  '[header]=full header line, including keyword'
-#
-#	Additional values for email headers. If these are not provided
-#	then the relevant headers will simply not appear in the
-#	message.
-#
-#  '[id]=message-id'
-#
-#	Controls the message-id of the created message.
-gen_msg_cnt=0
-gen_msg_filename=""
-gen_msg_id=""
-generate_message ()
-{
-    # This is our (bash-specific) magic for doing named parameters
-    local -A template="($@)"
-    local additional_headers
-
-    gen_msg_cnt=$((gen_msg_cnt + 1))
-    if [ -z "${template[filename]}" ]; then
-	gen_msg_name="msg-$(printf "%03d" $gen_msg_cnt)"
-    else
-	gen_msg_name=${template[filename]}
-    fi
-
-    if [ -z "${template[id]}" ]; then
-	gen_msg_id="${gen_msg_name%:2,*}@notmuch-test-suite"
-    else
-	gen_msg_id="${template[id]}"
-    fi
-
-    if [ -z "${template[dir]}" ]; then
-	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
-    else
-	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
-	mkdir -p "$(dirname "$gen_msg_filename")"
-    fi
-
-    if [ -z "${template[body]}" ]; then
-	template[body]="This is just a test message (#${gen_msg_cnt})"
-    fi
-
-    if [ -z "${template[from]}" ]; then
-	template[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"
-    fi
-
-    if [ -z "${template[to]}" ]; then
-	template[to]="Notmuch Test Suite <test_suite@notmuchmail.org>"
-    fi
-
-    if [ -z "${template[subject]}" ]; then
-	if [ -n "$test_subtest_name" ]; then
-	    template[subject]="$test_subtest_name"
-	else
-	    template[subject]="Test message #${gen_msg_cnt}"
-	fi
-    elif [ "${template[subject]}" = "@FORCE_EMPTY" ]; then
-	template[subject]=""
-    fi
-
-    if [ -z "${template[date]}" ]; then
-	# we use decreasing timestamps here for historical reasons;
-	# the existing test suite when we converted to unique timestamps just
-	# happened to have signicantly fewer failures with that choice.
-	local date_secs=$((978709437 - gen_msg_cnt))
-	# printf %(..)T is bash 4.2+ feature. use perl fallback if needed...
-	TZ=UTC printf -v template[date] "%(%a, %d %b %Y %T %z)T" $date_secs 2>/dev/null ||
-	    template[date]=`perl -le 'use POSIX "strftime";
-				@time = gmtime '"$date_secs"';
-				print strftime "%a, %d %b %Y %T +0000", @time'`
-    fi
-
-    additional_headers=""
-    if [ ! -z "${template[header]}" ]; then
-	additional_headers="${template[header]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[reply-to]}" ]; then
-	additional_headers="Reply-To: ${template[reply-to]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[in-reply-to]}" ]; then
-	additional_headers="In-Reply-To: ${template[in-reply-to]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[cc]}" ]; then
-	additional_headers="Cc: ${template[cc]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[bcc]}" ]; then
-	additional_headers="Bcc: ${template[bcc]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[references]}" ]; then
-	additional_headers="References: ${template[references]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[content-type]}" ]; then
-	additional_headers="Content-Type: ${template[content-type]}
-${additional_headers}"
-    fi
-
-    if [ ! -z "${template[content-transfer-encoding]}" ]; then
-	additional_headers="Content-Transfer-Encoding: ${template[content-transfer-encoding]}
-${additional_headers}"
-    fi
-
-    # Note that in the way we're setting it above and using it below,
-    # `additional_headers' will also serve as the header / body separator
-    # (empty line in between).
-
-    cat <<EOF >"$gen_msg_filename"
-From: ${template[from]}
-To: ${template[to]}
-Message-Id: <${gen_msg_id}>
-Subject: ${template[subject]}
-Date: ${template[date]}
-${additional_headers}
-${template[body]}
-EOF
-}
-
-# Generate a new message and add it to the database.
-#
-# All of the arguments and return values supported by generate_message
-# are also supported here, so see that function for details.
-add_message ()
-{
-    generate_message "$@" &&
-    notmuch new > /dev/null
-}
-
 # Deliver a message with emacs and add it to the database
 #
 # Uses emacs to generate and deliver a message to the mail store.
@@ -500,8 +346,17 @@ emacs_deliver_message ()
 # Accepts arbitrary extra emacs/elisp functions to modify the message
 # before sending, which is useful to doing things like attaching files
 # to the message and encrypting/signing.
+#
+# If any GNU-style long-arguments (like --quiet or --decrypt=true) are
+# at the head of the argument list, they are sent directly to "notmuch
+# new" after message delivery
 emacs_fcc_message ()
 {
+    local nmn_args=''
+    while [[ "$1" =~ ^-- ]]; do
+        nmn_args="$nmn_args $1"
+        shift
+    done
     local subject="$1"
     local body="$2"
     shift 2
@@ -520,7 +375,7 @@ emacs_fcc_message ()
 	   (insert \"${body}\")
 	   $@
 	   (notmuch-mua-send-and-exit))" || return 1
-    notmuch new >/dev/null
+    notmuch new $nmn_args >/dev/null
 }
 
 # Add an existing, fixed corpus of email to the database.
@@ -539,7 +394,7 @@ add_email_corpus ()
     if [ -d $TEST_DIRECTORY/corpora.mail/$corpus ]; then
 	cp -a $TEST_DIRECTORY/corpora.mail/$corpus ${MAIL_DIR}
     else
-	cp -a $TEST_DIRECTORY/corpora/$corpus ${MAIL_DIR}
+	cp -a $NOTMUCH_SRCDIR/test/corpora/$corpus ${MAIL_DIR}
 	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
 	mkdir -p $TEST_DIRECTORY/corpora.mail
 	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpora.mail/$corpus
@@ -627,9 +482,10 @@ test_expect_equal_json () {
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
+    local script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
         || echo "$1")
-    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
         || echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
@@ -681,6 +537,16 @@ NOTMUCH_DUMP_TAGS ()
 {
     # this relies on the default format being batch-tag, otherwise some tests will break
     notmuch dump --include=tags "${@}" | sed '/^#/d' | sort
+}
+
+notmuch_drop_mail_headers ()
+{
+    $NOTMUCH_PYTHON -c '
+import email, sys
+msg = email.message_from_file(sys.stdin)
+for hdr in sys.argv[1:]: del msg[hdr]
+print(msg.as_string(False))
+' "$@"
 }
 
 notmuch_search_sanitize ()
@@ -1077,8 +943,8 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 # --load		Force loading of notmuch.el and test-lib.el
 
 exec ${TEST_EMACS} --quick \
-	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
-	--directory "$TEST_DIRECTORY" --load test-lib.el \
+	--directory "$NOTMUCH_SRCDIR/emacs" --load notmuch.el \
+	--directory "$NOTMUCH_SRCDIR/test" --load test-lib.el \
 	"\$@"
 EOF
 	chmod a+x "$TMP_DIRECTORY/run_emacs"
@@ -1093,8 +959,8 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
-		emacs_tests="${this_test_bare}.el"
-		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
+		emacs_tests="$NOTMUCH_SRCDIR/test/${this_test_bare}.el"
+		if [ -f "$emacs_tests" ]; then
 			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
 		else
 			load_emacs_tests=
@@ -1137,14 +1003,14 @@ test_python() {
 }
 
 test_ruby() {
-    MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
+    MAIL_DIR=$MAIL_DIR ruby -I $NOTMUCH_SRCDIR/bindings/ruby> OUTPUT
 }
 
 test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${NOTMUCH_BUILDDIR}/lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
@@ -1200,7 +1066,10 @@ test_init_ () {
 }
 
 
-. ./test-lib-common.sh || exit 1
+# Where to run the tests
+TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+
+. "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
 if [ "${NOTMUCH_GMIME_MAJOR}" = 3 ]; then
     test_subtest_broken_gmime_3 () {
@@ -1223,7 +1092,7 @@ emacs_generate_script
 
 # Use -P to resolve symlinks in our working directory so that the cwd
 # in subprocesses like git equals our $PWD (for pathname comparisons).
-cd -P "$test" || error "Cannot set up test environment"
+cd -P "$TMP_DIRECTORY" || error "Cannot set up test environment"
 
 if test "$verbose" = "t"
 then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch search" by folder: and path: (with variations)'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_message '[dir]=bad' '[subject]="To the bone"'
 add_message '[dir]=.' '[subject]="Top level"'
@@ -15,7 +15,7 @@ add_message '[dir]=things/bad' '[subject]="Bites, stings, sad feelings"'
 test_begin_subtest "Single-world folder: specification (multiple results)"
 output=$(notmuch search folder:bad folder:bad/news folder:things/bad | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
 test_begin_subtest "Top level folder"
@@ -24,7 +24,7 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; T
 
 test_begin_subtest "Two-word path to narrow results to one"
 output=$(notmuch search folder:bad/news | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)"
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)"
 
 test_begin_subtest "Folder search with --output=files"
 output=$(notmuch search --output=files folder:bad/news | notmuch_search_files_sanitize)

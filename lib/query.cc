@@ -29,7 +29,7 @@ struct _notmuch_query {
     notmuch_sort_t sort;
     notmuch_string_list_t *exclude_terms;
     notmuch_exclude_t omit_excluded;
-    notmuch_bool_t parsed;
+    bool parsed;
     Xapian::Query xapian_query;
     std::set<std::string> terms;
 };
@@ -62,12 +62,12 @@ struct _notmuch_threads {
 };
 
 /* We need this in the message functions so forward declare. */
-static notmuch_bool_t
+static bool
 _notmuch_doc_id_set_init (void *ctx,
 			  notmuch_doc_id_set_t *doc_ids,
 			  GArray *arr);
 
-static notmuch_bool_t
+static bool
 _debug_query (void)
 {
     char *env = getenv ("NOTMUCH_DEBUG_QUERY");
@@ -97,7 +97,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     new (&query->xapian_query) Xapian::Query ();
     new (&query->terms) std::set<std::string> ();
-    query->parsed = FALSE;
+    query->parsed = false;
 
     talloc_set_destructor (query, _notmuch_query_destructor);
 
@@ -134,7 +134,7 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
 	     t != query->xapian_query.get_terms_end (); ++t)
 	    query->terms.insert (*t);
 
-	query->parsed = TRUE;
+	query->parsed = true;
 
     } catch (const Xapian::Error &error) {
 	if (!query->notmuch->exception_reported) {
@@ -144,7 +144,7 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
 	    _notmuch_database_log_append (query->notmuch,
 					  "Query string was: %s\n",
 					  query->query_string);
-	    query->notmuch->exception_reported = TRUE;
+	    query->notmuch->exception_reported = true;
 	}
 
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -261,7 +261,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
     try {
 
-	messages->base.is_of_list_type = FALSE;
+	messages->base.is_of_list_type = false;
 	messages->base.iterator = NULL;
 	messages->notmuch = notmuch;
 	new (&messages->iterator) Xapian::MSetIterator ();
@@ -304,7 +304,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
 		mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
 
-		GArray *excluded_doc_ids = g_array_new (FALSE, FALSE, sizeof (unsigned int));
+		GArray *excluded_doc_ids = g_array_new (false, false, sizeof (unsigned int));
 
 		for (iterator = mset.begin (); iterator != mset.end (); iterator++) {
 		    unsigned int doc_id = *iterator;
@@ -322,13 +322,13 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
 	switch (query->sort) {
 	case NOTMUCH_SORT_OLDEST_FIRST:
-	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, FALSE);
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, false);
 	    break;
 	case NOTMUCH_SORT_NEWEST_FIRST:
-	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, TRUE);
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, true);
 	    break;
 	case NOTMUCH_SORT_MESSAGE_ID:
-	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, false);
 	    break;
 	case NOTMUCH_SORT_UNSORTED:
 	    break;
@@ -359,13 +359,13 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 			       "Query string was: %s\n",
 			       query->query_string);
 
-	notmuch->exception_reported = TRUE;
+	notmuch->exception_reported = true;
 	talloc_free (messages);
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 }
 
-notmuch_bool_t
+bool
 _notmuch_mset_messages_valid (notmuch_messages_t *messages)
 {
     notmuch_mset_messages_t *mset_messages;
@@ -415,7 +415,7 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
 
     if (messages->excluded_doc_ids &&
 	_notmuch_doc_id_set_contains (messages->excluded_doc_ids, doc_id))
-	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, true);
 
     return message;
 }
@@ -430,7 +430,7 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages)
     mset_messages->iterator++;
 }
 
-static notmuch_bool_t
+static bool
 _notmuch_doc_id_set_init (void *ctx,
 			  notmuch_doc_id_set_t *doc_ids,
 			  GArray *arr)
@@ -443,7 +443,7 @@ _notmuch_doc_id_set_init (void *ctx,
     bitmap = talloc_zero_array (ctx, unsigned char, DOCIDSET_WORD(max) + 1);
 
     if (bitmap == NULL)
-	return FALSE;
+	return false;
 
     doc_ids->bitmap = bitmap;
     doc_ids->bound = max + 1;
@@ -453,15 +453,15 @@ _notmuch_doc_id_set_init (void *ctx,
 	bitmap[DOCIDSET_WORD(doc_id)] |= 1 << DOCIDSET_BIT(doc_id);
     }
 
-    return TRUE;
+    return true;
 }
 
-notmuch_bool_t
+bool
 _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 			      unsigned int doc_id)
 {
     if (doc_id >= doc_ids->bound)
-	return FALSE;
+	return false;
     return doc_ids->bitmap[DOCIDSET_WORD(doc_id)] & (1 << DOCIDSET_BIT(doc_id));
 }
 
@@ -514,7 +514,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
 	return status;
     }
 
-    threads->doc_ids = g_array_new (FALSE, FALSE, sizeof (unsigned int));
+    threads->doc_ids = g_array_new (false, false, sizeof (unsigned int));
     while (notmuch_messages_valid (messages)) {
 	unsigned int doc_id = _notmuch_mset_messages_get_doc_id (messages);
 	g_array_append_val (threads->doc_ids, doc_id);
@@ -546,7 +546,7 @@ notmuch_threads_valid (notmuch_threads_t *threads)
     unsigned int doc_id;
 
     if (! threads)
-	return FALSE;
+	return false;
 
     while (threads->doc_id_pos < threads->doc_ids->len) {
 	doc_id = g_array_index (threads->doc_ids, unsigned int,

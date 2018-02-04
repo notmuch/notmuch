@@ -16,7 +16,7 @@ enum direction {
     DECODE
 };
 
-static int inplace = FALSE;
+static bool inplace = false;
 
 static int
 xcode (void *ctx, enum direction dir, char *in, char **buf_p, size_t *size_p)
@@ -44,17 +44,17 @@ int
 main (int argc, char **argv)
 {
 
-    enum direction dir = DECODE;
-    int omit_newline = FALSE;
+    int dir = DECODE;
+    bool omit_newline = false;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &dir, "direction", 'd',
+	{ .opt_keyword = &dir, .name = "direction", .keywords =
 	  (notmuch_keyword_t []){ { "encode", ENCODE },
 				  { "decode", DECODE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &omit_newline, "omit-newline", 'n', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &inplace, "in-place", 'i', 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &omit_newline, .name = "omit-newline" },
+	{ .opt_bool = &inplace, .name = "in-place" },
+	{ }
     };
 
     int opt_index = parse_arguments (argc, argv, options, 1);
@@ -71,7 +71,7 @@ main (int argc, char **argv)
     char *buffer = NULL;
     size_t buf_size = 0;
 
-    notmuch_bool_t read_stdin = TRUE;
+    bool read_stdin = true;
 
     for (; opt_index < argc; opt_index++) {
 
@@ -82,7 +82,7 @@ main (int argc, char **argv)
 	if (! omit_newline)
 	    putchar ('\n');
 
-	read_stdin = FALSE;
+	read_stdin = false;
     }
 
     if (! read_stdin)

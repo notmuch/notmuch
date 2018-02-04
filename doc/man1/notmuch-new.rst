@@ -43,6 +43,24 @@ Supported options for **new** include
     ``--quiet``
         Do not print progress or results.
 
+    ``--decrypt=(true|nostash|auto|false)``
+
+        If ``true``, when encountering an encrypted message, try to
+        decrypt it while indexing, and stash any discovered session
+        keys.  If ``auto``, try to use any session key already known
+        to belong to this message, but do not attempt to use the
+        user's secret keys.  If decryption is successful, index the
+        cleartext of the message.
+
+        Be aware that the index is likely sufficient (and the session
+        key is certainly sufficient) to reconstruct the cleartext of
+        the message itself, so please ensure that the notmuch message
+        index is adequately protected.  DO NOT USE ``--decrypt=true``
+        or ``--decrypt=nostash`` without considering the security of
+        your index.
+
+        See also ``index.decrypt`` in **notmuch-config(1)**.
+
 EXIT STATUS
 ===========
 
@@ -54,7 +72,15 @@ This command supports the following special exit status code
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-reply(1)**, **notmuch-restore(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**

@@ -44,6 +44,7 @@ struct _notmuch_thread {
 
     GHashTable *message_hash;
     int total_messages;
+    int total_files;
     int matched_messages;
     time_t oldest;
     time_t newest;
@@ -58,12 +59,12 @@ _notmuch_thread_destructor (notmuch_thread_t *thread)
     g_hash_table_unref (thread->message_hash);
 
     if (thread->authors_array) {
-	g_ptr_array_free (thread->authors_array, TRUE);
+	g_ptr_array_free (thread->authors_array, true);
 	thread->authors_array = NULL;
     }
 
     if (thread->matched_authors_array) {
-	g_ptr_array_free (thread->matched_authors_array, TRUE);
+	g_ptr_array_free (thread->matched_authors_array, true);
 	thread->matched_authors_array = NULL;
     }
 
@@ -155,10 +156,13 @@ _resolve_thread_authors_string (notmuch_thread_t *thread)
 	first_non_matched_author = 0;
     }
 
-    g_ptr_array_free (thread->authors_array, TRUE);
+    g_ptr_array_free (thread->authors_array, true);
     thread->authors_array = NULL;
-    g_ptr_array_free (thread->matched_authors_array, TRUE);
+    g_ptr_array_free (thread->matched_authors_array, true);
     thread->matched_authors_array = NULL;
+
+    if (!thread->authors)
+	thread->authors = talloc_strdup(thread, "");
 }
 
 /* clean up the ugly "Lastname, Firstname" format that some mail systems
@@ -238,7 +242,7 @@ _thread_add_message (notmuch_thread_t *thread,
     InternetAddress *address;
     const char *from, *author;
     char *clean_author;
-    notmuch_bool_t message_excluded = FALSE;
+    bool message_excluded = false;
 
     if (omit_exclude != NOTMUCH_EXCLUDE_FALSE) {
 	for (tags = notmuch_message_get_tags (message);
@@ -253,7 +257,7 @@ _thread_add_message (notmuch_thread_t *thread,
 	    {
 		/* Check for an empty string, and then ignore initial 'K'. */
 		if (*(term->string) && strcmp(tag, (term->string + 1)) == 0) {
-		    message_excluded = TRUE;
+		    message_excluded = true;
 		    break;
 		}
 	    }
@@ -266,6 +270,7 @@ _thread_add_message (notmuch_thread_t *thread,
     _notmuch_message_list_add_message (thread->message_list,
 				       talloc_steal (thread, message));
     thread->total_messages++;
+    thread->total_files += notmuch_message_count_files (message);
 
     g_hash_table_insert (thread->message_hash,
 			 xstrdup (notmuch_message_get_message_id (message)),
@@ -308,7 +313,7 @@ _thread_add_message (notmuch_thread_t *thread,
 
     /* Mark excluded messages. */
     if (message_excluded)
-	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, true);
 }
 
 static void
@@ -495,6 +500,7 @@ _notmuch_thread_create (void *ctx,
 						  free, NULL);
 
     thread->total_messages = 0;
+    thread->total_files = 0;
     thread->matched_messages = 0;
     thread->oldest = 0;
     thread->newest = 0;
@@ -564,6 +570,12 @@ int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread)
 {
     return thread->total_messages;
+}
+
+int
+notmuch_thread_get_total_files (notmuch_thread_t *thread)
+{
+    return thread->total_files;
 }
 
 int

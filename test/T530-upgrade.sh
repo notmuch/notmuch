@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 test_description="database upgrade"
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 dbtarball=database-v1.tar.xz
 

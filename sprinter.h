@@ -1,7 +1,7 @@
 #ifndef NOTMUCH_SPRINTER_H
 #define NOTMUCH_SPRINTER_H
 
-/* Necessary for notmuch_bool_t */
+/* Necessary for bool */
 #include "notmuch-client.h"
 
 /* Structure printer interface. This is used to create output
@@ -34,7 +34,7 @@ typedef struct sprinter {
     void (*string) (struct sprinter *, const char *);
     void (*string_len) (struct sprinter *, const char *, size_t);
     void (*integer) (struct sprinter *, int);
-    void (*boolean) (struct sprinter *, notmuch_bool_t);
+    void (*boolean) (struct sprinter *, bool);
     void (*null) (struct sprinter *);
 
     /* Print the key of a map's key/value pair. The char * must be UTF-8
@@ -58,7 +58,7 @@ typedef struct sprinter {
 
     /* True if this is the special-cased plain text printer.
      */
-    notmuch_bool_t is_text_printer;
+    bool is_text_printer;
 } sprinter_t;
 
 

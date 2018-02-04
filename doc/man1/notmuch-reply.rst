@@ -72,16 +72,26 @@ Supported options for **reply** include
             in this order, and copy values from the first that contains
             something other than only the user's addresses.
 
-    ``--decrypt``
-        Decrypt any MIME encrypted parts found in the selected content
-        (ie. "multipart/encrypted" parts). Status of the decryption will
-        be reported (currently only supported with --format=json and
-        --format=sexp) and on successful decryption the
-        multipart/encrypted part will be replaced by the decrypted
-        content.
+    ``--decrypt=(false|auto|true)``
 
-        Decryption expects a functioning **gpg-agent(1)** to provide any
-        needed credentials. Without one, the decryption will fail.
+        If ``true``, decrypt any MIME encrypted parts found in the
+        selected content (i.e., "multipart/encrypted" parts). Status
+        of the decryption will be reported (currently only supported
+        with --format=json and --format=sexp), and on successful
+        decryption the multipart/encrypted part will be replaced by
+        the decrypted content.
+
+        If ``auto``, and a session key is already known for the
+        message, then it will be decrypted, but notmuch will not try
+        to access the user's secret keys.
+
+        Use ``false`` to avoid even automatic decryption.
+
+        Non-automatic decryption expects a functioning
+        **gpg-agent(1)** to provide any needed credentials. Without
+        one, the decryption will likely fail.
+
+        Default: ``auto``
 
 See **notmuch-search-terms(7)** for details of the supported syntax for
 <search-terms>.
@@ -108,7 +118,15 @@ This command supports the following special exit status codes
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-restore(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**

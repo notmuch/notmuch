@@ -4,117 +4,169 @@
 #include "error_util.h"
 #include "command-line-arguments.h"
 
+typedef enum {
+    OPT_FAILED, /* false */
+    OPT_OK, /* good */
+    OPT_GIVEBACK, /* pop one of the arguments you thought you were getting off the stack */
+} opt_handled;
+
 /*
   Search the array of keywords for a given argument, assigning the
-  output variable to the corresponding value.  Return FALSE if nothing
+  output variable to the corresponding value.  Return false if nothing
   matches.
 */
 
-static notmuch_bool_t
-_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
-
-    const notmuch_keyword_t *keywords = arg_desc->keywords;
+static opt_handled
+_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next,
+		      const char *arg_str, bool negate)
+{
+    const notmuch_keyword_t *keywords;
 
     if (next == '\0') {
 	/* No keyword given */
 	arg_str = "";
     }
 
-    while (keywords->name) {
-	if (strcmp (arg_str, keywords->name) == 0) {
-	    if (arg_desc->output_var) {
-		if (arg_desc->opt_type == NOTMUCH_OPT_KEYWORD_FLAGS)
-		    *((int *)arg_desc->output_var) |= keywords->value;
-		else
-		    *((int *)arg_desc->output_var) = keywords->value;
-	    }
-	    return TRUE;
-	}
-	keywords++;
+    for (keywords = arg_desc->keywords; keywords->name; keywords++) {
+	if (strcmp (arg_str, keywords->name) != 0)
+	    continue;
+
+	if (arg_desc->opt_flags && negate)
+	    *arg_desc->opt_flags &= ~keywords->value;
+	else if (arg_desc->opt_flags)
+	    *arg_desc->opt_flags |= keywords->value;
+	else
+	    *arg_desc->opt_keyword = keywords->value;
+
+	return OPT_OK;
     }
+
+    if (arg_desc->opt_keyword && arg_desc->keyword_no_arg_value && next != ':' && next != '=') {
+	for (keywords = arg_desc->keywords; keywords->name; keywords++) {
+	    if (strcmp (arg_desc->keyword_no_arg_value, keywords->name) != 0)
+		continue;
+
+	    *arg_desc->opt_keyword = keywords->value;
+	    fprintf (stderr, "Warning: No known keyword option given for \"%s\", choosing value \"%s\"."
+		     "  Please specify the argument explicitly!\n", arg_desc->name, arg_desc->keyword_no_arg_value);
+
+	    return OPT_GIVEBACK;
+	}
+	fprintf (stderr, "No matching keyword for option \"%s\" and default value \"%s\" is invalid.\n", arg_str, arg_desc->name);
+	return OPT_FAILED;
+    }
+
     if (next != '\0')
 	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str, arg_desc->name);
     else
 	fprintf (stderr, "Option \"%s\" needs a keyword argument.\n", arg_desc->name);
-    return FALSE;
+    return OPT_FAILED;
 }
 
-static notmuch_bool_t
-_process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+static opt_handled
+_process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next,
+		      const char *arg_str, bool negate)
+{
+    bool value;
 
-    if (next == '\0') {
-	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
-	return TRUE;
+    if (next == '\0' || strcmp (arg_str, "true") == 0) {
+	value = true;
+    } else if (strcmp (arg_str, "false") == 0) {
+	value = false;
+    } else {
+	fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
+	return OPT_FAILED;
     }
-    if (strcmp (arg_str, "false") == 0) {
-	*((notmuch_bool_t *)arg_desc->output_var) = FALSE;
-	return TRUE;
-    }
-    if (strcmp (arg_str, "true") == 0) {
-	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
-	return TRUE;
-    }
-    fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
-    return FALSE;
+
+    *arg_desc->opt_bool = negate ? !value : value;
+
+    return OPT_OK;
 }
 
-static notmuch_bool_t
+static opt_handled
 _process_int_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
     char *endptr;
     if (next == '\0' || arg_str[0] == '\0') {
 	fprintf (stderr, "Option \"%s\" needs an integer argument.\n", arg_desc->name);
-	return FALSE;
+	return OPT_FAILED;
     }
 
-    *((int *)arg_desc->output_var) = strtol (arg_str, &endptr, 10);
+    *arg_desc->opt_int = strtol (arg_str, &endptr, 10);
     if (*endptr == '\0')
-	return TRUE;
+	return OPT_OK;
 
     fprintf (stderr, "Unable to parse argument \"%s\" for option \"%s\" as an integer.\n",
 	     arg_str, arg_desc->name);
-    return FALSE;
+    return OPT_FAILED;
 }
 
-static notmuch_bool_t
+static opt_handled
 _process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
     if (next == '\0') {
 	fprintf (stderr, "Option \"%s\" needs a string argument.\n", arg_desc->name);
-	return FALSE;
+	return OPT_FAILED;
     }
-    if (arg_str[0] == '\0') {
+    if (arg_str[0] == '\0' && ! arg_desc->allow_empty) {
 	fprintf (stderr, "String argument for option \"%s\" must be non-empty.\n", arg_desc->name);
-	return FALSE;
+	return OPT_FAILED;
     }
-    *((const char **)arg_desc->output_var) = arg_str;
-    return TRUE;
+    *arg_desc->opt_string = arg_str;
+    return OPT_OK;
+}
+
+/* Return number of non-NULL opt_* fields in opt_desc. */
+static int _opt_set_count (const notmuch_opt_desc_t *opt_desc)
+{
+    return
+	!!opt_desc->opt_inherit +
+	!!opt_desc->opt_bool +
+	!!opt_desc->opt_int +
+	!!opt_desc->opt_keyword +
+	!!opt_desc->opt_flags +
+	!!opt_desc->opt_string +
+	!!opt_desc->opt_position;
+}
+
+/* Return true if opt_desc is valid. */
+static bool _opt_valid (const notmuch_opt_desc_t *opt_desc)
+{
+    int n = _opt_set_count (opt_desc);
+
+    if (n > 1)
+	INTERNAL_ERROR ("more than one non-NULL opt_* field for argument \"%s\"",
+			opt_desc->name);
+
+    return n > 0;
 }
 
 /*
-   Search for the {pos_arg_index}th position argument, return FALSE if
+   Search for the {pos_arg_index}th position argument, return false if
    that does not exist.
 */
 
-notmuch_bool_t
+bool
 parse_position_arg (const char *arg_str, int pos_arg_index,
 		    const notmuch_opt_desc_t *arg_desc) {
 
     int pos_arg_counter = 0;
-    while (arg_desc->opt_type != NOTMUCH_OPT_END){
-	if (arg_desc->opt_type == NOTMUCH_OPT_POSITION) {
+    while (_opt_valid (arg_desc)) {
+	if (arg_desc->opt_position) {
 	    if (pos_arg_counter == pos_arg_index) {
-		if (arg_desc->output_var) {
-		    *((const char **)arg_desc->output_var) = arg_str;
-		}
-		return TRUE;
+		*arg_desc->opt_position = arg_str;
+		if (arg_desc->present)
+		    *arg_desc->present = true;
+		return true;
 	    }
 	    pos_arg_counter++;
 	}
 	arg_desc++;
     }
-    return FALSE;
+    return false;
 }
+
+#define NEGATIVE_PREFIX "no-"
 
 /*
  * Search for a non-positional (i.e. starting with --) argument matching arg,
@@ -132,15 +184,23 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
     assert(options);
 
     const char *arg = _arg + 2; /* _arg starts with -- */
+    const char *negative_arg = NULL;
+
+    /* See if this is a --no-argument */
+    if (strlen (arg) > strlen (NEGATIVE_PREFIX) &&
+	strncmp (arg, NEGATIVE_PREFIX, strlen (NEGATIVE_PREFIX)) == 0) {
+	negative_arg = arg + strlen (NEGATIVE_PREFIX);
+    }
+
     const notmuch_opt_desc_t *try;
 
     const char *next_arg = NULL;
     if (opt_index < argc - 1  && strncmp (argv[opt_index + 1], "--", 2) != 0)
 	next_arg = argv[opt_index + 1];
 
-    for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
-	if (try->opt_type == NOTMUCH_OPT_INHERIT) {
-	    int new_index = parse_option (argc, argv, try->output_var, opt_index);
+    for (try = options; _opt_valid (try); try++) {
+	if (try->opt_inherit) {
+	    int new_index = parse_option (argc, argv, try->opt_inherit, opt_index);
 	    if (new_index >= 0)
 		return new_index;
 	}
@@ -148,11 +208,22 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	if (! try->name)
 	    continue;
 
-	if (strncmp (arg, try->name, strlen (try->name)) != 0)
-	    continue;
+	char next;
+	const char *value;
+	bool negate = false;
 
-	char next = arg[strlen (try->name)];
-	const char *value = arg + strlen(try->name) + 1;
+	if (strncmp (arg, try->name, strlen (try->name)) == 0) {
+	    next = arg[strlen (try->name)];
+	    value = arg + strlen (try->name) + 1;
+	} else if (negative_arg && (try->opt_bool || try->opt_flags) &&
+		   strncmp (negative_arg, try->name, strlen (try->name)) == 0) {
+	    next = negative_arg[strlen (try->name)];
+	    value = negative_arg + strlen (try->name) + 1;
+	    /* The argument part of --no-argument matches, negate the result. */
+	    negate = true;
+	} else {
+	    continue;
+	}
 
 	/*
 	 * If we have not reached the end of the argument (i.e. the
@@ -163,40 +234,36 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	if (next != '=' && next != ':' && next != '\0')
 	    continue;
 
-	if (next == '\0' && next_arg != NULL && try->opt_type != NOTMUCH_OPT_BOOLEAN) {
+	bool lookahead = (next == '\0' && next_arg != NULL && ! try->opt_bool);
+
+	if (lookahead) {
 	    next = ' ';
 	    value = next_arg;
 	    opt_index ++;
 	}
 
-	if (try->output_var == NULL)
-	    INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
-
-	notmuch_bool_t opt_status = FALSE;
-	switch (try->opt_type) {
-	case NOTMUCH_OPT_KEYWORD:
-	case NOTMUCH_OPT_KEYWORD_FLAGS:
-	    opt_status = _process_keyword_arg (try, next, value);
-	    break;
-	case NOTMUCH_OPT_BOOLEAN:
-	    opt_status = _process_boolean_arg (try, next, value);
-	    break;
-	case NOTMUCH_OPT_INT:
+	opt_handled opt_status = OPT_FAILED;
+	if (try->opt_keyword || try->opt_flags)
+	    opt_status = _process_keyword_arg (try, next, value, negate);
+	else if (try->opt_bool)
+	    opt_status = _process_boolean_arg (try, next, value, negate);
+	else if (try->opt_int)
 	    opt_status = _process_int_arg (try, next, value);
-	    break;
-	case NOTMUCH_OPT_STRING:
+	else if (try->opt_string)
 	    opt_status = _process_string_arg (try, next, value);
-	    break;
-	case NOTMUCH_OPT_POSITION:
-	case NOTMUCH_OPT_END:
-	default:
-	    INTERNAL_ERROR ("unknown or unhandled option type %d", try->opt_type);
-	    /*UNREACHED*/
-	}
-	if (opt_status)
-	    return opt_index+1;
 	else
+	    INTERNAL_ERROR ("unknown or unhandled option \"%s\"", try->name);
+
+	if (opt_status == OPT_FAILED)
 	    return -1;
+
+	if (lookahead && opt_status == OPT_GIVEBACK)
+	    opt_index --;
+
+	if (try->present)
+	    *try->present = true;
+
+	return opt_index+1;
     }
     return -1;
 }
@@ -207,7 +274,7 @@ parse_arguments (int argc, char **argv,
 		 const notmuch_opt_desc_t *options, int opt_index) {
 
     int pos_arg_index = 0;
-    notmuch_bool_t more_args = TRUE;
+    bool more_args = true;
 
     while (more_args && opt_index < argc) {
 	if (strncmp (argv[opt_index],"--",2) != 0) {
@@ -228,7 +295,7 @@ parse_arguments (int argc, char **argv,
 	    opt_index = parse_option (argc, argv, options, opt_index);
 	    if (opt_index < 0) {
 		fprintf (stderr, "Unrecognized option: %s\n", argv[prev_opt_index]);
-		more_args = FALSE;
+		more_args = false;
 	    }
 	}
     }

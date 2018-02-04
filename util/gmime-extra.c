@@ -33,6 +33,21 @@ g_string_talloc_strdup (void *ctx, char *g_string)
 
 #if (GMIME_MAJOR_VERSION < 3)
 
+const char *
+g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
+{
+    /* output user id only if validity is FULL or ULTIMATE. */
+    /* note that gmime 2.6 is using the term "trust" here, which
+     * is WRONG.  It's actually user id "validity". */
+    const char *name = g_mime_certificate_get_name (cert);
+    if (name == NULL)
+	return name;
+    GMimeCertificateTrust trust = g_mime_certificate_get_trust (cert);
+    if (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE)
+	return name;
+    return NULL;
+}
+
 char *
 g_mime_message_get_address_string (GMimeMessage *message, GMimeRecipientType type)
 {
@@ -106,6 +121,19 @@ g_mime_utils_header_decode_date_unix (const char *date) {
 }
 
 #else /* GMime >= 3.0 */
+
+const char *
+g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
+{
+    /* output user id only if validity is FULL or ULTIMATE. */
+    const char *uid = g_mime_certificate_get_user_id (cert);
+    if (uid == NULL)
+	return uid;
+    GMimeValidity validity = g_mime_certificate_get_id_validity (cert);
+    if (validity == GMIME_VALIDITY_FULL || validity == GMIME_VALIDITY_ULTIMATE)
+	return uid;
+    return NULL;
+}
 
 const char*
 g_mime_certificate_get_fpr16 (GMimeCertificate *cert) {

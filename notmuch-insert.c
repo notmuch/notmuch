@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "string-util.h"
 
 static volatile sig_atomic_t interrupted;
 
@@ -64,7 +65,7 @@ safe_gethostname (char *hostname, size_t len)
 }
 
 /* Call fsync() on a directory path. */
-static notmuch_bool_t
+static bool
 sync_dir (const char *dir)
 {
     int fd, r;
@@ -72,7 +73,7 @@ sync_dir (const char *dir)
     fd = open (dir, O_RDONLY);
     if (fd == -1) {
 	fprintf (stderr, "Error: open %s: %s\n", dir, strerror (errno));
-	return FALSE;
+	return false;
     }
 
     r = fsync (fd);
@@ -87,29 +88,29 @@ sync_dir (const char *dir)
 /*
  * Check the specified folder name does not contain a directory
  * component ".." to prevent writes outside of the Maildir
- * hierarchy. Return TRUE on valid folder name, FALSE otherwise.
+ * hierarchy. Return true on valid folder name, false otherwise.
  */
-static notmuch_bool_t
+static bool
 is_valid_folder_name (const char *folder)
 {
     const char *p = folder;
 
     for (;;) {
 	if ((p[0] == '.') && (p[1] == '.') && (p[2] == '\0' || p[2] == '/'))
-	    return FALSE;
+	    return false;
 	p = strchr (p, '/');
 	if (!p)
-	    return TRUE;
+	    return true;
 	p++;
     }
 }
 
 /*
  * Make the given directory and its parents as necessary, using the
- * given mode. Return TRUE on success, FALSE otherwise. Partial
+ * given mode. Return true on success, false otherwise. Partial
  * results are not cleaned up on errors.
  */
-static notmuch_bool_t
+static bool
 mkdir_recursive (const void *ctx, const char *path, int mode)
 {
     struct stat st;
@@ -122,13 +123,13 @@ mkdir_recursive (const void *ctx, const char *path, int mode)
         if (! S_ISDIR (st.st_mode)) {
 	    fprintf (stderr, "Error: '%s' is not a directory: %s\n",
 		     path, strerror (EEXIST));
-	    return FALSE;
+	    return false;
 	}
 
-	return TRUE;
+	return true;
     } else if (errno != ENOENT) {
 	fprintf (stderr, "Error: stat '%s': %s\n", path, strerror (errno));
-	return FALSE;
+	return false;
     }
 
     /* mkdir parents, if any */
@@ -137,27 +138,27 @@ mkdir_recursive (const void *ctx, const char *path, int mode)
 	parent = talloc_strndup (ctx, path, slash - path);
 	if (! parent) {
 	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
-	    return FALSE;
+	    return false;
 	}
 
 	if (! mkdir_recursive (ctx, parent, mode))
-	    return FALSE;
+	    return false;
     }
 
     if (mkdir (path, mode)) {
 	fprintf (stderr, "Error: mkdir '%s': %s\n", path, strerror (errno));
-	return FALSE;
+	return false;
     }
 
-    return parent ? sync_dir (parent) : TRUE;
+    return parent ? sync_dir (parent) : true;
 }
 
 /*
  * Create the given maildir folder, i.e. maildir and its
- * subdirectories cur/new/tmp. Return TRUE on success, FALSE
+ * subdirectories cur/new/tmp. Return true on success, false
  * otherwise. Partial results are not cleaned up on errors.
  */
-static notmuch_bool_t
+static bool
 maildir_create_folder (const void *ctx, const char *maildir)
 {
     const char *subdirs[] = { "cur", "new", "tmp" };
@@ -169,14 +170,14 @@ maildir_create_folder (const void *ctx, const char *maildir)
 	subdir = talloc_asprintf (ctx, "%s/%s", maildir, subdirs[i]);
 	if (! subdir) {
 	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
-	    return FALSE;
+	    return false;
 	}
 
 	if (! mkdir_recursive (ctx, subdir, mode))
-	    return FALSE;
+	    return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 /*
@@ -240,13 +241,13 @@ maildir_mktemp (const void *ctx, const char *maildir, char **path_out)
 }
 
 /*
- * Copy fdin to fdout, return TRUE on success, and FALSE on errors and
+ * Copy fdin to fdout, return true on success, and false on errors and
  * empty input.
  */
-static notmuch_bool_t
+static bool
 copy_fd (int fdout, int fdin)
 {
-    notmuch_bool_t empty = TRUE;
+    bool empty = true;
 
     while (! interrupted) {
 	ssize_t remain;
@@ -261,7 +262,7 @@ copy_fd (int fdout, int fdin)
 		continue;
 	    fprintf (stderr, "Error: reading from standard input: %s\n",
 		     strerror (errno));
-	    return FALSE;
+	    return false;
 	}
 
 	p = buf;
@@ -272,11 +273,11 @@ copy_fd (int fdout, int fdin)
 	    if (written <= 0) {
 		fprintf (stderr, "Error: writing to temporary file: %s",
 			 strerror (errno));
-		return FALSE;
+		return false;
 	    }
 	    p += written;
 	    remain -= written;
-	    empty = FALSE;
+	    empty = false;
 	} while (remain > 0);
     }
 
@@ -366,24 +367,25 @@ FAIL:
 
 /*
  * Add the specified message file to the notmuch database, applying
- * tags in tag_ops. If synchronize_flags is TRUE, the tags are
+ * tags in tag_ops. If synchronize_flags is true, the tags are
  * synchronized to maildir flags (which may result in message file
  * rename).
  *
  * Return NOTMUCH_STATUS_SUCCESS on success, errors otherwise. If keep
- * is TRUE, errors in tag changes and flag syncing are ignored and
+ * is true, errors in tag changes and flag syncing are ignored and
  * success status is returned; otherwise such errors cause the message
  * to be removed from the database. Failure to add the message to the
  * database results in error status regardless of keep.
  */
 static notmuch_status_t
 add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
-	  notmuch_bool_t synchronize_flags, notmuch_bool_t keep)
+	  bool synchronize_flags, bool keep,
+	  notmuch_indexopts_t *indexopts)
 {
     notmuch_message_t *message;
     notmuch_status_t status;
 
-    status = notmuch_database_add_message (notmuch, path, &message);
+    status = notmuch_database_index_file (notmuch, path, indexopts, &message);
     if (status == NOTMUCH_STATUS_SUCCESS) {
 	status = tag_op_list_apply (message, tag_ops, 0);
 	if (status) {
@@ -451,23 +453,24 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     size_t new_tags_length;
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
-    const char *folder = NULL;
-    notmuch_bool_t create_folder = FALSE;
-    notmuch_bool_t keep = FALSE;
-    notmuch_bool_t no_hooks = FALSE;
-    notmuch_bool_t synchronize_flags;
-    const char *maildir;
+    const char *folder = "";
+    bool create_folder = false;
+    bool keep = false;
+    bool hooks = true;
+    bool synchronize_flags;
+    char *maildir;
     char *newpath;
     int opt_index;
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &keep, "keep", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
+	{ .opt_string = &folder, .name = "folder", .allow_empty = true },
+	{ .opt_bool = &create_folder, .name = "create-folder" },
+	{ .opt_bool = &keep, .name = "keep" },
+	{ .opt_bool =  &hooks, .name = "hooks" },
+	{ .opt_inherit = notmuch_shared_indexing_options },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
@@ -488,14 +491,14 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     for (i = 0; i < new_tags_length; i++) {
 	const char *error_msg;
 
-	error_msg = illegal_tag (new_tags[i], FALSE);
+	error_msg = illegal_tag (new_tags[i], false);
 	if (error_msg) {
 	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n",
 		     new_tags[i],  error_msg);
 	    return EXIT_FAILURE;
 	}
 
-	if (tag_op_list_append (tag_ops, new_tags[i], FALSE))
+	if (tag_op_list_append (tag_ops, new_tags[i], false))
 	    return EXIT_FAILURE;
     }
 
@@ -508,21 +511,20 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (folder == NULL) {
-	maildir = db_path;
-    } else {
-	if (! is_valid_folder_name (folder)) {
-	    fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
-	    return EXIT_FAILURE;
-	}
-	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
-	if (! maildir) {
-	    fprintf (stderr, "Out of memory\n");
-	    return EXIT_FAILURE;
-	}
-	if (create_folder && ! maildir_create_folder (config, maildir))
-	    return EXIT_FAILURE;
+    if (! is_valid_folder_name (folder)) {
+	fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
+	return EXIT_FAILURE;
     }
+
+    maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
+    if (! maildir) {
+	fprintf (stderr, "Out of memory\n");
+	return EXIT_FAILURE;
+    }
+
+    strip_trailing (maildir, '/');
+    if (create_folder && ! maildir_create_folder (config, maildir))
+	return EXIT_FAILURE;
 
     /* Set up our handler for SIGINT. We do not set SA_RESTART so that copying
      * from standard input may be interrupted. */
@@ -545,9 +547,15 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
+    status = notmuch_process_shared_indexing_options (notmuch, config);
+    if (status != NOTMUCH_STATUS_SUCCESS) {
+	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
+		 notmuch_status_to_string (status));
+	return EXIT_FAILURE;
+    }
 
     /* Index the message. */
-    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep);
+    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep, indexing_cli_choices.opts);
 
     /* Commit changes. */
     close_status = notmuch_database_destroy (notmuch);
@@ -573,7 +581,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	}
     }
 
-    if (! no_hooks && status == NOTMUCH_STATUS_SUCCESS) {
+    if (hooks && status == NOTMUCH_STATUS_SUCCESS) {
 	/* Ignore hook failures. */
 	notmuch_run_hook (db_path, "post-insert");
     }

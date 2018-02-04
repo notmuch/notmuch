@@ -4,7 +4,7 @@
 notmuch_string_map_t *
 _notmuch_message_property_map (notmuch_message_t *message);
 
-notmuch_bool_t
+bool
 _notmuch_message_frozen (notmuch_message_t *message);
 
 void

@@ -38,7 +38,7 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
 
 static notmuch_status_t
 _notmuch_message_modify_property (notmuch_message_t *message, const char *key, const char *value,
-				  notmuch_bool_t delete_it)
+				  bool delete_it)
 {
     notmuch_private_status_t private_status;
     notmuch_status_t status;
@@ -76,17 +76,18 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
 notmuch_status_t
 notmuch_message_add_property (notmuch_message_t *message, const char *key, const char *value)
 {
-    return _notmuch_message_modify_property (message, key, value, FALSE);
+    return _notmuch_message_modify_property (message, key, value, false);
 }
 
 notmuch_status_t
 notmuch_message_remove_property (notmuch_message_t *message, const char *key, const char *value)
 {
-    return _notmuch_message_modify_property (message, key, value, TRUE);
+    return _notmuch_message_modify_property (message, key, value, true);
 }
 
+static
 notmuch_status_t
-notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key)
+_notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key, bool prefix)
 {
     notmuch_status_t status;
     const char * term_prefix;
@@ -97,7 +98,8 @@ notmuch_message_remove_all_properties (notmuch_message_t *message, const char *k
 
     _notmuch_message_invalidate_metadata (message, "property");
     if (key)
-	term_prefix = talloc_asprintf (message, "%s%s=", _find_prefix ("property"), key);
+	term_prefix = talloc_asprintf (message, "%s%s%s", _find_prefix ("property"), key,
+				       prefix ? "" : "=");
     else
 	term_prefix = _find_prefix ("property");
 
@@ -105,6 +107,18 @@ notmuch_message_remove_all_properties (notmuch_message_t *message, const char *k
     _notmuch_message_remove_terms (message, term_prefix);
 
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key)
+{
+    return _notmuch_message_remove_all_properties (message, key, false);
+}
+
+notmuch_status_t
+notmuch_message_remove_all_properties_with_prefix (notmuch_message_t *message, const char *prefix)
+{
+    return _notmuch_message_remove_all_properties (message, prefix, true);
 }
 
 notmuch_message_properties_t *

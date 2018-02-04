@@ -2,7 +2,7 @@
 
 test_description='show'
 
-. ./perf-test-lib.sh || exit 1
+. $(dirname "$0")/perf-test-lib.sh || exit 1
 
 memory_start
 

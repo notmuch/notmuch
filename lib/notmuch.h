@@ -192,6 +192,23 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_ILLEGAL_ARGUMENT,
     /**
+     * A MIME object claimed to have cryptographic protection which
+     * notmuch tried to handle, but the protocol was not specified in
+     * an intelligible way.
+     */
+    NOTMUCH_STATUS_MALFORMED_CRYPTO_PROTOCOL,
+    /**
+     * Notmuch attempted to do crypto processing, but could not
+     * initialize the engine needed to do so.
+     */
+    NOTMUCH_STATUS_FAILED_CRYPTO_CONTEXT_CREATION,
+    /**
+     * A MIME object claimed to have cryptographic protection, and
+     * notmuch attempted to process it, but the specific protocol was
+     * something that notmuch doesn't know how to handle.
+     */
+    NOTMUCH_STATUS_UNKNOWN_CRYPTO_PROTOCOL,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -219,6 +236,7 @@ typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
 typedef struct _notmuch_config_list notmuch_config_list_t;
+typedef struct _notmuch_indexopts notmuch_indexopts_t;
 #endif /* __DOXYGEN__ */
 
 /**
@@ -236,7 +254,7 @@ typedef struct _notmuch_config_list notmuch_config_list_t;
  * The database will not yet have any data in it
  * (notmuch_database_create itself is a very cheap function). Messages
  * contained within 'path' can be added to the database by calling
- * notmuch_database_add_message.
+ * notmuch_database_index_file.
  *
  * In case of any failure, this function returns an error status and
  * sets *database to NULL (after printing an error message on stderr).
@@ -541,8 +559,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
 				notmuch_directory_t **directory);
 
 /**
- * Add a new message to the given notmuch database or associate an
- * additional filename with an existing message.
+ * Add a message file to a database, indexing it for retrieval by
+ * future searches.  If a message already exists with the same message
+ * ID as the specified file, their indexes will be merged, and this
+ * new filename will also be associated with the existing message.
  *
  * Here, 'filename' should be a path relative to the path of
  * 'database' (see notmuch_database_get_path), or else should be an
@@ -555,8 +575,14 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * entire contents of the file.
  *
  * If another message with the same message ID already exists in the
- * database, rather than creating a new message, this adds 'filename'
- * to the list of the filenames for the existing message.
+ * database, rather than creating a new message, this adds the search
+ * terms from the identified file to the existing message's index, and
+ * adds 'filename' to the list of filenames known for the message.
+ *
+ * The 'indexopts' parameter can be NULL (meaning, use the indexing
+ * defaults from the database), or can be an explicit choice of
+ * indexing options that should govern the indexing of this specific
+ * 'filename'.
  *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
@@ -589,7 +615,24 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
  * 	database to use this function.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
  */
+notmuch_status_t
+notmuch_database_index_file (notmuch_database_t *database,
+			     const char *filename,
+			     notmuch_indexopts_t *indexopts,
+			     notmuch_message_t **message);
+
+/**
+ * Deprecated alias for notmuch_database_index_file called with
+ * NULL indexopts.
+ *
+ * @deprecated Deprecated as of libnotmuch 5.1 (notmuch 0.26). Please
+ * use notmuch_database_index_file instead.
+ *
+ */
+NOTMUCH_DEPRECATED(5,1)
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
@@ -1097,6 +1140,18 @@ int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 
 /**
+ * Get the total number of files in 'thread'.
+ *
+ * This sums notmuch_message_count_files over all messages in the
+ * thread
+ * @returns Non-negative integer
+ * @since libnotmuch 5.0 (notmuch 0.25)
+ */
+
+int
+notmuch_thread_get_total_files (notmuch_thread_t *thread);
+
+/**
  * Get a notmuch_messages_t iterator for the top-level messages in
  * 'thread' in oldest-first order.
  *
@@ -1342,6 +1397,14 @@ notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
 /**
+ * Get the total number of files associated with a message.
+ * @returns Non-negative integer
+ * @since libnotmuch 5.0 (notmuch 0.25)
+ */
+int
+notmuch_message_count_files (notmuch_message_t *message);
+
+/**
  * Get a filename for the email corresponding to 'message'.
  *
  * The returned filename is an absolute filename, (the initial
@@ -1372,6 +1435,20 @@ notmuch_message_get_filename (notmuch_message_t *message);
  */
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message);
+
+/**
+ * Re-index the e-mail corresponding to 'message' using the supplied index options
+ *
+ * Returns the status of the re-index operation.  (see the return
+ * codes documented in notmuch_database_index_file)
+ *
+ * After reindexing, the user should discard the message object passed
+ * in here by calling notmuch_message_destroy, since it refers to the
+ * original message, not to the reindexed message.
+ */
+notmuch_status_t
+notmuch_message_reindex (notmuch_message_t *message,
+			 notmuch_indexopts_t *indexopts);
 
 /**
  * Message flags.
@@ -1546,12 +1623,20 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  *
  * A client can ensure that notmuch database tags remain synchronized
  * with maildir flags by calling this function after each call to
- * notmuch_database_add_message. See also
+ * notmuch_database_index_file. See also
  * notmuch_message_tags_to_maildir_flags for synchronizing tag changes
  * back to maildir flags.
  */
 notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
+
+/**
+ * return TRUE if any filename of 'message' has maildir flag 'flag',
+ * FALSE otherwise.
+ *
+ */
+notmuch_bool_t
+notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag);
 
 /**
  * Rename message filename(s) to encode tags as maildir flags.
@@ -1679,6 +1764,9 @@ notmuch_message_destroy (notmuch_message_t *message);
  * add or delete values for, as other subsystems or extensions may
  * depend on these properties.
  *
+ * Please see notmuch-properties(7) for more details about specific
+ * properties and conventions around their use.
+ *
  */
 /**@{*/
 /**
@@ -1739,6 +1827,22 @@ notmuch_status_t
 notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key);
 
 /**
+ * Remove all (prefix*,value) pairs from the given message
+ *
+ * @param[in,out] message  message to operate on.
+ * @param[in]     prefix   delete properties with keys that start with prefix.
+ *			   If NULL, delete all properties
+ * @returns
+ * - NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *   read-only mode so message cannot be modified.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_status_t
+notmuch_message_remove_all_properties_with_prefix (notmuch_message_t *message, const char *prefix);
+
+/**
  * Opaque message property iterator
  */
 typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
@@ -1788,7 +1892,7 @@ notmuch_message_get_properties (notmuch_message_t *message, const char *key, not
  * says. Whereas when this function returns FALSE, calling any of
  * these functions results in undefined behaviour.
  *
- * See the documentation of notmuch_message_properties_get for example
+ * See the documentation of notmuch_message_get_properties for example
  * code showing how to iterate over a notmuch_message_properties_t
  * object.
  *
@@ -1908,7 +2012,7 @@ notmuch_tags_destroy (notmuch_tags_t *tags);
  *
  *   o Read the mtime of a directory from the filesystem
  *
- *   o Call add_message for all mail files in the directory
+ *   o Call index_file for all mail files in the directory
  *
  *   o Call notmuch_directory_set_mtime with the mtime read from the
  *     filesystem.
@@ -2112,6 +2216,66 @@ notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
  */
 void
 notmuch_config_list_destroy (notmuch_config_list_t *config_list);
+
+
+/**
+ * get the current default indexing options for a given database.
+ *
+ * This object will survive until the database itself is destroyed,
+ * but the caller may also release it earlier with
+ * notmuch_indexopts_destroy.
+ *
+ * This object represents a set of options on how a message can be
+ * added to the index.  At the moment it is a featureless stub.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_indexopts_t *
+notmuch_database_get_default_indexopts (notmuch_database_t *db);
+
+/**
+ * Stating a policy about how to decrypt messages.
+ *
+ * See index.decrypt in notmuch-config(1) for more details.
+ */
+typedef enum {
+    NOTMUCH_DECRYPT_FALSE,
+    NOTMUCH_DECRYPT_TRUE,
+    NOTMUCH_DECRYPT_AUTO,
+    NOTMUCH_DECRYPT_NOSTASH,
+} notmuch_decryption_policy_t;
+
+/**
+ * Specify whether to decrypt encrypted parts while indexing.
+ *
+ * Be aware that the index is likely sufficient to reconstruct the
+ * cleartext of the message itself, so please ensure that the notmuch
+ * message index is adequately protected. DO NOT SET THIS FLAG TO TRUE
+ * without considering the security of your index.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_status_t
+notmuch_indexopts_set_decrypt_policy (notmuch_indexopts_t *indexopts,
+				      notmuch_decryption_policy_t decrypt_policy);
+
+/**
+ * Return whether to decrypt encrypted parts while indexing.
+ * see notmuch_indexopts_set_decrypt_policy.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+notmuch_decryption_policy_t
+notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts);
+
+/**
+ * Destroy a notmuch_indexopts_t object.
+ *
+ * @since libnotmuch 5.1 (notmuch 0.26)
+ */
+void
+notmuch_indexopts_destroy (notmuch_indexopts_t *options);
+
 
 /**
  * interrogate the library for compile time features

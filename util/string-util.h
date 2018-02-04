@@ -75,6 +75,8 @@ int strcase_equal (const void *a, const void *b);
 /* GLib GHashFunc compatible case insensitive hash function */
 unsigned int strcase_hash (const void *ptr);
 
+void strip_trailing (char *str, char ch);
+
 #ifdef __cplusplus
 }
 #endif

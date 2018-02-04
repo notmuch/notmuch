@@ -184,7 +184,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 
     int next;
 
-    g_mime_filter_set_size (gmime_filter, inlen, FALSE);
+    g_mime_filter_set_size (gmime_filter, inlen, false);
     outptr = gmime_filter->outbuf;
 
     next = filter->state;
@@ -261,7 +261,7 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info, (GTypeFlags) 0);
     }
 
-    filter = (NotmuchFilterDiscardNonTerm *) g_object_newv (type, 0, NULL);
+    filter = (NotmuchFilterDiscardNonTerm *) g_object_new (type, NULL);
     filter->content_type = content_type;
     filter->state = 0;
     if (g_mime_content_type_is_type (content_type, "text", "html")) {
@@ -351,9 +351,28 @@ _index_address_list (notmuch_message_t *message,
     }
 }
 
+static void
+_index_content_type (notmuch_message_t *message, GMimeObject *part)
+{
+    GMimeContentType *content_type = g_mime_object_get_content_type (part);
+    if (content_type) {
+	char *mime_string = g_mime_content_type_to_string (content_type);
+	if (mime_string) {
+	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
+	    g_free (mime_string);
+	}
+    }
+}
+
+static void
+_index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *indexopts,
+			    GMimeContentType *content_type,
+			    GMimeMultipartEncrypted *part);
+
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
+		  notmuch_indexopts_t *indexopts,
 		  GMimeObject *part)
 {
     GMimeStream *stream, *filter;
@@ -361,6 +380,7 @@ _index_mime_part (notmuch_message_t *message,
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
     GMimeContentDisposition *disposition;
+    GMimeContentType *content_type;
     char *body;
     const char *charset;
 
@@ -370,15 +390,8 @@ _index_mime_part (notmuch_message_t *message,
 	return;
     }
 
-    GMimeContentType *content_type = g_mime_object_get_content_type(part);
-    if (content_type) {
-	char *mime_string = g_mime_content_type_to_string(content_type);
-	if (mime_string)
-	{
-	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
-	    g_free(mime_string);
-	}
-    }
+    _index_content_type (message, part);
+    content_type = g_mime_object_get_content_type (part);
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
@@ -392,18 +405,32 @@ _index_mime_part (notmuch_message_t *message,
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
-		/* Don't index the signature. */
-		if (i == 1)
+		/* Don't index the signature, but index its content type. */
+		if (i == GMIME_MULTIPART_SIGNED_SIGNATURE) {
+		    _index_content_type (message,
+					 g_mime_multipart_get_part (multipart, i));
 		    continue;
-		if (i > 1)
+		} else if (i != GMIME_MULTIPART_SIGNED_CONTENT) {
 		    _notmuch_database_log (_notmuch_message_database (message),
-					  "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+					   "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+		}
 	    }
 	    if (GMIME_IS_MULTIPART_ENCRYPTED (multipart)) {
-		/* Don't index encrypted parts. */
+		_index_content_type (message,
+				     g_mime_multipart_get_part (multipart, i));
+		if (i == GMIME_MULTIPART_ENCRYPTED_CONTENT) {
+		    _index_encrypted_mime_part(message, indexopts,
+					       content_type,
+					       GMIME_MULTIPART_ENCRYPTED (part));
+		} else {
+		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
+			_notmuch_database_log (_notmuch_message_database (message),
+					       "Warning: Unexpected extra parts of multipart/encrypted.\n");
+		    }
+		}
 		continue;
 	    }
-	    _index_mime_part (message,
+	    _index_mime_part (message, indexopts,
 			      g_mime_multipart_get_part (multipart, i));
 	}
 	return;
@@ -414,7 +441,7 @@ _index_mime_part (notmuch_message_t *message,
 
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
-	_index_mime_part (message, g_mime_message_get_mime_part (mime_message));
+	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message));
 
 	return;
     }
@@ -444,9 +471,10 @@ _index_mime_part (notmuch_message_t *message,
     byte_array = g_byte_array_new ();
 
     stream = g_mime_stream_mem_new_with_byte_array (byte_array);
-    g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
+    g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), false);
 
     filter = g_mime_stream_filter_new (stream);
+
     discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
 
     g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
@@ -475,7 +503,7 @@ _index_mime_part (notmuch_message_t *message,
     g_object_unref (discard_non_term_filter);
 
     g_byte_array_append (byte_array, (guint8 *) "\0", 1);
-    body = (char *) g_byte_array_free (byte_array, FALSE);
+    body = (char *) g_byte_array_free (byte_array, false);
 
     if (body) {
 	_notmuch_message_gen_terms (message, NULL, body);
@@ -484,8 +512,91 @@ _index_mime_part (notmuch_message_t *message,
     }
 }
 
+/* descend (if desired) into the cleartext part of an encrypted MIME
+ * part while indexing. */
+static void
+_index_encrypted_mime_part (notmuch_message_t *message,
+			    notmuch_indexopts_t *indexopts,
+			    g_mime_3_unused(GMimeContentType *content_type),
+			    GMimeMultipartEncrypted *encrypted_data)
+{
+    notmuch_status_t status;
+    GError *err = NULL;
+    notmuch_database_t * notmuch = NULL;
+    GMimeObject *clear = NULL;
+
+    if (!indexopts || (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_FALSE))
+	return;
+
+    notmuch = _notmuch_message_database (message);
+
+    GMimeCryptoContext* crypto_ctx = NULL;
+#if (GMIME_MAJOR_VERSION < 3)
+    {
+	const char *protocol = NULL;
+	protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+	status = _notmuch_crypto_get_gmime_ctx_for_protocol (&(indexopts->crypto),
+							 protocol, &crypto_ctx);
+	if (status) {
+	    _notmuch_database_log (notmuch, "Warning: setup failed for decrypting "
+				   "during indexing. (%d)\n", status);
+	    status = notmuch_message_add_property (message, "index.decryption", "failure");
+	    if (status)
+		_notmuch_database_log_append (notmuch, "failed to add index.decryption "
+					      "property (%d)\n", status);
+	    return;
+	}
+    }
+#endif
+    bool attempted = false;
+    GMimeDecryptResult *decrypt_result = NULL;
+    bool get_sk = (HAVE_GMIME_SESSION_KEYS && notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
+    clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
+				     message, crypto_ctx, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
+    if (!attempted)
+	return;
+    if (err || !clear) {
+	if (decrypt_result)
+	    g_object_unref (decrypt_result);
+	if (err) {
+	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
+				   err->domain, err->code, err->message);
+	    g_error_free(err);
+	} else {
+	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (unknown error)\n");
+	}
+	/* Indicate that we failed to decrypt during indexing */
+	status = notmuch_message_add_property (message, "index.decryption", "failure");
+	if (status)
+	    _notmuch_database_log_append (notmuch, "failed to add index.decryption "
+					  "property (%d)\n", status);
+	return;
+    }
+    if (decrypt_result) {
+#if HAVE_GMIME_SESSION_KEYS
+	if (get_sk) {
+	    status = notmuch_message_add_property (message, "session-key",
+						   g_mime_decrypt_result_get_session_key (decrypt_result));
+	    if (status)
+		_notmuch_database_log (notmuch, "failed to add session-key "
+				       "property (%d)\n", status);
+	}
+#endif
+	g_object_unref (decrypt_result);
+    }
+    _index_mime_part (message, indexopts, clear);
+    g_object_unref (clear);
+
+    status = notmuch_message_add_property (message, "index.decryption", "success");
+    if (status)
+	_notmuch_database_log (notmuch, "failed to add index.decryption "
+			       "property (%d)\n", status);
+
+}
+
 notmuch_status_t
 _notmuch_message_index_file (notmuch_message_t *message,
+			     notmuch_indexopts_t *indexopts,
 			     notmuch_message_file_t *message_file)
 {
     GMimeMessage *mime_message;
@@ -513,7 +624,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
     subject = g_mime_message_get_subject (mime_message);
     _notmuch_message_gen_terms (message, "subject", subject);
 
-    _index_mime_part (message, g_mime_message_get_mime_part (mime_message));
+    _index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message));
 
     return NOTMUCH_STATUS_SUCCESS;
 }

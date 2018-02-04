@@ -34,6 +34,7 @@ _internal_error (const char *format, ...)
     fprintf (stderr, "Internal error: ");
     vfprintf (stderr, format, va_args);
 
+    va_end (va_args);
     exit (1);
 }
 

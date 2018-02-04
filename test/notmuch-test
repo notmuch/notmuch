@@ -15,12 +15,20 @@ if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
     exit 1
 fi
 
-cd "$(dirname "$0")"
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/export-dirs.sh || exit 1
 
-TESTS=${NOTMUCH_TESTS:-T[0-9][0-9][0-9]-*.sh}
+TESTS=
+for test in $NOTMUCH_TESTS; do
+    TESTS="$TESTS $NOTMUCH_SRCDIR/test/$test"
+done
+
+if [[ -z "$TESTS" ]]; then
+    TESTS="$NOTMUCH_SRCDIR/test/T[0-9][0-9][0-9]-*.sh"
+fi
 
 # Clean up any results from a previous run
-rm -rf test-results
+rm -rf $NOTMUCH_BUILDDIR/test/test-results
 
 # Test for timeout utility
 if command -v timeout >/dev/null; then
@@ -33,12 +41,13 @@ fi
 trap 'e=$?; kill $!; exit $e' HUP INT TERM
 # Run the tests
 for test in $TESTS; do
-    $TEST_TIMEOUT_CMD ./$test "$@" &
+    $TEST_TIMEOUT_CMD $test "$@" &
     wait $!
     # If the test failed without producing results, then it aborted,
     # so we should abort, too.
     RES=$?
-    if [[ $RES != 0 && ! -e "test-results/${test%.sh}" ]]; then
+    testname=$(basename $test .sh)
+    if [[ $RES != 0 && ! -e "$NOTMUCH_BUILDDIR/test/test-results/$testname" ]]; then
         exit $RES
     fi
 done
@@ -46,10 +55,10 @@ trap - HUP INT TERM
 
 # Report results
 echo
-./aggregate-results.sh test-results/*
+$NOTMUCH_SRCDIR/test/aggregate-results.sh $NOTMUCH_BUILDDIR/test/test-results/*
 ev=$?
 
 # Clean up
-rm -rf test-results corpus.mail
+rm -rf $NOTMUCH_BUILDDIR/test/test-results $NOTMUCH_BUILDDIR/test/corpora.mail
 
 exit $ev

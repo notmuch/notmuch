@@ -12,7 +12,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'notmuch'
-copyright = u'2009-2017, Carl Worth and many others'
+copyright = u'2009-2018, Carl Worth and many others'
 
 location = os.path.dirname(__file__)
 
@@ -46,6 +46,10 @@ html_static_path = []
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'notmuchdoc'
+
+# Disable SmartyPants, as it mangles command lines.
+# Despite the name, this actually affects manual pages as well.
+html_use_smartypants = False
 
 # -- Options for manual page output ---------------------------------------
 
@@ -93,6 +97,14 @@ man_pages = [
 
     ('man1/notmuch-new', 'notmuch-new',
      u'incorporate new mail into the notmuch database',
+     [notmuch_authors], 1),
+
+    ('man7/notmuch-properties', 'notmuch-properties',
+     u'notmuch message property conventions and documentation',
+     [notmuch_authors], 7),
+
+    ('man1/notmuch-reindex', 'notmuch-reindex',
+     u're-index matching messages',
      [notmuch_authors], 1),
 
     ('man1/notmuch-reply', 'notmuch-reply',

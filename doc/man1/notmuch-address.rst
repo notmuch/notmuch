@@ -29,7 +29,7 @@ Supported options for **address** include
         intended for programs that invoke **notmuch(1)** internally. If
         omitted, the latest supported version will be used.
 
-    ``--output=(sender|recipients|count)``
+    ``--output=(sender|recipients|count|address)``
 
         Controls which information appears in the output. This option
         can be given multiple times to combine different outputs.
@@ -54,6 +54,11 @@ Supported options for **address** include
 
             Note: With this option, addresses are printed only after
             the whole search is finished. This may take long time.
+
+        **address**
+            Output only the email addresses instead of the full
+            mailboxes with names and email addresses. This option has
+            no effect on the JSON or S-Expression output formats.
 
     ``--deduplicate=(no|mailbox|address)``
 
@@ -115,8 +120,16 @@ This command supports the following special exit status codes
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**,
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**,
 **notmuch-search(1)**

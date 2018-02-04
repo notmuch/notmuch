@@ -179,14 +179,14 @@ operator&(notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
 struct _notmuch_database {
-    notmuch_bool_t exception_reported;
+    bool exception_reported;
 
     char *path;
 
     notmuch_database_mode_t mode;
     int atomic_nesting;
-    /* TRUE if changes have been made in this atomic section */
-    notmuch_bool_t atomic_dirty;
+    /* true if changes have been made in this atomic section */
+    bool atomic_dirty;
     Xapian::Database *xapian_db;
 
     /* Bit mask of features used by this database.  This is a
@@ -246,4 +246,10 @@ _notmuch_database_get_terms_with_prefix (void *ctx, Xapian::TermIterator &i,
 					 Xapian::TermIterator &end,
 					 const char *prefix);
 
+void
+_notmuch_database_find_doc_ids (notmuch_database_t *notmuch,
+				const char *prefix_name,
+				const char *value,
+				Xapian::PostingIterator *begin,
+				Xapian::PostingIterator *end);
 #endif

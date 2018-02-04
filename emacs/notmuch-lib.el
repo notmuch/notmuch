@@ -593,7 +593,7 @@ the given type."
 		       (set-buffer-multibyte nil))
 		     (let ((args `("show" "--format=raw"
 				   ,(format "--part=%s" (plist-get part :id))
-				   ,@(when process-crypto '("--decrypt"))
+				   ,@(when process-crypto '("--decrypt=true"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
 			    (if binaryp 'no-conversion
@@ -768,23 +768,23 @@ signaled error.  This function does not return."
   (error "%s" (concat msg (when extra
 			    " (see *Notmuch errors* for more details)"))))
 
-(defun notmuch-check-async-exit-status (proc msg &optional command err-file)
+(defun notmuch-check-async-exit-status (proc msg &optional command err)
   "If PROC exited abnormally, pop up an error buffer and signal an error.
 
 This is a wrapper around `notmuch-check-exit-status' for
 asynchronous process sentinels.  PROC and MSG must be the
-arguments passed to the sentinel.  COMMAND and ERR-FILE, if
-provided, are passed to `notmuch-check-exit-status'.  If COMMAND
-is not provided, it is taken from `process-command'."
+arguments passed to the sentinel.  COMMAND and ERR, if provided,
+are passed to `notmuch-check-exit-status'.  If COMMAND is not
+provided, it is taken from `process-command'."
   (let ((exit-status
 	 (case (process-status proc)
 	   ((exit) (process-exit-status proc))
 	   ((signal) msg))))
     (when exit-status
       (notmuch-check-exit-status exit-status (or command (process-command proc))
-				 nil err-file))))
+				 nil err))))
 
-(defun notmuch-check-exit-status (exit-status command &optional output err-file)
+(defun notmuch-check-exit-status (exit-status command &optional output err)
   "If EXIT-STATUS is non-zero, pop up an error buffer and signal an error.
 
 If EXIT-STATUS is non-zero, pop up a notmuch error buffer
@@ -793,9 +793,9 @@ be a number indicating the exit status code of a process or a
 string describing the signal that terminated the process (such as
 returned by `call-process').  COMMAND must be a list giving the
 command and its arguments.  OUTPUT, if provided, is a string
-giving the output of command.  ERR-FILE, if provided, is the name
-of a file containing the error output of command.  OUTPUT and the
-contents of ERR-FILE will be included in the error message."
+giving the output of command.  ERR, if provided, is the error
+output of command.  OUTPUT and ERR will be included in the error
+message."
 
   (cond
    ((eq exit-status 0) t)
@@ -808,12 +808,7 @@ You may need to restart Emacs or upgrade your notmuch Emacs package."))
 Emacs requested a newer output format than supported by the notmuch CLI.
 You may need to restart Emacs or upgrade your notmuch package."))
    (t
-    (let* ((err (when err-file
-		  (with-temp-buffer
-		    (insert-file-contents err-file)
-		    (unless (eobp)
-		      (buffer-string)))))
-	   (command-string
+    (let* ((command-string
 	    (mapconcat (lambda (arg)
 			 (shell-quote-argument
 			  (cond ((stringp arg) arg)
@@ -889,9 +884,13 @@ error."
   (with-temp-buffer
     (let ((err-file (make-temp-file "nmerr")))
       (unwind-protect
-	  (let ((status (notmuch-call-notmuch--helper (list t err-file) args)))
+	  (let ((status (notmuch-call-notmuch--helper (list t err-file) args))
+		(err (with-temp-buffer
+		       (insert-file-contents err-file)
+		       (unless (eobp)
+			 (buffer-string)))))
 	    (notmuch-check-exit-status status (cons notmuch-command args)
-				       (buffer-string) err-file)
+				       (buffer-string) err)
 	    (goto-char (point-min))
 	    (read (current-buffer)))
 	(delete-file err-file)))))
@@ -910,30 +909,56 @@ invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
 
-  ;; There is no way (as of Emacs 24.3) to capture stdout and stderr
-  ;; separately for asynchronous processes, or even to redirect stderr
-  ;; to a file, so we use a trivial shell wrapper to send stderr to a
-  ;; temporary file and clean things up in the sentinel.
-  (let* ((err-file (make-temp-file "nmerr"))
-	 ;; Use a pipe
-	 (process-connection-type nil)
-	 ;; Find notmuch using Emacs' `exec-path'
-	 (command (or (executable-find notmuch-command)
-		      (error "command not found: %s" notmuch-command)))
-	 (proc (apply #'start-process name buffer
-		      "/bin/sh" "-c"
-		      "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
-		      command err-file args)))
-    (process-put proc 'err-file err-file)
+  (let (err-file err-buffer proc
+	;; Find notmuch using Emacs' `exec-path'
+	(command (or (executable-find notmuch-command)
+		     (error "Command not found: %s" notmuch-command))))
+    (if (fboundp 'make-process)
+	(progn
+	  (setq err-buffer (generate-new-buffer " *notmuch-stderr*"))
+	  ;; Emacs 25 and newer has `make-process', which allows
+	  ;; redirecting stderr independently from stdout to a
+	  ;; separate buffer. As this allows us to avoid using a
+	  ;; temporary file and shell invocation, use it when
+	  ;; available.
+	  (setq proc (make-process
+		      :name name
+		      :buffer buffer
+		      :command (cons command args)
+		      :connection-type 'pipe
+		      :stderr err-buffer))
+	  (process-put proc 'err-buffer err-buffer)
+	  ;; Silence "Process NAME stderr finished" in stderr by adding a
+	  ;; no-op sentinel to the fake stderr process object
+	  (set-process-sentinel (get-buffer-process err-buffer) #'ignore))
+
+      ;; On Emacs versions before 25, there is no way to capture
+      ;; stdout and stderr separately for asynchronous processes, or
+      ;; even to redirect stderr to a file, so we use a trivial shell
+      ;; wrapper to send stderr to a temporary file and clean things
+      ;; up in the sentinel.
+      (setq err-file (make-temp-file "nmerr"))
+      (let ((process-connection-type nil)) ;; Use a pipe
+	(setq proc (apply #'start-process name buffer
+			  "/bin/sh" "-c"
+			  "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
+			  command err-file args)))
+      (process-put proc 'err-file err-file))
+
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
     proc))
 
 (defun notmuch-start-notmuch-sentinel (proc event)
-  (let ((err-file (process-get proc 'err-file))
-	(sub-sentinel (process-get proc 'sub-sentinel))
-	(real-command (process-get proc 'real-command)))
+  "Process sentinel function used by `notmuch-start-notmuch'."
+  (let* ((err-file (process-get proc 'err-file))
+	 (err-buffer (or (process-get proc 'err-buffer)
+			 (find-file-noselect err-file)))
+	 (err (when (not (zerop (buffer-size err-buffer)))
+		(with-current-buffer err-buffer (buffer-string))))
+	 (sub-sentinel (process-get proc 'sub-sentinel))
+	 (real-command (process-get proc 'real-command)))
     (condition-case err
 	(progn
 	  ;; Invoke the sub-sentinel, if any
@@ -945,12 +970,13 @@ status."
 	  ;; and there's no point in telling the user that (but we
 	  ;; still check for and report stderr output below).
 	  (when (buffer-live-p (process-buffer proc))
-	    (notmuch-check-async-exit-status proc event real-command err-file))
+	    (notmuch-check-async-exit-status proc event real-command err))
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
-		 (with-temp-buffer
-		   (unless (= (second (insert-file-contents err-file)) 0)
+		 (when err
+		   (with-current-buffer err-buffer
+		     (goto-char (point-min))
 		     (end-of-line)
 		     ;; Show first line; stuff remaining lines in the
 		     ;; errors buffer.
@@ -964,7 +990,8 @@ status."
        ;; Emacs behaves strangely if an error escapes from a sentinel,
        ;; so turn errors into messages.
        (message "%s" (error-message-string err))))
-    (ignore-errors (delete-file err-file))))
+    (when err-buffer (kill-buffer err-buffer))
+    (when err-file (ignore-errors (delete-file err-file)))))
 
 ;; This variable is used only buffer local, but it needs to be
 ;; declared globally first to avoid compiler warnings.

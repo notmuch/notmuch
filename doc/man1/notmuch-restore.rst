@@ -62,14 +62,15 @@ Supported options for **restore** include
 
         **properties**
 
-          Output per-message (key,value) metadata.  Each line starts
+          Restore per-message (key,value) metadata.  Each line starts
           with "#= ", followed by a message id, and a space separated
-          list of key=value pairs.  pair.  Ids, keys and values are
-          hex encoded if needed.
+          list of key=value pairs.  Ids, keys and values are hex
+          encoded if needed.  See **notmuch-properties(7)** for more
+          details.
 
         **tags**
 
-          Output per-message metadata, namely tags. See *format* above
+          Restore per-message metadata, namely tags. See *format* above
           for more details.
 
       The default is to restore all available types of data.  The
@@ -89,7 +90,16 @@ standard input.
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-properties(7)**,
+**notmuch-reply(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch address" in several variants'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_email_corpus
 
@@ -116,6 +116,42 @@ cat <<EOF >EXPECTED
 5	Mikhail Gusarov <dottedmag@dottedmag.net>
 7	Keith Packard <keithp@keithp.com>
 12	Carl Worth <cworth@cworth.org>
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "--output=recipients --output=address"
+notmuch address --output=recipients --output=address '*' >OUTPUT
+cat <<EOF >EXPECTED
+allan@archlinux.org
+aur-general@archlinux.org
+olivier.berger@it-sudparis.eu
+notmuch@notmuchmail.org
+notmuch@notmuchmail.org
+keithp@keithp.com
+dottedmag@dottedmag.net
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "--output=sender --output=address --output=count"
+notmuch address --output=sender --output=address --output=count '*' | sort -n >OUTPUT
+cat <<EOF >EXPECTED
+1	agriffis@n01se.net
+1	aperez@igalia.com
+1	boulogne.f@gmail.com
+1	chris@chris-wilson.co.uk
+1	ingmar@exherbo.org
+1	isra@herraiz.org
+1	olivier.berger@it-sudparis.eu
+1	rollandsantimano@yahoo.com
+2	alex.boterolowry@gmail.com
+2	gzjjgod@gmail.com
+3	stewart@flamingspork.com
+4	alex.boterolowry@gmail.com
+4	jan@ryngle.com
+5	dottedmag@dottedmag.net
+5	lars@seas.harvard.edu
+7	keithp@keithp.com
+12	cworth@cworth.org
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

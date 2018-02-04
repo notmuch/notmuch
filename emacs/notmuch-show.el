@@ -773,6 +773,20 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
   (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
 
+(if (version< emacs-version "25.3")
+    ;; https://bugs.gnu.org/28350
+    ;;
+    ;; For newer emacs, we fall back to notmuch-show-insert-part-*/*
+    ;; (see notmuch-show-handlers-for)
+    (defun notmuch-show-insert-part-text/enriched (msg part content-type nth depth button)
+      ;; By requiring enriched below, we ensure that the function enriched-decode-display-prop
+      ;; is defined before it will be shadowed by the letf below. Otherwise the version
+      ;; in enriched.el may be loaded a bit later and used instead (for the first time).
+      (require 'enriched)
+      (letf (((symbol-function 'enriched-decode-display-prop)
+		 (lambda (start end &optional param) (list start end))))
+	(notmuch-show-insert-part-*/* msg part content-type nth depth button))))
+
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
   ;; we return that.
@@ -1260,7 +1274,9 @@ matched."
     ;; aren't wiped out.
     (setq notmuch-show-thread-id thread-id
 	  notmuch-show-parent-buffer parent-buffer
-	  notmuch-show-query-context query-context
+	  notmuch-show-query-context (if (or (string= query-context "")
+					     (string= query-context "*"))
+					 nil query-context)
 
 	  notmuch-show-process-crypto notmuch-crypto-process-mime
 	  ;; If `elide-toggle', invert the default value.

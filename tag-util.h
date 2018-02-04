@@ -99,7 +99,7 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
  *	   explanatory message otherwise.
  */
 const char *
-illegal_tag (const char *tag, notmuch_bool_t remove);
+illegal_tag (const char *tag, bool remove);
 
 /*
  * Create an empty list of tag operations
@@ -111,14 +111,14 @@ tag_op_list_t *
 tag_op_list_create (void *ctx);
 
 /*
- * Add a tag operation (delete iff remove == TRUE) to a list.
+ * Add a tag operation (delete iff remove == true) to a list.
  * The list is expanded as necessary.
  */
 
 int
 tag_op_list_append (tag_op_list_t *list,
 		    const char *tag,
-		    notmuch_bool_t remove);
+		    bool remove);
 
 /*
  * Apply a list of tag operations, in order, to a given message.
@@ -157,7 +157,7 @@ tag_op_list_tag (const tag_op_list_t *list, size_t i);
  *   Is the i'th tag operation a remove?
  */
 
-notmuch_bool_t
+bool
 tag_op_list_isremove (const tag_op_list_t *list, size_t i);
 
 #endif

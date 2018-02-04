@@ -15,7 +15,11 @@ DESCRIPTION
 ===========
 
 The **config** command can be used to get or set settings in the notmuch
-configuration file.
+configuration file and corresponding database.
+
+Items marked **[STORED IN DATABASE]** are only in the database.  They
+should not be placed in the configuration file, and should be accessed
+programmatically as described in the SYNOPSIS above.
 
     **get**
         The value of the specified configuration item is printed to
@@ -75,11 +79,22 @@ The available configuration items are described below.
         Default: ``unread;inbox``.
 
     **new.ignore**
-        A list of file and directory names, without path, that will not
-        be searched for messages by **notmuch new**. All the files and
-        directories matching any of the names specified here will be
-        ignored, regardless of the location in the mail store directory
-        hierarchy.
+        A list to specify files and directories that will not be
+        searched for messages by **notmuch new**. Each entry in the
+        list is either:
+
+          A file or a directory name, without path, that will be
+          ignored, regardless of the location in the mail store
+          directory hierarchy.
+
+        Or:
+
+          A regular expression delimited with // that will be matched
+          against the path of the file or directory relative to the
+          database path. Matching files and directories will be
+          ignored. The beginning and end of string must be explictly
+          anchored. For example, /.*/foo$/ would match "bar/foo" and
+          "bar/baz/foo", but not "foo" or "bar/foobar".
 
         Default: empty list.
 
@@ -134,6 +149,63 @@ The available configuration items are described below.
 
         Default: ``gpg``.
 
+    **index.decrypt**
+
+        **[STORED IN DATABASE]**
+
+        Policy for decrypting encrypted messages during indexing.
+        Must be one of: ``false``, ``auto``, ``nostash``, or
+        ``true``.
+
+        When indexing an encrypted e-mail message, if this variable is
+        set to ``true``, notmuch will try to decrypt the message and
+        index the cleartext, stashing a copy of any discovered session
+        keys for the message.  If ``auto``, it will try to index the
+        cleartext if a stashed session key is already known for the message
+        (e.g. from a previous copy), but will not try to access your
+        secret keys.  Use ``false`` to avoid decrypting even when a
+        stashed session key is already present.
+
+        ``nostash`` is the same as ``true`` except that it will not
+        stash newly-discovered session keys in the database.
+
+        From the command line (i.e. during **notmuch-new(1)**,
+        **notmuch-insert(1)**, or **notmuch-reindex(1)**), the user
+        can override the database's stored decryption policy with the
+        ``--decrypt=`` option.
+
+        Here is a table that summarizes the functionality of each of
+        these policies:
+
+        +------------------------+-------+------+---------+------+
+        |                        | false | auto | nostash | true |
+        +========================+=======+======+=========+======+
+        | Index cleartext using  |       |  X   |    X    |  X   |
+        | stashed session keys   |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+        | Index cleartext        |       |      |    X    |  X   |
+        | using secret keys      |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+        | Stash session keys     |       |      |         |  X   |
+        +------------------------+-------+------+---------+------+
+        | Delete stashed session |   X   |      |         |      |
+        | keys on reindex        |       |      |         |      |
+        +------------------------+-------+------+---------+------+
+
+        Stashed session keys are kept in the database as properties
+        associated with the message.  See ``session-key`` in
+        **notmuch-properties(7)** for more details about how they can
+        be useful.
+
+        Be aware that the notmuch index is likely sufficient (and a
+        stashed session key is certainly sufficient) to reconstruct
+        the cleartext of the message itself, so please ensure that the
+        notmuch message index is adequately protected.  DO NOT USE
+        ``index.decrypt=true`` or ``index.decrypt=nostash`` without
+        considering the security of your index.
+
+        Default: ``auto``.
+
     **built_with.<name>**
 
         Compile time feature <name>. Current possibilities include
@@ -142,6 +214,7 @@ The available configuration items are described below.
 
     **query.<name>**
 
+        **[STORED IN DATABASE]**
         Expansion for named query called <name>. See
         **notmuch-search-terms(7)** for more information about named
         queries.
@@ -159,7 +232,16 @@ of notmuch.
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-count(1)**, **notmuch-dump(1)**,
-**notmuch-hooks(5)**, **notmuch-insert(1)**, **notmuch-new(1)**,
-**notmuch-reply(1)**, **notmuch-restore(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-properties(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**

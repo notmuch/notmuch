@@ -4,17 +4,7 @@
 #
 
 test_description='the test framework itself.'
-
-################################################################
-# It appears that people try to run tests without building...
-
-if ! test -x ../notmuch
-then
-	echo >&2 'You do not seem to have built notmuch yet.'
-	exit 1
-fi
-
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 ################################################################
 # Test harness
@@ -23,8 +13,7 @@ test_expect_success ':'
 
 test_begin_subtest 'test runs if prerequisite is satisfied'
 test_set_prereq HAVEIT
-haveit=no
-test_expect_success 'test_have_prereq HAVEIT && haveit=yes'
+test_expect_success 'test_have_prereq HAVEIT'
 
 test_begin_subtest 'tests clean up after themselves'
 clean=no
@@ -43,19 +32,19 @@ fi
 test_begin_subtest 'failure to clean up causes the test to fail'
 test_expect_code 2 'test_when_finished "(exit 2)"'
 
-EXPECTED=$TEST_DIRECTORY/test.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/test.expected-output
 suppress_diff_date() {
     sed -e 's/\(.*\-\-\- test-verbose\.4\.\expected\).*/\1/' \
 	-e 's/\(.*\+\+\+ test-verbose\.4\.\output\).*/\1/'
 }
 
 test_begin_subtest "Ensure that test output is suppressed unless the test fails"
-output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= ./test-verbose 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= $NOTMUCH_SRCDIR/test/test-verbose 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-no | suppress_diff_date)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Ensure that -v does not suppress test output"
-output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= ./test-verbose -v 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= $NOTMUCH_SRCDIR/test/test-verbose -v 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-yes | suppress_diff_date)
 # Do not include the results of test-verbose in totals
 rm $TEST_DIRECTORY/test-results/test-verbose

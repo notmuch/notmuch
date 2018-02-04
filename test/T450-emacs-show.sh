@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 test_description="emacs notmuch-show view"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
-EXPECTED=$TEST_DIRECTORY/emacs-show.expected-output
+EXPECTED=$NOTMUCH_SRCDIR/test/emacs-show.expected-output
 
 add_email_corpus
 
@@ -191,12 +191,21 @@ This is an error (see *Notmuch errors* for more details)
 === ERROR ===
 [XXX]
 This is an error
-command: YYY/notmuch_fail show --format\\=sexp --format-version\\=4 --decrypt --exclude\\=false \\' \\* \\'
+command: YYY/notmuch_fail show --format\\=sexp --format-version\\=4 --decrypt\\=true --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error
 stdout:
 This is output"
 
+test_begin_subtest "text/enriched exploit mitigation"
+add_message '[content-type]="text/enriched"
+             [body]="
+<x-display><param>(when (progn (read-only-mode -1) (insert ?p ?0 ?w ?n ?e ?d)) nil)</param>test</x-display>
+"'
+test_emacs '(notmuch-show "id:'$gen_msg_id'")
+	(test-visible-output "OUTPUT.raw")'
+output=$(head -1 OUTPUT.raw|cut -f1-4 -d' ')
+test_expect_equal "$output" "Notmuch Test Suite <test_suite@notmuchmail.org>"
 
 test_done

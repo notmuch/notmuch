@@ -25,7 +25,7 @@
 
    .. automethod:: get_directory
 
-   .. automethod:: add_message
+   .. automethod:: index_file
 
    .. automethod:: remove_message
 
@@ -36,6 +36,12 @@
    .. automethod:: get_all_tags
 
    .. automethod:: create_query
+
+   .. automethod:: get_config
+
+   .. automethod:: get_configs
+
+   .. automethod:: set_config
 
    .. attribute:: Database.MODE
 

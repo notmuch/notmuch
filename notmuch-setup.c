@@ -187,7 +187,7 @@ notmuch_setup_command (notmuch_config_t *config,
 					     (const char **)
 					     other_emails->pdata,
 					     other_emails->len);
-    g_ptr_array_free (other_emails, TRUE);
+    g_ptr_array_free (other_emails, true);
 
     prompt ("Top-level directory of your email archive [%s]: ",
 	    notmuch_config_get_database_path (config));
@@ -210,7 +210,7 @@ notmuch_setup_command (notmuch_config_t *config,
 	notmuch_config_set_new_tags (config, (const char **) tags->pdata,
 				     tags->len);
 
-	g_ptr_array_free (tags, TRUE);
+	g_ptr_array_free (tags, true);
     }
 
 
@@ -227,7 +227,7 @@ notmuch_setup_command (notmuch_config_t *config,
 						(const char **) tags->pdata,
 						tags->len);
 
-	g_ptr_array_free (tags, TRUE);
+	g_ptr_array_free (tags, true);
     }
 
     if (notmuch_config_save (config))

@@ -46,14 +46,14 @@ notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 static int
 _help_for (const char *topic);
 
-static notmuch_bool_t print_version = FALSE, print_help = FALSE;
-char *notmuch_requested_db_uuid = NULL;
+static bool print_version = false, print_help = false;
+const char *notmuch_requested_db_uuid = NULL;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
-    { NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
-    { NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
-    { NOTMUCH_OPT_STRING, &notmuch_requested_db_uuid, "uuid", 'u', 0 },
-    {0, 0, 0, 0, 0}
+    { .opt_bool = &print_version, .name = "version" },
+    { .opt_bool = &print_help, .name = "help" },
+    { .opt_string = &notmuch_requested_db_uuid, .name = "uuid" },
+    { }
 };
 
 /* any subcommand wanting to support these options should call
@@ -82,8 +82,8 @@ int notmuch_minimal_options (const char *subcommand_name,
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
@@ -95,6 +95,51 @@ int notmuch_minimal_options (const char *subcommand_name,
     notmuch_process_shared_options (subcommand_name);
     return opt_index;
 }
+
+
+struct _notmuch_client_indexing_cli_choices indexing_cli_choices = { };
+const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
+    { .opt_keyword = &indexing_cli_choices.decrypt_policy,
+      .present = &indexing_cli_choices.decrypt_policy_set, .keywords =
+      (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
+			      { "true", NOTMUCH_DECRYPT_TRUE },
+			      { "auto", NOTMUCH_DECRYPT_AUTO },
+			      { "nostash", NOTMUCH_DECRYPT_NOSTASH },
+			      { 0, 0 } },
+      .name = "decrypt" },
+    { }
+};
+
+
+notmuch_status_t
+notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, g_mime_3_unused(notmuch_config_t *config))
+{
+    if (indexing_cli_choices.opts == NULL)
+	indexing_cli_choices.opts = notmuch_database_get_default_indexopts (notmuch);
+    if (indexing_cli_choices.decrypt_policy_set) {
+	notmuch_status_t status;
+	if (indexing_cli_choices.opts == NULL)
+	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+	status = notmuch_indexopts_set_decrypt_policy (indexing_cli_choices.opts, indexing_cli_choices.decrypt_policy);
+	if (status != NOTMUCH_STATUS_SUCCESS) {
+	    fprintf (stderr, "Error: Failed to set index decryption policy to %d. (%s)\n",
+		     indexing_cli_choices.decrypt_policy, notmuch_status_to_string (status));
+	    notmuch_indexopts_destroy (indexing_cli_choices.opts);
+	    indexing_cli_choices.opts = NULL;
+	    return status;
+	}
+    }
+#if (GMIME_MAJOR_VERSION < 3)
+    if (indexing_cli_choices.opts && notmuch_indexopts_get_decrypt_policy (indexing_cli_choices.opts) != NOTMUCH_DECRYPT_FALSE) {
+	const char* gpg_path = notmuch_config_get_crypto_gpg_path (config);
+	if (gpg_path && strcmp(gpg_path, "gpg"))
+	    fprintf (stderr, "Warning: deprecated crypto.gpg_path is set to '%s'\n"
+		     "\tbut ignoring (use $PATH instead)\n", gpg_path);
+    }
+#endif
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 
 static command_t commands[] = {
     { NULL, notmuch_command, NOTMUCH_CONFIG_OPEN | NOTMUCH_CONFIG_CREATE,
@@ -123,8 +168,14 @@ static command_t commands[] = {
       "Restore the tags from the given dump file (see 'dump')." },
     { "compact", notmuch_compact_command, NOTMUCH_CONFIG_OPEN,
       "Compact the notmuch database." },
+    { "reindex", notmuch_reindex_command, NOTMUCH_CONFIG_OPEN,
+      "Re-index all messages matching the search terms." },
     { "config", notmuch_config_command, NOTMUCH_CONFIG_OPEN,
       "Get or set settings in the notmuch configuration file." },
+#if WITH_EMACS
+    { "emacs-mua", NULL, 0,
+      "send mail with notmuch and emacs." },
+#endif
     { "help", notmuch_help_command, NOTMUCH_CONFIG_CREATE, /* create but don't save config */
       "This message, or more detailed help for the named command." }
 };
@@ -139,6 +190,8 @@ static help_topic_t help_topics[] = {
       "Common search term syntax." },
     { "hooks",
       "Hooks that will be run before or after certain commands." },
+    { "properties",
+      "Message property conventions and documentation." },
 };
 
 static command_t *
@@ -369,13 +422,13 @@ notmuch_command (notmuch_config_t *config,
  * is).
  *
  * Does not return if the external command is found and
- * executed. Return TRUE if external command is not found. Return
- * FALSE on errors.
+ * executed. Return true if external command is not found. Return
+ * false on errors.
  */
-static notmuch_bool_t try_external_command(char *argv[])
+static bool try_external_command(char *argv[])
 {
     char *old_argv0 = argv[0];
-    notmuch_bool_t ret = TRUE;
+    bool ret = true;
 
     argv[0] = talloc_asprintf (NULL, "notmuch-%s", old_argv0);
 
@@ -387,7 +440,7 @@ static notmuch_bool_t try_external_command(char *argv[])
     if (errno != ENOENT) {
 	fprintf (stderr, "Error: Running external command '%s' failed: %s\n",
 		 argv[0], strerror(errno));
-	ret = FALSE;
+	ret = false;
     }
 
     talloc_free (argv[0]);
@@ -403,15 +456,15 @@ main (int argc, char *argv[])
     char *talloc_report;
     const char *command_name = NULL;
     command_t *command;
-    char *config_file_name = NULL;
+    const char *config_file_name = NULL;
     notmuch_config_t *config = NULL;
     int opt_index;
     int ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &config_file_name, .name = "config" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     talloc_enable_null_tracking ();
@@ -438,7 +491,8 @@ main (int argc, char *argv[])
     notmuch_process_shared_options (command_name);
 
     command = find_command (command_name);
-    if (!command) {
+    /* if command->function is NULL, try external command */
+    if (!command || !command->function) {
 	/* This won't return if the external command is found. */
 	if (try_external_command(argv + opt_index))
 	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",

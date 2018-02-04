@@ -34,7 +34,8 @@ Supported options for **insert** include
     ``--folder=<``\ folder\ **>**
         Deliver the message to the specified folder, relative to the
         top-level directory given by the value of **database.path**. The
-        default is to deliver to the top-level directory.
+        default is the empty string, which means delivering to the
+        top-level directory.
 
     ``--create-folder``
         Try to create the folder named by the ``--folder`` option, if it
@@ -49,6 +50,29 @@ Supported options for **insert** include
 
     ``--no-hooks``
         Prevent hooks from being run.
+
+    ``--decrypt=(true|nostash|auto|false)``
+
+        If ``true`` and the message is encrypted, try to decrypt the
+        message while indexing, stashing any session keys discovered.
+        If ``auto``, and notmuch already knows about a session key for
+        the message, it will try decrypting using that session key but
+        will not try to access the user's secret keys.  If decryption
+        is successful, index the cleartext itself.  Either way, the
+        message is always stored to disk in its original form
+        (ciphertext).
+
+        ``nostash`` is the same as ``true`` except that it will not
+        stash newly-discovered session keys in the database.
+
+        Be aware that the index is likely sufficient (and a stashed
+        session key is certainly sufficient) to reconstruct the
+        cleartext of the message itself, so please ensure that the
+        notmuch message index is adequately protected. DO NOT USE
+        ``--decrypt=true`` or ``--decrypt=nostash`` without
+        considering the security of your index.
+
+        See also ``index.decrypt`` in **notmuch-config(1)**.
 
 EXIT STATUS
 ===========
@@ -73,7 +97,14 @@ status of the **insert** command.
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-reply(1)**,
-**notmuch-restore(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**

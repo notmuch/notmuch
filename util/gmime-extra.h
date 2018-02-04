@@ -16,12 +16,9 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define g_mime_2_6_unref(obj) g_object_unref (obj)
 #define g_mime_3_unused(arg) arg
 #define g_mime_certificate_get_fpr16(cert) g_mime_certificate_get_key_id (cert)
-#define g_mime_certificate_get_uid(cert) g_mime_certificate_get_name (cert);
 #else /* GMime >= 3.0 */
-typedef GMimeAddressType GMimeRecipientType;
 
 #define GMIME_ENABLE_RFC_2047_WORKAROUNDS 0xdeadbeef
-#define g_mime_certificate_get_uid(cert) g_mime_certificate_get_key_id (cert);
 #define g_mime_content_type_to_string(c) g_mime_content_type_get_mime_type (c)
 #define g_mime_filter_crlf_new(encode,dots) g_mime_filter_dos2unix_new (FALSE)
 #define g_mime_gpg_context_new(func,path) g_mime_gpg_context_new ()
@@ -30,7 +27,6 @@ typedef GMimeAddressType GMimeRecipientType;
 #define g_mime_init(flags) g_mime_init()
 #define g_mime_message_add_recipient(m,t,n,a) g_mime_message_add_mailbox (m,t,n,a)
 #define g_mime_message_set_subject(m,s) g_mime_message_set_subject(m,s,NULL)
-#define g_mime_multipart_encrypted_decrypt(mpe,ctx,out,err) g_mime_multipart_encrypted_decrypt(mpe, GMIME_DECRYPT_NONE, NULL, out, err)
 #define g_mime_multipart_signed_verify(mps,ctx,err) g_mime_multipart_signed_verify(mps, GMIME_ENCRYPT_NONE, err)
 #define g_mime_object_write_to_stream(o,s) g_mime_object_write_to_stream (o,NULL,s)
 #define g_mime_object_set_header(o,h,v) g_mime_object_set_header (o,h,v,NULL)
@@ -46,15 +42,6 @@ typedef GMimeAddressType GMimeRecipientType;
 typedef GMimeAddressType GMimeRecipientType;
 
 typedef GMimeSignatureStatus GMimeSignatureError;
-
-typedef GMimeTrust GMimeCertificateTrust;
-
-#define GMIME_CERTIFICATE_TRUST_UNKNOWN GMIME_TRUST_UNKNOWN
-#define GMIME_CERTIFICATE_TRUST_UNDEFINED GMIME_TRUST_UNDEFINED
-#define GMIME_CERTIFICATE_TRUST_NEVER GMIME_TRUST_NEVER
-#define GMIME_CERTIFICATE_TRUST_MARGINAL GMIME_TRUST_MARGINAL
-#define GMIME_CERTIFICATE_TRUST_FULLY GMIME_TRUST_FULL
-#define GMIME_CERTIFICATE_TRUST_ULTIMATE GMIME_TRUST_ULTIMATE
 
 #define g_mime_2_6_unref(obj) /*ignore*/
 #define g_mime_3_unused(arg) unused(arg)
@@ -107,4 +94,10 @@ gboolean g_mime_signature_status_bad (GMimeSignatureStatus status);
 gboolean g_mime_signature_status_error (GMimeSignatureError status);
 
 gint64 g_mime_utils_header_decode_date_unix (const char *date);
+
+/**
+ * Return string for valid User ID (or NULL if no valid User ID exists)
+ */
+const char * g_mime_certificate_get_valid_userid (GMimeCertificate *cert);
+
 #endif

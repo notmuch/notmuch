@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='folder tags removed and added through file renames remain consistent'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 test_begin_subtest "No new messages"
 output=$(NOTMUCH_NEW)
@@ -32,7 +32,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Test matches folder:spam"
 output=$(notmuch search folder:spam)
-test_expect_equal "$output" "thread:0000000000000001   2001-01-05 [1/1] Notmuch Test Suite; Single new message (inbox unread)"
+test_expect_equal "$output" "thread:0000000000000001   2001-01-05 [1/1(2)] Notmuch Test Suite; Single new message (inbox unread)"
 
 test_begin_subtest "Remove folder:spam copy of email"
 rm $dir/spam/$(basename $file_x)

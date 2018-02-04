@@ -2,7 +2,7 @@
 
 test_description='dump and restore'
 
-. ./perf-test-lib.sh || exit 1
+. $(dirname "$0")/perf-test-lib.sh || exit 1
 
 time_start
 

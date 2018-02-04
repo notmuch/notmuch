@@ -211,7 +211,7 @@ parse_sup_line (void *ctx, char *line,
 	    tok_len++;
 	}
 
-	if (tag_op_list_append (tag_ops, tok, FALSE))
+	if (tag_op_list_append (tag_ops, tok, false))
 	    return -1;
     }
 
@@ -223,11 +223,11 @@ int
 notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    notmuch_bool_t accumulate = FALSE;
+    bool accumulate = false;
     tag_op_flag_t flags = 0;
     tag_op_list_t *tag_ops;
 
-    char *input_file_name = NULL;
+    const char *input_file_name = NULL;
     const char *name_for_error = NULL;
     gzFile input = NULL;
     char *line = NULL;
@@ -247,20 +247,20 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	flags |= TAG_FLAG_MAILDIR_SYNC;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &input_format, "format", 'f',
+	{ .opt_keyword = &input_format, .name = "format", .keywords =
 	  (notmuch_keyword_t []){ { "auto", DUMP_FORMAT_AUTO },
 				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
 				  { "sup", DUMP_FORMAT_SUP },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
+	{ .opt_flags = &include, .name = "include", .keywords =
 	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
 				  { "properties", DUMP_INCLUDE_PROPERTIES },
 				  { "tags", DUMP_INCLUDE_TAGS} } },
 
-	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &accumulate, "accumulate", 'a', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &input_file_name, .name = "input" },
+	{ .opt_bool = &accumulate, .name = "accumulate" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

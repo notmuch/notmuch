@@ -122,7 +122,7 @@ static const char crypto_config_comment[] =
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
-    notmuch_bool_t is_new;
+    bool is_new;
 
     char *database_path;
     char *crypto_gpg_path;
@@ -134,7 +134,7 @@ struct _notmuch_config {
     size_t new_tags_length;
     const char **new_ignore;
     size_t new_ignore_length;
-    notmuch_bool_t maildir_synchronize_flags;
+    bool maildir_synchronize_flags;
     const char **search_exclude_tags;
     size_t search_exclude_tags_length;
 };
@@ -212,8 +212,8 @@ get_username_from_passwd_file (void *ctx)
     return name;
 }
 
-static notmuch_bool_t
-get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
+static bool
+get_config_from_file (notmuch_config_t *config, bool create_new)
 {
     #define BUF_SIZE 4096
     char *config_str = NULL;
@@ -221,7 +221,7 @@ get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
     int config_bufsize = BUF_SIZE;
     size_t len;
     GError *error = NULL;
-    notmuch_bool_t ret = FALSE;
+    bool ret = false;
 
     FILE *fp = fopen(config->filename, "r");
     if (fp == NULL) {
@@ -230,8 +230,8 @@ get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
 	     * default configuration file in the case of FILE NOT FOUND.
 	     */
 	    if (create_new) {
-		config->is_new = TRUE;
-		ret = TRUE;
+		config->is_new = true;
+		ret = true;
 	    } else {
 		fprintf (stderr, "Configuration file %s not found.\n"
 			 "Try running 'notmuch setup' to create a configuration.\n",
@@ -271,7 +271,7 @@ get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
 
     if (g_key_file_load_from_data (config->key_file, config_str, config_len,
 				   G_KEY_FILE_KEEP_COMMENTS, &error)) {
-	ret = TRUE;
+	ret = true;
 	goto out;
     }
 
@@ -352,7 +352,7 @@ notmuch_config_open (void *ctx,
     talloc_set_destructor (config, notmuch_config_destructor);
 
     /* non-zero defaults */
-    config->maildir_synchronize_flags = TRUE;
+    config->maildir_synchronize_flags = true;
 
     if (filename) {
 	config->filename = talloc_strdup (config, filename);
@@ -366,7 +366,7 @@ notmuch_config_open (void *ctx,
     config->key_file = g_key_file_new ();
 
     if (config_mode & NOTMUCH_CONFIG_OPEN) {
-	notmuch_bool_t create_new = (config_mode & NOTMUCH_CONFIG_CREATE) != 0;
+	bool create_new = (config_mode & NOTMUCH_CONFIG_CREATE) != 0;
 
 	if (! get_config_from_file (config, create_new)) {
 	    talloc_free (config);
@@ -466,7 +466,7 @@ notmuch_config_open (void *ctx,
 	g_key_file_get_boolean (config->key_file,
 				"maildir", "synchronize_flags", &error);
     if (error) {
-	notmuch_config_set_maildir_synchronize_flags (config, TRUE);
+	notmuch_config_set_maildir_synchronize_flags (config, true);
 	g_error_free (error);
     }
 
@@ -579,7 +579,7 @@ notmuch_config_save (notmuch_config_t *config)
     return 0;
 }
 
-notmuch_bool_t
+bool
 notmuch_config_is_new (notmuch_config_t *config)
 {
     return config->is_new;
@@ -808,7 +808,20 @@ _item_split (char *item, char **group, char **key)
 }
 
 #define BUILT_WITH_PREFIX "built_with."
-#define QUERY_PREFIX "query."
+
+static bool
+_stored_in_db (const char *item)
+{
+    const char * db_configs[] = {
+	"index.decrypt",
+    };
+    if (STRNCMP_LITERAL (item, "query.") == 0)
+	return true;
+    for (size_t i = 0; i < ARRAY_SIZE (db_configs); i++)
+	if (strcmp (item, db_configs[i]) == 0)
+	    return true;
+    return false;
+}
 
 static int
 _print_db_config(notmuch_config_t *config, const char *name)
@@ -857,7 +870,7 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
     } else if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
 	printf ("%s\n",
 		notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)) ? "true" : "false");
-    } else if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+    } else if (_stored_in_db (item)) {
 	return _print_db_config (config, item);
     } else {
 	char **value;
@@ -928,7 +941,7 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
 	return 1;
     }
 
-    if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+    if (_stored_in_db (item)) {
 	return _set_db_config (config, item, argc, argv);
     }
 
@@ -1086,7 +1099,7 @@ notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 
 }
 
-notmuch_bool_t
+bool
 notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config)
 {
     return config->maildir_synchronize_flags;
@@ -1094,7 +1107,7 @@ notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config)
 
 void
 notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
-					      notmuch_bool_t synchronize_flags)
+					      bool synchronize_flags)
 {
     g_key_file_set_boolean (config->key_file,
 			    "maildir", "synchronize_flags", synchronize_flags);

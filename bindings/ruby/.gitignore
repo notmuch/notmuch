@@ -1,7 +1,7 @@
 # .gitignore for bindings/ruby
 
 # Generated files
-Makefile
-mkmf.log
-notmuch.so
+/Makefile
+/mkmf.log
+/notmuch.so
 *.o

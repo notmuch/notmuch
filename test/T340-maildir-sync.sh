@@ -2,7 +2,7 @@
 
 test_description="maildir synchronization"
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 # Create the expected maildir structure
 mkdir $MAIL_DIR/cur
@@ -28,6 +28,14 @@ add_message [subject]='"Adding message with S"' [filename]='adding-with-s-flag:2
 output=$(notmuch search subject:"Adding message with S" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding message with S (inbox)"
 
+test_begin_subtest "Adding message with 'S' w/o 'unread' in new.tags prevents 'unread' tag"
+OLDCONFIG=$(notmuch config get new.tags)
+notmuch config set new.tags "inbox"
+add_message [subject]='"Adding message with S 2"' [filename]='adding-with-s-flag2:2,S' [dir]=cur
+notmuch config set new.tags $OLDCONFIG
+output=$(notmuch search subject:Adding-message-with-S-2 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding message with S 2 (inbox)"
+
 test_begin_subtest "Adding 'replied' tag adds 'R' flag to filename"
 add_message [subject]='"Adding replied tag"' [filename]='adding-replied-tag:2,S' [dir]=cur
 notmuch tag +replied subject:"Adding replied tag"
@@ -49,7 +57,7 @@ test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "Date": "GENERATED_DATE"},
 "body": [{"id": 1,
 "content-type": "text/plain",
-"content": "This is just a test message (#3)\n"}]},
+"content": "This is just a test message (#4)\n"}]},
 []]]]'
 
 test_begin_subtest "notmuch reply works with renamed file (without notmuch new)"
@@ -153,14 +161,14 @@ cp "$MAIL_DIR/cur/duplicated-message:2," "$MAIL_DIR/cur/duplicated-message-copy:
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Duplicated message (inbox replied)"
 
 test_begin_subtest "Adding duplicate message without flags does not remove tags"
 cp "$MAIL_DIR/cur/duplicated-message-copy:2,RS" "$MAIL_DIR/cur/duplicated-message-another-copy:2,"
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
+thread:XXX   2001-01-05 [1/1(3)] Notmuch Test Suite; Duplicated message (inbox replied)"
 
 test_begin_subtest "Tag changes modify flags of multiple files"
 notmuch tag -replied subject:"Duplicated message"
@@ -181,11 +189,21 @@ test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maild
 
 test_begin_subtest "Files in new/ get default synchronized tags"
 OLDCONFIG=$(notmuch config get new.tags)
-notmuch config set new.tags test
+notmuch config set new.tags "test;unread"
 add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
 notmuch config set new.tags $OLDCONFIG
 notmuch search 'subject:"File in new"' | notmuch_search_sanitize > output
 test_expect_equal "$(< output)" \
 "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; File in new/ (test unread)"
 
+for tag in draft flagged passed replied; do
+    test_begin_subtest "$tag is valid in new.tags"
+    OLDCONFIG=$(notmuch config get new.tags)
+    notmuch config set new.tags "$tag;unread"
+    add_message [subject]="\"$tag sync in new\"" [dir]=new
+    notmuch config set new.tags $OLDCONFIG
+    notmuch search "subject:\"$tag sync in new\"" | notmuch_search_sanitize > output
+    test_expect_equal "$(< output)" \
+		      "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; $tag sync in new ($tag unread)"
+done
 test_done

@@ -40,10 +40,6 @@ if [ "$srcdir" != "." ]; then
 	cp "$srcdir"/"$dir"/Makefile "$dir"
     done
 
-    # Easiest way to get the test suite to work is to just copy the
-    # whole thing into the build directory.
-    cp -a "$srcdir"/test/* test
-
     # Emacs only likes to generate compiled files next to the .el files
     # by default so copy these as well (which is not ideal).
     cp -a "$srcdir"/emacs/*.el emacs
@@ -482,22 +478,30 @@ fi
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
+GMIME3_MINVER=3.0.3
 
 printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-3.0"; then
+if pkg-config --exists "gmime-3.0 > $GMIME3_MINVER"; then
     printf "Yes (3.0).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-3.0)
     gmime_ldflags=$(pkg-config --libs gmime-3.0)
     gmime_major=3
+    have_gmime_session_keys=1
 elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
     printf "Yes (2.6).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-2.6)
     gmime_ldflags=$(pkg-config --libs gmime-2.6)
     gmime_major=2
+    if pkg-config --exists "gmime-2.6 >= 2.6.21"; then
+        have_gmime_session_keys=1
+    else
+        have_gmime_session_keys=0
+    fi
 else
     have_gmime=0
+    have_gmime_session_keys=0
     printf "No.\n"
     errors=$((errors + 1))
 fi
@@ -553,7 +557,7 @@ fi
 printf "Checking for python... "
 have_python=0
 
-for name in ${PYTHON} python python2 python3; do
+for name in ${PYTHON} python3 python python2; do
     if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
@@ -644,6 +648,15 @@ if [ $WITH_DESKTOP = "1" ]; then
 	printf "No (so will not install .desktop file).\n"
 	WITH_DESKTOP=0
     fi
+fi
+
+printf "Checking for cppcheck... "
+if command -v cppcheck > /dev/null; then
+    have_cppcheck=1
+    printf "Yes.\n"
+else
+    have_cppcheck=0
+    printf "No.\n"
 fi
 
 libdir_in_ldconfig=0
@@ -1065,6 +1078,9 @@ zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completio
 # build its own version)
 HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
 
+# Whether the cppcheck static checker is available
+HAVE_CPPCHECK = ${have_cppcheck}
+
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
 HAVE_GETLINE = ${have_getline}
@@ -1087,6 +1103,9 @@ HAVE_TIMEGM = ${have_timegm}
 
 # Whether struct dirent has d_type (if not, then notmuch will use stat)
 HAVE_D_TYPE = ${have_d_type}
+
+# Whether the GMime version can handle extraction and reuse of session keys
+HAVE_GMIME_SESSION_KEYS = ${have_gmime_session_keys}
 
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
@@ -1166,6 +1185,7 @@ COMMON_CONFIGURE_CFLAGS = \\
 	\$(GMIME_CFLAGS) \$(TALLOC_CFLAGS) \$(ZLIB_CFLAGS)	\\
 	-DHAVE_VALGRIND=\$(HAVE_VALGRIND) \$(VALGRIND_CFLAGS)	\\
 	-DHAVE_GETLINE=\$(HAVE_GETLINE)				\\
+	-DWITH_EMACS=\$(WITH_EMACS)				\\
 	-DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
 	-DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)			\\
 	-DHAVE_STRSEP=\$(HAVE_STRSEP)				\\
@@ -1173,6 +1193,7 @@ COMMON_CONFIGURE_CFLAGS = \\
 	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
 	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
 	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
+	-DHAVE_GMIME_SESSION_KEYS=\$(HAVE_GMIME_SESSION_KEYS)	\\
 	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
 	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
 	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
@@ -1200,6 +1221,9 @@ NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
 
 # Whether the Xapian version in use supports lock retry
 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${have_xapian_db_retry_lock}
+
+# Whether the GMime version can handle extraction and reuse of session keys
+NOTMUCH_HAVE_GMIME_SESSION_KEYS=${have_gmime_session_keys}
 
 # Which backend will Xapian use by default?
 NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}

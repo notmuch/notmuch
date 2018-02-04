@@ -194,10 +194,10 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     struct sigaction action;
     tag_op_flag_t tag_flags = TAG_FLAG_NONE;
-    notmuch_bool_t batch = FALSE;
-    notmuch_bool_t remove_all = FALSE;
+    bool batch = false;
+    bool remove_all = false;
     FILE *input = stdin;
-    char *input_file_name = NULL;
+    const char *input_file_name = NULL;
     int opt_index;
     int ret;
 
@@ -209,11 +209,11 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     sigaction (SIGINT, &action, NULL);
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
-	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &remove_all, "remove-all", 0, 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_bool = &batch, .name = "batch" },
+	{ .opt_string = &input_file_name, .name = "input" },
+	{ .opt_bool = &remove_all, .name = "remove-all" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
@@ -223,7 +223,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     if (input_file_name) {
-	batch = TRUE;
+	batch = true;
 	input = fopen (input_file_name, "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
@@ -235,6 +235,8 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     if (batch) {
 	if (opt_index != argc) {
 	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
+	    if (input)
+		fclose (input);
 	    return EXIT_FAILURE;
 	}
     } else {

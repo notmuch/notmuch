@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 test_description="error reporting for library"
 
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_email_corpus
 
@@ -127,7 +127,7 @@ int main (int argc, char** argv)
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
    }
-   stat = notmuch_database_add_message (db, "/dev/null", NULL);
+   stat = notmuch_database_index_file (db, "/dev/null", NULL, NULL);
    if (stat)
        fputs (notmuch_database_status_string (db), stderr);
 
@@ -152,7 +152,7 @@ int main (int argc, char** argv)
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
    }
-   stat = notmuch_database_add_message (db, "./nonexistent", NULL);
+   stat = notmuch_database_index_file (db, "./nonexistent", NULL, NULL);
    if (stat) {
        char *status_string = notmuch_database_status_string (db);
        if (status_string) fputs (status_string, stderr);

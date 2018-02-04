@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='atomicity'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 # This script tests the effects of killing and restarting "notmuch
 # new" at arbitrary points.  If notmuch new is properly atomic, the
@@ -64,7 +64,7 @@ if test_require_external_prereq gdb; then
     # -tty /dev/null works around a conflict between the 'timeout' wrapper
     # and gdb's attempt to control the TTY.
     export MAIL_DIR
-    ${TEST_GDB} -tty /dev/null -batch -x $TEST_DIRECTORY/atomicity.py notmuch 1>gdb.out 2>&1
+    ${TEST_GDB} -tty /dev/null -batch -x $NOTMUCH_SRCDIR/test/atomicity.py notmuch 1>gdb.out 2>&1
 
     # Get the final, golden output
     notmuch search '*' > expected

@@ -21,7 +21,7 @@ struct sprinter_text {
     /* A flag to indicate if this is the first tag. Used in list of tags
      * for summary.
      */
-    notmuch_bool_t first_tag;
+    bool first_tag;
 };
 
 static void
@@ -52,7 +52,7 @@ text_integer (struct sprinter *sp, int val)
 }
 
 static void
-text_boolean (struct sprinter *sp, notmuch_bool_t val)
+text_boolean (struct sprinter *sp, bool val)
 {
     struct sprinter_text *sptxt = (struct sprinter_text *) sp;
 
@@ -128,7 +128,7 @@ sprinter_text_create (const void *ctx, FILE *stream)
 	    .map_key = text_map_key,
 	    .separator = text_separator,
 	    .set_prefix = text_set_prefix,
-	    .is_text_printer = TRUE,
+	    .is_text_printer = true,
 	},
     };
     struct sprinter_text *res;

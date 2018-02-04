@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="output of multipart message"
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 cat <<EOF > embedded_message_body
 Content-Type: multipart/alternative; boundary="==-=-=="

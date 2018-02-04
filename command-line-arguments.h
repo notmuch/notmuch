@@ -1,18 +1,9 @@
 #ifndef NOTMUCH_OPTS_H
 #define NOTMUCH_OPTS_H
 
-#include "notmuch.h"
+#include <stdbool.h>
 
-enum notmuch_opt_type {
-    NOTMUCH_OPT_END = 0,
-    NOTMUCH_OPT_INHERIT,	/* another options table */
-    NOTMUCH_OPT_BOOLEAN,	/* --verbose              */
-    NOTMUCH_OPT_INT,		/* --frob=8               */
-    NOTMUCH_OPT_KEYWORD,	/* --format=raw|json|text */
-    NOTMUCH_OPT_KEYWORD_FLAGS,	/* the above with values OR'd together */
-    NOTMUCH_OPT_STRING,		/* --file=/tmp/gnarf.txt  */
-    NOTMUCH_OPT_POSITION	/* notmuch dump pos_arg   */
-};
+#include "notmuch.h"
 
 /*
  * Describe one of the possibilities for a keyword option
@@ -24,22 +15,31 @@ typedef struct notmuch_keyword {
     int value;
 } notmuch_keyword_t;
 
-/*
- * Describe one option.
- *
- * First two parameters are mandatory.
- *
- * name is mandatory _except_ for positional arguments.
- *
- * arg_id is currently unused, but could define short arguments.
- *
- * keywords is a (possibly NULL) pointer to an array of keywords
- */
+/* Describe one option. */
 typedef struct notmuch_opt_desc {
-    enum notmuch_opt_type opt_type;
-    void *output_var;
+    /* One and only one of opt_* must be set. */
+    const struct notmuch_opt_desc *opt_inherit;
+    bool *opt_bool;
+    int *opt_int;
+    int *opt_keyword;
+    int *opt_flags;
+    const char **opt_string;
+    const char **opt_position;
+
+    /* for opt_keyword only: if no matching arguments were found, and
+     * keyword_no_arg_value is set, then use keyword_no_arg_value instead. */
+    const char *keyword_no_arg_value;
+
+    /* Must be set except for opt_inherit and opt_position. */
     const char *name;
-    int  arg_id;
+
+    /* Optional, if non-NULL, set to true if the option is present. */
+    bool *present;
+
+    /* Optional, allow empty strings for opt_string. */
+    bool allow_empty;
+
+    /* Must be set for opt_keyword and opt_flags. */
     const struct notmuch_keyword *keywords;
 } notmuch_opt_desc_t;
 
@@ -73,7 +73,7 @@ parse_arguments (int argc, char **argv, const notmuch_opt_desc_t *options, int o
 int
 parse_option (int argc, char **argv, const notmuch_opt_desc_t* options, int opt_index);
 
-notmuch_bool_t
+bool
 parse_position_arg (const char *arg,
 		    int position_arg_index,
 		    const notmuch_opt_desc_t* options);

@@ -32,14 +32,14 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     const char *path = notmuch_config_get_database_path (config);
     const char *backup_path = NULL;
     notmuch_status_t ret;
-    notmuch_bool_t quiet = FALSE;
+    bool quiet = false;
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_STRING, &backup_path, "backup", 0, 0 },
-	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0}
+	{ .opt_string = &backup_path, .name = "backup" },
+	{ .opt_bool =  &quiet, .name = "quiet" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

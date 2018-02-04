@@ -97,7 +97,7 @@ dump_properties_message (void *ctx,
 {
     const char *message_id;
     notmuch_message_properties_t *list;
-    notmuch_bool_t first = TRUE;
+    bool first = true;
 
     message_id = notmuch_message_get_message_id (message);
 
@@ -106,7 +106,7 @@ dump_properties_message (void *ctx,
 	return 0;
     }
 
-    for (list = notmuch_message_get_properties (message, "", FALSE);
+    for (list = notmuch_message_get_properties (message, "", false);
 	 notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
 	const char *key, *val;
 
@@ -116,7 +116,7 @@ dump_properties_message (void *ctx,
 		return 1;
 	    }
 	    gzprintf (output, "#= %s", *buffer_p);
-	    first = FALSE;
+	    first = false;
 	}
 
 	key = notmuch_message_properties_key (list);
@@ -277,7 +277,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *query_str,
 		       dump_format_t output_format,
 		       dump_include_t include,
-		       notmuch_bool_t gzip_output)
+		       bool gzip_output)
 {
     gzFile output = NULL;
     const char *mode = gzip_output ? "w9" : "wT";
@@ -369,26 +369,26 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-    char *output_file_name = NULL;
+    const char *output_file_name = NULL;
     int opt_index;
 
     int output_format = DUMP_FORMAT_BATCH_TAG;
     int include = 0;
-    notmuch_bool_t gzip_output = 0;
+    bool gzip_output = 0;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',
+	{ .opt_keyword = &output_format, .name = "format", .keywords =
 	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
 				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
+	{ .opt_flags = &include, .name = "include", .keywords =
 	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
 				  { "properties", DUMP_INCLUDE_PROPERTIES },
 				  { "tags", DUMP_INCLUDE_TAGS} } },
-	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
-	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
-	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
-	{ 0, 0, 0, 0, 0 }
+	{ .opt_string = &output_file_name, .name = "output" },
+	{ .opt_bool = &gzip_output, .name = "gzip" },
+	{ .opt_inherit = notmuch_shared_options },
+	{ }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);

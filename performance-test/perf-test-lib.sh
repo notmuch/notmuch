@@ -1,4 +1,4 @@
-. ./version.sh || exit 1
+. $(dirname "$0")/version.sh || exit 1
 
 corpus_size=large
 
@@ -25,12 +25,19 @@ do
 		echo "error: unknown performance test option '$1'" >&2; exit 1 ;;
 	esac
 done
-. ../test/test-lib-common.sh || exit 1
+
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/../test/export-dirs.sh || exit 1
+
+# Where to run the tests
+TEST_DIRECTORY=$NOTMUCH_BUILDDIR/performance-test
+
+. "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
 set -e
 
-if ! test -x ../notmuch
-then
+# It appears that people try to run tests without building...
+if [[ ! -x "$NOTMUCH_BUILDDIR/notmuch" ]]; then
 	echo >&2 'You do not seem to have built notmuch yet.'
 	exit 1
 fi

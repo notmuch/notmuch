@@ -101,7 +101,15 @@ of the tag **space in tags**
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
-**notmuch-search(1)**, **notmuch-search-terms(7)**, **notmuch-show(1)**,
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,

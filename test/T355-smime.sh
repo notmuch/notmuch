@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description='S/MIME signature verification and decryption'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 add_gpgsm_home ()
 {
@@ -10,7 +10,7 @@ add_gpgsm_home ()
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
-    gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $TEST_DIRECTORY/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
+    gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
     fpr=$(gpgsm  --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
     echo "$fpr S relax" >> $GNUPGHOME/trustlist.txt
     test_debug "cat $GNUPGHOME/import.log"
@@ -19,7 +19,7 @@ add_gpgsm_home ()
 test_require_external_prereq openssl
 test_require_external_prereq gpgsm
 
-cp $TEST_DIRECTORY/smime/key+cert.pem test_suite.pem
+cp $NOTMUCH_SRCDIR/test/smime/key+cert.pem test_suite.pem
 
 FINGERPRINT=$(openssl x509 -fingerprint -in test_suite.pem -noout | sed -e 's/^.*=//' -e s/://g)
 
@@ -41,13 +41,19 @@ test_expect_success \
 
 test_begin_subtest "Signature verification (openssl)"
 notmuch show --format=raw subject:"test signed message 001" |\
-    openssl smime -verify -CAfile $TEST_DIRECTORY/smime/test.crt 2>OUTPUT
+    openssl smime -verify -CAfile $NOTMUCH_SRCDIR/test/smime/test.crt 2>OUTPUT
 cat <<EOF > EXPECTED
 Verification successful
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "signature verification (notmuch CLI)"
+if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
+    # gmime 2 can't report User IDs properly for S/MIME
+    USERID=''
+else
+    USERID='"userid": "CN=Notmuch Test Suite",'
+fi
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [-1234567890]*|"created": 946728000|' \
@@ -65,7 +71,7 @@ expected='[[[{"id": "XXXXX",
  "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"fingerprint": "'$FINGERPRINT'",
- "status": "good",
+ "status": "good",'$USERID'
  "expires": 424242424,
  "created": 946728000}],
  "content-type": "multipart/signed",
@@ -86,7 +92,7 @@ test_expect_equal_json \
 test_begin_subtest "Decryption and signature verification (openssl)"
 notmuch show --format=raw subject:"test encrypted message 001" |\
     openssl smime -decrypt -recip test_suite.pem |\
-    openssl smime -verify -CAfile $TEST_DIRECTORY/smime/test.crt 2>OUTPUT
+    openssl smime -verify -CAfile $NOTMUCH_SRCDIR/test/smime/test.crt 2>OUTPUT
 cat <<EOF > EXPECTED
 Verification successful
 EOF

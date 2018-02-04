@@ -32,7 +32,7 @@ is a possibly empty forest of replies.
 "
   (let ((args '("show" "--format=sexp" "--format-version=4")))
     (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt"))))
+	(setq args (append args '("--decrypt=true"))))
     (setq args (append args search-terms))
     (apply #'notmuch-call-notmuch-sexp args)))
 

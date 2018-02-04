@@ -33,14 +33,14 @@ typedef struct _notmuch_string_pair_t {
 } notmuch_string_pair_t;
 
 struct _notmuch_string_map {
-    notmuch_bool_t sorted;
+    bool sorted;
     size_t length;
     notmuch_string_pair_t *pairs;
 };
 
 struct _notmuch_string_map_iterator {
     notmuch_string_pair_t *current;
-    notmuch_bool_t exact;
+    bool exact;
     const char *key;
 };
 
@@ -55,7 +55,7 @@ _notmuch_string_map_create (const void *ctx)
 
     map->length = 0;
     map->pairs = NULL;
-    map->sorted = TRUE;
+    map->sorted = true;
 
     return map;
 }
@@ -67,7 +67,7 @@ _notmuch_string_map_append (notmuch_string_map_t *map,
 {
 
     map->length++;
-    map->sorted = FALSE;
+    map->sorted = false;
 
     if (map->pairs)
 	map->pairs = talloc_realloc (map, map->pairs, notmuch_string_pair_t, map->length + 1);
@@ -103,11 +103,11 @@ _notmuch_string_map_sort (notmuch_string_map_t *map)
 
     qsort (map->pairs, map->length, sizeof (notmuch_string_pair_t), cmppair);
 
-    map->sorted = TRUE;
+    map->sorted = true;
 }
 
-static notmuch_bool_t
-string_cmp (const char *a, const char *b, notmuch_bool_t exact)
+static bool
+string_cmp (const char *a, const char *b, bool exact)
 {
     if (exact)
 	return (strcmp (a, b));
@@ -116,7 +116,7 @@ string_cmp (const char *a, const char *b, notmuch_bool_t exact)
 }
 
 static notmuch_string_pair_t *
-bsearch_first (notmuch_string_pair_t *array, size_t len, const char *key, notmuch_bool_t exact)
+bsearch_first (notmuch_string_pair_t *array, size_t len, const char *key, bool exact)
 {
     size_t first = 0;
     size_t last = len - 1;
@@ -151,7 +151,7 @@ _notmuch_string_map_get (notmuch_string_map_t *map, const char *key)
     /* this means that calling append invalidates iterators */
     _notmuch_string_map_sort (map);
 
-    pair = bsearch_first (map->pairs, map->length, key, TRUE);
+    pair = bsearch_first (map->pairs, map->length, key, true);
     if (! pair)
 	return NULL;
 
@@ -160,7 +160,7 @@ _notmuch_string_map_get (notmuch_string_map_t *map, const char *key)
 
 notmuch_string_map_iterator_t *
 _notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
-				     notmuch_bool_t exact)
+				     bool exact)
 {
     notmuch_string_map_iterator_t *iter;
 
@@ -179,15 +179,15 @@ _notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
     return iter;
 }
 
-notmuch_bool_t
+bool
 _notmuch_string_map_iterator_valid (notmuch_string_map_iterator_t *iterator)
 {
     if (iterator->current == NULL)
-	return FALSE;
+	return false;
 
     /* sentinel */
     if (iterator->current->key == NULL)
-	return FALSE;
+	return false;
 
     return (0 == string_cmp (iterator->key, iterator->current->key, iterator->exact));
 

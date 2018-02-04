@@ -46,7 +46,7 @@ notmuch_bool_t
 notmuch_filenames_valid (notmuch_filenames_t *filenames)
 {
     if (filenames == NULL)
-	return FALSE;
+	return false;
 
     return (filenames->iterator != NULL);
 }

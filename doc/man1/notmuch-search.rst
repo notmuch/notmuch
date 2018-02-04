@@ -42,7 +42,9 @@ Supported options for **search** include
             the search terms. The summary includes the thread ID, date,
             the number of messages in the thread (both the number
             matched and the total number), the authors of the thread and
-            the subject.
+	    the subject. In the case where a thread contains multiple files for
+	    some messages, the total number of files is printed in parentheses
+	    (see below for an example).
 
         **threads**
             Output the thread IDs of all threads with any message
@@ -135,6 +137,19 @@ Supported options for **search** include
         prefix. The prefix matches messages based on filenames. This
         option filters filenames of the matching messages.
 
+EXAMPLE
+=======
+
+The following shows an example of the summary output format, with one
+message having multiple filenames.
+
+::
+
+  % notmuch search date:today.. and tag:bad-news
+  thread:0000000000063c10 Today [1/1] Some Persun; To the bone (inbox unread)
+  thread:0000000000063c25 Today [1/1(2)] Ann Other; Bears (inbox unread)
+  thread:0000000000063c00 Today [1/1] A Thurd; Bites, stings, sad feelings (inbox unread)
+
 EXIT STATUS
 ===========
 
@@ -149,8 +164,16 @@ This command supports the following special exit status codes
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search-terms(7)**,
+**notmuch-show(1)**,
+**notmuch-tag(1)**
 **notmuch-address(1)**

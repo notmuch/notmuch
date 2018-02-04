@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='regular expression searches'
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
     test_done
@@ -29,7 +29,7 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "unanchored folder:// specification"
 output=$(notmuch search folder:/bad/ | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
 test_begin_subtest "anchored folder:// search"
@@ -39,7 +39,7 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; T
 test_begin_subtest "unanchored path:// specification"
 output=$(notmuch search path:/bad/ | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
 test_begin_subtest "anchored path:// search"

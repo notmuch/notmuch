@@ -291,7 +291,7 @@ notmuch_rb_database_add_message (VALUE self, VALUE pathv)
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
-    ret = notmuch_database_add_message (db, path, &message);
+    ret = notmuch_database_index_file (db, path, NULL, &message);
     notmuch_rb_status_raise (ret);
     return rb_assoc_new (Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message),
         (ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) ? Qtrue : Qfalse);

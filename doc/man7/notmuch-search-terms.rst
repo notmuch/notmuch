@@ -9,6 +9,8 @@ SYNOPSIS
 
 **notmuch** **dump** [--format=(batch-tag|sup)] [--] [--output=<*file*>] [--] [<*search-term*> ...]
 
+**notmuch** **reindex** [option ...] <*search-term*> ...
+
 **notmuch** **search** [option ...] <*search-term*> ...
 
 **notmuch** **show** [option ...] <*search-term*> ...
@@ -28,136 +30,124 @@ recipient headers.
 As a special case, a search string consisting of exactly a single
 asterisk ("\*") will match all messages.
 
+Search prefixes
+---------------
+
 In addition to free text, the following prefixes can be used to force
 terms to match against specific portions of an email, (where <brackets>
-indicate user-supplied values):
+indicate user-supplied values).
 
--  from:<name-or-address>
-
--  from:/<regex>/
-
--  to:<name-or-address>
-
--  subject:<word-or-quoted-phrase>
-
--  subject:/<regex>/
-
--  attachment:<word>
-
--  mimetype:<word>
-
--  tag:<tag> (or is:<tag>)
-
--  id:<message-id>
-
--  thread:<thread-id>
-
--  folder:<maildir-folder>
-
--  path:<directory-path> or path:<directory-path>/**
-
--  date:<since>..<until>
-
--  lastmod:<initial-revision>..<final-revision>
-
--  query:<name>
-
--  property:<key>=<value>
-
-The **from:** prefix is used to match the name or address of the sender
-of an email message.
-
-The **to:** prefix is used to match the names or addresses of any
-recipient of an email message, (whether To, Cc, or Bcc).
-
-Any term prefixed with **subject:** will match only text from the
-subject of an email. Searching for a phrase in the subject is supported
-by including quotation marks around the phrase, immediately following
-**subject:**.
-
-If notmuch is built with **Xapian Field Processors** (see below) the
-**from:** and **subject** prefix can be also used to restrict the
-results to those whose from/subject value matches a regular expression
-(see **regex(7)**) delimited with //.
-
-::
+If notmuch is built with **Xapian Field Processors** (see below) some
+of the prefixes with <regex> forms can be also used to restrict the
+results to those whose value matches a regular expression (see
+**regex(7)**) delimited with //, for example::
 
    notmuch search 'from:/bob@.*[.]example[.]com/'
 
-The **attachment:** prefix can be used to search for specific filenames
-(or extensions) of attachments to email messages.
+from:<name-or-address> or from:/<regex>/
+    The **from:** prefix is used to match the name or address of
+    the sender of an email message.
 
-The **mimetype:** prefix will be used to match text from the
-content-types of MIME parts within email messages (as specified by the
-sender).
+to:<name-or-address>
+    The **to:** prefix is used to match the names or addresses of any
+    recipient of an email message, (whether To, Cc, or Bcc).
 
-For **tag:** and **is:** valid tag values include **inbox** and
-**unread** by default for new messages added by **notmuch new** as well
-as any other tag values added manually with **notmuch tag**.
+subject:<word-or-quoted-phrase> or subject:/<regex>/
+    Any term prefixed with **subject:** will match only text from the
+    subject of an email. Searching for a phrase in the subject is
+    supported by including quotation marks around the phrase,
+    immediately following **subject:**.
 
-For **id:**, message ID values are the literal contents of the
-Message-ID: header of email messages, but without the '<', '>'
-delimiters.
+attachment:<word>
+    The **attachment:** prefix can be used to search for specific
+    filenames (or extensions) of attachments to email messages.
 
-The **thread:** prefix can be used with the thread ID values that are
-generated internally by notmuch (and do not appear in email messages).
-These thread ID values can be seen in the first column of output from
-**notmuch search**
+mimetype:<word>
+    The **mimetype:** prefix will be used to match text from the
+    content-types of MIME parts within email messages (as specified by
+    the sender).
 
-The **path:** prefix searches for email messages that are in
-particular directories within the mail store. The directory must be
-specified relative to the top-level maildir (and without the leading
-slash). By default, **path:** matches messages in the specified
-directory only. The "/\*\*" suffix can be used to match messages in
-the specified directory and all its subdirectories recursively.
-**path:""** matches messages in the root of the mail store and,
-likewise, **path:\*\*** matches all messages.
+tag:<tag> or tag:/<regex>/ or is:<tag> or is:/<regex>/
+    For **tag:** and **is:** valid tag values include **inbox** and
+    **unread** by default for new messages added by **notmuch new** as
+    well as any other tag values added manually with **notmuch tag**.
 
-The **folder:** prefix searches for email messages by maildir or MH
-folder. For MH-style folders, this is equivalent to **path:**. For
-maildir, this includes messages in the "new" and "cur"
-subdirectories. The exact syntax for maildir folders depends on your
-mail configuration. For maildir++, **folder:""** matches the inbox
-folder (which is the root in maildir++), other folder names always
-start with ".", and nested folders are separated by "."s, such as
-**folder:.classes.topology**. For "file system" maildir, the inbox is
-typically **folder:INBOX** and nested folders are separated by
-slashes, such as **folder:classes/topology**.
+id:<message-id> or mid:<message-id> or mid:/<regex>/
+    For **id:** and **mid:**, message ID values are the literal
+    contents of the Message-ID: header of email messages, but without
+    the '<', '>' delimiters.
 
-Both **path:** and **folder:** will find a message if *any* copy of
-that message is in the specific directory/folder.
+thread:<thread-id>
+    The **thread:** prefix can be used with the thread ID values that
+    are generated internally by notmuch (and do not appear in email
+    messages). These thread ID values can be seen in the first column
+    of output from **notmuch search**
 
-The **date:** prefix can be used to restrict the results to only
-messages within a particular time range (based on the Date: header) with
-a range syntax of:
+path:<directory-path> or path:<directory-path>/** or path:/<regex>/
+    The **path:** prefix searches for email messages that are in
+    particular directories within the mail store. The directory must
+    be specified relative to the top-level maildir (and without the
+    leading slash). By default, **path:** matches messages in the
+    specified directory only. The "/\*\*" suffix can be used to match
+    messages in the specified directory and all its subdirectories
+    recursively. **path:""** matches messages in the root of the mail
+    store and, likewise, **path:\*\*** matches all messages.
 
-date:<since>..<until>
+    **path:** will find a message if *any* copy of that message is in
+    the specific directory.
 
-See **DATE AND TIME SEARCH** below for details on the range expression,
-and supported syntax for <since> and <until> date and time expressions.
+folder:<maildir-folder> or folder:/<regex>/
+    The **folder:** prefix searches for email messages by maildir or
+    MH folder. For MH-style folders, this is equivalent to
+    **path:**. For maildir, this includes messages in the "new" and
+    "cur" subdirectories. The exact syntax for maildir folders depends
+    on your mail configuration. For maildir++, **folder:""** matches
+    the inbox folder (which is the root in maildir++), other folder
+    names always start with ".", and nested folders are separated by
+    "."s, such as **folder:.classes.topology**. For "file system"
+    maildir, the inbox is typically **folder:INBOX** and nested
+    folders are separated by slashes, such as
+    **folder:classes/topology**.
 
-The time range can also be specified using timestamps with a syntax of:
+    **folder:** will find a message if *any* copy of that message is
+    in the specific folder.
 
-<initial-timestamp>..<final-timestamp>
+date:<since>..<until> or date:<date>
+    The **date:** prefix can be used to restrict the results to only
+    messages within a particular time range (based on the Date:
+    header).
 
-Each timestamp is a number representing the number of seconds since
-1970-01-01 00:00:00 UTC.
+    See **DATE AND TIME SEARCH** below for details on the range
+    expression, and supported syntax for <since> and <until> date and
+    time expressions.
 
-The **lastmod:** prefix can be used to restrict the result by the
-database revision number of when messages were last modified (tags
-were added/removed or filenames changed).  This is usually used in
-conjunction with the **--uuid** argument to **notmuch search**
-to find messages that have changed since an earlier query.
+    The time range can also be specified using timestamps with a
+    syntax of:
 
-The **query:** prefix allows queries to refer to previously saved
-queries added with **notmuch-config(1)**. Named queries are only
-available if notmuch is built with **Xapian Field Processors** (see
-below).
+    <initial-timestamp>..<final-timestamp>
 
-The **property:** prefix searches for messages with a particular
-<key>=<value> property pair. Properties are used internally by notmuch
-(and extensions) to add metadata to messages. A given key can be
-present on a given message with several different values.
+    Each timestamp is a number representing the number of seconds
+    since 1970-01-01 00:00:00 UTC.
+
+lastmod:<initial-revision>..<final-revision>
+    The **lastmod:** prefix can be used to restrict the result by the
+    database revision number of when messages were last modified (tags
+    were added/removed or filenames changed). This is usually used in
+    conjunction with the **--uuid** argument to **notmuch search** to
+    find messages that have changed since an earlier query.
+
+query:<name>
+    The **query:** prefix allows queries to refer to previously saved
+    queries added with **notmuch-config(1)**. Named queries are only
+    available if notmuch is built with **Xapian Field Processors**
+    (see below).
+
+property:<key>=<value>
+    The **property:** prefix searches for messages with a particular
+    <key>=<value> property pair. Properties are used internally by
+    notmuch (and extensions) to add metadata to messages. A given key
+    can be present on a given message with several different values.
+    See **notmuch-properties(7)** for more details.
 
 Operators
 ---------
@@ -235,7 +225,7 @@ Boolean and Probabilistic Prefixes
 Xapian (and hence notmuch) prefixes are either **boolean**, supporting
 exact matches like "tag:inbox" or **probabilistic**, supporting a more
 flexible **term** based searching. Certain **special** prefixes are
-processed by notmuch in a way not stricly fitting either of Xapian's
+processed by notmuch in a way not strictly fitting either of Xapian's
 built in styles. The prefixes currently supported by notmuch are as
 follows.
 
@@ -253,7 +243,7 @@ In general Xapian distinguishes between lists of terms and
 **phrases**. Phrases are indicated by double quotes (but beware you
 probably need to protect those from your shell) and insist that those
 unstemmed words occur in that order. One useful, but initially
-surprising feature is that the following are equivalant ways to write
+surprising feature is that the following are equivalent ways to write
 the same phrase.
 
 - "a list of words"
@@ -262,7 +252,7 @@ the same phrase.
 - a.list.of.words
 
 Both parenthesised lists of terms and quoted phrases are ok with
-probabilisitic prefixes such as **to:**, **from:**, and **subject:**. In particular
+probabilistic prefixes such as **to:**, **from:**, and **subject:**. In particular
 
 ::
 
@@ -419,7 +409,17 @@ Currently the following features require field processor support:
 SEE ALSO
 ========
 
-**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
-**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
-**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
-**notmuch-search(1)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch(1)**,
+**notmuch-config(1)**,
+**notmuch-count(1)**,
+**notmuch-dump(1)**,
+**notmuch-hooks(5)**,
+**notmuch-insert(1)**,
+**notmuch-new(1)**,
+**notmuch-reindex(1)**,
+**notmuch-properties(1)**,
+***notmuch-reply(1)**,
+**notmuch-restore(1)**,
+**notmuch-search(1)**,
+***notmuch-show(1)**,
+**notmuch-tag(1)**

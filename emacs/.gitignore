@@ -1,4 +1,4 @@
-.eldeps*
-*.elc
-notmuch-version.el
-notmuch-pkg.el
+/.eldeps*
+/*.elc
+/notmuch-version.el
+/notmuch-pkg.el

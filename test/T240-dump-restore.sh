@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="\"notmuch dump\" and \"notmuch restore\""
-. ./test-lib.sh || exit 1
+. $(dirname "$0")/test-lib.sh || exit 1
 
 NOTMUCH_NEW > /dev/null
 test_begin_subtest "dump header"
