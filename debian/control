@@ -3,6 +3,7 @@ Section: mail
 Priority: optional
 Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
+ Daniel Kahn Gillmor <dkg@fifthhorseman.net>,
  Jameson Graef Rollins <jrollins@finestructure.net>,
  David Bremner <bremner@debian.org>
 Build-Conflicts: ruby1.8, gdb-minimal, gdb [s390x ia64 armel ppc64el mips mipsel mips64el]
