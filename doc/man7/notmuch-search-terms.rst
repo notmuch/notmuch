@@ -121,13 +121,14 @@ date:<since>..<until> or date:<date>
     expression, and supported syntax for <since> and <until> date and
     time expressions.
 
-    The time range can also be specified using timestamps with a
-    syntax of:
+    The time range can also be specified using timestamps without
+    including the date prefix using a syntax of:
 
     <initial-timestamp>..<final-timestamp>
 
     Each timestamp is a number representing the number of seconds
-    since 1970-01-01 00:00:00 UTC.
+    since 1970-01-01 00:00:00 UTC. Specifying a time range this way
+    is considered legacy and predates the date prefix.
 
 lastmod:<initial-revision>..<final-revision>
     The **lastmod:** prefix can be used to restrict the result by the
@@ -295,6 +296,13 @@ In this case, <since> is taken as the earliest time it could describe
 (the beginning of yesterday) and <until> is taken as the latest time it
 could describe (the end of yesterday). Similarly, date:january..february
 matches from the beginning of January to the end of February.
+
+If specifying a time range using timestamps in conjunction with the
+date prefix, each timestamp must be preceded by @ (ASCII hex 40). As
+above, each timestamp is a number representing the number of seconds
+since 1970-01-01 00:00:00 UTC. For example:
+
+    date:@<initial-timestamp>..@<final-timestamp>
 
 date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
 expansion takes place before interpretation, and thus, for example,
