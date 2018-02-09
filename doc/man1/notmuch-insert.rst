@@ -51,6 +51,12 @@ Supported options for **insert** include
 ``--no-hooks``
     Prevent hooks from being run.
 
+``--world-readable``
+    When writing mail to the mailbox, allow it to be read by users
+    other than the current user.  Note that this does not override
+    umask.  By default, delivered mail is only readable by the current
+    user.
+
 ``--decrypt=(true|nostash|auto|false)``
     If ``true`` and the message is encrypted, try to decrypt the
     message while indexing, stashing any session keys discovered.  If

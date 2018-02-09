@@ -159,10 +159,10 @@ mkdir_recursive (const void *ctx, const char *path, int mode)
  * otherwise. Partial results are not cleaned up on errors.
  */
 static bool
-maildir_create_folder (const void *ctx, const char *maildir)
+maildir_create_folder (const void *ctx, const char *maildir, bool world_readable)
 {
     const char *subdirs[] = { "cur", "new", "tmp" };
-    const int mode = 0700;
+    const int mode = (world_readable ? 0755 : 0700);
     char *subdir;
     unsigned int i;
 
@@ -211,10 +211,11 @@ tempfilename (const void *ctx)
  * is not touched).
  */
 static int
-maildir_mktemp (const void *ctx, const char *maildir, char **path_out)
+maildir_mktemp (const void *ctx, const char *maildir, bool world_readable, char **path_out)
 {
     char *filename, *path;
     int fd;
+    const int mode = (world_readable ? 0644 : 0600);
 
     do {
 	filename = tempfilename (ctx);
@@ -227,7 +228,7 @@ maildir_mktemp (const void *ctx, const char *maildir, char **path_out)
 	    return -1;
 	}
 
-	fd = open (path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0600);
+	fd = open (path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, mode);
     } while (fd == -1 && errno == EEXIST);
 
     if (fd == -1) {
@@ -289,12 +290,12 @@ copy_fd (int fdout, int fdin)
  * the file, or NULL on errors.
  */
 static char *
-maildir_write_tmp (const void *ctx, int fdin, const char *maildir)
+maildir_write_tmp (const void *ctx, int fdin, const char *maildir, bool world_readable)
 {
     char *path;
     int fdout;
 
-    fdout = maildir_mktemp (ctx, maildir, &path);
+    fdout = maildir_mktemp (ctx, maildir, world_readable, &path);
     if (fdout < 0)
 	return NULL;
 
@@ -323,11 +324,11 @@ FAIL:
  * errors.
  */
 static char *
-maildir_write_new (const void *ctx, int fdin, const char *maildir)
+maildir_write_new (const void *ctx, int fdin, const char *maildir, bool world_readable)
 {
     char *cleanpath, *tmppath, *newpath, *newdir;
 
-    tmppath = maildir_write_tmp (ctx, fdin, maildir);
+    tmppath = maildir_write_tmp (ctx, fdin, maildir, world_readable);
     if (! tmppath)
 	return NULL;
     cleanpath = tmppath;
@@ -457,6 +458,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     bool create_folder = false;
     bool keep = false;
     bool hooks = true;
+    bool world_readable = false;
     bool synchronize_flags;
     char *maildir;
     char *newpath;
@@ -467,7 +469,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_string = &folder, .name = "folder", .allow_empty = true },
 	{ .opt_bool = &create_folder, .name = "create-folder" },
 	{ .opt_bool = &keep, .name = "keep" },
-	{ .opt_bool =  &hooks, .name = "hooks" },
+	{ .opt_bool = &hooks, .name = "hooks" },
+	{ .opt_bool = &world_readable, .name = "world-readable" },
 	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
@@ -523,7 +526,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     strip_trailing (maildir, '/');
-    if (create_folder && ! maildir_create_folder (config, maildir))
+    if (create_folder && ! maildir_create_folder (config, maildir, world_readable))
 	return EXIT_FAILURE;
 
     /* Set up our handler for SIGINT. We do not set SA_RESTART so that copying
@@ -535,7 +538,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     sigaction (SIGINT, &action, NULL);
 
     /* Write the message to the Maildir new directory. */
-    newpath = maildir_write_new (config, STDIN_FILENO, maildir);
+    newpath = maildir_write_new (config, STDIN_FILENO, maildir, world_readable);
     if (! newpath) {
 	return EXIT_FAILURE;
     }
