@@ -44,10 +44,48 @@ Supported options for **reindex** include
 
     See also ``index.decrypt`` in **notmuch-config(1)**.
 
+EXAMPLES
+========
+
+A user just received an encrypted message without indexing its
+cleartext.  After reading it (via ``notmuch show --decrypt=true``),
+they decide that they want to index its cleartext so that they can
+easily find it later and read it without having to have access to
+their secret keys:
+
+::
+
+ notmuch reindex --decrypt=true id:1234567@example.com
+
+A user wants to change their policy going forward to start indexing
+cleartext.  But they also want indexed access to the cleartext of all
+previously-received encrypted messages.  Some messages might have
+already been indexed in the clear (as in the example above). They can
+ask notmuch to just reindex the not-yet-indexed messages:
+
+::
+
+  notmuch config set index.decrypt true
+  notmuch reindex tag:encrypted and not property:index.decryption=success
+
+Later, the user changes their mind, and wants to stop indexing
+cleartext (perhaps their threat model has changed, or their trust in
+their index store has been shaken).  They also want to clear all of
+their old cleartext from the index.  Note that they compact the
+database afterward as a workaround for
+https://trac.xapian.org/ticket/742:
+
+::
+
+  notmuch config set index.decrypt false
+  notmuch reindex property:index.decryption=success
+  notmuch compact
+
 SEE ALSO
 ========
 
 **notmuch(1)**,
+**notmuch-compact(1)**,
 **notmuch-config(1)**,
 **notmuch-count(1)**,
 **notmuch-dump(1)**,
