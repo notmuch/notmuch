@@ -19,7 +19,7 @@ Reply-to: header is present and different from any To:/Cc: address it
 is used, otherwise From: header is used. Unless
 ``--reply-to=sender`` is specified, values from the To: and Cc: headers
 are copied, but not including any of the current user's email addresses
-(as configured in primary\_mail or other\_email in the .notmuch-config
+(as configured in primary\_mail or other\_email in the ${NOTMUCH\_CONFIG}
 file) in the recipient list.
 
 It also builds a suitable new subject, including Re: at the front (if

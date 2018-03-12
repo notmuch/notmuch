@@ -41,7 +41,7 @@ of notmuch.
 
 **NOTMUCH\_CONFIG**
     Specifies the location of the notmuch configuration file. Notmuch
-    will use ${HOME}/.notmuch-config if this variable is not set.
+    will use ${XDG_CONFIG_HOME}/notmuch/config if this variable is not set.
 
 SEE ALSO
 ========

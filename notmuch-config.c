@@ -293,7 +293,7 @@ out:
 /* Open the named notmuch configuration file. If the filename is NULL,
  * the value of the environment variable $NOTMUCH_CONFIG will be used.
  * If $NOTMUCH_CONFIG is unset, the default configuration file
- * ($HOME/.notmuch-config) will be used.
+ * ($XDG_CONFIG_HOME/notmuch/config) will be used.
  *
  * If any error occurs, (out of memory, or a permission-denied error,
  * etc.), this function will print a message to stderr and return
@@ -358,8 +358,10 @@ notmuch_config_open (void *ctx,
 	config->filename = talloc_strdup (config, filename);
     } else if ((notmuch_config_env = getenv ("NOTMUCH_CONFIG"))) {
 	config->filename = talloc_strdup (config, notmuch_config_env);
+    } else if ((notmuch_config_env = getenv ("XDG_CONFIG_HOME"))) {
+	config->filename = talloc_strdup (config, notmuch_config_env);
     } else {
-	config->filename = talloc_asprintf (config, "%s/.notmuch-config",
+	config->filename = talloc_asprintf (config, "%s/.config/notmuch/config",
 					    getenv ("HOME"));
     }
 

@@ -74,7 +74,7 @@ The setup command will prompt for your full name, your primary email
 address, any alternate email addresses you use, and the directory
 containing your email archives. Your answers will be written to a
 configuration file in ${NOTMUCH\_CONFIG} (if set) or
-${HOME}/.notmuch-config . This configuration file will be created with
+${XDG_CONFIG_HOME}/notmuch/config . This configuration file will be created with
 descriptive comments, making it easy to edit by hand later to change the
 configuration. Or you can run **notmuch setup** again to change the
 configuration.
