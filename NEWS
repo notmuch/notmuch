@@ -1444,7 +1444,7 @@ Command-Line Interface
 The commands set consistent exit status codes on failures
 
   The cli commands now consistently set exit status of 1 on failures,
-  except where explicitly otherwise noted. The notable expections are
+  except where explicitly otherwise noted. The notable exceptions are
   the status codes for format version mismatches for commands that
   support formatted output.
 
@@ -2654,7 +2654,7 @@ Turn "id:MSG-ID" links into buttons associated with notmuch searches
 
 Add keybinding ('c I') for stashing Message-ID's without an id: prefix
 
-  Reduces manual labour when stashing them for use outside notmuch.
+  Reduces manual labor when stashing them for use outside notmuch.
 
 Do not query on `notmuch-search` exit
 

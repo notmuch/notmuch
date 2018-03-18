@@ -597,7 +597,7 @@ func (self *Threads) MoveToNext() {
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_threads_t object will be reclaimed when the
- * containg query object is destroyed.
+ * containing query object is destroyed.
  */
 func (self *Threads) Destroy() {
 	if self.threads != nil {

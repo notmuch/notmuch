@@ -529,7 +529,7 @@ notmuch (0.18-3) unstable; urgency=medium
 notmuch (0.18-2) unstable; urgency=medium
 
   * Disable atomicity tests on armhf. These should be re-enabled when
-    upstream relases a fix for this (in progress).
+    upstream releases a fix for this (in progress).
 
  -- David Bremner <bremner@debian.org>  Thu, 08 May 2014 08:28:33 +0900
 
@@ -950,7 +950,7 @@ notmuch (0.6.1-1) unstable; urgency=low
 notmuch (0.6) unstable; urgency=low
 
   * New upstream release; see /usr/share/doc/notmuch/NEWS for
-    details. Hilights include:
+    details. Highlights include:
     - Folder-based search (Closes: #597222)
     - PGP/MIME decryption and verification
   * Document strict dependency on emacs23 (Closes: #631994).

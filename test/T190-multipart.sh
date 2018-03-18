@@ -319,7 +319,7 @@ This is an embedded message, with a multipart/alternative part.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "--format=text --part=7, inline attachement"
+test_begin_subtest "--format=text --part=7, inline attachment"
 notmuch show --format=text --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 attachment{ ID: 7, Filename: attachment, Content-type: text/plain
