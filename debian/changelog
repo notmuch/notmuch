@@ -1,3 +1,9 @@
+notmuch (0.26.1-1) unstable; urgency=medium
+
+  * Bump LIBRARY_MINOR_VERSION to 1, for new functions in 0.26
+
+ -- David Bremner <bremner@debian.org>  Mon, 02 Apr 2018 08:08:01 -0300
+
 notmuch (0.26-1) unstable; urgency=medium
 
   [ Daniel Kahn Gillmor ]
