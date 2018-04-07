@@ -42,7 +42,7 @@ of the prefixes with <regex> forms can be also used to restrict the
 results to those whose value matches a regular expression (see
 **regex(7)**) delimited with //, for example::
 
-   notmuch search 'from:/bob@.*[.]example[.]com/'
+   notmuch search 'from:"/bob@.*[.]example[.]com/"'
 
 from:<name-or-address> or from:/<regex>/
     The **from:** prefix is used to match the name or address of
@@ -272,6 +272,28 @@ Both of these will match a subject "Free Delicious Pizza" while
    subject:"pizza free"
 
 will not.
+
+Quoting
+-------
+
+Double quotes are also used by the notmuch query parser to protect
+boolean terms or regular expressions containing spaces or other
+special characters, e.g.
+
+::
+
+   tag:"a tag"
+
+::
+
+   folder:"/^.*/(Junk|Spam)$/"
+
+As with phrases, you need to protect the double quotes from the shell
+e.g.
+
+::
+
+   % notmuch search 'folder:"/^.*/(Junk|Spam)$/"'
 
 DATE AND TIME SEARCH
 ====================
