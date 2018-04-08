@@ -66,7 +66,6 @@ notmuch restore < prop-dump
 notmuch reindex '*'
 notmuch dump | grep '^#=' | sort > OUTPUT
 test_expect_equal_file prop-dump OUTPUT
-test_done
 
 add_email_corpus lkml
 
