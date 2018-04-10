@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# This script can be used like
+# NOTMUCH_CONFIG=test/tmp.T580-thread-search/notmuch-config \
+#    devel/draw-thread thread:0000000000000002 | dot -Tpdf > thread2.pdf
+
+# In addition to notmuch, you will need the following tools installed
+# - graphviz
+# - mblaze (or replace the call to mhdr)
+
+threadid=$1
+
+declare -a edges
+
+declare -a dest
+echo "digraph \"$threadid\" {"
+for messageid in $(notmuch search --exclude=false --output=messages $threadid); do
+    echo "subgraph \"cluster_$messageid\" {"
+    printf "\"%s\" [shape=folder];\n" ${messageid#id:}
+    for file in $(notmuch search --exclude=false --output=files $messageid); do
+        node=$(basename $file)
+        printf "\"%s\" [shape=note];\n" $node
+
+        mapfile -t dest < <(mhdr -hReferences $file | tr '<>,' '"" ')
+        edge="\"$node\" -> { ${dest[*]} }"
+        edges+=($edge)
+    done
+    echo "}"
+done
+
+for edge in "${edges[*]}"; do
+    echo $edge
+done
+
+echo "}"
