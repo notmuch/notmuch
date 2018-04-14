@@ -356,7 +356,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 add_email_corpus broken
 test_begin_subtest "reference loop does not crash"
-test_subtest_known_broken
 test_expect_code 0 "notmuch show --format=json id:mid-loop-12@example.org id:mid-loop-21@example.org > OUTPUT"
 
 test_done

@@ -397,7 +397,13 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
     for (node = thread->message_list->head; node; node = node->next) {
 	message = node->message;
 	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (in_reply_to && strlen (in_reply_to) &&
+	/*
+	 * if we reach the end of the list without finding a top-level
+	 * message, that means the thread is a cycle (or set of
+	 * cycles) and any message can be considered top-level
+	 */
+	if ((thread->toplevel_list->head || node->next) &&
+	     in_reply_to && strlen (in_reply_to) &&
 	    g_hash_table_lookup_extended (thread->message_hash,
 					  in_reply_to, NULL,
 					  (void **) &parent))
