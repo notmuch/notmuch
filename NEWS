@@ -1,3 +1,14 @@
+Notmuch 0.26.2 (UNRELEASED)
+===========================
+
+Library Changes
+---------------
+
+Make thread indexing more robust against reference loops
+
+  Choose a thread root by date in case of reference loops. Fix a
+  related abort in `notmuch show`.
+
 Notmuch 0.26.1 (2018-04-02)
 ===========================
 
