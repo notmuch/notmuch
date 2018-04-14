@@ -1034,7 +1034,7 @@ Path to gpg is now configurable
 Emacs
 -----
 
-Avoid rendering large text attachements.
+Avoid rendering large text attachments.
 
 Improved rendering of CID references in HTML.
 
@@ -1075,7 +1075,7 @@ Documentation
 Sphinx is now mandatory to build docs
 
   Support for using rst2man in place of sphinx to build the
-  docmumentation has been removed.
+  documentation has been removed.
 
 Improved notmuch-search-terms.7
 
