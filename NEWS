@@ -4,6 +4,12 @@ Notmuch 0.26.2 (UNRELEASED)
 Library Changes
 ---------------
 
+Work around Xapian bug with `get_mset(0,0, x)`.
+
+  This causes aborts in `_notmuch_query_count_documents` on
+  e.g. Fedora 28.  The underlying bug is fixed in Xapian commit
+  f92e2a936c1592, and will be fixed in Xapian 1.4.6.
+
 Make thread indexing more robust against reference loops
 
   Choose a thread root by date in case of reference loops. Fix a
