@@ -390,20 +390,37 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 static void
 _resolve_thread_relationships (notmuch_thread_t *thread)
 {
-    notmuch_message_node_t *node;
+    notmuch_message_node_t *node, *first_node;
     notmuch_message_t *message, *parent;
     const char *in_reply_to;
 
-    for (node = thread->message_list->head; node; node = node->next) {
+    first_node = thread->message_list->head;
+    if (! first_node)
+	return;
+
+    for (node = first_node->next; node; node = node->next) {
 	message = node->message;
 	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	/*
-	 * if we reach the end of the list without finding a top-level
-	 * message, that means the thread is a cycle (or set of
-	 * cycles) and any message can be considered top-level
-	 */
-	if ((thread->toplevel_list->head || node->next) &&
-	     in_reply_to && strlen (in_reply_to) &&
+	if (in_reply_to && strlen (in_reply_to) &&
+	    g_hash_table_lookup_extended (thread->message_hash,
+					  in_reply_to, NULL,
+					  (void **) &parent))
+	    _notmuch_message_add_reply (parent, message);
+	else
+	    _notmuch_message_list_add_message (thread->toplevel_list, message);
+    }
+
+    /*
+     * if we reach the end of the list without finding a top-level
+     * message, that means the thread is a cycle (or set of cycles)
+     * and any message can be considered top-level.  Choose the oldest
+     * message, which happens to be first in our list.
+     */
+    if (first_node) {
+	message = first_node->message;
+	in_reply_to = _notmuch_message_get_in_reply_to (message);
+	if (thread->toplevel_list->head &&
+	    in_reply_to && strlen (in_reply_to) &&
 	    g_hash_table_lookup_extended (thread->message_hash,
 					  in_reply_to, NULL,
 					  (void **) &parent))

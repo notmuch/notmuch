@@ -359,7 +359,6 @@ test_begin_subtest "reference loop does not crash"
 test_expect_code 0 "notmuch show --format=json id:mid-loop-12@example.org id:mid-loop-21@example.org > OUTPUT"
 
 test_begin_subtest "reference loop ordered by date"
-test_subtest_known_broken
 threadid=$(notmuch search --output=threads  id:mid-loop-12@example.org)
 notmuch show --format=mbox $threadid | grep '^Date'  > OUTPUT
 cat <<EOF > EXPECTED
