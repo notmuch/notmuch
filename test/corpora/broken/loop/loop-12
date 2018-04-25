@@ -1,0 +1,8 @@
+From: Alice <alice@example.org>
+To: Daniel <daniel@example.org>
+Subject: referencing in-reply-to-loop-21
+Message-ID: <mid-loop-12@example.org>
+In-Reply-To: <mid-loop-21@example.org>
+Date: Thu, 16 Jun 2016 22:14:41 -0400
+
+Note Message-ID and In-Reply-To: in file in-reply-to-loop-21
