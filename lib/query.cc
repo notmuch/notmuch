@@ -652,9 +652,9 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	/*
 	 * Set the checkatleast parameter to the number of documents
 	 * in the database to make get_matches_estimated() exact.
-	 * Set the max parameter to 0 to avoid fetching documents we will discard.
+	 * Set the max parameter to 1 to avoid fetching documents we will discard.
 	 */
-	mset = enquire.get_mset (0, 0,
+	mset = enquire.get_mset (0, 1,
 				 notmuch->xapian_db->get_doccount ());
 
 	count = mset.get_matches_estimated();
