@@ -1,9 +1,10 @@
-notmuch (0.26.2-1) UNRELEASED; urgency=medium
+notmuch (0.26.2-1) unstable; urgency=medium
 
-  * Break reference loops when indexing, fixes INTERNAL_ERROR in "notmuch show"
-  * Don't call get_mset(0,0,X), fixes crash on some gcc8 using distros
+  * Upstream bugfix release
+    - Break reference loops when indexing, fixes INTERNAL_ERROR in "notmuch show"
+    - Don't call get_mset(0,0,X), fixes crash on some gcc8 using distros
 
- -- David Bremner <bremner@debian.org>  Thu, 26 Apr 2018 22:41:37 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 28 Apr 2018 08:10:24 -0300
 
 notmuch (0.26.1-1) unstable; urgency=medium
 
