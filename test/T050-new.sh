@@ -12,6 +12,10 @@ generate_message
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
+test_begin_subtest "Single message (full-scan)"
+generate_message
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "Multiple new messages"
 generate_message
@@ -19,11 +23,19 @@ generate_message
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 2 new messages to the database."
 
+test_begin_subtest "Multiple new messages (full-scan)"
+generate_message
+generate_message
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "Added 2 new messages to the database."
 
 test_begin_subtest "No new messages (non-empty DB)"
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "No new mail."
 
+test_begin_subtest "No new messages (full-scan)"
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "No new mail."
 
 test_begin_subtest "New directories"
 rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch
@@ -224,8 +236,24 @@ test_begin_subtest "Ignore files and directories specified in new.ignore"
 generate_message
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
-output=$(NOTMUCH_NEW 2>&1)
-test_expect_equal "$output" "Added 1 new message to the database."
+NOTMUCH_NEW --debug 2>&1 | sort > OUTPUT
+cat <<EOF > EXPECTED
+(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.git
+(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.ignored_hidden_file
+(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/ignored_file
+(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.git
+(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.ignored_hidden_file
+(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/ignored_file
+Added 1 new message to the database.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Ignore files and directories specified in new.ignore (full-scan)"
+generate_message
+notmuch config set new.ignore .git ignored_file .ignored_hidden_file
+NOTMUCH_NEW --debug --full-scan 2>&1 | sort > OUTPUT
+# reuse EXPECTED from previous test
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
