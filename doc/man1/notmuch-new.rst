@@ -59,6 +59,11 @@ Supported options for **new** include
 
     See also ``index.decrypt`` in **notmuch-config(1)**.
 
+``--full-scan``
+    By default notmuch-new uses directory modification times (mtimes)
+    to optimize the scanning of directories for new mail. This option turns
+    that optimization off.
+
 EXIT STATUS
 ===========
 
