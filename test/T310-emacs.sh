@@ -866,7 +866,7 @@ id:bought
 bought
 inbox,stashtest
 ${gen_msg_filename}
-http://mid.gmane.org/bought
+https://mid.gmane.org/bought
 https://marc.info/?i=bought
 https://mid.mail-archive.com/bought
 EOF

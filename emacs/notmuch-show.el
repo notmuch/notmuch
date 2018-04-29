@@ -183,7 +183,7 @@ each attachment handler is logged in buffers with names beginning
 24.3 to work.")
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
-  '(("Gmane" . "http://mid.gmane.org/")
+  '(("Gmane" . "https://mid.gmane.org/")
     ("MARC" . "https://marc.info/?i=")
     ("Mail Archive, The" . "https://mid.mail-archive.com/")
     ("LKML" . "https://lkml.kernel.org/r/")

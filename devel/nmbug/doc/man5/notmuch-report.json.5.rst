@@ -79,8 +79,8 @@ views
     An array of strings, which will be joined with 'and' to form the
     view query.
 
-.. _Gmane: http://gmane.org/
-.. _JSON: http://json.org/
+.. _Gmane: https://gmane.org/
+.. _JSON: https://json.org/
 .. _Python format string: https://docs.python.org/3/library/string.html#formatstrings
 .. _quoted: https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote
 
@@ -95,7 +95,7 @@ EXAMPLE
       "blurb": "For more information see <a href=\"https://notmuchmail.org/nmbug\">nmbug</a>",
       "header": "<html><head></head><body><h1>{title}</h1><p>{blurb}</p><h2>Views</h2>",
       "footer": "<hr><p>Generated: {datetime}</p></html>",
-      "message-url": "http://mid.gmane.org/{message-id}"
+      "message-url": "https://mid.gmane.org/{message-id}"
     },
     "views": [
       {

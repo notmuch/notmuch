@@ -734,18 +734,18 @@ EOF
     fi
     if [ $have_zlib -eq 0 ]; then
 	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
-	echo "	http://zlib.net/"
+	echo "	https://zlib.net/"
 	echo
     fi
     if [ $have_gmime -eq 0 ]; then
 	echo "	GMime 2.6 library >= $GMIME_MINVER"
 	echo "	(including development files such as headers)"
-	echo "	http://spruce.sourceforge.net/gmime/"
+	echo "	https://github.com/jstedfast/gmime/"
 	echo
     fi
     if [ $have_glib -eq 0 ]; then
 	echo "	Glib library >= 2.22 (including development files such as headers)"
-	echo "	http://ftp.gnome.org/pub/gnome/sources/glib/"
+	echo "	https://ftp.gnome.org/pub/gnome/sources/glib/"
 	echo
     fi
     if [ $have_talloc -eq 0 ]; then

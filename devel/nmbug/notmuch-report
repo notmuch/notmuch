@@ -415,7 +415,7 @@ _PAGES['html'] = HtmlPage(
     header=header_template.format(**context),
     footer=footer_template.format(**context),
     message_url_template=config['meta'].get(
-        'message-url', 'http://mid.gmane.org/{message-id}'),
+        'message-url', 'https://mid.gmane.org/{message-id}'),
     )
 
 if args.list_views:

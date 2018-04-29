@@ -46,7 +46,7 @@ Talloc, and zlib which are each described below:
 	Without GMime, Notmuch would not be able to extract and index
 	the actual text from email message encoded as BASE64, etc.
 
-	GMime is available from http://spruce.sourceforge.net/gmime/
+	GMime is available from https://github.com/jstedfast/gmime
 
 	Talloc
 	------
@@ -70,7 +70,7 @@ Talloc, and zlib which are each described below:
 	Notmuch needs the transparent write feature of zlib introduced
 	in version 1.2.5.2 (Dec. 2011).
 
-	zlib is available from http://zlib.net
+	zlib is available from https://zlib.net
 
 Building Documentation
 ----------------------
