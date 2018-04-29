@@ -99,7 +99,7 @@ notmuch new > /dev/null
 
 mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir for deletion from database
 No new mail. Detected 3 file renames."
 
@@ -107,7 +107,7 @@ No new mail. Detected 3 file renames."
 test_begin_subtest "Deleted directory"
 rm -rf "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir-renamed for deletion from database
 No new mail. Removed 3 messages."
 
@@ -126,7 +126,7 @@ test_begin_subtest "Deleted directory (end of list)"
 
 rm -rf "${MAIL_DIR}"/zzz
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/zzz for deletion from database
 No new mail. Removed 3 messages."
 
@@ -177,7 +177,7 @@ test_begin_subtest "Deleted two-level directory"
 
 rm -rf "${MAIL_DIR}"/two
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
 No new mail. Removed 3 messages."
 
@@ -223,7 +223,7 @@ Subject: Test mbox message 2
 
 Body 2.
 EOF
-output=$(NOTMUCH_NEW --debug 2>&1)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
 test_expect_equal "$output" \
 "Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
 Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
@@ -258,11 +258,9 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
-touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
-touch "${MAIL_DIR}"      # likewise for MAIL_DIR
 mkdir -p "${MAIL_DIR}"/one/two/three/.git
 touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
-output=$(NOTMUCH_NEW --debug 2>&1 | sort)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
@@ -289,7 +287,7 @@ test_expect_equal "$output" "No new mail."
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (regexp)"
 notmuch config set new.ignore ".git" "/^bro.*ink\$/" "/ignored.*file/"
-output=$(NOTMUCH_NEW --debug 2>&1 | sort)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
