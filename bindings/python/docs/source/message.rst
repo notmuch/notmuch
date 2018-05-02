@@ -33,6 +33,10 @@
 
    .. automethod:: get_tags
 
+   .. automethod:: get_property
+
+   .. automethod:: get_properties
+
    .. automethod:: maildir_flags_to_tags
 
    .. automethod:: tags_to_maildir_flags

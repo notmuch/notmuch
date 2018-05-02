@@ -75,6 +75,11 @@ class NotmuchMessageS(Structure):
 NotmuchMessageP = POINTER(NotmuchMessageS)
 
 
+class NotmuchMessagePropertiesS(Structure):
+    pass
+NotmuchMessagePropertiesP = POINTER(NotmuchMessagePropertiesS)
+
+
 class NotmuchTagsS(Structure):
     pass
 NotmuchTagsP = POINTER(NotmuchTagsS)
