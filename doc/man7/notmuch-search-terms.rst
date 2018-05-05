@@ -83,6 +83,22 @@ thread:<thread-id>
     messages). These thread ID values can be seen in the first column
     of output from **notmuch search**
 
+thread:{<notmuch query>}
+    If notmuch is built with **Xapian Field Processors** (see below),
+    threads may be searched for indirectly by providing an arbitrary
+    notmuch query in **{}**. For example, the following returns
+    threads containing a message from mallory and one (not necessarily
+    the same message) with Subject containing the word "crypto".
+
+    ::
+
+       % notmuch search 'thread:"{from:mallory}" and thread:"{subject:crypto}"'
+
+    The performance of such queries can vary wildly. To understand
+    this, the user should think of the query **thread:{<something>}**
+    as expanding to all of the thread IDs which match **<something>**;
+    notmuch then performs a second search using the expanded query.
+
 path:<directory-path> or path:<directory-path>/** or path:/<regex>/
     The **path:** prefix searches for email messages that are in
     particular directories within the mail store. The directory must
@@ -277,8 +293,8 @@ Quoting
 -------
 
 Double quotes are also used by the notmuch query parser to protect
-boolean terms or regular expressions containing spaces or other
-special characters, e.g.
+boolean terms, regular expressions, or subqueries containing spaces or
+other special characters, e.g.
 
 ::
 
@@ -288,12 +304,17 @@ special characters, e.g.
 
    folder:"/^.*/(Junk|Spam)$/"
 
+::
+
+   thread:"{from:mallory and date:2009}"
+
 As with phrases, you need to protect the double quotes from the shell
 e.g.
 
 ::
 
    % notmuch search 'folder:"/^.*/(Junk|Spam)$/"'
+   % notmuch search 'thread:"{from:mallory and date:2009}" and thread:{to:mallory}'
 
 DATE AND TIME SEARCH
 ====================
@@ -435,6 +456,7 @@ Currently the following features require field processor support:
 - non-range date queries, e.g. "date:today"
 - named queries e.g. "query:my_special_query"
 - regular expression searches, e.g. "subject:/^\\[SPAM\\]/"
+- thread subqueries, e.g. "thread:{from:bob}"
 
 SEE ALSO
 ========
