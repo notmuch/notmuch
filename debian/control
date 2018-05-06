@@ -5,7 +5,7 @@ Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
  Jameson Graef Rollins <jrollins@finestructure.net>,
  David Bremner <bremner@debian.org>
-Build-Conflicts: ruby1.8, gdb-minimal, gdb [s390x ia64 armel ppc64el mips mipsel mips64el]
+Build-Conflicts: ruby1.8, gdb-minimal, gdb [ia64 mips mips64el]
 Build-Depends:
  dpkg-dev (>= 1.17.14),
  debhelper (>= 10~),
@@ -23,8 +23,8 @@ Build-Depends:
  emacs25-nox | emacs25 (>=25~) | emacs25-lucid (>=25~) |
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~) |
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~),
- gdb [!s390x !ia64 !armel !ppc64el !mips !mipsel !mips64el !kfreebsd-any !alpha],
- dtach (>= 0.8),
+ gdb [!ia64 !mips !mips64el !kfreebsd-any !alpha] <!nocheck>,
+ dtach (>= 0.8) <!nocheck>,
  gpgsm <!nocheck>,
  gnupg <!nocheck>,
  bash-completion (>=1.9.0~)

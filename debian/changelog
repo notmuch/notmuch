@@ -1,3 +1,13 @@
+notmuch (0.26.2-2) unstable; urgency=medium
+
+  * Mark gdb and dtach as <!nocheck>, meaning they are only needed for
+    the test suite.
+  * Re-enable gdb based tests on s390x, ppc64el, armel, mipsel, they
+    pass on porterbox. Leave disabled on mipsel64 (gdb tests still
+    failing), and mips (many tests fail on porterbox).
+
+ -- David Bremner <bremner@debian.org>  Sun, 06 May 2018 08:36:52 -0300
+
 notmuch (0.26.2-1) unstable; urgency=medium
 
   * Upstream bugfix release
