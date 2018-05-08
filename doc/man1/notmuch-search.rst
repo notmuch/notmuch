@@ -146,9 +146,9 @@ message having multiple filenames.
 ::
 
   % notmuch search date:today.. and tag:bad-news
-  thread:0000000000063c10 Today [1/1] Some Persun; To the bone (inbox unread)
-  thread:0000000000063c25 Today [1/1(2)] Ann Other; Bears (inbox unread)
-  thread:0000000000063c00 Today [1/1] A Thurd; Bites, stings, sad feelings (inbox unread)
+  thread:0000000000063c10 Today [1/1] Some Persun; To the bone (bad-news inbox unread)
+  thread:0000000000063c25 Today [1/1(2)] Ann Other; Bears (bad-news inbox unread)
+  thread:0000000000063c00 Today [1/1] A Thurd; Bites, stings, sad feelings (bad-news unread)
 
 EXIT STATUS
 ===========
