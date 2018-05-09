@@ -62,6 +62,7 @@ CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-}
 PYTHON=${PYTHON:-}
+RUBY=${RUBY:-ruby}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
 # from the environment as we do with CC and CXX above. The reason is
@@ -117,6 +118,8 @@ Other environment variables can be used to control configure itself,
 			compiling and linking against the Xapian
 			library. [$XAPIAN_CONFIG]
 	PYTHON		Name of python command to use in
+			configure and the test suite.
+	RUBY		Name of ruby command to use in
 			configure and the test suite.
 
 Additionally, various options can be specified on the configure
@@ -621,7 +624,7 @@ fi
 have_ruby_dev=0
 if [ $WITH_RUBY = "1" ] ; then
     printf "Checking for ruby development files... "
-    if ruby -e "require 'mkmf'"> /dev/null 2>&1; then
+    if ${RUBY} -e "require 'mkmf'"> /dev/null 2>&1; then
 	printf "Yes.\n"
 	have_ruby_dev=1
     else
@@ -1027,6 +1030,9 @@ WARN_CFLAGS=${WARN_CFLAGS}
 # Name of python interpreter
 PYTHON = ${python}
 
+# Name of ruby interpreter
+RUBY = ${RUBY}
+
 # The prefix to which notmuch should be installed
 # Note: If you change this value here, be sure to ensure that the
 # LIBDIR_IN_LDCONFIG value below is still set correctly.
@@ -1233,6 +1239,9 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}
+
+# Name of ruby interpreter
+NOTMUCH_RUBY=${RUBY}
 
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
