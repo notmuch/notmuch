@@ -110,7 +110,7 @@ Supported options for **show** include
     supported with --format=json and --format=sexp), and the
     multipart/signed part will be replaced by the signed data.
 
-``--decrypt=(false|auto|true)``
+``--decrypt=(false|auto|true|stash)``
     If ``true``, decrypt any MIME encrypted parts found in the
     selected content (i.e. "multipart/encrypted" parts). Status of
     the decryption will be reported (currently only supported
@@ -118,17 +118,45 @@ Supported options for **show** include
     decryption the multipart/encrypted part will be replaced by
     the decrypted content.
 
+    ``stash`` behaves like ``true``, but upon successful decryption it
+    will also stash the message's session key in the database, and
+    index the cleartext of the message, enabling automatic decryption
+    in the future.
+
     If ``auto``, and a session key is already known for the
     message, then it will be decrypted, but notmuch will not try
     to access the user's keys.
 
     Use ``false`` to avoid even automatic decryption.
 
-    Non-automatic decryption expects a functioning
-    **gpg-agent(1)** to provide any needed credentials. Without
-    one, the decryption will fail.
+    Non-automatic decryption (``stash`` or ``true``, in the absence of
+    a stashed session key) expects a functioning **gpg-agent(1)** to
+    provide any needed credentials. Without one, the decryption will
+    fail.
 
-    Note: ``true`` implies --verify.
+    Note: setting either ``true`` or ``stash`` here implies
+    ``--verify``.
+
+    Here is a table that summarizes each of these policies:
+
+    +------------------------+-------+------+------+-------+
+    |                        | false | auto | true | stash |
+    +========================+=======+======+======+=======+
+    | Show cleartext if      |       |  X   |  X   |   X   |
+    | session key is         |       |      |      |       |
+    | already known          |       |      |      |       |
+    +------------------------+-------+------+------+-------+
+    | Use secret keys to     |       |      |  X   |   X   |
+    | show cleartext         |       |      |      |       |
+    +------------------------+-------+------+------+-------+
+    | Stash any newly        |       |      |      |   X   |
+    | recovered session keys,|       |      |      |       |
+    | reindexing message if  |       |      |      |       |
+    | found                  |       |      |      |       |
+    +------------------------+-------+------+------+-------+
+
+    Note: ``--decrypt=stash`` requires write access to the database.
+    Otherwise, ``notmuch show`` operates entirely in read-only mode.
 
     Default: ``auto``
 

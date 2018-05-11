@@ -80,6 +80,24 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+# show the message using stashing decryption
+test_begin_subtest "stash decryption during show"
+output=$(notmuch show --decrypt=stash tag:encrypted subject:002 | notmuch_show_part 3)
+expected='This is a test encrypted message with a wumpus.'
+test_expect_equal \
+    "$output" \
+    "$expected"
+
+test_begin_subtest "search should now find the contents"
+output=$(notmuch search wumpus)
+expected='thread:0000000000000003   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (encrypted inbox unread)'
+if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal \
+    "$output" \
+    "$expected"
+
 # try reinserting it with decryption, should appear again, but now we
 # have two copies of the message:
 test_begin_subtest "message cleartext is present after reinserting with --decrypt=true"

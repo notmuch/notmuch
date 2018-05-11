@@ -1124,6 +1124,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
 				  { "auto", NOTMUCH_DECRYPT_AUTO },
 				  { "true", NOTMUCH_DECRYPT_NOSTASH },
+				  { "stash", NOTMUCH_DECRYPT_TRUE },
 				  { 0, 0 } } },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
@@ -1139,7 +1140,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     /* explicit decryption implies verification */
-    if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH)
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH ||
+	params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
 	params.crypto.verify = true;
 
     /* specifying a part implies single message display */
@@ -1202,8 +1204,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     params.crypto.gpgpath = notmuch_config_get_crypto_gpg_path (config);
 #endif
 
+    notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
+	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
     if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+			       mode, &notmuch))
 	return EXIT_FAILURE;
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
