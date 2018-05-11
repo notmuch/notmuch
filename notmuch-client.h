@@ -482,6 +482,11 @@ print_status_query (const char *loc,
 		    notmuch_status_t status);
 
 notmuch_status_t
+print_status_message (const char *loc,
+		      const notmuch_message_t *message,
+		      notmuch_status_t status);
+
+notmuch_status_t
 print_status_database (const char *loc,
 		       const notmuch_database_t *database,
 		       notmuch_status_t status);
