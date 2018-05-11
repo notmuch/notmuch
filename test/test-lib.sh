@@ -621,6 +621,11 @@ notmuch_config_sanitize ()
     notmuch_dir_sanitize | notmuch_built_with_sanitize
 }
 
+notmuch_show_part ()
+{
+    awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: '"$1"'/{ f=1 }'
+}
+
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.

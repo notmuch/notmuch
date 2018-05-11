@@ -50,7 +50,7 @@ test_expect_equal \
 
 test_begin_subtest "show the message body of the encrypted message"
 notmuch dump wumpus
-output=$(notmuch show wumpus | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+output=$(notmuch show wumpus | notmuch_show_part 3)
 expected='This is a test encrypted message with a wumpus.'
 if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
     test_subtest_known_broken
@@ -198,14 +198,14 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "show one of the messages with --decrypt=true"
-output=$(notmuch show --decrypt=true thread:0000000000000001 | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+output=$(notmuch show --decrypt=true thread:0000000000000001 | notmuch_show_part 3)
 expected='This is a test encrypted message with a wumpus.'
 test_expect_equal \
     "$output" \
     "$expected"
 
 test_begin_subtest "Ensure that we cannot show the message with --decrypt=auto"
-output=$(notmuch show thread:0000000000000001 | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+output=$(notmuch show thread:0000000000000001 | notmuch_show_part 3)
 expected='Non-text part: application/octet-stream'
 test_expect_equal \
     "$output" \
@@ -256,7 +256,7 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "notmuch show should show cleartext if session key is present"
-output=$(notmuch show id:simple-encrypted@crypto.notmuchmail.org | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+output=$(notmuch show id:simple-encrypted@crypto.notmuchmail.org | notmuch_show_part 3)
 expected='This is a top sekrit message.'
 if [ $NOTMUCH_HAVE_GMIME_SESSION_KEYS -eq 0 ]; then
     test_subtest_known_broken
@@ -266,7 +266,7 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "notmuch show should show nothing if decryption is explicitly disallowed"
-output=$(notmuch show --decrypt=false id:simple-encrypted@crypto.notmuchmail.org | awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: 3/{ f=1 }')
+output=$(notmuch show --decrypt=false id:simple-encrypted@crypto.notmuchmail.org | notmuch_show_part 3)
 expected='Non-text part: application/octet-stream'
 test_expect_equal \
     "$output" \
