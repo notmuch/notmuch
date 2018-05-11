@@ -197,16 +197,18 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
     GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
+    notmuch_message_t *message = NULL;
 
     if (! node->decrypted_child) {
-	mime_node_t *parent;
-	for (parent = node; parent; parent = parent->parent)
-	    if (parent->envelope_file)
+	for (mime_node_t *parent = node; parent; parent = parent->parent)
+	    if (parent->envelope_file) {
+		message = parent->envelope_file;
 		break;
+	    }
 
 	node->decrypted_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
 							 node->ctx->crypto->decrypt,
-							 parent ? parent->envelope_file : NULL,
+							 message,
 							 cryptoctx, encrypteddata, &decrypt_result, &err);
     }
     if (! node->decrypted_child) {
@@ -225,6 +227,18 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 	    g_object_ref (node->sig_list);
 	    set_signature_list_destructor (node);
 	}
+
+#if HAVE_GMIME_SESSION_KEYS
+	if (node->ctx->crypto->decrypt == NOTMUCH_DECRYPT_TRUE && message) {
+	    notmuch_database_t *db = notmuch_message_get_database (message);
+	    const char *session_key = g_mime_decrypt_result_get_session_key (decrypt_result);
+	    if (db && session_key)
+		print_status_message ("Failed to stash session key in the database",
+				      message,
+				      notmuch_message_add_property (message, "session-key",
+								    session_key));
+	}
+#endif
 	g_object_unref (decrypt_result);
     }
 
