@@ -1891,6 +1891,22 @@ notmuch_message_properties_t *
 notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact);
 
 /**
+ * Return the number of properties named "key" belonging to the specific message.
+ *
+ * @param[in] message  The message to examine
+ * @param[in] key      key to count
+ * @param[out] count   The number of matching properties associated with this message.
+ *
+ * @returns
+ *
+ * NOTMUCH_STATUS_SUCCESS: successful count, possibly some other error.
+ *
+ * @since libnotmuch 5.2 (notmuch 0.27)
+ */
+notmuch_status_t
+notmuch_message_count_properties (notmuch_message_t *message, const char *key, unsigned int *count);
+
+/**
  * Is the given *properties* iterator pointing at a valid (key,value)
  * pair.
  *

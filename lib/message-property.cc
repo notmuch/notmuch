@@ -36,6 +36,31 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+notmuch_status_t
+notmuch_message_count_properties (notmuch_message_t *message, const char *key, unsigned int *count)
+{
+    if (! count || ! key || ! message)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    notmuch_string_map_t *map;
+    map = _notmuch_message_property_map (message);
+    if (! map)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    notmuch_string_map_iterator_t *matcher = _notmuch_string_map_iterator_create (map, key, true);
+    if (! matcher)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    *count = 0;
+    while (_notmuch_string_map_iterator_valid (matcher)) {
+	(*count)++;
+	_notmuch_string_map_iterator_move_to_next (matcher);
+    }
+
+    _notmuch_string_map_iterator_destroy (matcher);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static notmuch_status_t
 _notmuch_message_modify_property (notmuch_message_t *message, const char *key, const char *value,
 				  bool delete_it)
