@@ -873,6 +873,11 @@ show_message (void *ctx,
     void *local = talloc_new (ctx);
     mime_node_t *root, *part;
     notmuch_status_t status;
+    unsigned int session_keys = 0;
+    notmuch_status_t session_key_count_error = NOTMUCH_STATUS_SUCCESS;
+
+    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
+	session_key_count_error = notmuch_message_count_properties (message, "session-key", &session_keys);
 
     status = mime_node_open (local, message, &(params->crypto), &root);
     if (status)
@@ -880,6 +885,21 @@ show_message (void *ctx,
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
     if (part)
 	status = format->part (local, sp, part, indent, params);
+#if HAVE_GMIME_SESSION_KEYS
+    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE && session_key_count_error == NOTMUCH_STATUS_SUCCESS) {
+	unsigned int new_session_keys = 0;
+	if (notmuch_message_count_properties (message, "session-key", &new_session_keys) == NOTMUCH_STATUS_SUCCESS &&
+	    new_session_keys > session_keys) {
+	    /* try a quiet re-indexing */
+	    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (notmuch_message_get_database (message));
+	    if (indexopts) {
+		notmuch_indexopts_set_decrypt_policy (indexopts, NOTMUCH_DECRYPT_AUTO);
+		print_status_message ("Error re-indexing message with --decrypt=stash",
+				      message, notmuch_message_reindex (message, indexopts));
+	    }
+	}
+    }
+#endif
   DONE:
     talloc_free (local);
     return status;
