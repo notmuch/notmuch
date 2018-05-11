@@ -44,7 +44,7 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
     notmuch_status_t status;
     char *term = NULL;
 
-    status = _notmuch_database_ensure_writable (_notmuch_message_database (message));
+    status = _notmuch_database_ensure_writable (notmuch_message_get_database (message));
     if (status)
 	return status;
 
@@ -92,7 +92,7 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
     notmuch_status_t status;
     const char * term_prefix;
 
-    status = _notmuch_database_ensure_writable (_notmuch_message_database (message));
+    status = _notmuch_database_ensure_writable (notmuch_message_get_database (message));
     if (status)
 	return status;
 

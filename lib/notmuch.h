@@ -1346,6 +1346,14 @@ notmuch_tags_t *
 notmuch_messages_collect_tags (notmuch_messages_t *messages);
 
 /**
+ * Get the database associated with this message.
+ *
+ * @since libnotmuch 5.2 (notmuch 0.27)
+ */
+notmuch_database_t *
+notmuch_message_get_database (notmuch_message_t *message);
+
+/**
  * Get the message ID of 'message'.
  *
  * The returned string belongs to 'message' and as such, should not be
