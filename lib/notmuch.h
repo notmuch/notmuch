@@ -1351,7 +1351,7 @@ notmuch_messages_collect_tags (notmuch_messages_t *messages);
  * @since libnotmuch 5.2 (notmuch 0.27)
  */
 notmuch_database_t *
-notmuch_message_get_database (notmuch_message_t *message);
+notmuch_message_get_database (const notmuch_message_t *message);
 
 /**
  * Get the message ID of 'message'.

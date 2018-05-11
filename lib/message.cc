@@ -1925,7 +1925,7 @@ notmuch_message_destroy (notmuch_message_t *message)
 }
 
 notmuch_database_t *
-notmuch_message_get_database (notmuch_message_t *message)
+notmuch_message_get_database (const notmuch_message_t *message)
 {
     return message->notmuch;
 }
