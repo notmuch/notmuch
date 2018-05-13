@@ -113,7 +113,7 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 	       char **outbuf, size_t *outlen, size_t *outprespace)
 {
 	GMimeFilterReply *reply = (GMimeFilterReply *) filter;
-	register const char *inptr = inbuf;
+	const char *inptr = inbuf;
 	const char *inend = inbuf + inlen;
 	char *outptr;
 

@@ -176,7 +176,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 {
     NotmuchFilterDiscardNonTerm *filter = (NotmuchFilterDiscardNonTerm *) gmime_filter;
     const scanner_state_t *states = filter->states;
-    register const char *inptr = inbuf;
+    const char *inptr = inbuf;
     const char *inend = inbuf + inlen;
     char *outptr;
 
