@@ -18,3 +18,5 @@ CLEAN += $(patsubst %,$(dir)/ruby/%, \
 	Makefile database.o directory.o filenames.o\
 	init.o message.o messages.o mkmf.log notmuch.so query.o \
 	status.o tags.o thread.o threads.o)
+
+CLEAN += bindings/ruby/.vendorarchdir.time
