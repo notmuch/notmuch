@@ -208,8 +208,33 @@ pressing RET after positioning the cursor on a hidden part.
 ``?``
     Display full set of key bindings
 
+.. _notmuch-tree:
+
 notmuch-tree
 ============
+
+``notmuch-tree-mode`` displays the results of a "notmuch tree" of your
+email archives. Each line in the buffer represents a single
+message giving the relative date, the author, subject, and any
+tags.
+
+``<return>``
+   Displays that message.
+
+``N``
+    Move to next message
+
+``P``
+    Move to previous message
+
+``n``
+    Move to next matching message
+
+``p``
+    Move to previous matching message
+
+``?``
+    Display full set of key bindings
 
 Global key bindings
 ===================
