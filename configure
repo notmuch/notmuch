@@ -139,6 +139,7 @@ Fine tuning of some installation directories is available:
 	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--infodir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
@@ -162,7 +163,6 @@ configure-script calling conventions, but don't do anything yet:
 
 	--build=<cpu>-<vendor>-<os>	Currently ignored
 	--host=<cpu>-<vendor>-<os>	Currently ignored
-	--infodir=DIR			Currently ignored
 	--datadir=DIR			Currently ignored
 	--localstatedir=DIR		Currently ignored
 	--libexecdir=DIR		Currently ignored
@@ -185,6 +185,8 @@ for option; do
 	INCLUDEDIR="${option#*=}"
     elif [ "${option%%=*}" = '--mandir' ] ; then
 	MANDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--infodir' ] ; then
+	INFODIR="${option#*=}"
     elif [ "${option%%=*}" = '--sysconfdir' ] ; then
 	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--emacslispdir' ] ; then
@@ -264,8 +266,6 @@ for option; do
     elif [ "${option%%=*}" = '--build' ] ; then
 	true
     elif [ "${option%%=*}" = '--host' ] ; then
-	true
-    elif [ "${option%%=*}" = '--infodir' ] ; then
 	true
     elif [ "${option%%=*}" = '--datadir' ] ; then
 	true
@@ -1067,6 +1067,9 @@ includedir = ${INCLUDEDIR:=\$(prefix)/include}
 
 # The directory to which man pages should be installed
 mandir = ${MANDIR:=\$(prefix)/share/man}
+
+# The directory to which man pages should be installed
+infodir = ${INFODIR:=\$(prefix)/share/info}
 
 # The directory to which read-only (configuration) files should be installed
 sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
