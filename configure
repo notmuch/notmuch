@@ -633,6 +633,8 @@ if [ $WITH_RUBY = "1" ] ; then
 fi
 
 have_sphinx=0
+have_makeinfo=0
+have_install_info=0
 if [ $WITH_DOCS = "1" ] ; then
     printf "Checking if sphinx is available and supports nroff output... "
     if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
@@ -640,6 +642,20 @@ if [ $WITH_DOCS = "1" ] ; then
 	have_sphinx=1
     else
 	printf "No (so will not install man pages).\n"
+    fi
+    printf "Checking if makeinfo is available... "
+    if command -v makeinfo > /dev/null; then
+	printf "Yes.\n"
+	have_makeinfo=1
+    else
+	printf "No (so will not build info pages).\n"
+    fi
+    printf "Checking if install-info is available... "
+    if command -v install-info > /dev/null; then
+	printf "Yes.\n"
+	have_install_info=1
+    else
+	printf "No (so will not install info pages).\n"
     fi
 fi
 
@@ -1067,6 +1083,12 @@ HAVE_EMACS = ${have_emacs}
 
 # Whether there's a sphinx-build binary available for building documentation
 HAVE_SPHINX=${have_sphinx}
+
+# Whether there's a makeinfo binary available for building info format documentation
+HAVE_MAKEINFO=${have_makeinfo}
+
+# Whether there's an install-info binary available for installing info format documentation
+HAVE_INSTALL_INFO=${have_install_info}
 
 # Whether there's a doxygen binary available for building api documentation
 HAVE_DOXYGEN=${have_doxygen}
