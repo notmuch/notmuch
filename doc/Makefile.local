@@ -24,6 +24,12 @@ MAN_ROFF_FILES := $(MAN1_ROFF) $(MAN5_ROFF) $(MAN7_ROFF)
 
 MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 
+MAN1_TEXI := $(patsubst $(srcdir)/doc/man1/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN1_RST))
+MAN5_TEXI := $(patsubst $(srcdir)/doc/man5/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN5_RST))
+MAN7_TEXI := $(patsubst $(srcdir)/doc/man7/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN7_RST))
+INFO_TEXI_FILES := $(MAN1_TEXI) $(MAN5_TEXI) $(MAN7_TEXI) $(DOCBUILDDIR)/texinfo/notmuch-emacs.texi
+INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
+
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
 .PHONY: install-man build-man apidocs install-apidocs
@@ -96,6 +102,23 @@ install-man: ${MAN_GZIP_FILES}
 	install -m0644 $(filter %.5.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(filter %.7.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
+endif
+
+ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO),11)
+build-info:
+	@echo "Missing sphinx or makeinfo, not building info pages"
+else
+build-info: sphinx-info
+endif
+
+ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO)$(HAVE_INSTALL_INFO),111)
+install-info:
+	@echo "Missing prerequisites, not installing info pages"
+else
+install-info: build-info
+	mkdir -m0755 -p "$(DESTDIR)$(infodir)"
+	install -m0644 $(INFO_INFO_FILES) $(DESTDIR)$(infodir)
+	for file in $(INFO_INFO_FILES); do install-info $$file $(DESTDIR)$(infodir)/dir; done
 endif
 
 $(dir)/config.dox: version.stamp

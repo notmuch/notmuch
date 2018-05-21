@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man ruby-bindings
+all: notmuch notmuch-shared build-man build-info ruby-bindings
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -260,7 +260,7 @@ notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 .PHONY: install
-install: all install-man
+install: all install-man install-info
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
 ifeq ($(MAKECMDGOALS), install)

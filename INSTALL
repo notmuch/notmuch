@@ -80,6 +80,9 @@ of sphinx (Jul. 2010).
 
 Sphinx is available from www.sphinx-doc.org.
 
+To install the documentation as "info" pages, you will need the
+additional tools makeinfo and install-info.
+
 Installing Dependencies from Packages
 -------------------------------------
 
@@ -88,11 +91,11 @@ dependencies with a single simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python3-sphinx
+        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python3-sphinx texinfo install-info
 
   For Fedora and similar:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python3-sphinx
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python3-sphinx texinfo info
 
 On other systems, a similar command can be used, but the details of
 the package names may be different.
