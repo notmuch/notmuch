@@ -80,9 +80,14 @@ endif
 
 elpa: $(ELPA_FILE)
 
-notmuch-emacs-%.tar: ${elpa_sources}
+ELPA_DIR=.elpa-build/notmuch-${ELPA_VERSION}
+notmuch-emacs-%.tar: ${elpa_sources} build-info
 	mkdir -p .elpa-build/notmuch-${ELPA_VERSION}
-	cp ${elpa_sources} .elpa-build/notmuch-${ELPA_VERSION}
+	cp ${elpa_sources} ${ELPA_DIR}
+ifeq ($(HAVE_SPHINX)$(HAVE_MAKEINFO)$(HAVE_INSTALL_INFO),111)
+	cp ${INFO_INFO_FILES} ${ELPA_DIR}
+	for file in ${INFO_INFO_FILES}; do install-info $$file ${ELPA_DIR}/dir; done
+endif
 	tar -C .elpa-build -cf $@ notmuch-${ELPA_VERSION}
 	rm -r .elpa-build
 
