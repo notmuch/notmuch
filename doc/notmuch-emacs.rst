@@ -245,6 +245,9 @@ following key bindings:
 ``j``
     Jump to saved searches using :ref:`notmuch-jump`.
 
+``k``
+    Tagging operations using :ref:`notmuch-tag-jump`
+
 .. _notmuch-jump:
 
 notmuch-jump
@@ -257,6 +260,22 @@ key of a saved search will immediately jump to that saved search.  For
 example, in the default configuration ``j i`` jumps immediately to the
 inbox search.  When you press ``j``, notmuch-jump shows the saved
 searches and their shortcut keys in the mini-buffer.
+
+.. _notmuch-tag-jump:
+
+notmuch-tag-jump
+----------------
+
+Tagging operations configured through ``notmuch-tagging-keys`` can
+be accessed via :kbd:`k` in :ref:`notmuch-show`,
+:ref:`notmuch-search` and :ref:`notmuch-tree`.  With a
+prefix (:kbd:`C-u k`), notmuch displays a menu of the reverses of the
+operations specified in ``notmuch-tagging-keys``; i.e. each
+``+tag`` is replaced by ``-tag`` and vice versa.
+
+:index:`notmuch-tagging-keys`
+
+   A list of keys and corresponding tagging operations.
 
 Configuration
 =============
