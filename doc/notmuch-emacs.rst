@@ -177,6 +177,37 @@ variables.
 notmuch-show
 ============
 
+``notmuch-show-mode`` is used to display a single thread of email from
+your email archives.
+
+By default, various components of email messages, (citations,
+signatures, already-read messages), are hidden. You can make
+these parts visible by clicking with the mouse button or by
+pressing RET after positioning the cursor on a hidden part.
+
+``<space>``
+    Scroll the current message (if necessary),
+    advance to the next message, or advance to the next thread (if
+    already on the last message of a thread).
+
+``N``
+    Move to next message
+
+``P``
+    Move to previous message (or start of current message)
+
+``n``
+    Move to next matching message
+
+``p``
+    Move to previous matching message
+
+``+,-``
+    Add or remove arbitrary tags from the current message.
+
+``?``
+    Display full set of key bindings
+
 notmuch-tree
 ============
 
