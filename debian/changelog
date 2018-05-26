@@ -1,3 +1,9 @@
+notmuch (0.27~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 May 2018 09:12:37 -0700
+
 notmuch (0.26.2-2) unstable; urgency=medium
 
   * Mark gdb and dtach as <!nocheck>, meaning they are only needed for
