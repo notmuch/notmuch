@@ -238,12 +238,12 @@ notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
 NOTMUCH_NEW --debug 2>&1 | sort > OUTPUT
 cat <<EOF > EXPECTED
-(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.git
-(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.ignored_hidden_file
-(D) add_files, pass 1: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/ignored_file
-(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.git
-(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/.ignored_hidden_file
-(D) add_files, pass 2: explicitly ignoring /home/bremner/software/upstream/notmuch/test/tmp.T050-new/mail/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
 Added 1 new message to the database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
