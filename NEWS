@@ -1,6 +1,12 @@
 Notmuch 0.27 (UNRELEASED)
 =========================
 
+Dependencies
+------------
+
+As of this release, support for versions of Xapian before 1.4.0 is
+deprecated, and may disappear in a future release of notmuch.
+
 Notmuch 0.26.2 (2018-04-28)
 ===========================
 
