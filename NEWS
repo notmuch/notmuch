@@ -10,6 +10,13 @@ Add support for thread:{} queries
   containing (possibly distinct) messages matching foo and bar. See
   `notmuch-search-terms(7)` for details.
 
+Command Line Interface
+----------------------
+
+Add the --full-scan option to `notmuch new`
+
+  This option disables mtime based optimization of scanning for new mail.
+
 Dependencies
 ------------
 
