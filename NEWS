@@ -1,6 +1,15 @@
 Notmuch 0.27 (UNRELEASED)
 =========================
 
+General
+-------
+
+Add support for thread:{} queries
+
+  Queries of the form `thread:{foo} and thread:{bar}` match threads
+  containing (possibly distinct) messages matching foo and bar. See
+  `notmuch-search-terms(7)` for details.
+
 Dependencies
 ------------
 
