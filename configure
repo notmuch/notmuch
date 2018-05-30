@@ -715,7 +715,7 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     IFS="
 "
     for path in $ldconfig_paths; do
-	if [ "$path" = "$libdir_expanded" ]; then
+	if [ "$path" -ef "$libdir_expanded" ]; then
 	    libdir_in_ldconfig=1
 	fi
     done
