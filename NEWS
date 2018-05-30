@@ -17,6 +17,12 @@ Add the --full-scan option to `notmuch new`
 
   This option disables mtime based optimization of scanning for new mail.
 
+Documentation
+-------------
+
+An initial manual for `notmuch-emacs` is now installed by default (in
+`info` format).
+
 Dependencies
 ------------
 
