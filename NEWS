@@ -1,6 +1,34 @@
 Notmuch 0.27 (UNRELEASED)
 =========================
 
+General
+-------
+
+Add support for thread:{} queries
+
+  Queries of the form `thread:{foo} and thread:{bar}` match threads
+  containing (possibly distinct) messages matching foo and bar. See
+  `notmuch-search-terms(7)` for details.
+
+Command Line Interface
+----------------------
+
+Add the --full-scan option to `notmuch new`
+
+  This option disables mtime based optimization of scanning for new mail.
+
+Documentation
+-------------
+
+An initial manual for `notmuch-emacs` is now installed by default (in
+`info` format).
+
+Dependencies
+------------
+
+As of this release, support for versions of Xapian before 1.4.0 is
+deprecated, and may disappear in a future release of notmuch.
+
 Notmuch 0.26.2 (2018-04-28)
 ===========================
 
