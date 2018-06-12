@@ -19,6 +19,8 @@
 # If you want to number the parts, i suggest piping the output through
 # something like "cat -n"
 
+from __future__ import print_function
+
 import email
 import sys
 
@@ -34,7 +36,7 @@ def test(z, prefix=''):
             if d[0] in [ 'attachment', 'inline' ]:
                 disposition = ' ' + d[0]
     if (z.is_multipart()):
-        print prefix + '┬╴' + z.get_content_type() + cset + disposition + fname, z.as_string().__len__().__str__() + ' bytes'
+        print(prefix + '┬╴' + z.get_content_type() + cset + disposition + fname, z.as_string().__len__().__str__() + ' bytes')
         if prefix.endswith('└'):
             prefix = prefix.rpartition('└')[0] + ' '
         if prefix.endswith('├'):
@@ -47,6 +49,6 @@ def test(z, prefix=''):
         test(parts[i], prefix + '└')
         # FIXME: show epilogue?
     else:
-        print prefix + '─╴'+ z.get_content_type() + cset + disposition + fname, z.get_payload().__len__().__str__(), 'bytes'
+        print(prefix + '─╴'+ z.get_content_type() + cset + disposition + fname, z.get_payload().__len__().__str__(), 'bytes')
 
 test(email.message_from_file(sys.stdin), '└')
