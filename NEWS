@@ -1,4 +1,4 @@
-Notmuch 0.27 (UNRELEASED)
+Notmuch 0.27 (2018-06-13)
 =========================
 
 General
@@ -16,6 +16,12 @@ Command Line Interface
 Add the --full-scan option to `notmuch new`
 
   This option disables mtime based optimization of scanning for new mail.
+
+Add new --decrypt=stash option for `notmuch show`
+
+  This facilitates a workflow for encrypted messages where message
+  cleartext are indexed on first read, but the user's decryption key
+  does not have to be available during message receipt.
 
 Documentation
 -------------
