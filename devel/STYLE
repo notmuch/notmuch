@@ -1,0 +1,110 @@
+C/C++ coding style
+==================
+
+Tools
+-----
+
+There is a file uncrustify.cfg in this directory that can be used to
+approximate the prevailing code style. You can run it with e.g.
+
+   uncrustify --replace -c devel/uncrustify.cfg foo.c
+
+You still have to use your judgement about accepting or rejecting the
+changes uncrustify makes. With a nice git frontend, you can add the
+lines you agree with and reject the rest.
+
+For Emacs users, the file .dir-locals.el in the top level source
+directory will configure c-mode to automatically meet most of the
+basic layout rules.  I
+
+Indentation, Whitespace, and Layout
+-----------------------------------
+
+The following nonsense code demonstrates many aspects of the style:
+
+static some_type
+function (param_type param, param_type param)
+{
+   for (int i = 0; i < 10; i++) {
+       int j;
+
+       j = i + 10;
+
+       some_other_func (j, i);
+   }
+}
+
+* Indent is 4 spaces with mixed tab/spaces and a tab width of 8.
+  (Specifically, a line should begin with zero or more tabs followed
+  by fewer than eight spaces.)
+
+* Use copious whitespace.  In particular
+   - there is a space between the function name and the open paren in a call.
+   - likewise, there is a space following keywords such as if and while
+   - every binary operator should have space on either side.
+
+* No trailing whitespace. Please enable the standard pre-commit hook in git
+  (or an equivalent hook). The standard pre-commit hook is enabled by simply
+  renaming file '.git/hooks/pre-commit.sample' to '.git/hooks/pre-commit' .
+
+* The name in a function prototype should start at the beginning of a line.
+
+* Opening braces "cuddle" (they are on the same line as the
+  if/for/while test) and are preceded by a space. The opening brace of
+  functions is the exception, and starts on a new line.
+
+* Comments are always C-style /* */ block comments.  They should start
+  with a capital letter and generally be written in complete
+  sentences.  Public library functions are documented immediately
+  before their prototype in lib/notmuch.h.  Internal functions are
+  typically documented immediately before their definition.
+
+* Code lines should be less than 80 columns and comments should be
+  wrapped at 70 columns.
+
+* Variable declarations should be at the top of a block; C99 style
+  control variable declarations in for loops are also OK.
+
+Naming
+------
+
+* Use lowercase_with_underscores for function, variable, and type
+  names.
+
+* Except for variables with extremely small scope, and perhaps loop
+  indices, when naming variables and functions, err on the side of
+  verbosity.
+
+* All structs should be typedef'd to a name ending with _t.  If the
+  struct has a tag, it should be the same as the typedef name, minus
+  the trailing _t.
+
+CLI conventions
+---------------
+
+* Any changes to the JSON output format of search or show need an
+  accompanying change to devel/schemata.
+
+libnotmuch conventions
+----------------------------------
+
+* Functions starting with notmuch_ in lib/notmuch.h are public and are
+  automatically exported from the shared library.  Private library
+  functions should generally either be static or, if they are shared
+  between compilation units, start with _notmuch.
+
+* Functions in libnotmuch must not access user configuration files
+  (i.e. .notmuch-config)
+
+* Code which needs to be accessed from both the CLI and from
+  libnotmuch should be factored out into libutil (under util/).
+
+* Deprecated functions should be marked with the NOTMUCH_DEPRECATED
+  macro which generates run time warnings with gcc and clang. In order
+  not to confuse doxygen this should go at the beginning of the
+  declaration like:
+
+  NOTMUCH_DEPRECATED(major,minor) notmuch_status_t notmuch_dwim(void *arg);
+
+  The @deprecated doxygen command can be used to generate markup in
+  the API docs.

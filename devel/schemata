@@ -1,0 +1,210 @@
+This file describes the schemata used for notmuch's structured output
+format (currently JSON and S-Expressions).
+
+[]'s indicate lists.  List items can be marked with a '?', meaning
+they are optional; or a '*', meaning there can be zero or more of that
+item.  {}'s indicate an object that maps from field identifiers to
+values.  An object field marked '?' is optional.  |'s indicate
+alternates (e.g., int|string means something can be an int or a
+string).
+
+For S-Expression output, lists are printed delimited by () instead of
+[]. Objects are printed as p-lists, i.e. lists where the keys and values
+are interleaved. Keys are printed as keywords (symbols preceded by a
+colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
+nil, true as t and false as nil.
+
+This is version 4 of the structured output format.
+
+Version history
+---------------
+
+v1
+- First versioned schema release.
+- Added part.content-length and part.content-transfer-encoding fields.
+
+v2
+- Added the thread_summary.query field.
+
+v3
+- Replaced message.filename string with a list of filenames.
+- Added part.content-disposition field.
+
+v4
+- replace signature error integer bitmask with a set of flags for
+  individual errors.
+
+Common non-terminals
+--------------------
+
+# Number of seconds since the Epoch
+unix_time = int
+
+# Thread ID, sans "thread:"
+threadid = string
+
+# Message ID, sans "id:"
+messageid = string
+
+notmuch show schema
+-------------------
+
+# A top-level set of threads (do_show)
+# Returned by notmuch show without a --part argument
+thread_set = [thread*]
+
+# Top-level messages in a thread (show_messages)
+thread = [thread_node*]
+
+# A message and its replies (show_messages)
+thread_node = [
+    message|null,             # null if not matched and not --entire-thread
+    [thread_node*]            # children of message
+]
+
+# A message (format_part_sprinter)
+message = {
+    # (format_message_sprinter)
+    id:             messageid,
+    match:          bool,
+    filename:	    [string*],
+    timestamp:      unix_time, # date header as unix time
+    date_relative:  string,   # user-friendly timestamp
+    tags:           [string*],
+
+    headers:        headers,
+    body?:          [part]    # omitted if --body=false
+}
+
+# A MIME part (format_part_sprinter)
+part = {
+    id:             int|string, # part id (currently DFS part number)
+
+    encstatus?:     encstatus,
+    sigstatus?:     sigstatus,
+
+    content-type:   string,
+    content-disposition?:       string,
+    content-id?:    string,
+    # if content-type starts with "multipart/":
+    content:        [part*],
+    # if content-type is "message/rfc822":
+    content:        [{headers: headers, body: [part]}],
+    # otherwise (leaf parts):
+    filename?:      string,
+    content-charset?: string,
+    # A leaf part's body content is optional, but may be included if
+    # it can be correctly encoded as a string.  Consumers should use
+    # this in preference to fetching the part content separately.
+    content?:       string,
+    # If a leaf part's body content is not included, the length of
+    # the encoded content (in bytes) may be given instead.
+    content-length?: int,
+    # If a leaf part's body content is not included, its transfer encoding
+    # may be given.  Using this and the encoded content length, it is
+    # possible for the consumer to estimate the decoded content length.
+    content-transfer-encoding?: string
+}
+
+# The headers of a message or part (format_headers_sprinter with reply = FALSE)
+headers = {
+    Subject:        string,
+    From:           string,
+    To?:            string,
+    Cc?:            string,
+    Bcc?:           string,
+    Reply-To?:      string,
+    Date:           string
+}
+
+# Encryption status (format_part_sprinter)
+encstatus = [{status: "good"|"bad"}]
+
+# Signature status (format_part_sigstatus_sprinter)
+sigstatus = [signature*]
+
+signature = {
+    # (signature_status_to_string)
+    status:         "good"|"bad"|"error"|"unknown",
+    # if status is "good":
+    fingerprint?:   string,
+    created?:       unix_time,
+    expires?:       unix_time,
+    userid?:        string
+    # if status is not "good":
+    keyid?:         string
+    errors?: 	    sig_errors
+}
+
+sig_errors = {
+    key-revoked?: bool,
+    key-expired?: bool,
+    sig-expired?: bool,
+    key-missing?: bool,
+    alg-unsupported?: bool,
+    crl-missing?: bool,
+    crl-too-old?: bool,
+    bad-policy?: bool,
+    sys-error?: bool,
+    tofu-conflict?: bool
+}
+
+notmuch search schema
+---------------------
+
+# --output=summary
+search_summary = [thread_summary*]
+
+# --output=threads
+search_threads = [threadid*]
+
+# --output=messages
+search_messages = [messageid*]
+
+# --output=files
+search_files = [string*]
+
+# --output=tags
+search_tags = [string*]
+
+thread_summary = {
+    thread:         threadid,
+    timestamp:      unix_time,
+    date_relative:  string,   # user-friendly timestamp
+    matched:        int,      # number of matched messages
+    total:          int,      # total messages in thread
+    authors:        string,   # comma-separated names with | between
+                              # matched and unmatched
+    subject:        string,
+    tags:           [string*],
+
+    # Two stable query strings identifying exactly the matched and
+    # unmatched messages currently in this thread.  The messages
+    # matched by these queries will not change even if more messages
+    # arrive in the thread.  If there are no matched or unmatched
+    # messages, the corresponding query will be null (there is no
+    # query that matches nothing).  (Added in schema version 2.)
+    query:          [string|null, string|null],
+}
+
+notmuch reply schema
+--------------------
+
+reply = {
+    # The headers of the constructed reply
+    reply-headers: reply_headers,
+
+    # As in the show format (format_part_sprinter)
+    original: message
+}
+
+# Reply headers (format_headers_sprinter with reply = TRUE)
+reply_headers = {
+    Subject:        string,
+    From:           string,
+    To?:            string,
+    Cc?:            string,
+    Bcc?:           string,
+    In-reply-to:    string,
+    References:     string
+}

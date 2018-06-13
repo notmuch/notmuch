@@ -1,0 +1,92 @@
+From: Timur Tabi <timur.tabi@gmail.com>
+Subject: Re: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Date: Wed, 30 Jun 2010 15:55:58 -0500
+Lines: 33
+Message-ID: <AANLkTine3pc2Ai2Woj81Y9fS_KgGs1sIMb2NMR6G74ww@mail.gmail.com>
+References: <20100308191005.GE4324@amak.tundra.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: mporter@kernel.crashing.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, thomas.moll@sysgo.com
+To: Alexandre Bounine <abounine@tundra.com>
+X-From: linux-kernel-owner@vger.kernel.org Wed Jun 30 22:56:40 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1OU4Kl-0005Kf-V4
+	for glk-linux-kernel-3@lo.gmane.org; Wed, 30 Jun 2010 22:56:40 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1756668Ab0F3U4b convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Wed, 30 Jun 2010 16:56:31 -0400
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41333 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753416Ab0F3U43 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Wed, 30 Jun 2010 16:56:29 -0400
+Received: by vws5 with SMTP id 5so1449398vws.19
+        for <linux-kernel@vger.kernel.org>; Wed, 30 Jun 2010 13:56:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:received:mime-version:received:in-reply-to
+         :references:from:date:message-id:subject:to:cc:content-type
+         :content-transfer-encoding;
+        bh=FTlit9cHTz/9rLGcvA5/pEZlzxAQ5x20v8HE5XYFwYM=;
+        b=NFbjnxZ4KwcjTy4tFh+BnhWPEGeYTw6z918yIouRaMmbEDph56xq26K9aTBokuYHqe
+         UgFjBn7XWcxvqJPyCetfsDRG+F3M2XwCq/DSCswSPtXSLsy8WKm7cMXVS3hjiO8sMZ97
+         mRMGZkYBJHjWP+ulkBXiq6q7/OQuE8Dkl+rWM=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type:content-transfer-encoding;
+        b=r0N6AOAg+TSvY2kPQPahldj4iRU9oUoSLtHA7JXG2QU4CR9O5GBhxAtr2aY99qUPZd
+         tFS0ZWRAb9cmOgiZhTpNxsBjCJ/e/DQ1ccP5rZ/U40q1SJ1KwN92hqpOoppZ0tkqSB7/
+         UlQtsvPSK7a0bYqufEmscfAi98w1+mfZIbK6U=
+Received: by 10.220.161.203 with SMTP id s11mr5093041vcx.195.1277931388141; 
+	Wed, 30 Jun 2010 13:56:28 -0700 (PDT)
+Received: by 10.220.161.137 with HTTP; Wed, 30 Jun 2010 13:55:58 -0700 (PDT)
+In-Reply-To: <20100308191005.GE4324@amak.tundra.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1004632>
+
+On Mon, Mar 8, 2010 at 2:10 PM, Alexandre Bounine <abounine@tundra.com>=
+ wrote:
+>
+> From: Alexandre Bounine <alexandre.bounine@idt.com>
+>
+> Add Machine Check exception handling into RapidIO port driver
+> for Freescale SoCs (MPC85xx).
+>
+> Signed-off-by: Alexandre Bounine <alexandre.bounine@idt.com>
+> Tested-by: Thomas Moll <thomas.moll@sysgo.com>
+=2E..
+
+> +static int fsl_rio_mcheck_exception(struct pt_regs *regs)
+> +{
+> + =A0 =A0 =A0 const struct exception_table_entry *entry =3D NULL;
+> + =A0 =A0 =A0 unsigned long reason =3D (mfspr(SPRN_MCSR) & MCSR_MASK)=
+;
+
+MCSR_MASK is not defined anywhere, so when I compile this code, I get t=
+his:
+
+  CC      arch/powerpc/sysdev/fsl_rio.o
+arch/powerpc/sysdev/fsl_rio.c: In function 'fsl_rio_mcheck_exception':
+arch/powerpc/sysdev/fsl_rio.c:248: error: 'MCSR_MASK' undeclared
+(first use in this function)
+arch/powerpc/sysdev/fsl_rio.c:248: error: (Each undeclared identifier
+is reported only once
+arch/powerpc/sysdev/fsl_rio.c:248: error: for each function it appears =
+in.)
+
+--=20
+Timur Tabi
+Linux kernel developer at Freescale
+
+

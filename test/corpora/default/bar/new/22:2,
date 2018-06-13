@@ -1,0 +1,84 @@
+Date: Tue, 17 Nov 2009 19:50:40 -0500
+From: Lars Kellogg-Stedman <lars@seas.harvard.edu>
+To: Keith Packard <keithp@keithp.com>
+Message-ID: <20091118005040.GA25380@dottiness.seas.harvard.edu>
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+	<87iqd9rn3l.fsf@vertex.dottedmag>
+	<20091117203301.GV3165@dottiness.seas.harvard.edu>
+	<yunaayketfm.fsf@aiko.keithp.com>
+MIME-Version: 1.0
+In-Reply-To: <yunaayketfm.fsf@aiko.keithp.com>
+User-Agent: Mutt/1.5.19 (2009-01-05)
+Cc: notmuch@notmuchmail.org
+Subject: Re: [notmuch] Working with Maildir storage?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1483126515=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+
+--===============1483126515==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
+Content-Disposition: inline
+
+
+--9amGYk9869ThD9tj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+> I've also pushed a slightly more complicated (and complete) fix to my
+> private notmuch repository
+
+The version of lib/messages.cc in your repo doesn't build because it's
+missing "#include <stdint.h>" (for the uint32_t on line 466).
+
+--=20
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+
+--9amGYk9869ThD9tj
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBCAAGBQJLA0TgAAoJENdGlQYxQazYsG0IAJ1t9h4Q3ma8z8ejeKR22Xh0
+WcuRX2x9yEXy/+aG9W7Mot0mqUQCiLdmHM/2h5N9BFHyJvfOUf8lmssrJ5OS/kp5
+j7FIx3GUELBmEZqFUPjRSQPk1hZURYdRsloKkrbQ2kAivjjb50zAAQ8Av4Cgj6cS
+3HvNNmeVfJt1NS75vm+/wn48M8Vrcdv4gvNlSOhgFOixknvRoxSyNDOHYBKvHnSV
+2HnO0GzhAQzDZAwdHBzJtb8vRmglrH33TVdrE7OW+sojYB3Wyz8r9+HIt8Q8ovzX
+nQ8p0Nf5DlF7tye3JYo0EeNm5EQJ4q0YyVYInhmtpi3A5Cyu50GcB/GZ5Sd6ajo=
+=WULe
+-----END PGP SIGNATURE-----
+
+--9amGYk9869ThD9tj--
+
+--===============1483126515==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============1483126515==--
+

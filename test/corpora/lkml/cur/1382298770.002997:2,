@@ -1,0 +1,90 @@
+From: Jeff Layton <jlayton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+Subject: Re: [RFC][PATCH 06/10] cifs: define inode-level cache object and
+ register them
+Date: Fri, 25 Jun 2010 12:53:06 -0400
+Lines: 36
+Message-ID: <20100625125306.7f9b1966@tlielax.poochiereds.net>
+References: <4C24A606.5040001@suse.de>
+	<1277220214-3597-1-git-send-email-sjayaraman@suse.de>
+	<yes>
+	<9822.1277312573@redhat.com>
+	<22697.1277470549@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Cc: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>,
+	Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	samba-technical-w/Ol4Ecudpl8XjKLYN78aQ@public.gmane.org
+To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Fri Jun 25 18:53:12 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1OSC9P-0005Eb-SU
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Fri, 25 Jun 2010 18:53:12 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S932199Ab0FYQxK (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Fri, 25 Jun 2010 12:53:10 -0400
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:53512 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187Ab0FYQxJ (ORCPT
+	<rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>); Fri, 25 Jun 2010 12:53:09 -0400
+X-Authority-Analysis: v=1.0 c=1 a=iVNVO0OCT3kA:10 a=yQWWgrYGNuUA:10 a=kj9zAlcOel0A:10 a=20KFwNOVAAAA:8 a=hGzw-44bAAAA:8 a=f0L6POiToRdS6aViIA4A:9 a=tdNtT7bw1iHNm6ggrCkIte35EhAA:4 a=CjuIK1q_8ugA:10 a=jEp0ucaQiEUA:10 a=0kPLrQdw3YYA:10 a=dowx1zmaLagA:10 a=00U40p1LBqVLw4jT:21 a=gh7LVOPznGai4vo_:21
+X-Cloudmark-Score: 0
+X-Originating-IP: 71.70.153.3
+Received: from [71.70.153.3] ([71.70.153.3:42266] helo=mail.poochiereds.net)
+	by cdptpa-oedge01.mail.rr.com (envelope-from <jlayton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>)
+	(ecelerity 2.2.2.39 r()) with ESMTP
+	id 2D/E0-24471-3FED42C4; Fri, 25 Jun 2010 16:53:08 +0000
+Received: from tlielax.poochiereds.net (tlielax.poochiereds.net [192.168.1.3])
+	by mail.poochiereds.net (Postfix) with ESMTPS id E9B19580FA;
+	Fri, 25 Jun 2010 12:53:06 -0400 (EDT)
+In-Reply-To: <22697.1277470549-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+X-Mailer: Claws Mail 3.7.6 (GTK+ 2.20.1; x86_64-redhat-linux-gnu)
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1003033>
+
+On Fri, 25 Jun 2010 13:55:49 +0100
+David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+
+> Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+> 
+> > I think the creation time is currently being ignored as we won't be able
+> > to accomodate in POSIX stat struct.
+> 
+> The FS-Cache interface doesn't use the POSIX stat struct, but it could be
+> really useful to save it and use it for cache coherency inside the kernel.
+> 
+> Out of interest, what does Samba do when it comes to generating a creation time
+> for UNIX where one does not exist?
+> 
+
+(cc'ing samba-technical since we're talking about the create time)
+
+Looks like it mostly uses the ctime. IMO, the mtime would be a better
+choice since it changes less frequently, but I don't guess that it
+matters very much.
+
+I have a few patches that make the cifs_iget code do more stringent
+checks. One of those makes it use the create time like an i_generation
+field to guard against matching inodes that have the same number but
+that have undergone a delete/create cycle. They need a bit more testing
+but I'm planning to post them in time for 2.6.36.
+
+Because of how samba generates this number, it could be somewhat
+problematic to do this. What may save us though is that Linux<->Samba
+mostly uses unix extensions unless someone has specifically disabled
+them on either end. The unix extension calls don't generally send any
+sort of create time field, so we can't rely on it in those codepaths
+anyway.
+
+-- 
+Jeff Layton <jlayton-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>
+
+

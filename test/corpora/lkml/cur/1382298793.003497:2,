@@ -1,0 +1,94 @@
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: rfc: rewrite commit subject line for subsystem maintainer
+ preference tool
+Date: Wed, 17 Nov 2010 01:44:27 +0100
+Lines: 34
+Message-ID: <20101117014427.41d85b13@stein>
+References: <1289848458.16461.150.camel@Joe-Laptop>
+	<20101115193407.GK12986@rakim.wolfsonmicro.main>
+	<1289850773.16461.166.camel@Joe-Laptop>
+	<20101116104921.GL12986@rakim.wolfsonmicro.main>
+	<1289919077.28741.50.camel@Joe-Laptop>
+	<20101116183707.179964dd@schatten.dmk.lab>
+	<20101116181226.GB26239@rakim.wolfsonmicro.main>
+	<20101116203522.65240b18@schatten.dmk.lab>
+	<20101116195530.GA7523@rakim.wolfsonmicro.main>
+	<20101116122102.86e7e0b9.rdunlap@xenotime.net>
+	<20101116230126.GB24623@opensource.wolfsonmicro.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Cc: Randy Dunlap <rdunlap@xenotime.net>,
+	Florian Mickler <florian@mickler.org>,
+	Joe Perches <joe@perches.com>,
+	Jiri Kosina <trivial@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+X-From: linux-kernel-owner@vger.kernel.org Wed Nov 17 01:45:44 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PIW9d-0005et-Ft
+	for glk-linux-kernel-3@lo.gmane.org; Wed, 17 Nov 2010 01:45:41 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S933190Ab0KQApU (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Tue, 16 Nov 2010 19:45:20 -0500
+Received: from einhorn.in-berlin.de ([192.109.42.8]:40608 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932265Ab0KQApS (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Tue, 16 Nov 2010 19:45:18 -0500
+X-Envelope-From: stefanr@s5r6.in-berlin.de
+Received: from stein ([83.221.231.7])
+	(authenticated bits=0)
+	by einhorn.in-berlin.de (8.13.6/8.13.6/Debian-1) with ESMTP id oAH0iRjV025917
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NOT);
+	Wed, 17 Nov 2010 01:44:28 +0100
+In-Reply-To: <20101116230126.GB24623@opensource.wolfsonmicro.com>
+X-Mailer: Claws Mail 3.7.6 (GTK+ 2.20.1; x86_64-pc-linux-gnu)
+X-Scanned-By: MIMEDefang_at_IN-Berlin_e.V. on 192.109.42.8
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1063530>
+
+On Nov 16 Mark Brown wrote:
+> On Tue, Nov 16, 2010 at 12:21:02PM -0800, Randy Dunlap wrote:
+> 
+> > I don't know what you asked Joe to change, but asking someone to use
+> > the documented canonical patch format:
+> 
+> > <quote>
+> > The canonical patch subject line is:
+> 
+> >     Subject: [PATCH 001/123] subsystem: summary phrase
+> > </quote>
+> 
+> > should be fine.  And there is no need for printf-ish templates
+> > for this in MAINTAINERS either.
+> 
+> That's exactly what I asked him to do.  He said he's not willing to use
+> anything for "subsystem" which can't be automatically generated.
+
+Why should we codify our conventions in MAINTAINERS to accommodate the
+specific problem of virtually a _single_ patch author?
+
+Conventions are living and are being adjusted all the time, as code
+organization changes, people join and go, projects start and cease.
+
+Said author please looks the conventions up in the git history.  If he
+finds that this decelerates his patch generation rate, he can surely
+code a script that looks into git for him and suggests plausible
+prefixes for his patch titles to him.  Or he can collect a kind of
+database (a config file) locally for his own use in which he records
+conventional prefixes on the go.
+-- 
+Stefan Richter
+-=====-==-=- =-== =---=
+http://arcgraph.de/sr/
+
+

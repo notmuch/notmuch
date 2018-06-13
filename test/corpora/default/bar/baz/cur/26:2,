@@ -1,0 +1,121 @@
+From: "Stewart Smith" <stewart@flamingspork.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 12:56:40 +1100
+Subject: [notmuch] [PATCH 2/2] Read mail directory in inode number order
+Message-ID: <1258509400-32511-1-git-send-email-stewart@flamingspork.com>
+
+This gives a rather decent reduction in number of seeks required when
+reading a Maildir that isn't in pagecache.
+
+Most filesystems give some locality on disk based on inode numbers.
+In ext[234] this is the inode tables, in XFS groups of sequential inode
+numbers are together on disk and the most significant bits indicate
+allocation group (i.e inode 1,000,000 is always after inode 1,000).
+
+With this patch, we read in the whole directory, sort by inode number
+before stat()ing the contents.
+
+Ideally, directory is sequential and then we make one scan through the
+file system stat()ing.
+
+Since the universe is not ideal, we'll probably seek during reading the
+directory and a fair bit while reading the inodes themselves.
+
+However... with readahead, and stat()ing in inode order, we should be
+in the best place possible to hit the cache.
+
+In a (not very good) benchmark of "how long does it take to find the first
+15,000 messages in my Maildir after 'echo 3 > /proc/sys/vm/drop_caches'",
+this patch consistently cut at least 8 seconds off the scan time.
+
+Without patch: 50 seconds
+With patch: 38-42 seconds.
+
+(I did this in a previous maildir reading project and saw large improvements too)
+---
+ notmuch-new.c |   32 +++++++++++++++-----------------
+ 1 files changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/notmuch-new.c b/notmuch-new.c
+index 83a05ba..11fad8c 100644
+--- a/notmuch-new.c
++++ b/notmuch-new.c
+@@ -73,6 +73,11 @@ add_files_print_progress (add_files_state_t *state)
+     fflush (stdout);
+ }
+ 
++static int ino_cmp(const struct dirent **a, const struct dirent **b)
++{
++  return ((*a)->d_ino < (*b)->d_ino)? -1: 1;
++}
++
+ /* Examine 'path' recursively as follows:
+  *
+  *   o Ask the filesystem for the mtime of 'path' (path_mtime)
+@@ -100,13 +105,12 @@ add_files_recursive (notmuch_database_t *notmuch,
+ 		     add_files_state_t *state)
+ {
+     DIR *dir = NULL;
+-    struct dirent *e, *entry = NULL;
+-    int entry_length;
+-    int err;
++    struct dirent *entry = NULL;
+     char *next = NULL;
+     time_t path_mtime, path_dbtime;
+     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
+     notmuch_message_t *message = NULL;
++    struct dirent **namelist = NULL;
+ 
+     /* If we're told to, we bail out on encountering a read-only
+      * directory, (with this being a clear clue from the user to
+@@ -122,31 +126,23 @@ add_files_recursive (notmuch_database_t *notmuch,
+     path_mtime = st->st_mtime;
+ 
+     path_dbtime = notmuch_database_get_timestamp (notmuch, path);
++    int n_entries= scandir(path, &namelist, 0, ino_cmp);
+ 
+-    dir = opendir (path);
+-    if (dir == NULL) {
++    if (n_entries == -1) {
+ 	fprintf (stderr, "Error opening directory %s: %s\n",
+ 		 path, strerror (errno));
+ 	ret = NOTMUCH_STATUS_FILE_ERROR;
+ 	goto DONE;
+     }
+ 
+-    entry_length = offsetof (struct dirent, d_name) +
+-	pathconf (path, _PC_NAME_MAX) + 1;
+-    entry = malloc (entry_length);
++    int i=0;
+ 
+     while (!interrupted) {
+-	err = readdir_r (dir, entry, &e);
+-	if (err) {
+-	    fprintf (stderr, "Error reading directory: %s\n",
+-		     strerror (errno));
+-	    ret = NOTMUCH_STATUS_FILE_ERROR;
+-	    goto DONE;
+-	}
+-
+-	if (e == NULL)
++	if (i == n_entries)
+ 	    break;
+ 
++        entry= namelist[i++];
++
+ 	/* If this directory hasn't been modified since the last
+ 	 * add_files, then we only need to look further for
+ 	 * sub-directories. */
+@@ -243,6 +239,8 @@ add_files_recursive (notmuch_database_t *notmuch,
+ 	free (entry);
+     if (dir)
+ 	closedir (dir);
++    if (namelist)
++	free (namelist);
+ 
+     return ret;
+ }
+-- 
+1.6.3.3
+
+

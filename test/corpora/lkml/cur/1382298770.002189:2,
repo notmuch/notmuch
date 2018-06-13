@@ -1,0 +1,66 @@
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH 03/10] cifs: register CIFS for caching
+Date: Wed, 23 Jun 2010 17:51:17 +0100
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+Lines: 20
+Message-ID: <9603.1277311877@redhat.com>
+References: <1277220189-3485-1-git-send-email-sjayaraman@suse.de> <yes>
+Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Wed Jun 23 18:51:32 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1ORTAg-0008Bt-CT
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Wed, 23 Jun 2010 18:51:30 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1751915Ab0FWQv3 (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Wed, 23 Jun 2010 12:51:29 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50923 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751520Ab0FWQv3 (ORCPT <rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+	Wed, 23 Jun 2010 12:51:29 -0400
+Received: from int-mx05.intmail.prod.int.phx2.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o5NGpLFc028550
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Wed, 23 Jun 2010 12:51:21 -0400
+Received: from redhat.com (ovpn01.gateway.prod.ext.phx2.redhat.com [10.5.9.1])
+	by int-mx05.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o5NGpHIG010890;
+	Wed, 23 Jun 2010 12:51:18 -0400
+In-Reply-To: <1277220189-3485-1-git-send-email-sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.18
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002219>
+
+Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+
+> +	rc = cifs_fscache_register();
+> +	if (rc)
+> +		goto out;
+> +
+>  	rc = cifs_init_inodecache();
+>  	if (rc)
+>  		goto out_clean_proc;
+> @@ -949,8 +954,10 @@ init_cifs(void)
+>  	cifs_destroy_mids();
+>   out_destroy_inodecache:
+>  	cifs_destroy_inodecache();
+> +	cifs_fscache_unregister();
+>   out_clean_proc:
+
+This is incorrect.  You need to call cifs_fscache_unregister() if
+cifs_init_inodecache() fails.
+
+David
+
+

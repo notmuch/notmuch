@@ -1,0 +1,58 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 38/44] include/linux/if_macvlan.h: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:57 -0800
+Lines: 21
+Message-ID: <186ca914f887b2354ea3178696edc81cacbb28c6.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:08:18 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpQX-0001fQ-U4
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:08:18 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S933080Ab0KODHz (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:07:55 -0500
+Received: from mail.perches.com ([173.55.12.10]:1249 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932730Ab0KODGA (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:06:00 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id AAEDA24375;
+	Sun, 14 Nov 2010 19:04:27 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062290>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ include/linux/if_macvlan.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/if_macvlan.h b/include/linux/if_macvlan.h
+index 8a2fd66..ac96a2d 100644
+--- a/include/linux/if_macvlan.h
++++ b/include/linux/if_macvlan.h
+@@ -69,7 +69,7 @@ static inline void macvlan_count_rx(const struct macvlan_dev *vlan,
+ 	rx_stats = this_cpu_ptr(vlan->rx_stats);
+ 	if (likely(success)) {
+ 		u64_stats_update_begin(&rx_stats->syncp);
+-		rx_stats->rx_packets++;;
++		rx_stats->rx_packets++;
+ 		rx_stats->rx_bytes += len;
+ 		if (multicast)
+ 			rx_stats->rx_multicast++;
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

@@ -1,0 +1,7 @@
+{
+global:
+	_ZTI*;
+	_ZTS*;
+	notmuch_*;
+local: *;
+};

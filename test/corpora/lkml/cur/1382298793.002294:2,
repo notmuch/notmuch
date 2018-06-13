@@ -1,0 +1,63 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 04/44] drivers/cpufreq: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:23 -0800
+Lines: 26
+Message-ID: <a4bef9c18ce34e80870a07c728ee25e8efac6d9d.1289789604.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Dave Jones <davej@redhat.com>, cpufreq@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: cpufreq-owner@vger.kernel.org Mon Nov 15 04:16:07 2010
+Return-path: <cpufreq-owner@vger.kernel.org>
+Envelope-to: glkc-cpufreq2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <cpufreq-owner@vger.kernel.org>)
+	id 1PHpY5-0005lg-O4
+	for glkc-cpufreq2@lo.gmane.org; Mon, 15 Nov 2010 04:16:06 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932680Ab0KODO4 (ORCPT <rfc822;glkc-cpufreq2@m.gmane.org>);
+	Sun, 14 Nov 2010 22:14:56 -0500
+Received: from mail.perches.com ([173.55.12.10]:1127 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757376Ab0KODF3 (ORCPT <rfc822;cpufreq@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:29 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 1F49D2436E;
+	Sun, 14 Nov 2010 19:03:57 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: cpufreq-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <cpufreq.vger.kernel.org>
+X-Mailing-List: cpufreq@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062313>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/cpufreq/cpufreq_conservative.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/cpufreq/cpufreq_conservative.c b/drivers/cpufreq/cpufreq_conservative.c
+index 526bfbf..b0d8f3d 100644
+--- a/drivers/cpufreq/cpufreq_conservative.c
++++ b/drivers/cpufreq/cpufreq_conservative.c
+@@ -118,7 +118,7 @@ static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
+ 	if (wall)
+ 		*wall = (cputime64_t)jiffies_to_usecs(cur_wall_time);
+ 
+-	return (cputime64_t)jiffies_to_usecs(idle_time);;
++	return (cputime64_t)jiffies_to_usecs(idle_time);
+ }
+ 
+ static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe cpufreq" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

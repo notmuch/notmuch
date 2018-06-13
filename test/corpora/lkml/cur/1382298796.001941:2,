@@ -1,0 +1,73 @@
+From: Chris Ball <cjb@laptop.org>
+Subject: Re: [PATCH 11/44] drivers/mmc: Remove unnecessary semicolons
+Date: Sun, 5 Dec 2010 03:32:32 +0000
+Lines: 33
+Message-ID: <20101205033232.GD24000@void.printf.net>
+References: <cover.1289789604.git.joe@perches.com> <6391af02ba7ec4a76c5c5f462d8013fc1f52f999.1289789604.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Cc: Jiri Kosina <trivial@kernel.org>, linux-mmc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+X-From: linux-mmc-owner@vger.kernel.org Sun Dec 05 04:32:38 2010
+Return-path: <linux-mmc-owner@vger.kernel.org>
+Envelope-to: glkm-linux-mmc@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-mmc-owner@vger.kernel.org>)
+	id 1PP5L3-0005AB-4b
+	for glkm-linux-mmc@lo.gmane.org; Sun, 05 Dec 2010 04:32:37 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1752522Ab0LEDcg (ORCPT <rfc822;glkm-linux-mmc@m.gmane.org>);
+	Sat, 4 Dec 2010 22:32:36 -0500
+Received: from void.printf.net ([89.145.121.20]:42897 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752473Ab0LEDcf (ORCPT <rfc822;linux-mmc@vger.kernel.org>);
+	Sat, 4 Dec 2010 22:32:35 -0500
+Received: from chris by void.printf.net with local (Exim 4.69)
+	(envelope-from <chris@void.printf.net>)
+	id 1PP5Ky-0006Ly-KC; Sun, 05 Dec 2010 03:32:32 +0000
+Content-Disposition: inline
+In-Reply-To: <6391af02ba7ec4a76c5c5f462d8013fc1f52f999.1289789604.git.joe@perches.com>
+User-Agent: Mutt/1.5.18 (2008-05-17)
+Sender: linux-mmc-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-mmc.vger.kernel.org>
+X-Mailing-List: linux-mmc@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1071959>
+
+Hi Joe,
+
+On Sun, Nov 14, 2010 at 07:04:30PM -0800, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/mmc/host/davinci_mmc.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/mmc/host/davinci_mmc.c b/drivers/mmc/host/davinci_mmc.c
+> index e15547c..b643dde 100644
+> --- a/drivers/mmc/host/davinci_mmc.c
+> +++ b/drivers/mmc/host/davinci_mmc.c
+> @@ -480,7 +480,7 @@ static void mmc_davinci_send_dma_request(struct mmc_davinci_host *host,
+>  	struct scatterlist	*sg;
+>  	unsigned		sg_len;
+>  	unsigned		bytes_left = host->bytes_left;
+> -	const unsigned		shift = ffs(rw_threshold) - 1;;
+> +	const unsigned		shift = ffs(rw_threshold) - 1;
+>  
+>  	if (host->data_dir == DAVINCI_MMC_DATADIR_WRITE) {
+>  		template = &host->tx_template;
+> -- 
+
+Pushed to mmc-next for .38, thanks.
+
+-- 
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
+--
+To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

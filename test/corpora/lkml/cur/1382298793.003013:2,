@@ -1,0 +1,128 @@
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: [PATCH 44/44] sound/soc/codecs: Remove unnecessary
+	semicolons
+Date: Tue, 16 Nov 2010 10:49:22 +0000
+Lines: 50
+Message-ID: <20101116104921.GL12986@rakim.wolfsonmicro.main>
+References: <20101115134939.GC12986@rakim.wolfsonmicro.main>
+	<1289840957.16461.138.camel@Joe-Laptop>
+	<20101115173031.GI12986@rakim.wolfsonmicro.main>
+	<1289842444.16461.140.camel@Joe-Laptop>
+	<20101115182708.GJ12986@rakim.wolfsonmicro.main>
+	<1289845830.16461.149.camel@Joe-Laptop>
+	<20101115190738.GF3338@sirena.org.uk>
+	<1289848458.16461.150.camel@Joe-Laptop>
+	<20101115193407.GK12986@rakim.wolfsonmicro.main>
+	<1289850773.16461.166.camel@Joe-Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Dimitris Papastamos <dp@opensource.wolfsonmicro.com>,
+	alsa-devel@alsa-project.org, Jiri Kosina <trivial@kernel.org>,
+	Takashi Iwai <tiwai@suse.de>, linux-kernel@vger.kernel.org,
+	Ian Lartey <ian@opensource.wolfsonmicro.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>
+To: Joe Perches <joe@perches.com>
+X-From: alsa-devel-bounces@alsa-project.org Tue Nov 16 11:49:29 2010
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Envelope-to: glad-alsa-devel-2@m.gmane.org
+Received: from alsa0.perex.cz ([212.20.107.51])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <alsa-devel-bounces@alsa-project.org>)
+	id 1PIJ6O-0003Hl-Gx
+	for glad-alsa-devel-2@m.gmane.org; Tue, 16 Nov 2010 11:49:28 +0100
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id C3B89243EB; Tue, 16 Nov 2010 11:49:27 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.2.4 (2008-01-01) on mail1.perex.cz
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=5.0 tests=none autolearn=disabled
+	version=3.2.4
+Received: from alsa0.perex.cz (localhost [127.0.0.1])
+	by alsa0.perex.cz (Postfix) with ESMTP id 5204E243EB;
+	Tue, 16 Nov 2010 11:49:26 +0100 (CET)
+X-Original-To: alsa-devel@alsa-project.org
+Delivered-To: alsa-devel@alsa-project.org
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id D1E2E243EC; Tue, 16 Nov 2010 11:49:24 +0100 (CET)
+Received: from opensource2.wolfsonmicro.com (opensource.wolfsonmicro.com
+	[80.75.67.52]) by alsa0.perex.cz (Postfix) with ESMTP id 16268243EA
+	for <alsa-devel@alsa-project.org>; Tue, 16 Nov 2010 11:49:24 +0100 (CET)
+Received: from rakim.wolfsonmicro.main (lumison.wolfsonmicro.com
+	[87.246.78.27])
+	by opensource2.wolfsonmicro.com (Postfix) with ESMTPSA id 4AC4E3B438A; 
+	Tue, 16 Nov 2010 10:49:23 +0000 (GMT)
+Received: from broonie by rakim.wolfsonmicro.main with local (Exim 4.72)
+	(envelope-from <broonie@rakim.wolfsonmicro.main>)
+	id 1PIJ6I-0001Kz-Cf; Tue, 16 Nov 2010 10:49:22 +0000
+Content-Disposition: inline
+In-Reply-To: <1289850773.16461.166.camel@Joe-Laptop>
+X-Cookie: I like your SNOOPY POSTER!!
+User-Agent: Mutt/1.5.20 (2009-06-14)
+X-BeenThere: alsa-devel@alsa-project.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "Alsa-devel mailing list for ALSA developers -
+	http://www.alsa-project.org" <alsa-devel.alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1063040>
+
+On Mon, Nov 15, 2010 at 11:52:53AM -0800, Joe Perches wrote:
+> On Mon, 2010-11-15 at 19:34 +0000, Mark Brown wrote:
+
+> > It appears your scripts are already hooked into get_maintainers.pl which
+> > would seem the obvious place to do this?  Sadly I don't do perl, though
+> > it looks like you're doing pretty much all the work on that anyway.
+
+> Sadly, no it's not the right place.
+
+To query MAINTAINERS?  I'd assume that's where you'd want to put that
+stuff?
+
+> There could be a modification to $1 (path)
+> or some such.
+> 
+> Maybe a script like
+> ./scripts/convert_commit_subject_to_subsystem_maintainer_taste
+> or something.
+
+> Care to write one in sh/bash/perl/python/c/ocaml/c#?
+
+Like I say I'd expect this to be a get_maintainers based lookup to dump
+some data out?
+
+> As far as I know, the only subsystem pedants^H^H^H^H^Hople
+> that care much about the commit subject style are
+> arch/x86 and sound.
+
+If you look at the kernel you'll see quite a few subsystems which have
+some sort of standard practice which they do try to enforce, you
+shouldn't take silence as people being happy here - it's taken me some
+considerable time to get round to mentioning this, for example, and I
+might not have bothered if the patch had applied first time around.
+Like working against -next it's one of these things that would make your
+patches easier to deal with.
+
+> I can understand the desire of these subsystem maintainers
+> to have a consistent style.  I think though that requiring
+> a subject header style without providing more than a
+> general guideline is a but much.
+
+The general guideline I tend to go with is that if what you're doing
+looks odd for the code you're submitting against for some reason you're
+doing something wrong unless you understand why you're doing something
+different and there's a good reason.
+
+> I'd use any other automated tool you want to provide.
+
+Like I say, I'd expect the lookup from the database to be handled by
+get_maintainers.pl.  Having a separate database would seem odd.
+
+

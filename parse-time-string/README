@@ -1,0 +1,9 @@
+PARSE TIME STRING
+=================
+
+parse_time_string() is a date/time parser originally written for
+notmuch by Jani Nikula <jani@nikula.org>. However, there is nothing
+notmuch specific in it, and it should be kept reusable for other
+projects, and ready to be packaged on its own as needed. Please do not
+add dependencies on or references to anything notmuch specific. The
+parser should only depend on the C library.

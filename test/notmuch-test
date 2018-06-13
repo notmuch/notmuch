@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+# Run tests
+#
+# Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
+#
+# Adapted from a Makefile to a shell script by Carl Worth (2010)
+
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+    echo "Error: The notmuch test suite requires a bash version >= 4.0"
+    echo "due to use of associative arrays within the test suite."
+    echo "Please try again with a newer bash (or help us fix the"
+    echo "test suite to be more portable). Thanks."
+    exit 1
+fi
+
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/export-dirs.sh || exit 1
+
+TESTS=
+for test in $NOTMUCH_TESTS; do
+    TESTS="$TESTS $NOTMUCH_SRCDIR/test/$test"
+done
+
+if [[ -z "$TESTS" ]]; then
+    TESTS="$NOTMUCH_SRCDIR/test/T[0-9][0-9][0-9]-*.sh"
+fi
+
+# Clean up any results from a previous run
+rm -rf $NOTMUCH_BUILDDIR/test/test-results
+
+# Test for timeout utility
+if command -v timeout >/dev/null; then
+    TEST_TIMEOUT_CMD="timeout 2m"
+    echo "INFO: using 2 minute timeout for tests"
+else
+    TEST_TIMEOUT_CMD=""
+fi
+
+trap 'e=$?; kill $!; exit $e' HUP INT TERM
+# Run the tests
+for test in $TESTS; do
+    $TEST_TIMEOUT_CMD $test "$@" &
+    wait $!
+    # If the test failed without producing results, then it aborted,
+    # so we should abort, too.
+    RES=$?
+    testname=$(basename $test .sh)
+    if [[ $RES != 0 && ! -e "$NOTMUCH_BUILDDIR/test/test-results/$testname" ]]; then
+        exit $RES
+    fi
+done
+trap - HUP INT TERM
+
+# Report results
+echo
+$NOTMUCH_SRCDIR/test/aggregate-results.sh $NOTMUCH_BUILDDIR/test/test-results/*
+ev=$?
+
+# Clean up
+rm -rf $NOTMUCH_BUILDDIR/test/test-results $NOTMUCH_BUILDDIR/test/corpora.mail
+
+exit $ev

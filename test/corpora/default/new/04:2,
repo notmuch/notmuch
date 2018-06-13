@@ -1,0 +1,84 @@
+From: Mikhail Gusarov <dottedmag@dottedmag.net>
+To: notmuch@notmuchmail.org
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+Date: Wed, 18 Nov 2009 01:02:38 +0600
+In-Reply-To: <20091117190054.GU3165@dottiness.seas.harvard.edu> (Lars
+	Kellogg-Stedman's message of "Tue, 17 Nov 2009 14:00:54 -0500")
+Message-ID: <87iqd9rn3l.fsf@vertex.dottedmag>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/23.1 (gnu/linux)
+MIME-Version: 1.0
+Subject: Re: [notmuch] Working with Maildir storage?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1958295626=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+--===============1958295626==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
+
+--=-=-=
+Content-Transfer-Encoding: quoted-printable
+
+
+Twas brillig at 14:00:54 17.11.2009 UTC-05 when lars@seas.harvard.edu did g=
+yre and gimble:
+
+ LK> Resulted in 4604 lines of errors along the lines of:
+
+ LK>   Error opening
+ LK>   /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostna=
+me,U=3D3026:2,S:
+ LK>   Too many open files
+
+See the patch just posted here.
+
+=2D-=20
+  http://fossarchy.blogspot.com/
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQIcBAEBAgAGBQJLAvNOAAoJEJ0g9lA+M4iIjLYQAKp0PXEgl3JMOEBisH52AsIK
+CzzfP4Fzd41K9VH/c1EdQWDYR6FCAA4IUSNICnJhITsYUb0eC5AKJiey3JP0+rmd
+s4qEFBKH2iuphv8Llltcv2Q8DyPuJBkVa3mO9XCCeABZ6v4UvnTSWRVG12csSEih
+ScgienU8sMrM9LwvvVI1ZB2flm2TzsH2hWi30jIgmtBntIKJaTgbFXB50FYFwULa
+gGL/oH3u+YpumedWzPZdCJrw2q7nMvYx8aQ29EDCNLZibAZe+6oDTa6Fv6/0ldpQ
+U+DptR0nJGbJTWa26OTSvmyeIORjAfM+TEI68n7KO9VHYPmVh6awcf0MNKYh2xWk
+eRQNBcKyQNWxeKyCCpT/rrTlpxBWahpvg+V8lkDH2W09wjRp6CUKvifK3Sz3am9m
+5ZUMpvXbwkZD6Ci6l/QytbYK50e8UpvFSu5DBaxBz59ykoypuNg2ayO5Kdi6IF5d
+T+Sw6wo8UKn9a33+vheIc0fkhZXbeSotEmDm7huazm6CgM3dcWXUpTuJvik1cSWp
+4buv98gY6IKWKoUTXODWUr+7VR4gei8du8qOsKem+QDfNX7tmaIRjhrbB24B91Wy
+td3MTJD7GjMNid0INqRY1CRMLo8YlPaq6NBZfcYtYgwa6gpJijz1/MAn8+GMrfhF
+9LI8b9jopNP+pMYBohLA
+=/ksP
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+--===============1958295626==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============1958295626==--
+

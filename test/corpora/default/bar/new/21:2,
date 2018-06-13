@@ -1,0 +1,102 @@
+MIME-Version: 1.0
+Date: Tue, 17 Nov 2009 16:23:53 -0800
+Message-ID: <cf0c4d610911171623q3e27a0adx802e47039b57604b@mail.gmail.com>
+From: Alex Botero-Lowry <alex.boterolowry@gmail.com>
+To: notmuch@notmuchmail.org
+Content-Type: multipart/mixed; boundary=0016e64ca4d8f27a4804789a4139
+Subject: [notmuch] [PATCH] Error out if no query is supplied to search
+	instead of going into an infinite loop
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+--0016e64ca4d8f27a4804789a4139
+Content-Type: multipart/alternative; boundary=0016e64ca4d8f27a3604789a4137
+
+--0016e64ca4d8f27a3604789a4137
+Content-Type: text/plain; charset=ISO-8859-1
+
+In this case error out when no query is supplied. There seems to be an
+infinite-loop casued by i think notmuch_query_search_threads having
+an exception:
+
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+A Xapian exception occurred: Syntax: <expression> AND <expression>
+
+I'll look into that bug specifically a bit later.
+
+It might be better to do a usage instead of just throwing an error here?
+
+alex
+
+--0016e64ca4d8f27a3604789a4137
+Content-Type: text/html; charset=ISO-8859-1
+
+In this case error out when no query is supplied. There seems to be an infinite-loop casued by i think notmuch_query_search_threads having<br>an exception:<br><br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>
+A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>
+A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>
+A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>
+A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>
+A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br>A Xapian exception occurred: Syntax: &lt;expression&gt; AND &lt;expression&gt;<br><br>I&#39;ll look into that bug specifically a bit later.<br>
+<br>It might be better to do a usage instead of just throwing an error here?<br><br>alex<br>
+
+--0016e64ca4d8f27a3604789a4137--
+--0016e64ca4d8f27a4804789a4139
+Content-Type: application/octet-stream; 
+	name="0001-Error-out-if-no-query-is-supplied-to-search-instead-.patch"
+Content-Disposition: attachment; 
+	filename="0001-Error-out-if-no-query-is-supplied-to-search-instead-.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g25cms190
+
+RnJvbSAzZjk0MzFmNzRhNWZmNjZjODRjODY5YTNlMjZjMmJhZDQyYmVkMWIxIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbGV4YW5kZXIgQm90ZXJvLUxvd3J5IDxhbGV4LmJvdGVyb2xv
+d3J5QGdtYWlsLmNvbT4KRGF0ZTogVHVlLCAxNyBOb3YgMjAwOSAxNjoyMDoyOCAtMDgwMApTdWJq
+ZWN0OiBbUEFUQ0hdIEVycm9yIG91dCBpZiBubyBxdWVyeSBpcyBzdXBwbGllZCB0byBzZWFyY2gg
+aW5zdGVhZCBvZiBnb2luZyBpbnRvIGFuIGluZmluaXRlIGxvb3AKCi0tLQogbm90bXVjaC1zZWFy
+Y2guYyB8ICAgIDUgKysrKysKIDEgZmlsZXMgY2hhbmdlZCwgNSBpbnNlcnRpb25zKCspLCAwIGRl
+bGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL25vdG11Y2gtc2VhcmNoLmMgYi9ub3RtdWNoLXNlYXJj
+aC5jCmluZGV4IDhkYjA5YzcuLmQ5NGZjY2QgMTAwNjQ0Ci0tLSBhL25vdG11Y2gtc2VhcmNoLmMK
+KysrIGIvbm90bXVjaC1zZWFyY2guYwpAQCAtNjYsNiArNjYsMTEgQEAgbm90bXVjaF9zZWFyY2hf
+Y29tbWFuZCAodm9pZCAqY3R4LCBpbnQgYXJnYywgY2hhciAqYXJndltdKQogICAgIGFyZ2MgLT0g
+aTsKICAgICBhcmd2ICs9IGk7CiAKKyAgICBpZiAoYXJnYyA9PSAwKSB7CisgICAgICAgIGZwcmlu
+dGYgKHN0ZGVyciwgIk5vIHF1ZXJ5IHByb3ZpZGVkXG4iKTsKKyAgICAgICAgcmV0dXJuIDE7Cisg
+ICAgfQorCiAgICAgY29uZmlnID0gbm90bXVjaF9jb25maWdfb3BlbiAoY3R4LCBOVUxMLCBOVUxM
+KTsKICAgICBpZiAoY29uZmlnID09IE5VTEwpCiAJcmV0dXJuIDE7Ci0tIAoxLjYuNS4yCgo=
+--0016e64ca4d8f27a4804789a4139
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--0016e64ca4d8f27a4804789a4139--
+

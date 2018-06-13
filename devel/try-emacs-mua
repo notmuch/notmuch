@@ -1,0 +1,157 @@
+#!/bin/sh
+:; set -x; exec "${EMACS:-emacs}" --debug-init --load "$0" "$@"; exit
+;;
+;; Try the notmuch emacs client located in ../emacs/ directory
+;;
+;; Run this without arguments; emacs window opens with some usage information
+;;
+;; Authors: Tomi Ollila <tomi.ollila@iki.fi>
+;;
+;; https://www.emacswiki.org/emacs/EmacsScripts was a useful starting point...
+;;
+;; Licence: GPLv3+
+;;
+
+(message "Starting '%s'" load-file-name)
+
+(set-buffer "*scratch*")
+
+(setq initial-buffer-choice nil
+      inhibit-startup-screen t)
+
+(when (featurep 'notmuch)
+  (insert "
+Notmuch has been loaded to this emacs (during processing of the init file)
+which means it is (most probably) loaded from different source than expected.
+
+Please run \"" (file-name-nondirectory load-file-name)
+"\" with '-q' (or '-Q') as an argument, to disable
+processing of the init file -- you can load it after emacs has started\n
+exit emacs (y or n)? ")
+  (if (y-or-n-p "exit emacs")
+      (kill-emacs)
+    (error "Stopped reading %s" load-file-name)))
+
+(let ((pdir (file-name-directory
+	     (directory-file-name (file-name-directory load-file-name)))))
+  (unless (file-exists-p (concat pdir "emacs/notmuch-lib.el"))
+    (insert "Cannot find notmuch-emacs source directory
+while looking at: " pdir "emacs\n\nexit emacs (y or n)? ")
+    (if (y-or-n-p "exit emacs")
+	(kill-emacs)
+      (error "Stopped reading %s" load-file-name)))
+  (setq try-notmuch-source-directory (directory-file-name pdir)
+	try-notmuch-emacs-directory (concat pdir "emacs/")
+	load-path (cons try-notmuch-emacs-directory load-path)))
+
+;; they say advice doesn't work for primitives (functions from c source)
+;; well, these 'before' advice works for emacs 23.1 - 24.5 (at least)
+;; ...and for our purposes 24.3 is enough (there is no load-prefer-newer there)
+;; note also that the old, "obsolete" defadvice mechanism was used, but that
+;; is the only one available for emacs 23 and 24 up to 24.3.
+
+(if (boundp 'load-prefer-newer)
+    (defadvice require (before before-require activate)
+      (unless (featurep feature)
+	(message "require: %s" feature)))
+  ;; else: special require "short-circuit"; after load feature is provided...
+  ;; ... in notmuch sources we always use require and there are no loops
+  (defadvice require (before before-require activate)
+    (unless (featurep feature)
+      (message "require: %s" feature)
+      (let ((name (symbol-name feature)))
+	(if (and (string-match "^notmuch" name)
+		 (file-newer-than-file-p
+		  (concat try-notmuch-emacs-directory name ".el")
+		  (concat try-notmuch-emacs-directory name ".elc")))
+	    (load (concat try-notmuch-emacs-directory name ".el") nil nil t t)
+	  )))))
+
+(insert "Found notmuch emacs client in " try-notmuch-emacs-directory "\n")
+
+(let ((notmuch-path (executable-find "notmuch")))
+  (insert "Notmuch CLI executable "
+	  (if notmuch-path (concat "is " notmuch-path) "not found!") "\n"))
+
+(condition-case err
+;; "opportunistic" load-prefer-newer -- will be effective since emacs 24.4
+    (let ((load-prefer-newer t)
+	  (force-load-messages t))
+      (require 'notmuch))
+  ;; specifying `debug' here lets the debugger run
+  ;; if `debug-on-error' is non-nil.
+  ((debug error)
+   (let ((error-message-string (error-message-string err)))
+     (insert "\nLoading notmuch failed: " error-message-string "\n")
+     (message "Loading notmuch failed: %s" error-message-string)
+     (insert "See *Messages* buffer for more information.\n")
+     (if init-file-user
+	 (message "Hint: %s -q (or -Q) may help" load-file-name))
+     (pop-to-buffer "*Messages*")
+     (error "Stopped reading %s" load-file-name))))
+
+(insert "
+Go to the end of the following lines and type C-x C-e to evaluate
+(or C-j which is shorter but inserts evaluation results into buffer)
+
+To \"disable\" mail sending, evaluate
+* (setq message-send-mail-function (lambda () t))
+")
+
+(if (file-exists-p (concat try-notmuch-source-directory "/notmuch"))
+    (insert "
+To use accompanied notmuch binary from the same source, evaluate
+* (setq exec-path (cons \"" try-notmuch-source-directory  "\" exec-path))
+Note: Evaluating the above may be followed by unintended database
+upgrade and getting back to old version may require dump & restore.
+"))
+
+(if init-file-user ;; nil, if '-q' or '-Q' is given, but no '-u' 'USER'
+    (insert "
+Your init file was processed during emacs startup. If you want to test
+notmuch emacs mail client without your emacs init file interfering, Run\n\""
+(file-name-nondirectory load-file-name) "\" with '-q' (or '-Q') as an argument.
+")
+  (let ((emacs-init-file-name) (notmuch-init-file-name))
+    ;; determining init file name in startup.el/command-line is too complicated
+    ;; to be duplicated here; these 3 file names covers most of the users
+    (mapc (lambda (fn) (if (file-exists-p fn) (setq emacs-init-file-name fn)))
+	  '("~/.emacs.d/init.el" "~/.emacs" "~/.emacs.el"))
+    (setq notmuch-init-file-name "~/.emacs.d/notmuch-config.el")
+    (unless (file-exists-p notmuch-init-file-name)
+	(setq notmuch-init-file-name nil))
+    (if (and emacs-init-file-name notmuch-init-file-name)
+	(insert "
+If you want to load your initialization files now, evaluate\n* (progn")
+      (if (or emacs-init-file-name notmuch-init-file-name)
+	  (insert "
+If you want to load your initialization file now, evaluate\n*")))
+    (if emacs-init-file-name
+	(insert " (load \"" emacs-init-file-name "\")"))
+    (if notmuch-init-file-name
+	(insert " (load \"" notmuch-init-file-name "\")"))
+    (if (and emacs-init-file-name notmuch-init-file-name)
+	(insert ")"))
+    (if (or emacs-init-file-name notmuch-init-file-name)
+	(insert "\n")))
+  (if (>= emacs-major-version 24)
+      (insert "
+If you want to use packages (e.g. company from elpa) evaluate
+* (progn (require 'package) (package-initialize))
+")))
+
+(insert "
+To start notmuch (hello) screen, evaluate
+* (notmuch-hello)")
+
+(add-hook 'emacs-startup-hook
+	  (lambda ()
+	    (with-current-buffer "*scratch*"
+	      (lisp-interaction-mode)
+	      (goto-char (point-min))
+	      (forward-line 2)
+	      (set-buffer-modified-p nil))))
+
+;; Local Variables:
+;; mode: emacs-lisp
+;; End:

@@ -1,0 +1,131 @@
+Return-Path: <stefan@datenfreihafen.org>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id E4203431FBF
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:11:31 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id k6PahtnYXl0O for <notmuch@notmuchmail.org>;
+	Sat, 21 Nov 2009 16:11:30 -0800 (PST)
+Received: from sirius.lasnet.de (sirius.lasnet.de [78.47.116.19])
+	by olra.theworths.org (Postfix) with ESMTP id 1BAB6431FBC
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:11:30 -0800 (PST)
+Received: from p5b034af6.dip.t-dialin.net ([91.3.74.246] helo=excalibur)
+	by sirius.lasnet.de with esmtpsa 
+	(Cipher TLS-1.0:RSA_AES_256_CBC_SHA1:32) (Exim 4.63 #1)
+	id 1NC02v-0000t5-LF by authid <stefan@sostec.de> with cram_md5;
+	Sun, 22 Nov 2009 01:11:29 +0100
+Received: from stefan by excalibur with local (Exim 4.69)
+	(envelope-from <stefan@excalibur.local>)
+	id 1NC02u-0001Dj-V9; Sun, 22 Nov 2009 01:11:16 +0100
+From: Stefan Schmidt <stefan@datenfreihafen.org>
+To: notmuch@notmuchmail.org
+Date: Sun, 22 Nov 2009 01:11:00 +0100
+Message-Id: <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+X-Mailer: git-send-email 1.6.5.3
+In-Reply-To: <yes>
+References: <yes>
+Subject: [notmuch] [PATCH 1/2] lib/message: Add function to get maildir
+	flags.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Sun, 22 Nov 2009 00:11:32 -0000
+
+With notmuch_message_get_flags() we gain the information if the message was
+flagged as read, draft, trashed, etc. Handy for big mail spooles that were used
+with another mailer.
+
+Signed-off-by: Stefan Schmidt <stefan@datenfreihafen.org>
+---
+ lib/message.cc |   26 ++++++++++++++++++++++++++
+ lib/notmuch.h  |   10 ++++++++++
+ 2 files changed, 36 insertions(+), 0 deletions(-)
+
+diff --git a/lib/message.cc b/lib/message.cc
+index 069cedb..9bec61e 100644
+--- a/lib/message.cc
++++ b/lib/message.cc
+@@ -35,6 +35,7 @@ struct _notmuch_message {
+     char *thread_id;
+     char *in_reply_to;
+     char *filename;
++    char *flags;
+     notmuch_message_file_t *message_file;
+     notmuch_message_list_t *replies;
+ 
+@@ -114,6 +115,7 @@ _notmuch_message_create (const void *talloc_owner,
+     message->thread_id = NULL;
+     message->in_reply_to = NULL;
+     message->filename = NULL;
++    message->flags = NULL;
+     message->message_file = NULL;
+ 
+     message->replies = _notmuch_message_list_create (message);
+@@ -438,6 +440,30 @@ notmuch_message_get_filename (notmuch_message_t *message)
+     return message->filename;
+ }
+ 
++const char *
++notmuch_message_get_flags (notmuch_message_t *message)
++{
++    std::string filename_str, flags;
++    size_t position;
++    const char *db_path;
++
++    if (message->flags)
++	return message->flags;
++
++    filename_str = message->doc.get_data ();
++    db_path = notmuch_database_get_path (message->notmuch);
++
++    if (filename_str[0] != '/')
++	filename_str.insert (0, db_path);
++
++    /* Flags are everything behind ":" */
++    position = filename_str.find (":");
++    flags = filename_str.substr (position + 3); /* We don't want :2, */
++    message->flags = talloc_strdup (message, flags.c_str ());
++
++    return message->flags;
++}
++
+ time_t
+ notmuch_message_get_date (notmuch_message_t *message)
+ {
+diff --git a/lib/notmuch.h b/lib/notmuch.h
+index a61cd02..1da5dfd 100644
+--- a/lib/notmuch.h
++++ b/lib/notmuch.h
+@@ -694,6 +694,16 @@ notmuch_message_get_replies (notmuch_message_t *message);
+ const char *
+ notmuch_message_get_filename (notmuch_message_t *message);
+ 
++/* Get the maildir flags for the email corresponding to 'message'.
++ *
++ * The returned flags will be a string of ascii format flags.
++ *
++ * The returned string belongs to the message so should not be
++ * modified or freed by the caller (nor should it be referenced after
++ * the message is destroyed). */
++const char *
++notmuch_message_get_flags (notmuch_message_t *message);
++
+ /* Get the date of 'message' as a time_t value.
+  *
+  * For the original textual representation of the Date header from the
+-- 
+1.6.5.3
+
+

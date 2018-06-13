@@ -1,0 +1,17 @@
+notmuch -- The python interface to notmuch
+==========================================
+
+This module makes the functionality of the notmuch library
+(`https://notmuchmail.org`_) available to python. Successful import of
+this module depends on a libnotmuch.so|dll being available on the
+user's system.
+
+If you have downloaded the full source tarball, you can create the
+documentation with sphinx installed, go to the docs directory and
+"make html". A static version of the documentation is available at:
+
+  https://notmuch.readthedocs.io/projects/notmuch-python/
+
+To build the python bindings, do
+
+  python setup.py install --prefix=path/to/your/preferred/location

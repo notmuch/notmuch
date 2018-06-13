@@ -1,0 +1,101 @@
+Date: Wed, 18 Nov 2009 00:20:59 +0100
+From: Adrian Perez de Castro <aperez@igalia.com>
+To: notmuch@notmuchmail.org
+Message-ID: <20091118002059.067214ed@hikari>
+Organization: Igalia
+X-Mailer: Claws Mail 3.7.3 (GTK+ 2.18.3; x86_64-redhat-linux-gnu)
+Face: iVBORw0KGgoAAAANSUhEUgAAADAAAAAwBAMAAAClLOS0AAAAAXNSR0IArs4c6QAAADBQTFRFBwcHFhYWKCgoNzc3SEhIV1dXaGhod3d3iIiIlpaWqKiouLi4x8fH2NjY5+fn/v7+rSjDkgAAAjVJREFUOE9l07tvE0EQwOHfrkV9O+eko7g701BBfECJsIigT2IpooIqaSiRUEB0REj00FBQgYSCkhry+gecUPJybJeIxLumTbilsH2PMNXufDOa3ZVW+1JkpbUmD/8+vXR3c7or4Gz93mH309Kz8/C9/RQge7VfhW/LW+PF8IkrQ7Z6OKmQr1tl+LU/yWP9mxJka9O88fZHPwf/7u0kLyCnX3I4fQhgjAgIfi+HHw5A1Y2ggIMcFKAEnRoL0M3BosI4TI2IATjuT8DvSNJoNNJgkIhxlr9TUHeSpDnfohlIrMBlU+BGmsZqfr69FMfGMw4NoG835+J62riWyjQ/uXlTQjNUIoYegMsBM0pCD8oDas7n4HQsBghXFxJTW42KDs+4XLfjsN0wOYgABqARjMKIHIaAQnmHjsI5Cvi9Cf6k03OoWBkpIP3Q7354+dEimFBKHbMP9oKjwfd9gbrxR5KDToczK4uPF8UgNomKU2GaENRi77zyDKICxKBS4xXYbONPMQMdYZTBwMiMWiUg9g6UJ3OBogzjV8E7sBVwyvfAOYdQhsABzuOxI1MGZbs98Q6Md5UOfbbR2R0eWOesrnRw5ajT6f60LrNhWIHZpBnUWv2s14ukArWWTqTes3YQxRXgFkcMu70TPYqqUBs0YwmO967OVIdTG4bY4a7WLaqgLm5vbHdH5np0Dri//fmg7y8scB4u3+zsuNlH0X+g19bby69b+TYH6isvns8VdQWgxj9tHP8AR5/hSdYqkwsAAAAASUVORK5CYII=
+Mime-Version: 1.0
+Subject: [notmuch] Introducing myself
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1167731900=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+--===============1167731900==
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/ayZz9m37AOMROJCyUudvXvZ"; protocol="application/pgp-signature"
+
+--Sig_/ayZz9m37AOMROJCyUudvXvZ
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+
+Hello to all,
+
+I have just heard about Not Much today in some random Linux-related news
+site (LWN?), my name is Adrian Perez and I work as systems administrator
+(although I can do some code as well :P). I have always thought that the
+ideas behind Sup were great, but after some time using it, I got tired of
+the oddities that it has. I also do not like doing things like having to
+install Ruby just for reading and sorting mails. Some time ago I thought
+about doing something like Not Much and in fact I played a bit with the
+Python+Xapian and the Python+Whoosh combinations, because I find relaxing
+to code things in Python when I am not working and also it is installed
+by default on most distribution. I got to have some mailboxes indexed and
+basic searching working a couple of months ago. Lately I have been very
+busy and had no time for coding, and them... boom! Not Much appears -- and
+it is almost exactly what I was trying to do, but faster. I have been
+playing a bit with Not Much today, and I think it has potential.
+
+Also, I would like to share one idea I had in mind, that you might find
+interesting: One thing I have found very annoying is having to re-tag my
+mail when the indexes get b0rked (it happened a couple of times to me while
+using Sup), so I was planning to mails as read/unread and adding the tags
+not just to the index, but to the mail text itself, e.g. by adding a
+"X-Tags" header field or by reusing the "Keywords" one. This way, the index
+could be totally recreated by re-reading the mail directories, and this
+would also allow to a tools like OfflineIMAP [1] to get the mails into a
+local maildir, tagging and indexing the mails with the e-mail reader and
+then syncing back the messages with the "X-Tags" header to the IMAP server.
+This would allow to use the mail reader from a different computer and still
+have everything tagged finely.
+
+Best regards,
+
+
+---
+[1] http://software.complete.org/software/projects/show/offlineimap
+
+--=20
+Adrian Perez de Castro <aperez@igalia.com>
+Igalia - Free Software Engineering
+
+--Sig_/ayZz9m37AOMROJCyUudvXvZ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.13 (GNU/Linux)
+
+iEYEARECAAYFAksDL+AACgkQkcVZ2+TJEjtsuQCfXmilW8WpMQHCnwwJjRE1PWZy
+oFAAn3MmXC5sW7MvCFjs7ks6U16zgMEg
+=eL9p
+-----END PGP SIGNATURE-----
+
+--Sig_/ayZz9m37AOMROJCyUudvXvZ--
+
+--===============1167731900==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============1167731900==--
+

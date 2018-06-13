@@ -1,0 +1,81 @@
+Return-Path: <ingmar@exherbo.org>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id BAA52431FBC
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 00:43:44 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 0U+OLchDCS5T for <notmuch@notmuchmail.org>;
+	Thu, 26 Nov 2009 00:43:44 -0800 (PST)
+Received: from bach.exherbo.org (bach.exherbo.org [78.47.197.147])
+	by olra.theworths.org (Postfix) with ESMTP id 05223431FAE
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 00:43:43 -0800 (PST)
+Received: from [83.101.72.69] (helo=localhost)
+	by bach.exherbo.org with esmtpsa (TLSv1:AES256-SHA:256) (Exim 4.69)
+	(envelope-from <ingmar@exherbo.org>) id 1NDZx1-0000VV-3u
+	for notmuch@notmuchmail.org; Thu, 26 Nov 2009 08:43:43 +0000
+Content-Type: text/plain; charset=utf8
+From: Ingmar Vanhassel <ingmar@exherbo.org>
+To: notmuch <notmuch@notmuchmail.org>
+In-reply-to: <1259223435-29656-1-git-send-email-stefan@datenfreihafen.org>
+References: <yes> <1259223435-29656-1-git-send-email-stefan@datenfreihafen.org>
+Date: Thu, 26 Nov 2009 09:43:42 +0100
+Message-Id: <1259224970-sup-5259@cannonball>
+User-Agent: Sup/git
+Content-Transfer-Encoding: 8bit
+Subject: Re: [notmuch] [PATCH] Makefile: Enable backslash escapes for echo.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Thu, 26 Nov 2009 08:43:44 -0000
+
+Excerpts from Stefan Schmidt's message of Thu Nov 26 09:17:15 +0100 2009:
+> This fixes a visual glitch during a silent compile.
+> Before:
+> Use "make V=1" to see the verbose compile lines.\n  CC  debugger.o
+>   CC    gmime-filter-reply.o
+> 
+> After:
+> Use "make V=1" to see the verbose compile lines.
+>   CC    debugger.o
+>   CC    gmime-filter-reply.o
+> 
+> Signed-off-by: Stefan Schmidt <stefan@datenfreihafen.org>
+
+Looks right, works here with bash, dash & zsh, so:
+
+Reviewed-by: Ingmar Vanhassel <ingmar@exherbo.org>
+
+Thanks!
+
+> ---
+>  Makefile |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index 2cd1b1b..2d19a6e 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -41,7 +41,7 @@ include Makefile.config
+>  # user how to enable verbose compiles.
+>  ifeq ($(V),)
+>  quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
+> -quiet = @echo $(quiet_DOC)$(eval quiet_DOC:=)"  $1    $@"; $($1)
+> +quiet = @echo -e $(quiet_DOC)$(eval quiet_DOC:=)"  $1    $@"; $($1)
+>  endif
+>  # The user has explicitly enabled quiet compilation.
+>  ifeq ($(V),0)
+-- 
+Exherbo KDE, X.org maintainer
+

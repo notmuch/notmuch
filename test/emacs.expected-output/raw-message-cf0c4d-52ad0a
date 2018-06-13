@@ -1,0 +1,104 @@
+MIME-Version: 1.0
+Date: Tue, 17 Nov 2009 11:36:14 -0800
+Message-ID: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
+From: Alex Botero-Lowry <alex.boterolowry@gmail.com>
+To: notmuch@notmuchmail.org
+Content-Type: multipart/mixed; boundary=0016e687869333b1570478963d35
+Subject: [notmuch] preliminary FreeBSD support
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+--0016e687869333b1570478963d35
+Content-Type: multipart/alternative; boundary=0016e687869333b14e0478963d33
+
+--0016e687869333b14e0478963d33
+Content-Type: text/plain; charset=ISO-8859-1
+
+I saw the announcement this morning, and was very excited, as I had been
+hoping sup would be turned into a library,
+since I like the concept more than the UI (I'd rather an emacs interface).
+
+I did a preliminary compile which worked out fine, but
+sysconf(_SC_SC_GETPW_R_SIZE_MAX) returns -1 on
+FreeBSD, so notmuch_config_open segfaulted.
+
+Attached is a patch that supplies a default buffer size of 64 in cases where
+-1 is returned.
+
+http://www.opengroup.org/austin/docs/austin_328.txt - seems to indicate this
+is acceptable behavior,
+and http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg016808.htmlspecifically
+uses 64 as the
+buffer size.
+
+--0016e687869333b14e0478963d33
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+I saw the announcement this morning, and was very excited, as I had been ho=
+ping sup would be turned into a library,<br>since I like the concept more t=
+han the UI (I&#39;d rather an emacs interface).<br><br>I did a preliminary =
+compile which worked out fine, but sysconf(_SC_SC_GETPW_R_SIZE_MAX) returns=
+ -1 on<br>
+FreeBSD, so notmuch_config_open segfaulted.<br><br>Attached is a patch that=
+ supplies a default buffer size of 64 in cases where -1 is returned.<br><br=
+><a href=3D"http://www.opengroup.org/austin/docs/austin_328.txt">http://www=
+.opengroup.org/austin/docs/austin_328.txt</a> - seems to indicate this is a=
+cceptable behavior,<br>
+and <a href=3D"http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg01680=
+8.html">http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg016808.html<=
+/a> specifically uses 64 as the<br>buffer size.<br><br><br>
+
+--0016e687869333b14e0478963d33--
+--0016e687869333b1570478963d35
+Content-Type: application/octet-stream; 
+	name="0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch"
+Content-Disposition: attachment; 
+	filename="0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g252e6gs0
+
+RnJvbSBlM2JjNGJiZDdiOWQwZDA4NjgxNmFiNWY4ZjJkNmZmZWExZGQzZWE0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBbGV4YW5kZXIgQm90ZXJvLUxvd3J5IDxhbGV4LmJvdGVyb2xv
+d3J5QGdtYWlsLmNvbT4KRGF0ZTogVHVlLCAxNyBOb3YgMjAwOSAxMTozMDozOSAtMDgwMApTdWJq
+ZWN0OiBbUEFUQ0hdIERlYWwgd2l0aCBzaXR1YXRpb24gd2hlcmUgc3lzY29uZihfU0NfR0VUUFdf
+Ul9TSVpFX01BWCkgcmV0dXJucyAtMQoKLS0tCiBub3RtdWNoLWNvbmZpZy5jIHwgICAgMiArKwog
+MSBmaWxlcyBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvbm90bXVjaC1jb25maWcuYyBiL25vdG11Y2gtY29uZmlnLmMKaW5kZXggMjQ4MTQ5Yy4u
+ZTcyMjBkOCAxMDA2NDQKLS0tIGEvbm90bXVjaC1jb25maWcuYworKysgYi9ub3RtdWNoLWNvbmZp
+Zy5jCkBAIC03Nyw2ICs3Nyw3IEBAIHN0YXRpYyBjaGFyICoKIGdldF9uYW1lX2Zyb21fcGFzc3dk
+X2ZpbGUgKHZvaWQgKmN0eCkKIHsKICAgICBsb25nIHB3X2J1Zl9zaXplID0gc3lzY29uZihfU0Nf
+R0VUUFdfUl9TSVpFX01BWCk7CisgICAgaWYgKHB3X2J1Zl9zaXplID09IC0xKSBwd19idWZfc2l6
+ZSA9IDY0OwogICAgIGNoYXIgKnB3X2J1ZiA9IHRhbGxvY196ZXJvX3NpemUgKGN0eCwgcHdfYnVm
+X3NpemUpOwogICAgIHN0cnVjdCBwYXNzd2QgcGFzc3dkLCAqaWdub3JlZDsKICAgICBjaGFyICpu
+YW1lOwpAQCAtMTAxLDYgKzEwMiw3IEBAIHN0YXRpYyBjaGFyICoKIGdldF91c2VybmFtZV9mcm9t
+X3Bhc3N3ZF9maWxlICh2b2lkICpjdHgpCiB7CiAgICAgbG9uZyBwd19idWZfc2l6ZSA9IHN5c2Nv
+bmYoX1NDX0dFVFBXX1JfU0laRV9NQVgpOworICAgIGlmIChwd19idWZfc2l6ZSA9PSAtMSkgcHdf
+YnVmX3NpemUgPSA2NDsKICAgICBjaGFyICpwd19idWYgPSB0YWxsb2NfemVyb19zaXplIChjdHgs
+IHB3X2J1Zl9zaXplKTsKICAgICBzdHJ1Y3QgcGFzc3dkIHBhc3N3ZCwgKmlnbm9yZWQ7CiAgICAg
+Y2hhciAqbmFtZTsKLS0gCjEuNi41LjIKCg==
+--0016e687869333b1570478963d35
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--0016e687869333b1570478963d35--
+

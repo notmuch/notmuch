@@ -1,0 +1,85 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 07/44] drivers/isdn: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:26 -0800
+Lines: 49
+Message-ID: <c7a38f65340aafb208d50fc3a781602c07aebb0c.1289789604.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Karsten Keil <isdn@linux-pingi.de>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: netdev-owner@vger.kernel.org Mon Nov 15 04:15:06 2010
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1PHpX7-0005AO-Lc
+	for linux-netdev-2@lo.gmane.org; Mon, 15 Nov 2010 04:15:06 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932642Ab0KODOJ (ORCPT <rfc822;linux-netdev-2@m.gmane.org>);
+	Sun, 14 Nov 2010 22:14:09 -0500
+Received: from mail.perches.com ([173.55.12.10]:1142 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932587Ab0KODFb (ORCPT <rfc822;netdev@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:31 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 036B82436F;
+	Sun, 14 Nov 2010 19:03:59 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/isdn/hardware/mISDN/mISDNinfineon.c |    4 ++--
+ drivers/isdn/hardware/mISDN/mISDNisar.c     |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/isdn/hardware/mISDN/mISDNinfineon.c b/drivers/isdn/hardware/mISDN/mISDNinfineon.c
+index e90db88..bc0529a 100644
+--- a/drivers/isdn/hardware/mISDN/mISDNinfineon.c
++++ b/drivers/isdn/hardware/mISDN/mISDNinfineon.c
+@@ -420,7 +420,7 @@ enable_hwirq(struct inf_hw *hw)
+ 		break;
+ 	case INF_NICCY:
+ 		val = inl((u32)hw->cfg.start + NICCY_IRQ_CTRL_REG);
+-		val |= NICCY_IRQ_ENABLE;;
++		val |= NICCY_IRQ_ENABLE;
+ 		outl(val, (u32)hw->cfg.start + NICCY_IRQ_CTRL_REG);
+ 		break;
+ 	case INF_SCT_1:
+@@ -924,7 +924,7 @@ setup_instance(struct inf_hw *card)
+ 		mISDNipac_init(&card->ipac, card);
+ 
+ 	if (card->ipac.isac.dch.dev.Bprotocols == 0)
+-		goto error_setup;;
++		goto error_setup;
+ 
+ 	err = mISDN_register_device(&card->ipac.isac.dch.dev,
+ 		&card->pdev->dev, card->name);
+diff --git a/drivers/isdn/hardware/mISDN/mISDNisar.c b/drivers/isdn/hardware/mISDN/mISDNisar.c
+index 38eb314..d13fa5b 100644
+--- a/drivers/isdn/hardware/mISDN/mISDNisar.c
++++ b/drivers/isdn/hardware/mISDN/mISDNisar.c
+@@ -264,7 +264,7 @@ load_firmware(struct isar_hw *isar, const u8 *buf, int size)
+ 			while (noc) {
+ 				val = le16_to_cpu(*sp++);
+ 				*mp++ = val >> 8;
+-				*mp++ = val & 0xFF;;
++				*mp++ = val & 0xFF;
+ 				noc--;
+ 			}
+ 			spin_lock_irqsave(isar->hwlock, flags);
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

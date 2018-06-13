@@ -1,0 +1,20 @@
+# -*- makefile -*-
+
+TEST_DATABASE_MIRROR=https://notmuchmail.org/releases/test-databases
+
+dir := test/test-databases
+
+test_databases := $(dir)/database-v1.tar.xz
+
+%.tar.xz:
+	@exec 1>&2 ;\
+	if command -v wget >/dev/null ;\
+	then set -x; wget -nv -O $@ ${TEST_DATABASE_MIRROR}/$(notdir $@) ;\
+	elif command -v curl >/dev/null ;\
+	then set -x; curl -L -s -o $@ ${TEST_DATABASE_MIRROR}/$(notdir $@) ;\
+	else echo Cannot fetch databases, no wget nor curl available; exit 1 ;\
+	fi
+
+download-test-databases: ${test_databases}
+
+DATACLEAN := $(DATACLEAN) ${test_databases}

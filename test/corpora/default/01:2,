@@ -1,0 +1,34 @@
+From: "Mikhail Gusarov" <dottedmag@dottedmag.net>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 21:28:37 +0600
+Subject: [notmuch] [PATCH 1/2] Close message file after parsing message
+	headers
+Message-ID: <1258471718-6781-1-git-send-email-dottedmag@dottedmag.net>
+
+Keeping unused files open helps to see "Too many open files" often.
+
+Signed-off-by: Mikhail Gusarov <dottedmag at dottedmag.net>
+---
+ lib/message-file.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/lib/message-file.c b/lib/message-file.c
+index 8a3f8ee..197ab01 100644
+--- a/lib/message-file.c
++++ b/lib/message-file.c
+@@ -325,6 +325,11 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
+ 	    return decoded_value;
+     }
+ 
++    if (message->parsing_finished) {
++        fclose (message->file);
++        message->file = NULL;
++    }
++
+     if (message->line)
+ 	free (message->line);
+     message->line = NULL;
+-- 
+1.6.3.3
+
+

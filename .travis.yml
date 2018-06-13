@@ -1,0 +1,25 @@
+language: c
+
+dist: trusty
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - dtach
+    - libxapian-dev
+    - libgmime-2.6-dev
+    - libtalloc-dev
+    - python3-sphinx
+    - gpgsm
+
+script:
+  - ./configure
+  - make download-test-databases
+  - make test
+
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#notmuch"
+    on_success: change

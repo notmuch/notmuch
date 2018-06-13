@@ -1,0 +1,59 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 24/44] drivers/scsi/lpfc: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:43 -0800
+Lines: 21
+Message-ID: <1a0612305d3b141f85a6aeef6d91cd6829a80bae.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: James Smart <james.smart@emulex.com>,
+	"James E.J. Bottomley" <James.Bottomley@suse.de>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:10:40 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpSn-0002jF-BC
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:10:37 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S933110Ab0KODKE (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:10:04 -0500
+Received: from mail.perches.com ([173.55.12.10]:1195 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932782Ab0KODFn (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:43 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 86AD42436E;
+	Sun, 14 Nov 2010 19:04:10 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062300>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 7260c3a..9e2c652 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -617,7 +617,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *job)
+ 	dd_data->context_un.iocb.cmdiocbq = cmdiocbq;
+ 	dd_data->context_un.iocb.rspiocbq = rspiocbq;
+ 	dd_data->context_un.iocb.set_job = job;
+-	dd_data->context_un.iocb.bmp = NULL;;
++	dd_data->context_un.iocb.bmp = NULL;
+ 	dd_data->context_un.iocb.ndlp = ndlp;
+ 
+ 	if (phba->cfg_poll & DISABLE_FCP_RING_INT) {
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

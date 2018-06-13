@@ -1,0 +1,16 @@
+notmuch completion
+
+This directory contains support for various shells to automatically
+complete partially entered notmuch command lines.
+
+notmuch-completion.bash
+
+  Command-line completion for the bash shell. This depends on
+  bash-completion package [1] version 2.0, which depends on bash
+  version 3.2 or later.
+
+  [1] https://github.com/scop/bash-completion
+
+notmuch-completion.zsh
+
+  Command-line completion for the zsh shell.

@@ -1,0 +1,21 @@
+notmuch/compat
+
+This directory consists of three things:
+
+1. Small programs used by the notmuch configure script to test for the
+   availability of certain system features, (library functions, etc.).
+
+   For example: have_getline.c
+
+2. Compatibility implementations of those system features for systems
+   that don't provide their own versions.
+
+   For example: getline.c
+
+   The compilation of these files is made conditional on the output of
+   the test programs from [1].
+
+3. Macro definitions abstracting compiler differences (e.g. function
+   attributes).
+
+   For example: function-attributes.h

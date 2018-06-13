@@ -1,0 +1,22 @@
+From: "Alexander Botero-Lowry" <alex.boterolowry@gmail.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 00:02:56 -0800
+Subject: [notmuch] request for pull
+Message-ID: <86aayk2rbj.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me>
+
+The following changes since commit e8c9c3e6a534fc6c2919c2c1de63cea7250eb488:
+  Ingmar Vanhassel (1):
+        Makefile: Manual pages shouldn't be executable
+
+are available in the git repository at:
+
+  git://alexbl.net/notmuch.git master
+
+Alexander Botero-Lowry (2):
+      Error out if no query is supplied to search instead of going into an infinite loop
+      set a local truncate-line variable in notmuch-search-mode, so that subjects don't wrap and make the output look weird
+
+ notmuch-search.c |    5 +++++
+ notmuch.el       |    1 +
+ 2 files changed, 6 insertions(+), 0 deletions(-)
+

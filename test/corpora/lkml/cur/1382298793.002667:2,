@@ -1,0 +1,87 @@
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 14/44] drivers/net/ixgbe: Remove
+	unnecessary semicolons
+Date: Mon, 15 Nov 2010 11:08:21 -0800 (PST)
+Lines: 19
+Message-ID: <20101115.110821.13743893.davem@davemloft.net>
+References: <cover.1289789604.git.joe@perches.com>
+	<7d2c334daa75c5221946a17d45c9de1901cf06e7.1289789604.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: trivial@kernel.org, e1000-devel@lists.sourceforge.net,
+	bruce.w.allan@intel.com, jesse.brandeburg@intel.com,
+	linux-kernel@vger.kernel.org, gregory.v.rose@intel.com,
+	john.ronciak@intel.com, jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org
+To: joe@perches.com
+X-From: e1000-devel-bounces@lists.sourceforge.net Mon Nov 15 20:08:15 2010
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
+Envelope-to: glded-e1000-devel@m.gmane.org
+Received: from lists.sourceforge.net ([216.34.181.88])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <e1000-devel-bounces@lists.sourceforge.net>)
+	id 1PI4PW-0002Vz-9H
+	for glded-e1000-devel@m.gmane.org; Mon, 15 Nov 2010 20:08:14 +0100
+Received: from localhost ([127.0.0.1] helo=sfs-ml-4.v29.ch3.sourceforge.com)
+	by sfs-ml-4.v29.ch3.sourceforge.com with esmtp (Exim 4.69)
+	(envelope-from <e1000-devel-bounces@lists.sourceforge.net>)
+	id 1PI4PQ-0008VG-9t; Mon, 15 Nov 2010 19:08:08 +0000
+Received: from sog-mx-1.v43.ch3.sourceforge.com ([172.29.43.191]
+	helo=mx.sourceforge.net)
+	by sfs-ml-4.v29.ch3.sourceforge.com with esmtp (Exim 4.69)
+	(envelope-from <davem@davemloft.net>) id 1PI4PO-0008V9-I9
+	for e1000-devel@lists.sourceforge.net; Mon, 15 Nov 2010 19:08:06 +0000
+X-ACL-Warn: 
+Received: from 74-93-104-97-washington.hfc.comcastbusiness.net ([74.93.104.97]
+	helo=sunset.davemloft.net)
+	by sog-mx-1.v43.ch3.sourceforge.com with esmtp (Exim 4.69)
+	id 1PI4PK-0004Ab-D0
+	for e1000-devel@lists.sourceforge.net; Mon, 15 Nov 2010 19:08:06 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by sunset.davemloft.net (Postfix) with ESMTP id E0AE124C08A;
+	Mon, 15 Nov 2010 11:08:21 -0800 (PST)
+In-Reply-To: <7d2c334daa75c5221946a17d45c9de1901cf06e7.1289789604.git.joe@perches.com>
+X-Mailer: Mew version 6.3 on Emacs 23.1 / Mule 6.0 (HANACHIRUSATO)
+X-Spam-Score: 0.7 (/)
+X-Spam-Report: Spam Filtering performed by mx.sourceforge.net.
+	See http://spamassassin.org/tag/ for more details.
+	1.0 RDNS_DYNAMIC           Delivered to internal network by host with
+	dynamic-looking rDNS
+	-0.3 AWL AWL: From: address is in the auto white-list
+X-Headers-End: 1PI4PK-0004Ab-D0
+X-BeenThere: e1000-devel@lists.sourceforge.net
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "e100/e1000\(e\)/ixgb/igb/ixgbe development and discussion"
+	<e1000-devel.lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>, 
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062692>
+
+From: Joe Perches <joe@perches.com>
+Date: Sun, 14 Nov 2010 19:04:33 -0800
+
+> Signed-off-by: Joe Perches <joe@perches.com>
+
+Applied.
+
+------------------------------------------------------------------------------
+Centralized Desktop Delivery: Dell and VMware Reference Architecture
+Simplifying enterprise desktop deployment and management using
+Dell EqualLogic storage and VMware View: A highly scalable, end-to-end
+client virtualization framework. Read more!
+http://p.sf.net/sfu/dell-eql-dev2dev
+_______________________________________________
+E1000-devel mailing list
+E1000-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/e1000-devel
+To learn more about Intel&#174; Ethernet, visit http://communities.intel.com/community/wired
+
+
+

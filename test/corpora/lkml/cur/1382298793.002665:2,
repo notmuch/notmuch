@@ -1,0 +1,98 @@
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: [PATCH 44/44] sound/soc/codecs: Remove unnecessary
+	semicolons
+Date: Mon, 15 Nov 2010 19:07:38 +0000
+Lines: 22
+Message-ID: <20101115190738.GF3338@sirena.org.uk>
+References: <cover.1289789604.git.joe@perches.com>
+	<97fd199b7dac50613f6843156687223928cce44a.1289789605.git.joe@perches.com>
+	<20101115134939.GC12986@rakim.wolfsonmicro.main>
+	<1289840957.16461.138.camel@Joe-Laptop>
+	<20101115173031.GI12986@rakim.wolfsonmicro.main>
+	<1289842444.16461.140.camel@Joe-Laptop>
+	<20101115182708.GJ12986@rakim.wolfsonmicro.main>
+	<1289845830.16461.149.camel@Joe-Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Dimitris Papastamos <dp@opensource.wolfsonmicro.com>,
+	alsa-devel@alsa-project.org, Jiri Kosina <trivial@kernel.org>,
+	Takashi Iwai <tiwai@suse.de>, linux-kernel@vger.kernel.org,
+	Ian Lartey <ian@opensource.wolfsonmicro.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>
+To: Joe Perches <joe@perches.com>
+X-From: alsa-devel-bounces@alsa-project.org Mon Nov 15 20:07:53 2010
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Envelope-to: glad-alsa-devel-2@m.gmane.org
+Received: from alsa0.perex.cz ([212.20.107.51])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <alsa-devel-bounces@alsa-project.org>)
+	id 1PI4PA-0002MQ-AO
+	for glad-alsa-devel-2@m.gmane.org; Mon, 15 Nov 2010 20:07:52 +0100
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id 78DB02453D; Mon, 15 Nov 2010 20:07:51 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.2.4 (2008-01-01) on mail1.perex.cz
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=5.0 tests=none autolearn=disabled
+	version=3.2.4
+Received: from alsa0.perex.cz (localhost [127.0.0.1])
+	by alsa0.perex.cz (Postfix) with ESMTP id 07D122453A;
+	Mon, 15 Nov 2010 20:07:47 +0100 (CET)
+X-Original-To: alsa-devel@alsa-project.org
+Delivered-To: alsa-devel@alsa-project.org
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id 4AB082453B; Mon, 15 Nov 2010 20:07:45 +0100 (CET)
+Received: from cassiel.sirena.org.uk (cassiel.sirena.org.uk [80.68.93.111])
+	by alsa0.perex.cz (Postfix) with ESMTP id D864524538
+	for <alsa-devel@alsa-project.org>; Mon, 15 Nov 2010 20:07:44 +0100 (CET)
+Received: from broonie by cassiel.sirena.org.uk with local (Exim 4.69)
+	(envelope-from <broonie@sirena.org.uk>)
+	id 1PI4Ow-0007qS-V5; Mon, 15 Nov 2010 19:07:38 +0000
+Content-Disposition: inline
+In-Reply-To: <1289845830.16461.149.camel@Joe-Laptop>
+X-Cookie: Who messed with my anti-paranoia shot?
+User-Agent: Mutt/1.5.18 (2008-05-17)
+X-SA-Exim-Connect-IP: <locally generated>
+X-SA-Exim-Mail-From: broonie@sirena.org.uk
+X-SA-Exim-Scanned: No (on cassiel.sirena.org.uk);
+	SAEximRunCond expanded to false
+X-BeenThere: alsa-devel@alsa-project.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "Alsa-devel mailing list for ALSA developers -
+	http://www.alsa-project.org" <alsa-devel.alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062690>
+
+On Mon, Nov 15, 2010 at 10:30:29AM -0800, Joe Perches wrote:
+> On Mon, 2010-11-15 at 18:27 +0000, Mark Brown wrote:
+> > On Mon, Nov 15, 2010 at 09:34:04AM -0800, Joe Perches wrote:
+
+> > > I think it's more important to use consistent changelogs
+> > > for a patch series.
+
+> > ...since...?
+
+> 1995...
+
+That's not really a reason.  It seems that...
+
+> Since there isn't a consistent standard for subsystems
+> changelogs and automating scripts for the desires of
+> individual subsystem maintainers is not feasible.
+
+...you mean that you wish to do this since it makes your life as a
+script author easier.  I'd suggest using pattern matching to look up the
+rules for generating the prefixes (it's pretty much entirely prefixes)
+in the same way you're handling figuring out who to mail - that'd
+probably cover it in an automatable fashion.
+
+

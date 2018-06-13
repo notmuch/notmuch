@@ -1,0 +1,153 @@
+*notmuch.txt*	Plug-in to make vim a nice email client using notmuch
+
+Author: Felipe Contreras <felipe.contreras@gmail.com>
+
+Overview 					|notmuch-intro|
+Usage						|notmuch-usage|
+Mappings					|notmuch-mappings|
+Configuration					|notmuch-config|
+
+==============================================================================
+OVERVIEW					*notmuch-intro*
+
+This is a vim plug-in that provides a fully usable mail client interface,
+utilizing the notmuch framework.
+
+It has three main views: folders, search, and thread. In the folder view you
+can find a summary of saved searches, In the search view you can see all the
+threads that comprise the selected search, and in the thread view you can read
+every mail in the thread.
+
+==============================================================================
+USAGE						*notmuch-usage*
+
+To use it, simply run the `:NotMuch` command.
+
+By default you start in the folder view which shows you default searches and
+the number of threads that match those:
+>
+	10 new                  (tag:inbox and tag:unread)
+	20 inbox                (tag:inbox)
+	30 unread               (tag:unread)
+<
+You can see the threads of each by clicking `enter`, which sends you to the
+search view. In both the search and folder views you can type `s` to type a
+new search, or `=` to refresh. To see a thread, type `enter` again.
+
+To exit a view, click `q`.
+
+Also, you can specify a search directly:
+>
+	:NotMuch is:inbox and date:yesterday..
+<
+==============================================================================
+MAPPINGS					*notmuch-mappings*
+
+------------------------------------------------------------------------------
+Folder view~
+
+<enter>	Show selected search
+s	Enter a new search
+=	Refresh
+c	Compose a new mail
+
+------------------------------------------------------------------------------
+Search view~
+
+q	Quit view
+<enter>	Show selected search
+<space>	Show selected search with filter
+A	Archive (-inbox -unread)
+I	Mark as read (-unread)
+t	Tag (prompted)
+s	Search
+=	Refresh
+?	Show search information
+c	Compose a new mail
+>
+------------------------------------------------------------------------------
+Thread view~
+
+q	Quit view
+A	Archive (-inbox -unread)
+I	Mark as read (-unread)
+t	Tag (prompted)
+s	Search
+p	Save patches
+r	Reply
+?	Show thread information
+<tab>	Show next message
+c	Compose a new mail
+
+------------------------------------------------------------------------------
+Compose view~
+
+q	Quit view
+s	Send
+
+==============================================================================
+CONFIGURATION					*notmuch-config*
+
+You can add the following configurations to your `.vimrc`, or
+`~/.vim/plugin/notmuch.vim`.
+
+						*g:notmuch_folders*
+
+The first thing you might want to do is set your custom searches.
+>
+	let g:notmuch_folders = [
+		\ [ 'new', 'tag:inbox and tag:unread' ],
+		\ [ 'inbox', 'tag:inbox' ],
+		\ [ 'unread', 'tag:unread' ],
+		\ [ 'to-do', 'tag:to-do' ],
+		\ [ 'to-me', 'to:john.doe and tag:new' ],
+		\ ]
+<
+
+						*g:notmuch_custom_search_maps*
+						*g:notmuch_custom_show_maps*
+
+You can also configure the keyboard mappings for the different views:
+>
+	let g:notmuch_custom_search_maps = {
+		\ 't':		'search_tag("+to-do -inbox")',
+		\ 'd':		'search_tag("+deleted -inbox -unread")',
+		\ }
+
+	let g:notmuch_custom_show_maps = {
+		\ 't':		'show_tag("+to-do -inbox")',
+		\ 'd':		'show_tag("+deleted -inbox -unread")',
+		\ }
+<
+
+						*g:notmuch_date_format*
+
+To configure the date format you want in the search view:
+>
+	let g:notmuch_date_format = '%d.%m.%y'
+<
+
+						*g:notmuch_datetime_format*
+
+You can do the same for the thread view:
+>
+	let g:notmuch_datetime_format = '%d.%m.%y %H:%M:%S'
+<
+
+						*g:notmuch_folders_count_threads*
+
+If you want to count the threads instead of the messages in the folder view:
+>
+	let g:notmuch_folders_count_threads = 0
+<
+
+						*g:notmuch_reader*
+						*g:notmuch_sendmail*
+
+You can also configure your externail mail reader and sendemail program:
+>
+	let g:notmuch_reader = 'mutt -f %s'
+	let g:notmuch_sendmail = 'sendmail'
+<
+
+vim:tw=78:ts=8:noet:ft=help:

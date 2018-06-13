@@ -1,0 +1,6 @@
+  2009-11-17  Mikhail Gusarov       ┬►[notmuch] [PATCH 1/2] Close message file after parsing message	headers (inbox)
+  2009-11-17  Mikhail Gusarov       ├─►[notmuch] [PATCH 2/2] Include <stdint.h> to get uint32_t in C++	file with gcc 4.4 (inbox unread)
+  2009-11-17  Carl Worth            ╰┬►[notmuch] [PATCH 1/2] Close message file after parsing message headers (inbox unread)
+  2009-11-17  Keith Packard          ╰┬► ...                                              (inbox unread)
+  2009-11-18  Carl Worth              ╰─► ...                                             (inbox unread)
+End of search results.
