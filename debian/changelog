@@ -1,3 +1,12 @@
+notmuch (0.27-1) unstable; urgency=medium
+
+  * New upstream feature release
+    - thread subqueries (match terms in different messages of same thread)
+    - notmuch new --full-scan (ignore mtimes)
+    - notmuch show --decrypt=stash (decrypt and stash on first read)
+
+ -- David Bremner <bremner@debian.org>  Tue, 12 Jun 2018 22:39:33 -0300
+
 notmuch (0.27~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate
