@@ -41,7 +41,7 @@ Notmuch 0.26.2 (2018-04-28)
 Library Changes
 ---------------
 
-Work around Xapian bug with `get_mset(0,0, x)`.
+Work around Xapian bug with `get_mset(0,0, x)`
 
   This causes aborts in `_notmuch_query_count_documents` on
   e.g. Fedora 28.  The underlying bug is fixed in Xapian commit
@@ -178,11 +178,11 @@ Change of return value of `notmuch_thread_get_authors`
 
 Transition `notmuch_database_add_message` to `notmuch_database_index_file`
 
-   When indexing an e-mail message, the new
-   `notmuch_database_index_file` function is the preferred form, and
-   the old `notmuch_database_add_message` is deprecated.  The new form
-   allows passing a set of options to the indexing engine, which the
-   operator may decide to change from message to message.
+  When indexing an e-mail message, the new
+  `notmuch_database_index_file` function is the preferred form, and
+  the old `notmuch_database_add_message` is deprecated.  The new form
+  allows passing a set of options to the indexing engine, which the
+  operator may decide to change from message to message.
 
 Test Suite
 ----------
