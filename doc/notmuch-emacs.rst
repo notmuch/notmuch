@@ -338,7 +338,7 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 
 :index:`notmuch-tagging-keys`
 
-   A list of keys and corresponding tagging operations.
+  |docstring::notmuch-tagging-keys|
 
 Configuration
 =============
@@ -368,3 +368,5 @@ options, ``notmuch-init-file`` is not read.
 
 
 .. include:: ../emacs/notmuch-show.rsti
+
+.. include:: ../emacs/notmuch-tag.rsti
