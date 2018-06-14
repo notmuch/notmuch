@@ -211,6 +211,14 @@ pressing RET after positioning the cursor on a hidden part.
 ``?``
     Display full set of key bindings
 
+Display of messages can be controlled by the following variables
+
+:index:`notmuch-message-headers`
+       |docstring::notmuch-message-headers|
+
+:index:`notmuch-message-headers-visible`
+       |docstring::notmuch-message-headers-visible|
+
 .. _show-copy:
 
 Copy to kill-ring
