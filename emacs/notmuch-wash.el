@@ -24,7 +24,7 @@
 ;;; Code:
 
 (require 'coolj)
-
+(require 'notmuch-lib)
 (declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
 (defvar notmuch-show-indent-messages-width)
 
