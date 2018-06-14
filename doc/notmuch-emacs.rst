@@ -340,6 +340,12 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 
   |docstring::notmuch-tagging-keys|
 
+Buffer navigation
+=================
+
+:index:`notmuch-cycle-notmuch-buffers`
+   |docstring::notmuch-cycle-notmuch-buffers|
+
 Configuration
 =============
 
@@ -367,6 +373,8 @@ work with it. If Emacs was invoked with the ``-q`` or ``--no-init-file``
 options, ``notmuch-init-file`` is not read.
 
 .. include:: ../emacs/rstdoc.rsti
+
+.. include:: ../emacs/notmuch.rsti
 
 .. include:: ../emacs/notmuch-lib.rsti
 
