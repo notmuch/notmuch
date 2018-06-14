@@ -1,4 +1,5 @@
 /.eldeps*
 /*.elc
+/*.rsti
 /notmuch-version.el
 /notmuch-pkg.el

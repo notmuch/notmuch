@@ -45,6 +45,10 @@ emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
 
 emacs_bytecode = $(emacs_sources:.el=.elc)
+emacs_docstrings = $(emacs_sources:.el=.rsti)
+
+docstring.stamp: ${emacs_docstrings}
+	touch $@
 
 # Because of defmacro's and defsubst's, we have to account for load
 # dependencies between Elisp files when byte compiling.  Otherwise,
@@ -76,6 +80,8 @@ CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 ifeq ($(HAVE_EMACS),1)
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
+%.rsti: %.el
+	$(call quiet,EMACS) -batch -L emacs -l rstdoc -f rstdoc-batch-extract $< $@
 endif
 
 elpa: $(ELPA_FILE)
@@ -93,7 +99,7 @@ endif
 
 ifeq ($(WITH_EMACS),1)
 ifeq ($(HAVE_EMACS),1)
-all: $(emacs_bytecode)
+all: $(emacs_bytecode) $(emacs_docstrings)
 install-emacs: $(emacs_bytecode)
 endif
 
@@ -120,4 +126,5 @@ ifeq ($(WITH_DESKTOP),1)
 	-update-desktop-database "$(DESTDIR)$(desktop_dir)"
 endif
 
-CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el
+CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el \
+	$(emacs_docstrings) docstring.stamp
