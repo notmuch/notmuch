@@ -349,8 +349,10 @@ Importing Mail
 --------------
 
 :index:`notmuch-poll`
+   |docstring::notmuch-poll|
 
 :index:`notmuch-poll-script`
+   |docstring::notmuch-poll-script|
 
 Init File
 ---------
@@ -366,6 +368,7 @@ options, ``notmuch-init-file`` is not read.
 
 .. include:: ../emacs/rstdoc.rsti
 
+.. include:: ../emacs/notmuch-lib.rsti
 
 .. include:: ../emacs/notmuch-show.rsti
 
