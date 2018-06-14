@@ -1,0 +1,21 @@
+.. -*- rst -*-
+
+.. |br| replace:: |br-texinfo| |br-html|
+       
+.. |br-texinfo| raw:: texinfo
+
+   @* @*
+
+.. |br-html| raw:: html
+
+   <br /><br />
+
+.. |indent| replace:: |indent-texinfo| |indent-html|
+
+.. |indent-texinfo| raw:: texinfo
+
+   @* @ @ @ @
+
+.. |indent-html| raw:: html
+
+   <br />&nbsp;&nbsp;&nbsp;&nbsp;
