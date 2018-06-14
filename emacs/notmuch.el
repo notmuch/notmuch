@@ -711,7 +711,7 @@ A thread with TAG will have FACE applied.
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
- (setq notmuch-search-line-faces '((\"unread\" . (:foreground \"green\"))
+ (setq notmuch-search-line-faces \\='((\"unread\" . (:foreground \"green\"))
                                    (\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))))
 
