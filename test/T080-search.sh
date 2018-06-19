@@ -85,11 +85,11 @@ add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00
 output=$(notmuch search 'to:"Search By To Name"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
-test_begin_subtest "Search by to: (name and adress)"
+test_begin_subtest "Search by to: (name and address)"
 output=$(notmuch search 'to:"Search By To Name <test@example.com>"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
-test_begin_subtest "Search by to: without prefix (name and adress)"
+test_begin_subtest "Search by to: without prefix (name and address)"
 output=$(notmuch search '"Search By To Name <test@example.com>"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 

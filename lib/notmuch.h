@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION	5
-#define LIBNOTMUCH_MINOR_VERSION	0
+#define LIBNOTMUCH_MINOR_VERSION	2
 #define LIBNOTMUCH_MICRO_VERSION	0
 
 
@@ -869,7 +869,7 @@ notmuch_query_get_sort (const notmuch_query_t *query);
  *
  * NOTMUCH_STATUS_SUCCESS: excluded was added successfully.
  *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured.
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occurred.
  *      Most likely a problem lazily parsing the query string.
  *
  * NOTMUCH_STATUS_IGNORED: tag is explicitly present in the query, so
@@ -1065,7 +1065,7 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  *
  * NOTMUCH_STATUS_SUCCESS: query completed successfully.
  *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occurred. The
  *      value of *count is not defined.
  *
  * @since libnotmuch 5 (notmuch 0.25)
@@ -1101,7 +1101,7 @@ notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
 
  * NOTMUCH_STATUS_SUCCESS: query completed successfully.
  *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occurred. The
  *      value of *count is not defined.
  *
  * @since libnotmuch 5 (notmuch 0.25)
@@ -1344,6 +1344,14 @@ notmuch_messages_destroy (notmuch_messages_t *messages);
  */
 notmuch_tags_t *
 notmuch_messages_collect_tags (notmuch_messages_t *messages);
+
+/**
+ * Get the database associated with this message.
+ *
+ * @since libnotmuch 5.2 (notmuch 0.27)
+ */
+notmuch_database_t *
+notmuch_message_get_database (const notmuch_message_t *message);
 
 /**
  * Get the message ID of 'message'.
@@ -1778,7 +1786,7 @@ notmuch_message_destroy (notmuch_message_t *message);
  *
  * @returns
  * - NOTMUCH_STATUS_NULL_POINTER: *value* may not be NULL.
- * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * - NOTMUCH_STATUS_SUCCESS: No error occurred.
  * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
@@ -1790,7 +1798,7 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
  * @returns
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
  * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
- * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * - NOTMUCH_STATUS_SUCCESS: No error occurred.
  * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
@@ -1804,7 +1812,7 @@ notmuch_message_add_property (notmuch_message_t *message, const char *key, const
  * @returns
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
  * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
- * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * - NOTMUCH_STATUS_SUCCESS: No error occurred.
  * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
@@ -1819,7 +1827,7 @@ notmuch_message_remove_property (notmuch_message_t *message, const char *key, co
  * @returns
  * - NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
  *   read-only mode so message cannot be modified.
- * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * - NOTMUCH_STATUS_SUCCESS: No error occurred.
  *
  * @since libnotmuch 4.4 (notmuch 0.23)
  */
@@ -1835,7 +1843,7 @@ notmuch_message_remove_all_properties (notmuch_message_t *message, const char *k
  * @returns
  * - NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
  *   read-only mode so message cannot be modified.
- * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * - NOTMUCH_STATUS_SUCCESS: No error occurred.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
  */
@@ -1881,6 +1889,22 @@ typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
  */
 notmuch_message_properties_t *
 notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact);
+
+/**
+ * Return the number of properties named "key" belonging to the specific message.
+ *
+ * @param[in] message  The message to examine
+ * @param[in] key      key to count
+ * @param[out] count   The number of matching properties associated with this message.
+ *
+ * @returns
+ *
+ * NOTMUCH_STATUS_SUCCESS: successful count, possibly some other error.
+ *
+ * @since libnotmuch 5.2 (notmuch 0.27)
+ */
+notmuch_status_t
+notmuch_message_count_properties (notmuch_message_t *message, const char *key, unsigned int *count);
 
 /**
  * Is the given *properties* iterator pointing at a valid (key,value)

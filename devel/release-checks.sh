@@ -51,7 +51,7 @@ then
 		exit 1
 	fi
 else
-	echo "Reading './version' file failed (suprisingly!)"
+	echo "Reading './version' file failed (surprisingly!)"
 	exit 1
 fi < ./version
 

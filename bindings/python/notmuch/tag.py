@@ -64,7 +64,7 @@ class Tags(Python3StringMixIn):
     def __init__(self, tags_p, parent=None):
         """
         :param tags_p: A pointer to an underlying *notmuch_tags_t*
-             structure. These are not publically exposed, so a user
+             structure. These are not publicly exposed, so a user
              will almost never instantiate a :class:`Tags` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be

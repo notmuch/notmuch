@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: David Bremner <david@tethera.net>
  */
@@ -36,6 +36,31 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+notmuch_status_t
+notmuch_message_count_properties (notmuch_message_t *message, const char *key, unsigned int *count)
+{
+    if (! count || ! key || ! message)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    notmuch_string_map_t *map;
+    map = _notmuch_message_property_map (message);
+    if (! map)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    notmuch_string_map_iterator_t *matcher = _notmuch_string_map_iterator_create (map, key, true);
+    if (! matcher)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    *count = 0;
+    while (_notmuch_string_map_iterator_valid (matcher)) {
+	(*count)++;
+	_notmuch_string_map_iterator_move_to_next (matcher);
+    }
+
+    _notmuch_string_map_iterator_destroy (matcher);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static notmuch_status_t
 _notmuch_message_modify_property (notmuch_message_t *message, const char *key, const char *value,
 				  bool delete_it)
@@ -44,7 +69,7 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
     notmuch_status_t status;
     char *term = NULL;
 
-    status = _notmuch_database_ensure_writable (_notmuch_message_database (message));
+    status = _notmuch_database_ensure_writable (notmuch_message_get_database (message));
     if (status)
 	return status;
 
@@ -92,7 +117,7 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
     notmuch_status_t status;
     const char * term_prefix;
 
-    status = _notmuch_database_ensure_writable (_notmuch_message_database (message));
+    status = _notmuch_database_ensure_writable (notmuch_message_get_database (message));
     if (status)
 	return status;
 

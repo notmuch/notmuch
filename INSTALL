@@ -46,7 +46,7 @@ Talloc, and zlib which are each described below:
 	Without GMime, Notmuch would not be able to extract and index
 	the actual text from email message encoded as BASE64, etc.
 
-	GMime is available from http://spruce.sourceforge.net/gmime/
+	GMime is available from https://github.com/jstedfast/gmime
 
 	Talloc
 	------
@@ -70,7 +70,7 @@ Talloc, and zlib which are each described below:
 	Notmuch needs the transparent write feature of zlib introduced
 	in version 1.2.5.2 (Dec. 2011).
 
-	zlib is available from http://zlib.net
+	zlib is available from https://zlib.net
 
 Building Documentation
 ----------------------
@@ -80,19 +80,22 @@ of sphinx (Jul. 2010).
 
 Sphinx is available from www.sphinx-doc.org.
 
+To install the documentation as "info" pages, you will need the
+additional tools makeinfo and install-info.
+
 Installing Dependencies from Packages
 -------------------------------------
 
 On a modern, package-based operating system you can install all of the
-dependencies with a simple simple command line. For example:
+dependencies with a single simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python-sphinx
+        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python3-sphinx texinfo install-info
 
   For Fedora and similar:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python-sphinx
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python3-sphinx texinfo info
 
 On other systems, a similar command can be used, but the details of
 the package names may be different.

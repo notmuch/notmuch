@@ -176,7 +176,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 {
     NotmuchFilterDiscardNonTerm *filter = (NotmuchFilterDiscardNonTerm *) gmime_filter;
     const scanner_state_t *states = filter->states;
-    register const char *inptr = inbuf;
+    const char *inptr = inbuf;
     const char *inend = inbuf + inlen;
     char *outptr;
 
@@ -385,7 +385,7 @@ _index_mime_part (notmuch_message_t *message,
     const char *charset;
 
     if (! part) {
-	_notmuch_database_log (_notmuch_message_database (message),
+	_notmuch_database_log (notmuch_message_get_database (message),
 			      "Warning: Not indexing empty mime part.\n");
 	return;
     }
@@ -411,7 +411,7 @@ _index_mime_part (notmuch_message_t *message,
 					 g_mime_multipart_get_part (multipart, i));
 		    continue;
 		} else if (i != GMIME_MULTIPART_SIGNED_CONTENT) {
-		    _notmuch_database_log (_notmuch_message_database (message),
+		    _notmuch_database_log (notmuch_message_get_database (message),
 					   "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
 		}
 	    }
@@ -424,7 +424,7 @@ _index_mime_part (notmuch_message_t *message,
 					       GMIME_MULTIPART_ENCRYPTED (part));
 		} else {
 		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
-			_notmuch_database_log (_notmuch_message_database (message),
+			_notmuch_database_log (notmuch_message_get_database (message),
 					       "Warning: Unexpected extra parts of multipart/encrypted.\n");
 		    }
 		}
@@ -447,7 +447,7 @@ _index_mime_part (notmuch_message_t *message,
     }
 
     if (! (GMIME_IS_PART (part))) {
-	_notmuch_database_log (_notmuch_message_database (message),
+	_notmuch_database_log (notmuch_message_get_database (message),
 			      "Warning: Not indexing unknown mime part: %s.\n",
 			      g_type_name (G_OBJECT_TYPE (part)));
 	return;
@@ -528,7 +528,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     if (!indexopts || (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_FALSE))
 	return;
 
-    notmuch = _notmuch_message_database (message);
+    notmuch = notmuch_message_get_database (message);
 
     GMimeCryptoContext* crypto_ctx = NULL;
 #if (GMIME_MAJOR_VERSION < 3)

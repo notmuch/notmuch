@@ -103,7 +103,7 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   "Function to decide which parts get a header when replying.
 
 This function specifies which parts of a mime message with
-mutiple parts get a header."
+multiple parts get a header."
   :type '(radio (const :tag "No part headers"
 		               notmuch-show-reply-insert-header-p-never)
 		(const :tag "All except multipart/* and hidden parts"

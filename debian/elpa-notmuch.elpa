@@ -1,1 +1,2 @@
 emacs/*.el
+debian/tmp/usr/share/info/*

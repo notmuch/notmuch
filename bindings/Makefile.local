@@ -9,7 +9,7 @@ ifeq ($(HAVE_RUBY_DEV),1)
 		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
 		NOTMUCH_SRCDIR='$(NOTMUCH_SRCDIR)' \
-		ruby extconf.rb --vendor
+		$(RUBY) extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby
 endif
 
@@ -18,3 +18,5 @@ CLEAN += $(patsubst %,$(dir)/ruby/%, \
 	Makefile database.o directory.o filenames.o\
 	init.o message.o messages.o mkmf.log notmuch.so query.o \
 	status.o tags.o thread.o threads.o)
+
+CLEAN += bindings/ruby/.vendorarchdir.time

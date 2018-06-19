@@ -177,8 +177,64 @@ variables.
 notmuch-show
 ============
 
+``notmuch-show-mode`` is used to display a single thread of email from
+your email archives.
+
+By default, various components of email messages, (citations,
+signatures, already-read messages), are hidden. You can make
+these parts visible by clicking with the mouse button or by
+pressing RET after positioning the cursor on a hidden part.
+
+``<space>``
+    Scroll the current message (if necessary),
+    advance to the next message, or advance to the next thread (if
+    already on the last message of a thread).
+
+``N``
+    Move to next message
+
+``P``
+    Move to previous message (or start of current message)
+
+``n``
+    Move to next matching message
+
+``p``
+    Move to previous matching message
+
+``+,-``
+    Add or remove arbitrary tags from the current message.
+
+``?``
+    Display full set of key bindings
+
+.. _notmuch-tree:
+
 notmuch-tree
 ============
+
+``notmuch-tree-mode`` displays the results of a "notmuch tree" of your
+email archives. Each line in the buffer represents a single
+message giving the relative date, the author, subject, and any
+tags.
+
+``<return>``
+   Displays that message.
+
+``N``
+    Move to next message
+
+``P``
+    Move to previous message
+
+``n``
+    Move to next matching message
+
+``p``
+    Move to previous matching message
+
+``?``
+    Display full set of key bindings
 
 Global key bindings
 ===================
@@ -188,6 +244,9 @@ following key bindings:
 
 ``j``
     Jump to saved searches using :ref:`notmuch-jump`.
+
+``k``
+    Tagging operations using :ref:`notmuch-tag-jump`
 
 .. _notmuch-jump:
 
@@ -201,6 +260,22 @@ key of a saved search will immediately jump to that saved search.  For
 example, in the default configuration ``j i`` jumps immediately to the
 inbox search.  When you press ``j``, notmuch-jump shows the saved
 searches and their shortcut keys in the mini-buffer.
+
+.. _notmuch-tag-jump:
+
+notmuch-tag-jump
+----------------
+
+Tagging operations configured through ``notmuch-tagging-keys`` can
+be accessed via :kbd:`k` in :ref:`notmuch-show`,
+:ref:`notmuch-search` and :ref:`notmuch-tree`.  With a
+prefix (:kbd:`C-u k`), notmuch displays a menu of the reverses of the
+operations specified in ``notmuch-tagging-keys``; i.e. each
+``+tag`` is replaced by ``-tag`` and vice versa.
+
+:index:`notmuch-tagging-keys`
+
+   A list of keys and corresponding tagging operations.
 
 Configuration
 =============

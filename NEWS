@@ -1,3 +1,67 @@
+Notmuch 0.27 (2018-06-13)
+=========================
+
+General
+-------
+
+Add support for thread:{} queries
+
+  Queries of the form `thread:{foo} and thread:{bar}` match threads
+  containing (possibly distinct) messages matching foo and bar. See
+  `notmuch-search-terms(7)` for details.
+
+Command Line Interface
+----------------------
+
+Add the --full-scan option to `notmuch new`
+
+  This option disables mtime based optimization of scanning for new mail.
+
+Add new --decrypt=stash option for `notmuch show`
+
+  This facilitates a workflow for encrypted messages where message
+  cleartext are indexed on first read, but the user's decryption key
+  does not have to be available during message receipt.
+
+Documentation
+-------------
+
+An initial manual for `notmuch-emacs` is now installed by default (in
+`info` format).
+
+Dependencies
+------------
+
+As of this release, support for versions of Xapian before 1.4.0 is
+deprecated, and may disappear in a future release of notmuch.
+
+Notmuch 0.26.2 (2018-04-28)
+===========================
+
+Library Changes
+---------------
+
+Work around Xapian bug with `get_mset(0,0, x)`.
+
+  This causes aborts in `_notmuch_query_count_documents` on
+  e.g. Fedora 28.  The underlying bug is fixed in Xapian commit
+  f92e2a936c1592, and will be fixed in Xapian 1.4.6.
+
+Make thread indexing more robust against reference loops
+
+  Choose a thread root by date in case of reference loops. Fix a
+  related abort in `notmuch show`.
+
+Notmuch 0.26.1 (2018-04-02)
+===========================
+
+Library Changes
+---------------
+
+Bump the library minor version. This should have happened in 0.26, but
+better late than never.
+
+
 Notmuch 0.26 (2018-01-09)
 =========================
 
@@ -664,7 +728,7 @@ Fixed constant values so they are not all zero anymore
   Previously, it was impossible to open writable database handles,
   because `DATABASE_MODE_READ_ONLY` and `DATABASE_MODE_READ_WRITE` were
   both set to zero.
-  The same issue occured with sort modes.
+  The same issue occurred with sort modes.
 
 Notmuch 0.22.2 (2016-09-08)
 ===========================
@@ -1024,7 +1088,7 @@ Path to gpg is now configurable
 Emacs
 -----
 
-Avoid rendering large text attachements.
+Avoid rendering large text attachments.
 
 Improved rendering of CID references in HTML.
 
@@ -1065,7 +1129,7 @@ Documentation
 Sphinx is now mandatory to build docs
 
   Support for using rst2man in place of sphinx to build the
-  docmumentation has been removed.
+  documentation has been removed.
 
 Improved notmuch-search-terms.7
 
@@ -1444,7 +1508,7 @@ Command-Line Interface
 The commands set consistent exit status codes on failures
 
   The cli commands now consistently set exit status of 1 on failures,
-  except where explicitly otherwise noted. The notable expections are
+  except where explicitly otherwise noted. The notable exceptions are
   the status codes for format version mismatches for commands that
   support formatted output.
 
@@ -1578,7 +1642,7 @@ uses `@{upstream}` instead of `FETCH_HEAD` to track upstream changes.
   2. Remove your `NMBGIT` repository (e.g. `mv .nmbug .nmbug.bak`).
   3. Use the new `clone` command to create a fresh clone:
 
-        nmbug clone http://nmbug.tethera.net/git/nmbug-tags.git
+        nmbug clone https://nmbug.notmuchmail.org/git/nmbug-tags.git
 
   4. If you had local commits in step 1, add a remote for that
      repository and fetch them into the new repository.
@@ -2654,7 +2718,7 @@ Turn "id:MSG-ID" links into buttons associated with notmuch searches
 
 Add keybinding ('c I') for stashing Message-ID's without an id: prefix
 
-  Reduces manual labour when stashing them for use outside notmuch.
+  Reduces manual labor when stashing them for use outside notmuch.
 
 Do not query on `notmuch-search` exit
 
@@ -2689,7 +2753,7 @@ mailing list.
 nmbug - share tags with a given prefix
 
   nmbug helps maintain a git repo containing all tags with a given
-  prefix (by default "notmuch::"). Tags can be shared by commiting
+  prefix (by default "notmuch::"). Tags can be shared by committing
   them to git in one location and restoring in another.
 
 Notmuch 0.9 (2011-10-01)

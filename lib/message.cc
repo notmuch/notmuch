@@ -268,7 +268,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred creating message: %s\n",
+	_notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred creating message: %s\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = true;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
@@ -317,6 +317,23 @@ _notmuch_message_get_term (notmuch_message_t *message,
 
     return value;
 }
+
+/*
+ * For special applications where we only want the thread id, reading
+ * in all metadata is a heavy I/O penalty.
+ */
+const char *
+_notmuch_message_get_thread_id_only (notmuch_message_t *message)
+{
+
+    Xapian::TermIterator i = message->doc.termlist_begin ();
+    Xapian::TermIterator end = message->doc.termlist_end ();
+
+    message->thread_id = _notmuch_message_get_term (message, i, end,
+						    _find_prefix ("thread"));
+    return message->thread_id;
+}
+
 
 static void
 _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
@@ -495,7 +512,7 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 	return;
 
     message->message_file = _notmuch_message_file_open_ctx (
-	_notmuch_message_database (message), message, filename);
+	notmuch_message_get_database (message), message, filename);
 }
 
 const char *
@@ -525,7 +542,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 		return talloc_strdup (message, value.c_str ());
 
 	} catch (Xapian::Error &error) {
-	    _notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading header: %s\n",
+	    _notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred when reading header: %s\n",
 		     error.get_msg().c_str());
 	    message->notmuch->exception_reported = true;
 	    return NULL;
@@ -646,7 +663,7 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 	    notmuch_database_t *notmuch = message->notmuch;
 
 	    if (!notmuch->exception_reported) {
-		_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred creating message: %s\n",
+		_notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred creating message: %s\n",
 				      error.get_msg().c_str());
 		notmuch->exception_reported = true;
 	    }
@@ -1042,7 +1059,7 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading date: %s\n",
+	_notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred when reading date: %s\n",
 		 error.get_msg().c_str());
 	message->notmuch->exception_reported = true;
 	return 0;
@@ -1908,7 +1925,7 @@ notmuch_message_destroy (notmuch_message_t *message)
 }
 
 notmuch_database_t *
-_notmuch_message_database (notmuch_message_t *message)
+notmuch_message_get_database (const notmuch_message_t *message)
 {
     return message->notmuch;
 }
@@ -1985,7 +2002,7 @@ notmuch_message_reindex (notmuch_message_t *message,
     /* strdup it because the metadata may be invalidated */
     orig_thread_id = talloc_strdup (message, orig_thread_id);
 
-    notmuch = _notmuch_message_database (message);
+    notmuch = notmuch_message_get_database (message);
 
     ret = _notmuch_database_ensure_writable (notmuch);
     if (ret)

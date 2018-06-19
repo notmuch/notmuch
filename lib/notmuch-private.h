@@ -532,11 +532,13 @@ _notmuch_message_id_parse (void *ctx, const char *message_id, const char **next)
 void
 _notmuch_message_add_reply (notmuch_message_t *message,
 			    notmuch_message_t *reply);
-notmuch_database_t *
-_notmuch_message_database (notmuch_message_t *message);
 
 void
 _notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
+
+const char *
+_notmuch_message_get_thread_id_only(notmuch_message_t *message);
+
 /* sha1.c */
 
 char *

@@ -864,7 +864,7 @@ Supports the following entries in OPTIONS as a plist:
 :hide-if-empty - hide if no buttons would be shown
    (only makes sense without :show-empty-searches)
 :filter - This can be a function that takes the search query as its argument and
-   returns a filter to be used in conjuction with the query for that search or nil
+   returns a filter to be used in conjunction with the query for that search or nil
    to hide the element. This can also be a string that is used as a combined with
    each query using \"and\".
 :filter-count - Separate filter to generate the count displayed each search. Accepts

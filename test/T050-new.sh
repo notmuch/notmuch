@@ -12,6 +12,10 @@ generate_message
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
+test_begin_subtest "Single message (full-scan)"
+generate_message
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "Multiple new messages"
 generate_message
@@ -19,11 +23,19 @@ generate_message
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 2 new messages to the database."
 
+test_begin_subtest "Multiple new messages (full-scan)"
+generate_message
+generate_message
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "Added 2 new messages to the database."
 
 test_begin_subtest "No new messages (non-empty DB)"
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "No new mail."
 
+test_begin_subtest "No new messages (full-scan)"
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
+test_expect_equal "$output" "No new mail."
 
 test_begin_subtest "New directories"
 rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch
@@ -87,7 +99,7 @@ notmuch new > /dev/null
 
 mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir for deletion from database
 No new mail. Detected 3 file renames."
 
@@ -95,7 +107,7 @@ No new mail. Detected 3 file renames."
 test_begin_subtest "Deleted directory"
 rm -rf "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir-renamed for deletion from database
 No new mail. Removed 3 messages."
 
@@ -114,7 +126,7 @@ test_begin_subtest "Deleted directory (end of list)"
 
 rm -rf "${MAIL_DIR}"/zzz
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/zzz for deletion from database
 No new mail. Removed 3 messages."
 
@@ -165,7 +177,7 @@ test_begin_subtest "Deleted two-level directory"
 
 rm -rf "${MAIL_DIR}"/two
 
-output=$(NOTMUCH_NEW --debug)
+output=$(NOTMUCH_NEW --debug --full-scan)
 test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
 No new mail. Removed 3 messages."
 
@@ -211,7 +223,7 @@ Subject: Test mbox message 2
 
 Body 2.
 EOF
-output=$(NOTMUCH_NEW --debug 2>&1)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1)
 test_expect_equal "$output" \
 "Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
 Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
@@ -224,17 +236,31 @@ test_begin_subtest "Ignore files and directories specified in new.ignore"
 generate_message
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
-output=$(NOTMUCH_NEW 2>&1)
-test_expect_equal "$output" "Added 1 new message to the database."
+NOTMUCH_NEW --debug 2>&1 | sort > OUTPUT
+cat <<EOF > EXPECTED
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
+Added 1 new message to the database.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Ignore files and directories specified in new.ignore (full-scan)"
+generate_message
+notmuch config set new.ignore .git ignored_file .ignored_hidden_file
+NOTMUCH_NEW --debug --full-scan 2>&1 | sort > OUTPUT
+# reuse EXPECTED from previous test
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
-touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
-touch "${MAIL_DIR}"      # likewise for MAIL_DIR
 mkdir -p "${MAIL_DIR}"/one/two/three/.git
 touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
-output=$(NOTMUCH_NEW --debug 2>&1 | sort)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
@@ -261,7 +287,7 @@ test_expect_equal "$output" "No new mail."
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (regexp)"
 notmuch config set new.ignore ".git" "/^bro.*ink\$/" "/ignored.*file/"
-output=$(NOTMUCH_NEW --debug 2>&1 | sort)
+output=$(NOTMUCH_NEW --debug --full-scan 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
@@ -351,6 +377,19 @@ Unexpected error with file ${MAIL_DIR}/vanish
 add_file: Something went wrong trying to read or write a file
 Error opening ${MAIL_DIR}/vanish: No such file or directory
 exit status: 75
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+add_email_corpus broken
+test_begin_subtest "reference loop does not crash"
+test_expect_code 0 "notmuch show --format=json id:mid-loop-12@example.org id:mid-loop-21@example.org > OUTPUT"
+
+test_begin_subtest "reference loop ordered by date"
+threadid=$(notmuch search --output=threads  id:mid-loop-12@example.org)
+notmuch show --format=mbox $threadid | grep '^Date'  > OUTPUT
+cat <<EOF > EXPECTED
+Date: Thu, 16 Jun 2016 22:14:41 -0400
+Date: Fri, 17 Jun 2016 22:14:41 -0400
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

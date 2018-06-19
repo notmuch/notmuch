@@ -62,6 +62,7 @@ CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-}
 PYTHON=${PYTHON:-}
+RUBY=${RUBY:-ruby}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
 # from the environment as we do with CC and CXX above. The reason is
@@ -118,6 +119,8 @@ Other environment variables can be used to control configure itself,
 			library. [$XAPIAN_CONFIG]
 	PYTHON		Name of python command to use in
 			configure and the test suite.
+	RUBY		Name of ruby command to use in
+			configure and the test suite.
 
 Additionally, various options can be specified on the configure
 command line.
@@ -136,6 +139,7 @@ Fine tuning of some installation directories is available:
 	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--infodir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
@@ -159,7 +163,6 @@ configure-script calling conventions, but don't do anything yet:
 
 	--build=<cpu>-<vendor>-<os>	Currently ignored
 	--host=<cpu>-<vendor>-<os>	Currently ignored
-	--infodir=DIR			Currently ignored
 	--datadir=DIR			Currently ignored
 	--localstatedir=DIR		Currently ignored
 	--libexecdir=DIR		Currently ignored
@@ -182,6 +185,8 @@ for option; do
 	INCLUDEDIR="${option#*=}"
     elif [ "${option%%=*}" = '--mandir' ] ; then
 	MANDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--infodir' ] ; then
+	INFODIR="${option#*=}"
     elif [ "${option%%=*}" = '--sysconfdir' ] ; then
 	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--emacslispdir' ] ; then
@@ -261,8 +266,6 @@ for option; do
     elif [ "${option%%=*}" = '--build' ] ; then
 	true
     elif [ "${option%%=*}" = '--host' ] ; then
-	true
-    elif [ "${option%%=*}" = '--infodir' ] ; then
 	true
     elif [ "${option%%=*}" = '--datadir' ] ; then
 	true
@@ -621,7 +624,7 @@ fi
 have_ruby_dev=0
 if [ $WITH_RUBY = "1" ] ; then
     printf "Checking for ruby development files... "
-    if ruby -e "require 'mkmf'"> /dev/null 2>&1; then
+    if ${RUBY} -e "require 'mkmf'"> /dev/null 2>&1; then
 	printf "Yes.\n"
 	have_ruby_dev=1
     else
@@ -630,6 +633,8 @@ if [ $WITH_RUBY = "1" ] ; then
 fi
 
 have_sphinx=0
+have_makeinfo=0
+have_install_info=0
 if [ $WITH_DOCS = "1" ] ; then
     printf "Checking if sphinx is available and supports nroff output... "
     if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
@@ -637,6 +642,20 @@ if [ $WITH_DOCS = "1" ] ; then
 	have_sphinx=1
     else
 	printf "No (so will not install man pages).\n"
+    fi
+    printf "Checking if makeinfo is available... "
+    if command -v makeinfo > /dev/null; then
+	printf "Yes.\n"
+	have_makeinfo=1
+    else
+	printf "No (so will not build info pages).\n"
+    fi
+    printf "Checking if install-info is available... "
+    if command -v install-info > /dev/null; then
+	printf "Yes.\n"
+	have_install_info=1
+    else
+	printf "No (so will not install info pages).\n"
     fi
 fi
 
@@ -696,7 +715,7 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     IFS="
 "
     for path in $ldconfig_paths; do
-	if [ "$path" = "$libdir_expanded" ]; then
+	if [ "$path" -ef "$libdir_expanded" ]; then
 	    libdir_in_ldconfig=1
 	fi
     done
@@ -734,18 +753,18 @@ EOF
     fi
     if [ $have_zlib -eq 0 ]; then
 	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
-	echo "	http://zlib.net/"
+	echo "	https://zlib.net/"
 	echo
     fi
     if [ $have_gmime -eq 0 ]; then
 	echo "	GMime 2.6 library >= $GMIME_MINVER"
 	echo "	(including development files such as headers)"
-	echo "	http://spruce.sourceforge.net/gmime/"
+	echo "	https://github.com/jstedfast/gmime/"
 	echo
     fi
     if [ $have_glib -eq 0 ]; then
 	echo "	Glib library >= 2.22 (including development files such as headers)"
-	echo "	http://ftp.gnome.org/pub/gnome/sources/glib/"
+	echo "	https://ftp.gnome.org/pub/gnome/sources/glib/"
 	echo
     fi
     if [ $have_talloc -eq 0 ]; then
@@ -1027,6 +1046,9 @@ WARN_CFLAGS=${WARN_CFLAGS}
 # Name of python interpreter
 PYTHON = ${python}
 
+# Name of ruby interpreter
+RUBY = ${RUBY}
+
 # The prefix to which notmuch should be installed
 # Note: If you change this value here, be sure to ensure that the
 # LIBDIR_IN_LDCONFIG value below is still set correctly.
@@ -1046,6 +1068,9 @@ includedir = ${INCLUDEDIR:=\$(prefix)/include}
 # The directory to which man pages should be installed
 mandir = ${MANDIR:=\$(prefix)/share/man}
 
+# The directory to which man pages should be installed
+infodir = ${INFODIR:=\$(prefix)/share/info}
+
 # The directory to which read-only (configuration) files should be installed
 sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
 
@@ -1061,6 +1086,12 @@ HAVE_EMACS = ${have_emacs}
 
 # Whether there's a sphinx-build binary available for building documentation
 HAVE_SPHINX=${have_sphinx}
+
+# Whether there's a makeinfo binary available for building info format documentation
+HAVE_MAKEINFO=${have_makeinfo}
+
+# Whether there's an install-info binary available for installing info format documentation
+HAVE_INSTALL_INFO=${have_install_info}
 
 # Whether there's a doxygen binary available for building api documentation
 HAVE_DOXYGEN=${have_doxygen}
@@ -1233,6 +1264,9 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}
+
+# Name of ruby interpreter
+NOTMUCH_RUBY=${RUBY}
 
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.

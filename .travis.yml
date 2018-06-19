@@ -10,8 +10,7 @@ addons:
     - libxapian-dev
     - libgmime-2.6-dev
     - libtalloc-dev
-    - python-sphinx
-    - gdb
+    - python3-sphinx
     - gpgsm
 
 script:

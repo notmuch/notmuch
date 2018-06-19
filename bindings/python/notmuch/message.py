@@ -19,7 +19,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 
-from ctypes import c_char_p, c_long, c_uint, c_int
+from ctypes import c_char_p, c_long, c_uint, c_int, POINTER, byref
 from datetime import date
 from .globals import (
     nmlib,
@@ -29,6 +29,7 @@ from .globals import (
     NotmuchTagsP,
     NotmuchMessageP,
     NotmuchMessagesP,
+    NotmuchMessagePropertiesP,
     NotmuchFilenamesP,
 )
 from .errors import (
@@ -112,6 +113,36 @@ class Message(Python3StringMixIn):
     _maildir_flags_to_tags = nmlib.notmuch_message_maildir_flags_to_tags
     _maildir_flags_to_tags.argtypes = [NotmuchMessageP]
     _maildir_flags_to_tags.restype = c_int
+
+    """notmuch_message_get_property"""
+    _get_property = nmlib.notmuch_message_get_property
+    _get_property.argtypes = [NotmuchMessageP, c_char_p, POINTER(c_char_p)]
+    _get_property.restype = c_int
+
+    """notmuch_message_get_properties"""
+    _get_properties = nmlib.notmuch_message_get_properties
+    _get_properties.argtypes = [NotmuchMessageP, c_char_p, c_int]
+    _get_properties.restype = NotmuchMessagePropertiesP
+
+    """notmuch_message_properties_valid"""
+    _properties_valid = nmlib.notmuch_message_properties_valid
+    _properties_valid.argtypes = [NotmuchMessagePropertiesP]
+    _properties_valid.restype = bool
+
+    """notmuch_message_properties_value"""
+    _properties_value = nmlib.notmuch_message_properties_value
+    _properties_value.argtypes = [NotmuchMessagePropertiesP]
+    _properties_value.restype = c_char_p
+
+    """notmuch_message_properties_key"""
+    _properties_key = nmlib.notmuch_message_properties_key
+    _properties_key.argtypes = [NotmuchMessagePropertiesP]
+    _properties_key.restype = c_char_p
+
+    """notmuch_message_properties_move_to_next"""
+    _properties_move_to_next = nmlib.notmuch_message_properties_move_to_next
+    _properties_move_to_next.argtypes = [NotmuchMessagePropertiesP]
+    _properties_move_to_next.restype = None
 
     #Constants: Flags that can be set/get with set_flag
     FLAG = Enum(['MATCH'])
@@ -223,7 +254,7 @@ class Message(Python3StringMixIn):
         :returns: The header value as string
         :raises: :exc:`NotInitializedError` if the message is not
                  initialized
-        :raises: :exc:`NullPointerError` if any error occured
+        :raises: :exc:`NullPointerError` if any error occurred
         """
         if not self._msg:
             raise NotInitializedError()
@@ -295,7 +326,7 @@ class Message(Python3StringMixIn):
         :returns: A :class:`Tags` iterator.
         :raises: :exc:`NotInitializedError` if the message is not
                  initialized
-        :raises: :exc:`NullPointerError` if any error occured
+        :raises: :exc:`NullPointerError` if any error occurred
         """
         if not self._msg:
             raise NotInitializedError()
@@ -432,6 +463,53 @@ class Message(Python3StringMixIn):
     _freeze = nmlib.notmuch_message_freeze
     _freeze.argtypes = [NotmuchMessageP]
     _freeze.restype = c_uint
+
+    def get_property(self, prop):
+        """ Retrieve the value for a single property key
+
+        :param prop: The name of the property to get.
+        :returns: String with the property value or None if there is no such
+                  key. In the case of multiple values for the given key, the
+                  first one is retrieved.
+        :raises: :exc:`NotInitializedError` if message has not been
+                 initialized
+        """
+        if not self._msg:
+            raise NotInitializedError()
+
+        value = c_char_p()
+        status = Message._get_property(self._msg, _str(prop), byref(value))
+        if status != 0:
+            raise NotmuchError(status)
+
+        return value.value.decode('utf-8')
+
+    def get_properties(self, prop="", exact=False):
+        """ Get the properties of the message, returning a generator of
+        name, value pairs.
+
+        The generator will yield once per value. There might be more than one
+        value on each name, so the generator might yield the same name several
+        times.
+
+        :param prop: The name of the property to get. Otherwise it will return
+                     the full list of properties of the message.
+        :param exact: if True, require exact match with key. Otherwise
+                      treat as prefix.
+        :yields:  Each property values as a pair of `name, value`
+        :ytype:   pairs of str
+        :raises: :exc:`NotInitializedError` if message has not been
+                 initialized
+        """
+        if not self._msg:
+            raise NotInitializedError()
+
+        properties = Message._get_properties(self._msg, _str(prop), exact)
+        while Message._properties_valid(properties):
+            key = Message._properties_key(properties)
+            value = Message._properties_value(properties)
+            yield key.decode("utf-8"), value.decode("utf-8")
+            Message._properties_move_to_next(properties)
 
     def freeze(self):
         """Freezes the current state of 'message' within the database

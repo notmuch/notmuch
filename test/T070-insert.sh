@@ -4,6 +4,10 @@ test_description='"notmuch insert"'
 
 test_require_external_prereq gdb
 
+# subtests about file permissions assume that we're working with umask
+# 022 by default.
+umask 022
+
 # Create directories and database before inserting.
 mkdir -p "$MAIL_DIR"/{cur,new,tmp}
 mkdir -p "$MAIL_DIR"/Drafts/{cur,new,tmp}
@@ -36,6 +40,9 @@ gen_insert_msg
 notmuch insert < "$gen_msg_filename"
 cur_msg_filename=$(notmuch search --output=files "subject:insert-subject")
 test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
+
+test_begin_subtest "Permissions on inserted message should be 0600"
+test_expect_equal "600" "$(stat -c %a "$cur_msg_filename")"
 
 test_begin_subtest "Insert message adds default tags"
 output=$(notmuch show --format=json "subject:insert-subject")
@@ -72,6 +79,27 @@ gen_insert_msg
 notmuch insert +custom < "$gen_msg_filename"
 output=$(notmuch search --output=messages tag:custom)
 test_expect_equal "$output" "id:$gen_msg_id"
+
+test_begin_subtest "Insert tagged world-readable message"
+gen_insert_msg
+notmuch insert --world-readable +world-readable-test < "$gen_msg_filename"
+cur_msg_filename=$(notmuch search --output=files "tag:world-readable-test")
+test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
+
+test_begin_subtest "Permissions on inserted world-readable message should be 0644"
+test_expect_equal "644" "$(stat -c %a "$cur_msg_filename")"
+
+test_begin_subtest "Insert tagged world-readable message with group-only umask"
+oldumask=$(umask)
+umask 027
+gen_insert_msg
+notmuch insert --world-readable +world-readable-umask-test < "$gen_msg_filename"
+cur_msg_filename=$(notmuch search --output=files "tag:world-readable-umask-test")
+umask "$oldumask"
+test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
+
+test_begin_subtest "Permissions on inserted world-readable message with funny umask should be 0640"
+test_expect_equal "640" "$(stat -c %a "$cur_msg_filename")"
 
 test_begin_subtest "Insert message, add/remove tags"
 gen_insert_msg
@@ -169,6 +197,23 @@ notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch search --output=files path:F/G/H/I/J/new tag:folder)
 basename=$(basename "$output")
 test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/new/${basename}"
+
+test_begin_subtest "Created subfolder should have permissions 0700"
+test_expect_equal "700" "$(stat -c %a "${MAIL_DIR}/F/G/H/I/J")"
+test_begin_subtest "Created subfolder new/ should also have permissions 0700"
+test_expect_equal "700" "$(stat -c %a "${MAIL_DIR}/F/G/H/I/J/new")"
+
+test_begin_subtest "Insert message, create world-readable subfolder"
+gen_insert_msg
+notmuch insert --folder=F/G/H/I/J/K --create-folder --world-readable +folder-world-readable < "$gen_msg_filename"
+output=$(notmuch search --output=files path:F/G/H/I/J/K/new tag:folder-world-readable)
+basename=$(basename "$output")
+test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/K/new/${basename}"
+
+test_begin_subtest "Created world-readable subfolder should have permissions 0755"
+test_expect_equal "755" "$(stat -c %a "${MAIL_DIR}/F/G/H/I/J/K")"
+test_begin_subtest "Created world-readable subfolder new/ should also have permissions 0755"
+test_expect_equal "755" "$(stat -c %a "${MAIL_DIR}/F/G/H/I/J/K/new")"
 
 test_begin_subtest "Insert message, create existing subfolder"
 gen_insert_msg

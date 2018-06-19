@@ -54,7 +54,6 @@ The following properties are set by notmuch internally in the course
 of its normal activity.
 
 **index.decryption**
-
     If a message contains encrypted content, and notmuch tries to
     decrypt that content during indexing, it will add the property
     ``index.decryption=success`` when the cleartext was successfully

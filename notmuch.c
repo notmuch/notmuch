@@ -26,7 +26,7 @@
  * Notmuch subcommand hook.
  *
  * The return value will be used as notmuch exit status code,
- * preferrably EXIT_SUCCESS or EXIT_FAILURE.
+ * preferably EXIT_SUCCESS or EXIT_FAILURE.
  */
 typedef int (*command_function_t) (notmuch_config_t *config, int argc, char *argv[]);
 

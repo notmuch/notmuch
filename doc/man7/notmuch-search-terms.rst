@@ -42,7 +42,7 @@ of the prefixes with <regex> forms can be also used to restrict the
 results to those whose value matches a regular expression (see
 **regex(7)**) delimited with //, for example::
 
-   notmuch search 'from:/bob@.*[.]example[.]com/'
+   notmuch search 'from:"/bob@.*[.]example[.]com/"'
 
 from:<name-or-address> or from:/<regex>/
     The **from:** prefix is used to match the name or address of
@@ -83,6 +83,22 @@ thread:<thread-id>
     messages). These thread ID values can be seen in the first column
     of output from **notmuch search**
 
+thread:{<notmuch query>}
+    If notmuch is built with **Xapian Field Processors** (see below),
+    threads may be searched for indirectly by providing an arbitrary
+    notmuch query in **{}**. For example, the following returns
+    threads containing a message from mallory and one (not necessarily
+    the same message) with Subject containing the word "crypto".
+
+    ::
+
+       % notmuch search 'thread:"{from:mallory}" and thread:"{subject:crypto}"'
+
+    The performance of such queries can vary wildly. To understand
+    this, the user should think of the query **thread:{<something>}**
+    as expanding to all of the thread IDs which match **<something>**;
+    notmuch then performs a second search using the expanded query.
+
 path:<directory-path> or path:<directory-path>/** or path:/<regex>/
     The **path:** prefix searches for email messages that are in
     particular directories within the mail store. The directory must
@@ -121,13 +137,14 @@ date:<since>..<until> or date:<date>
     expression, and supported syntax for <since> and <until> date and
     time expressions.
 
-    The time range can also be specified using timestamps with a
-    syntax of:
+    The time range can also be specified using timestamps without
+    including the date prefix using a syntax of:
 
     <initial-timestamp>..<final-timestamp>
 
     Each timestamp is a number representing the number of seconds
-    since 1970-01-01 00:00:00 UTC.
+    since 1970-01-01 00:00:00 UTC. Specifying a time range this way
+    is considered legacy and predates the date prefix.
 
 lastmod:<initial-revision>..<final-revision>
     The **lastmod:** prefix can be used to restrict the result by the
@@ -272,6 +289,33 @@ Both of these will match a subject "Free Delicious Pizza" while
 
 will not.
 
+Quoting
+-------
+
+Double quotes are also used by the notmuch query parser to protect
+boolean terms, regular expressions, or subqueries containing spaces or
+other special characters, e.g.
+
+::
+
+   tag:"a tag"
+
+::
+
+   folder:"/^.*/(Junk|Spam)$/"
+
+::
+
+   thread:"{from:mallory and date:2009}"
+
+As with phrases, you need to protect the double quotes from the shell
+e.g.
+
+::
+
+   % notmuch search 'folder:"/^.*/(Junk|Spam)$/"'
+   % notmuch search 'thread:"{from:mallory and date:2009}" and thread:{to:mallory}'
+
 DATE AND TIME SEARCH
 ====================
 
@@ -295,6 +339,13 @@ In this case, <since> is taken as the earliest time it could describe
 (the beginning of yesterday) and <until> is taken as the latest time it
 could describe (the end of yesterday). Similarly, date:january..february
 matches from the beginning of January to the end of February.
+
+If specifying a time range using timestamps in conjunction with the
+date prefix, each timestamp must be preceded by @ (ASCII hex 40). As
+above, each timestamp is a number representing the number of seconds
+since 1970-01-01 00:00:00 UTC. For example:
+
+    date:@<initial-timestamp>..@<final-timestamp>
 
 date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
 expansion takes place before interpretation, and thus, for example,
@@ -405,6 +456,7 @@ Currently the following features require field processor support:
 - non-range date queries, e.g. "date:today"
 - named queries e.g. "query:my_special_query"
 - regular expression searches, e.g. "subject:/^\\[SPAM\\]/"
+- thread subqueries, e.g. "thread:{from:bob}"
 
 SEE ALSO
 ========

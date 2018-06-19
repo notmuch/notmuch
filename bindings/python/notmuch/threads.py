@@ -85,7 +85,7 @@ class Threads(Python3StringMixIn):
     def __init__(self, threads_p, parent=None):
         """
         :param threads_p:  A pointer to an underlying *notmuch_threads_t*
-             structure. These are not publically exposed, so a user
+             structure. These are not publicly exposed, so a user
              will almost never instantiate a :class:`Threads` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Query.search_threads`.  *threads_p* must be

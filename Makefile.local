@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man ruby-bindings
+all: notmuch notmuch-shared build-man build-info ruby-bindings
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -76,7 +76,7 @@ release: verify-source-tree-and-version
 	mv $(TAR_FILE) $(SHA256_FILE) $(GPG_FILE) releases
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
 ifeq ($(REALLY_UPLOAD),yes)
-	git push origin $(VERSION)
+	git push origin $(VERSION) $(DEB_TAG) release pristine-tar
 	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
 endif
@@ -176,7 +176,7 @@ verify-newer:
 	     echo "Refusing to replace an existing release."; \
 	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
 	     false ;; \
-	  *) echo "An unexpected error occured"; \
+	  *) echo "An unexpected error occurred"; \
 	     false;; esac
 
 # The user has not set any verbosity, default to quiet mode and inform the
@@ -260,7 +260,7 @@ notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 .PHONY: install
-install: all install-man
+install: all install-man install-info
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
 ifeq ($(MAKECMDGOALS), install)

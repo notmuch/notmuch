@@ -873,6 +873,11 @@ show_message (void *ctx,
     void *local = talloc_new (ctx);
     mime_node_t *root, *part;
     notmuch_status_t status;
+    unsigned int session_keys = 0;
+    notmuch_status_t session_key_count_error = NOTMUCH_STATUS_SUCCESS;
+
+    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
+	session_key_count_error = notmuch_message_count_properties (message, "session-key", &session_keys);
 
     status = mime_node_open (local, message, &(params->crypto), &root);
     if (status)
@@ -880,6 +885,21 @@ show_message (void *ctx,
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
     if (part)
 	status = format->part (local, sp, part, indent, params);
+#if HAVE_GMIME_SESSION_KEYS
+    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE && session_key_count_error == NOTMUCH_STATUS_SUCCESS) {
+	unsigned int new_session_keys = 0;
+	if (notmuch_message_count_properties (message, "session-key", &new_session_keys) == NOTMUCH_STATUS_SUCCESS &&
+	    new_session_keys > session_keys) {
+	    /* try a quiet re-indexing */
+	    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (notmuch_message_get_database (message));
+	    if (indexopts) {
+		notmuch_indexopts_set_decrypt_policy (indexopts, NOTMUCH_DECRYPT_AUTO);
+		print_status_message ("Error re-indexing message with --decrypt=stash",
+				      message, notmuch_message_reindex (message, indexopts));
+	    }
+	}
+    }
+#endif
   DONE:
     talloc_free (local);
     return status;
@@ -1104,6 +1124,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
 				  { "auto", NOTMUCH_DECRYPT_AUTO },
 				  { "true", NOTMUCH_DECRYPT_NOSTASH },
+				  { "stash", NOTMUCH_DECRYPT_TRUE },
 				  { 0, 0 } } },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
@@ -1119,7 +1140,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     /* explicit decryption implies verification */
-    if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH)
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH ||
+	params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
 	params.crypto.verify = true;
 
     /* specifying a part implies single message display */
@@ -1182,8 +1204,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     params.crypto.gpgpath = notmuch_config_get_crypto_gpg_path (config);
 #endif
 
+    notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
+	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
     if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+			       mode, &notmuch))
 	return EXIT_FAILURE;
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);

@@ -71,7 +71,7 @@ class Thread(object):
     def __init__(self, thread_p, parent=None):
         """
         :param thread_p: A pointer to an internal notmuch_thread_t
-            Structure.  These are not publically exposed, so a user
+            Structure.  These are not publicly exposed, so a user
             will almost never instantiate a :class:`Thread` object
             herself. They are usually handed back as a result,
             e.g. when iterating through :class:`Threads`. *thread_p*

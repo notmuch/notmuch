@@ -73,7 +73,7 @@ positional arg 1 bananas
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "test keyword arguments with non-default value separted by a space"
+test_begin_subtest "test keyword arguments with non-default value separated by a space"
 $TEST_DIRECTORY/arg-test --boolkeyword false bananas > OUTPUT
 cat <<EOF > EXPECTED
 boolkeyword 0

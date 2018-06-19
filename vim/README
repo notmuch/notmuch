@@ -5,7 +5,7 @@ utilizing the notmuch framework, through it's ruby bindings.
 
 == install ==
 
-Simply run 'make install'. However, check that you have the depencies below.
+Simply run 'make install'. However, check that you have the dependencies below.
 
 === vim +ruby ===
 

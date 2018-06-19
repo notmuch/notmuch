@@ -100,7 +100,7 @@ class Messages(object):
     def __init__(self, msgs_p, parent=None):
         """
         :param msgs_p:  A pointer to an underlying *notmuch_messages_t*
-             structure. These are not publically exposed, so a user
+             structure. These are not publicly exposed, so a user
              will almost never instantiate a :class:`Messages` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Query.search_messages`.  *msgs_p* must be

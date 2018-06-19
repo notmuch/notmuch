@@ -47,6 +47,7 @@ typedef struct {
     int output_is_a_tty;
     enum verbosity verbosity;
     bool debug;
+    bool full_scan;
     const char **new_tags;
     size_t new_tags_length;
     const char **ignore_verbatim;
@@ -527,7 +528,7 @@ add_files (notmuch_database_t *notmuch,
      * mistakenly return the total number of directory entries, since
      * that only inflates the count beyond 2.
      */
-    if (directory && fs_mtime == db_mtime && st.st_nlink == 2) {
+    if (directory && (! state->full_scan) && fs_mtime == db_mtime && st.st_nlink == 2) {
 	/* There's one catch: pass 1 below considers symlinks to
 	 * directories to be directories, but these don't increase the
 	 * file system link count.  So, only bail early if the
@@ -618,7 +619,7 @@ add_files (notmuch_database_t *notmuch,
      * being discovered until the clock catches up and the directory
      * is modified again).
      */
-    if (directory && fs_mtime == db_mtime)
+    if (directory && (! state->full_scan) && fs_mtime == db_mtime)
 	goto DONE;
 
     /* If the database has never seen this directory before, we can
@@ -1053,6 +1054,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     add_files_state_t add_files_state = {
 	.verbosity = VERBOSITY_NORMAL,
 	.debug = false,
+	.full_scan = false,
 	.output_is_a_tty = isatty (fileno (stdout)),
     };
     struct timeval tv_start;
@@ -1073,6 +1075,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &quiet, .name = "quiet" },
 	{ .opt_bool = &verbose, .name = "verbose" },
 	{ .opt_bool = &add_files_state.debug, .name = "debug" },
+	{ .opt_bool = &add_files_state.full_scan, .name = "full-scan" },
 	{ .opt_bool = &hooks, .name = "hooks" },
 	{ .opt_inherit = notmuch_shared_indexing_options },
 	{ .opt_inherit = notmuch_shared_options },

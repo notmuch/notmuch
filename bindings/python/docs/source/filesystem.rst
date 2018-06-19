@@ -14,7 +14,7 @@ Files and directories
       iterator and broke list(Filenames()). Use `len(list(names))`
       instead.
 
-:class:`Directoy` -- A directory entry in the database
+:class:`Directory` -- A directory entry in the database
 ------------------------------------------------------
 
 .. autoclass:: Directory

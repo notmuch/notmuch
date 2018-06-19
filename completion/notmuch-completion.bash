@@ -522,7 +522,7 @@ _notmuch_show()
 	    return
 	    ;;
         --decrypt)
-	    COMPREPLY=( $( compgen -W "true auto false" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true auto false stash" -- "${cur}" ) )
 	    return
 	    ;;
     esac

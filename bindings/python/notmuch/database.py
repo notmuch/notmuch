@@ -566,7 +566,7 @@ class Database(object):
         :returns: :class:`Message` or `None` if no message is found.
         :raises:
             :exc:`OutOfMemoryError`
-                  If an Out-of-memory occured while constructing the message.
+                  If an Out-of-memory occurred while constructing the message.
             :exc:`XapianError`
                   In case of a Xapian Exception. These exceptions
                   include "Database modified" situations, e.g. when the
@@ -591,7 +591,7 @@ class Database(object):
             function returns None if no message is found with the given
             filename.
 
-        :raises: :exc:`OutOfMemoryError` if an Out-of-memory occured while
+        :raises: :exc:`OutOfMemoryError` if an Out-of-memory occurred while
                  constructing the message.
         :raises: :exc:`XapianError` in case of a Xapian Exception.
                  These exceptions include "Database modified"

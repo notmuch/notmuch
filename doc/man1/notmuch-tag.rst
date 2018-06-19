@@ -32,23 +32,22 @@ the **maildir.synchronize\_flags** configuration option is enabled. See
 
 Supported options for **tag** include
 
-    ``--remove-all``
-        Remove all tags from each message matching the search terms
-        before applying the tag changes appearing on the command line.
-        This means setting the tags of each message to the tags to be
-        added. If there are no tags to be added, the messages will have
-        no tags.
+``--remove-all``
+    Remove all tags from each message matching the search terms before
+    applying the tag changes appearing on the command line.  This
+    means setting the tags of each message to the tags to be added. If
+    there are no tags to be added, the messages will have no tags.
 
-    ``--batch``
-        Read batch tagging operations from a file (stdin by default).
-        This is more efficient than repeated **notmuch tag**
-        invocations. See `TAG FILE FORMAT <#tag_file_format>`__ below
-        for the input format. This option is not compatible with
-        specifying tagging on the command line.
+``--batch``
+    Read batch tagging operations from a file (stdin by default).
+    This is more efficient than repeated **notmuch tag**
+    invocations. See `TAG FILE FORMAT <#tag_file_format>`__ below for
+    the input format. This option is not compatible with specifying
+    tagging on the command line.
 
-    ``--input=``\ <filename>
-        Read input from given file, instead of from stdin. Implies
-        ``--batch``.
+``--input=``\ <filename>
+    Read input from given file, instead of from stdin. Implies
+    ``--batch``.
 
 TAG FILE FORMAT
 ===============
