@@ -1,3 +1,11 @@
+notmuch (0.27-1~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+  * Restore libgmime-3.0 build dependency, preferred upstream, now
+    available in backports.
+
+ -- David Bremner <bremner@debian.org>  Mon, 18 Jun 2018 21:23:26 -0300
+
 notmuch (0.27-1) unstable; urgency=medium
 
   * New upstream feature release
