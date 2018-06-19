@@ -75,7 +75,7 @@ Supported options for **reply** include
     If ``true``, decrypt any MIME encrypted parts found in the
     selected content (i.e., "multipart/encrypted" parts). Status
     of the decryption will be reported (currently only supported
-    with --format=json and --format=sexp), and on successful
+    with ``--format=json`` and ``--format=sexp``), and on successful
     decryption the multipart/encrypted part will be replaced by
     the decrypted content.
 

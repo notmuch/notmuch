@@ -47,25 +47,25 @@ Supported options for **search** include
 
     **threads**
         Output the thread IDs of all threads with any message matching
-        the search terms, either one per line (--format=text),
-        separated by null characters (--format=text0), as a JSON array
-        (--format=json), or an S-Expression list (--format=sexp).
+        the search terms, either one per line (``--format=text``),
+        separated by null characters (``--format=text0``), as a JSON array
+        (``--format=json``), or an S-Expression list (``--format=sexp``).
 
     **messages**
         Output the message IDs of all messages matching the search
-        terms, either one per line (--format=text), separated by null
-        characters (--format=text0), as a JSON array (--format=json),
-        or as an S-Expression list (--format=sexp).
+        terms, either one per line (``--format=text``), separated by null
+        characters (``--format=text0``), as a JSON array (``--format=json``),
+        or as an S-Expression list (``--format=sexp``).
 
     **files**
         Output the filenames of all messages matching the search
-        terms, either one per line (--format=text), separated by null
-        characters (--format=text0), as a JSON array (--format=json),
-        or as an S-Expression list (--format=sexp).
+        terms, either one per line (``--format=text``), separated by null
+        characters (``--format=text0``), as a JSON array (``--format=json``),
+        or as an S-Expression list (``--format=sexp``).
 
         Note that each message may have multiple filenames associated
         with it. All of them are included in the output (unless
-        limited with the --duplicate=N option). This may be
+        limited with the ``--duplicate=N`` option). This may be
         particularly confusing for **folder:** or **path:** searches
         in a specified directory, as the messages may have duplicates
         in other directories that are included in the output, although
@@ -73,9 +73,9 @@ Supported options for **search** include
 
     **tags**
         Output all tags that appear on any message matching the search
-        terms, either one per line (--format=text), separated by null
-        characters (--format=text0), as a JSON array (--format=json),
-        or as an S-Expression list (--format=sexp).
+        terms, either one per line (``--format=text``), separated by null
+        characters (``--format=text0``), as a JSON array (``--format=json``),
+        or as an S-Expression list (``--format=sexp``).
 
 ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
     This option can be used to present results in either chronological
