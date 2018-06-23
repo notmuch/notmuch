@@ -2,6 +2,11 @@
 
 python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 
+ifeq ($(shell dpkg-architecture -qDEB_HOST_ARCH),arm64)
+	NOTMUCH_SKIP_TESTS=T460-emacs-tree
+	export NOTMUCH_SKIP_TESTS
+endif
+
 %:
 	dh $@ --with python2,python3,elpa
 
