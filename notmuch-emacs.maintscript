@@ -1,0 +1,1 @@
+rm_conffile /etc/emacs/site-start.d/50notmuch.el
