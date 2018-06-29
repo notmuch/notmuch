@@ -1,0 +1,8 @@
+notmuch for Debian
+==================
+
+To use the vim plugin, please install it using vim-addons(1)
+
+See also /usr/share/doc/notmuch/README.
+
+ -- David Bremner <bremner@debian.org>, Fri,  1 Jul 2011 11:34:39 -0300

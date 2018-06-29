@@ -1,0 +1,48 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: notmuch
+Source: git://notmuchmail.org/git/notmuch
+Upstream-Contact: Notmuch Mailing List <notmuch@notmuchmail.org>
+
+Files: *
+Copyright:  Copyright 2009 Carl Worth <cworth@cworth.org>
+ Bart Trojanowski <bart@jukie.net>
+ Keith Packard <keithp@keithp.com>
+ Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+ Ingmar Vanhassel <ingmar@exherbo.org>
+ Jed Brown <jed@59A2.org>
+ Jan Janak <jan@ryngle.com>
+ Chris Wilson <chris@chris-wilson.co.uk>
+ Keith Amidon <keith@nicira.com>
+ Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+ Mikhail Gusarov <dottedmag@dottedmag.net>
+ Jeffrey C. Ollie <jeff@ocjtech.us>
+ Jameson Graef Rollins <jrollins@finestructure.net>
+ Stewart Smith <stewart@flamingspork.com>
+ Adrian Perez <aperez@igalia.com>
+ Kan-Ru Chen <kanru@kanru.info>
+ James Rowe <jnrowe@gmail.com>
+ Eric Anholt <eric@anholt.net>
+ Alec Berryman <alec@thened.net>
+ Tassilo Horn <tassilo@member.fsf.org>
+ Stefan Schmidt <stefan@datenfreihafen.org>
+ Rolland Santimano <rollandsantimano@yahoo.com>
+ Peter Wang <novalazy@gmail.com>
+ Lars Kellogg-Stedman <lars@seas.harvard.edu>
+ Holger Freyther <zecke@selfish.org>
+ David Bremner <bremner@unb.ca>
+ Alexander Botero-Lowry <alexbl@fortitudo.(none)>
+License: GPL-3+
+
+Files: debian/*
+Copyright:  Copyright 2010 Jameson Graef Rollins <jrollins@finestructure.net>
+ martin f. krafft <madduck@debian.org>
+License: GPL-3+
+
+License: GPL-3+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in file "/usr/share/common-licenses/GPL-3".

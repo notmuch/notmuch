@@ -1,0 +1,4 @@
+vim/notmuch.vim usr/share/vim/addons/plugin
+vim/notmuch.txt usr/share/vim/addons/doc
+vim/syntax/notmuch-*.vim usr/share/vim/addons/syntax
+vim/notmuch.yaml usr/share/vim/registry

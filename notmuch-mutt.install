@@ -1,0 +1,2 @@
+contrib/notmuch-mutt/notmuch-mutt	usr/bin
+contrib/notmuch-mutt/notmuch-mutt.rc	etc/Muttrc.d
