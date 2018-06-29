@@ -1,3 +1,9 @@
+notmuch (0.27-2) unstable; urgency=medium
+
+  * Add texinfo as a build-dep, build info version of documentation.
+
+ -- David Bremner <bremner@debian.org>  Thu, 28 Jun 2018 21:01:29 -0300
+
 notmuch (0.27-1) unstable; urgency=medium
 
   * New upstream feature release
