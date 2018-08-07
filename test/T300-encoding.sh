@@ -45,7 +45,6 @@ output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
 test_expect_equal "$output" "thread:0000000000000005   2001-01-05 [1/1] Notmuch Test Suite; encodedword withoutspace (inbox unread)"
 
 test_begin_subtest "Mislabeled Windows-1252 encoding"
-test_subtest_known_broken
 add_message '[content-type]="text/plain; charset=iso-8859-1"'                           \
             "[body]=$'This text contains \x93Windows-1252\x94 character codes.'"
 cat <<EOF > EXPECTED
