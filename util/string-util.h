@@ -77,6 +77,8 @@ unsigned int strcase_hash (const void *ptr);
 
 void strip_trailing (char *str, char ch);
 
+const char* skip_space (const char *str);
+
 #ifdef __cplusplus
 }
 #endif
