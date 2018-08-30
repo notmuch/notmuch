@@ -583,6 +583,9 @@ _notmuch_string_list_append (notmuch_string_list_t *list,
 void
 _notmuch_string_list_sort (notmuch_string_list_t *list);
 
+const notmuch_string_list_t *
+_notmuch_message_get_references(notmuch_message_t *message);
+
 /* string-map.c */
 typedef struct _notmuch_string_map  notmuch_string_map_t;
 typedef struct _notmuch_string_map_iterator notmuch_string_map_iterator_t;
