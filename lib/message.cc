@@ -32,6 +32,7 @@ struct _notmuch_message {
     int frozen;
     char *message_id;
     char *thread_id;
+    size_t thread_depth;
     char *in_reply_to;
     notmuch_string_list_t *tag_list;
     notmuch_string_list_t *filename_term_list;
@@ -117,6 +118,9 @@ _notmuch_message_create_for_document (const void *talloc_owner,
 
     /* the message is initially not synchronized with Xapian */
     message->last_view = 0;
+
+    /* Calculated after the thread structure is computed */
+    message->thread_depth = 0;
 
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
@@ -597,6 +601,25 @@ _notmuch_message_add_reply (notmuch_message_t *message,
 			    notmuch_message_t *reply)
 {
     _notmuch_message_list_add_message (message->replies, reply);
+}
+
+size_t
+_notmuch_message_get_thread_depth (notmuch_message_t *message) {
+    return message->thread_depth;
+}
+
+void
+_notmuch_message_label_depths (notmuch_message_t *message,
+			       size_t depth)
+{
+    message->thread_depth = depth;
+
+    for (notmuch_messages_t *messages = _notmuch_messages_create (message->replies);
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages)) {
+	notmuch_message_t *child = notmuch_messages_get (messages);
+	_notmuch_message_label_depths (child, depth+1);
+    }
 }
 
 const notmuch_string_list_t *
