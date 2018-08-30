@@ -1,0 +1,9 @@
+From: Alice <alice@example.org>
+To: Daniel <daniel@example.org>
+Subject: great grand-child message
+Message-ID: <001-great-grand-child@example.org>
+In-Reply-To: <001-grand-child@example.org>
+References:  <000-real-root@example.org> <001-grand-child@example.org>
+Date: Fri, 17 Jun 2016 22:44:41 -0400
+
+
