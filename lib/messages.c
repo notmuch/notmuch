@@ -110,6 +110,18 @@ notmuch_messages_valid (notmuch_messages_t *messages)
     return (messages->iterator != NULL);
 }
 
+bool
+_notmuch_messages_has_next (notmuch_messages_t *messages)
+{
+    if (! notmuch_messages_valid (messages))
+	return false;
+
+    if (! messages->is_of_list_type)
+	INTERNAL_ERROR("_notmuch_messages_has_next not implimented for msets");
+
+    return (messages->iterator->next != NULL);
+}
+
 notmuch_message_t *
 notmuch_messages_get (notmuch_messages_t *messages)
 {

@@ -174,7 +174,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "reply to ghost (tree view)"
-test_subtest_known_broken
 test_emacs '(notmuch-tree "id:000-real-root@example.org")
 	    (notmuch-test-wait)
 	    (test-output)

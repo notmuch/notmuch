@@ -487,6 +487,9 @@ _notmuch_message_list_add_message (notmuch_message_list_t *list,
 notmuch_messages_t *
 _notmuch_messages_create (notmuch_message_list_t *list);
 
+bool
+_notmuch_messages_has_next (notmuch_messages_t *messages);
+
 /* query.cc */
 
 bool
