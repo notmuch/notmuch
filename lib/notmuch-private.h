@@ -533,6 +533,20 @@ _notmuch_query_count_documents (notmuch_query_t *query,
 char *
 _notmuch_message_id_parse (void *ctx, const char *message_id, const char **next);
 
+/* Parse a message-id, discarding leading and trailing whitespace, and
+ * '<' and '>' delimiters.
+ *
+ * Apply a probably-stricter-than RFC definition of what is allowed in
+ * a message-id. In particular, forbid whitespace.
+ *
+ * Returns a newly talloc'ed string belonging to 'ctx'.
+ *
+ * Returns NULL if there is any error parsing the message-id.
+ */
+
+char *
+_notmuch_message_id_parse_strict (void *ctx, const char *message_id);
+
 
 /* message.cc */
 
