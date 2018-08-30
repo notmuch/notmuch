@@ -209,4 +209,18 @@ End of search results.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "trusting reply-to (tree view)"
+test_subtest_known_broken
+test_emacs '(notmuch-tree "id:B00-root@example.org")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-17  Alice                 ┬►root message                                        (inbox unread)
+  2016-06-18  Alice                 ╰┬►child message                                      (inbox unread)
+  2016-06-18  Alice                  ╰─►grand-child message                               (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
