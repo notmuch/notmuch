@@ -227,7 +227,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					   const char **thread_id)
 {
     GHashTable *parents = NULL;
-    const char *refs, *in_reply_to, *in_reply_to_message_id;
+    const char *refs, *in_reply_to, *in_reply_to_message_id, *strict_message_id = NULL;
     const char *last_ref_message_id, *this_message_id;
     GList *l, *keys = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
@@ -242,14 +242,24 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					    parents, refs);
 
     in_reply_to = _notmuch_message_file_get_header (message_file, "in-reply-to");
+    if (in_reply_to)
+	strict_message_id = _notmuch_message_id_parse_strict (message,
+							      in_reply_to);
+
     in_reply_to_message_id = parse_references (message,
 					       this_message_id,
 					       parents, in_reply_to);
 
-    /* For the parent of this message, use the last message ID of the
-     * References header, if available.  If not, fall back to the
-     * first message ID in the In-Reply-To header. */
-    if (last_ref_message_id) {
+    /* For the parent of this message, use
+     * 1) the In-Reply-To header, if it looks sane, otherwise
+     * 2) the last message ID of the References header, if available.
+     * 3) Otherwise, fall back to the first message ID in
+     * the In-Reply-To header.
+     */
+
+    if (strict_message_id) {
+	_notmuch_message_add_term (message, "replyto", strict_message_id);
+    } else if (last_ref_message_id) {
 	_notmuch_message_add_term (message, "replyto",
 				   last_ref_message_id);
     } else if (in_reply_to_message_id) {
