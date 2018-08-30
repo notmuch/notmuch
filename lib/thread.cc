@@ -393,12 +393,31 @@ _thread_add_matched_message (notmuch_thread_t *thread,
     _thread_add_matched_author (thread, _notmuch_message_get_author (hashed_message));
 }
 
+static bool
+_parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
+    notmuch_message_t *parent;
+    const char *in_reply_to;
+
+    in_reply_to = _notmuch_message_get_in_reply_to (message);
+    THREAD_DEBUG("checking message = %s in_reply_to=%s\n",
+		 notmuch_message_get_message_id (message), in_reply_to);
+
+    if (in_reply_to && strlen (in_reply_to) &&
+	g_hash_table_lookup_extended (thread->message_hash,
+				      in_reply_to, NULL,
+				      (void **) &parent)) {
+	_notmuch_message_add_reply (parent, message);
+	return true;
+    } else {
+	return false;
+    }
+}
+
 static void
 _resolve_thread_relationships (notmuch_thread_t *thread)
 {
     notmuch_message_node_t *node, *first_node;
-    notmuch_message_t *message, *parent;
-    const char *in_reply_to;
+    notmuch_message_t *message;
 
     first_node = thread->message_list->head;
     if (! first_node)
@@ -406,13 +425,7 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
 
     for (node = first_node->next; node; node = node->next) {
 	message = node->message;
-	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (in_reply_to && strlen (in_reply_to) &&
-	    g_hash_table_lookup_extended (thread->message_hash,
-					  in_reply_to, NULL,
-					  (void **) &parent))
-	    _notmuch_message_add_reply (parent, message);
-	else
+	if (! _parent_via_in_reply_to (thread, message))
 	    _notmuch_message_list_add_message (thread->toplevel_list, message);
     }
 
@@ -424,15 +437,10 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
      */
     if (first_node) {
 	message = first_node->message;
-	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (! _notmuch_message_list_empty (thread->toplevel_list) &&
-	    in_reply_to && strlen (in_reply_to) &&
-	    g_hash_table_lookup_extended (thread->message_hash,
-					  in_reply_to, NULL,
-					  (void **) &parent))
-	    _notmuch_message_add_reply (parent, message);
-	else
+        if (_notmuch_message_list_empty(thread->toplevel_list) ||
+	    ! _parent_via_in_reply_to (thread, message)) {
 	    _notmuch_message_list_add_message (thread->toplevel_list, message);
+	}
     }
 
     /* XXX this could be made conditional on messages being inserted
