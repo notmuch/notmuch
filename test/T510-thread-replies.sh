@@ -45,10 +45,10 @@ expected='[[[{"id": "foo@one.com",
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
-test_begin_subtest "Prefer References to In-Reply-To"
+test_begin_subtest "Prefer References to dodgy In-Reply-To"
 add_message '[id]="foo@two.com"' \
     '[subject]=two'
-add_message '[in-reply-to]="<bar@baz.com>"' \
+add_message '[in-reply-to]="Your message of December 31 1999 <bar@baz.com>"' \
     '[references]="<foo@two.com>"' \
     '[subject]="Re: two"'
 output=$(notmuch show --format=json 'subject:two' | notmuch_json_show_sanitize)
@@ -101,12 +101,12 @@ expected='[[[{"id": "foo@three.com", "match": true, "excluded": false,
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
-test_begin_subtest "Use last Reference"
+test_begin_subtest "Use last Reference when In-Reply-To is dodgy"
 add_message '[id]="foo@four.com"' \
     '[subject]="four"'
 add_message '[id]="bar@four.com"' \
     '[subject]="not-four"'
-add_message '[in-reply-to]="<baz@four.com>"' \
+add_message '[in-reply-to]="<baz@four.com> (RFC822 4lyfe)"' \
     '[references]="<baz@four.com> <foo@four.com>"' \
     '[subject]="neither"'
 output=$(notmuch show --format=json 'subject:four' | notmuch_json_show_sanitize)
