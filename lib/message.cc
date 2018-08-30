@@ -588,6 +588,58 @@ _notmuch_message_add_reply (notmuch_message_t *message,
     _notmuch_message_list_add_message (message->replies, reply);
 }
 
+static int
+_cmpmsg (const void *pa, const void *pb)
+{
+    notmuch_message_t **a = (notmuch_message_t **) pa;
+    notmuch_message_t **b = (notmuch_message_t **) pb;
+    time_t time_a = notmuch_message_get_date (*a);
+    time_t time_b = notmuch_message_get_date (*b);
+
+    if (time_a == time_b)
+	return 0;
+    else if (time_a < time_b)
+	return -1;
+    else
+	return 1;
+}
+
+notmuch_message_list_t *
+_notmuch_message_sort_subtrees (void *ctx, notmuch_message_list_t *list)
+{
+
+    size_t count = 0;
+    size_t capacity = 16;
+
+    if (! list)
+	return list;
+
+    void *local = talloc_new (NULL);
+    notmuch_message_list_t *new_list = _notmuch_message_list_create (ctx);
+    notmuch_message_t **message_array = talloc_zero_array (local, notmuch_message_t *, capacity);
+
+    for (notmuch_messages_t *messages = _notmuch_messages_create (list);
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages)) {
+	notmuch_message_t *root = notmuch_messages_get (messages);
+	if (count >= capacity) {
+	    capacity *= 2;
+	    message_array = talloc_realloc (local, message_array, notmuch_message_t *, capacity);
+	}
+	message_array[count++] = root;
+	root->replies = _notmuch_message_sort_subtrees (root, root->replies);
+    }
+
+    qsort (message_array, count, sizeof (notmuch_message_t *), _cmpmsg);
+    for (size_t i = 0; i < count; i++) {
+	_notmuch_message_list_add_message (new_list, message_array[i]);
+    }
+
+    talloc_free (local);
+    talloc_free (list);
+    return new_list;
+}
+
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message)
 {

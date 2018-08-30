@@ -429,6 +429,12 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
 	    _notmuch_message_list_add_message (thread->toplevel_list, message);
     }
 
+    /* XXX this could be made conditional on messages being inserted
+     * (out of order) in later passes
+     */
+    thread->toplevel_list = _notmuch_message_sort_subtrees (thread, thread->toplevel_list);
+
+
     /* XXX: After scanning through the entire list looking for parents
      * via "In-Reply-To", we should do a second pass that looks at the
      * list of messages IDs in the "References" header instead. (And

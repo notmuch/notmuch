@@ -192,7 +192,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "reply to ghost (RT)"
-test_subtest_known_broken
 notmuch show --entire-thread=true id:87bmc6lp3h.fsf@len.workgroup | grep ^Subject: | head -1  > OUTPUT
 cat <<EOF > EXPECTED
 Subject: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx
@@ -200,7 +199,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "reply to ghost (RT/tree view)"
-test_subtest_known_broken
 test_emacs '(notmuch-tree "id:87bmc6lp3h.fsf@len.workgroup")
 	    (notmuch-test-wait)
 	    (test-output)

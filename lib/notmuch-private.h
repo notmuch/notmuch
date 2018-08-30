@@ -539,6 +539,9 @@ _notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
 const char *
 _notmuch_message_get_thread_id_only(notmuch_message_t *message);
 
+notmuch_message_list_t *
+_notmuch_message_sort_subtrees (void *ctx, notmuch_message_list_t *list);
+
 /* sha1.c */
 
 char *
