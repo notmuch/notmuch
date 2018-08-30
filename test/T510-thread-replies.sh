@@ -164,5 +164,53 @@ expected='[[[{"id": "XXXXX", "match": true, "excluded": false,
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
+add_email_corpus threading
+
+test_begin_subtest "reply to ghost"
+test_subtest_known_broken
+notmuch show --entire-thread=true id:000-real-root@example.org | grep ^Subject: | head -1  > OUTPUT
+cat <<EOF > EXPECTED
+Subject: root message
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (tree view)"
+test_subtest_known_broken
+test_emacs '(notmuch-tree "id:000-real-root@example.org")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-17  Alice                 ┬►root message                                        (inbox unread)
+  2016-06-18  Alice                 ╰┬►child message                                      (inbox unread)
+  2016-06-17  Mallory                ├─►fake root message                                 (inbox unread)
+  2016-06-18  Alice                  ├┬►grand-child message                               (inbox unread)
+  2016-06-18  Alice                  │╰─►great grand-child message                        (inbox unread)
+  2016-06-18  Daniel                 ╰─►grand-child message 2                             (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (RT)"
+test_subtest_known_broken
+notmuch show --entire-thread=true id:87bmc6lp3h.fsf@len.workgroup | grep ^Subject: | head -1  > OUTPUT
+cat <<EOF > EXPECTED
+Subject: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (RT/tree view)"
+test_subtest_known_broken
+test_emacs '(notmuch-tree "id:87bmc6lp3h.fsf@len.workgroup")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-19  Gregor Zattler       ┬┬►FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx                (inbox unread)
+  2016-06-19   via RT              │╰─►[support.xxxxxxxxxxx-xxxxxxxxx-xxxxxxxxx.de #33575] AutoReply: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx (inbox unread)
+  2016-06-26   via RT              ╰─►[support.xxxxxxxxxxx-xxxxxxxxx-xxxxxxxxx.de #33575] Resolved: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done
