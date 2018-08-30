@@ -416,20 +416,40 @@ _parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
 static void
 _parent_or_toplevel (notmuch_thread_t *thread, notmuch_message_t *message)
 {
-    bool found = false;
+    size_t max_depth = 0;
+    notmuch_message_t *new_parent;
     notmuch_message_t *parent = NULL;
     const notmuch_string_list_t *references =
 	_notmuch_message_get_references (message);
+
+    THREAD_DEBUG("trying to reparent via references: %s\n",
+		     notmuch_message_get_message_id (message));
+
     for (notmuch_string_node_t *ref_node = references->head;
-	 ! found && ref_node; ref_node = ref_node->next) {
-	if ((found = g_hash_table_lookup_extended (thread->message_hash,
-						   ref_node->string, NULL,
-						   (void **) &parent))) {
-	    _notmuch_message_add_reply (parent, message);
+	 ref_node; ref_node = ref_node->next) {
+	THREAD_DEBUG("checking reference=%s\n", ref_node->string);
+	if ((g_hash_table_lookup_extended (thread->message_hash,
+					   ref_node->string, NULL,
+					   (void **) &new_parent))) {
+	    size_t new_depth = _notmuch_message_get_thread_depth (new_parent);
+	    THREAD_DEBUG("got depth %lu\n", new_depth);
+	    if (new_depth > max_depth || !parent) {
+		THREAD_DEBUG("adding at depth %lu parent=%s\n", new_depth, ref_node->string);
+		max_depth = new_depth;
+		parent = new_parent;
+	    }
 	}
     }
-    if (! found)
+    if (parent) {
+	THREAD_DEBUG("adding reply %s to parent=%s\n",
+		 notmuch_message_get_message_id (message),
+		 notmuch_message_get_message_id (parent));
+	_notmuch_message_add_reply (parent, message);
+    } else {
+	THREAD_DEBUG("adding as toplevel %s\n",
+		 notmuch_message_get_message_id (message));
 	_notmuch_message_list_add_message (thread->toplevel_list, message);
+    }
 }
 
 static void
