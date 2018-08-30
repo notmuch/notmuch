@@ -414,21 +414,51 @@ _parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
 }
 
 static void
+_parent_or_toplevel (notmuch_thread_t *thread, notmuch_message_t *message)
+{
+    bool found = false;
+    notmuch_message_t *parent = NULL;
+    const notmuch_string_list_t *references =
+	_notmuch_message_get_references (message);
+    for (notmuch_string_node_t *ref_node = references->head;
+	 ! found && ref_node; ref_node = ref_node->next) {
+	if ((found = g_hash_table_lookup_extended (thread->message_hash,
+						   ref_node->string, NULL,
+						   (void **) &parent))) {
+	    _notmuch_message_add_reply (parent, message);
+	}
+    }
+    if (! found)
+	_notmuch_message_list_add_message (thread->toplevel_list, message);
+}
+
+static void
 _resolve_thread_relationships (notmuch_thread_t *thread)
 {
     notmuch_message_node_t *node, *first_node;
     notmuch_message_t *message;
+    void *local;
+    notmuch_message_list_t *maybe_toplevel_list;
 
     first_node = thread->message_list->head;
     if (! first_node)
 	return;
 
+    local = talloc_new (thread);
+    maybe_toplevel_list = _notmuch_message_list_create (local);
+
     for (node = first_node->next; node; node = node->next) {
 	message = node->message;
 	if (! _parent_via_in_reply_to (thread, message))
-	    _notmuch_message_list_add_message (thread->toplevel_list, message);
+	    _notmuch_message_list_add_message (maybe_toplevel_list, message);
     }
 
+    for (notmuch_messages_t *roots = _notmuch_messages_create (maybe_toplevel_list);
+	 notmuch_messages_valid (roots);
+	 notmuch_messages_move_to_next (roots)) {
+	notmuch_message_t *message = notmuch_messages_get (roots);
+	_parent_or_toplevel (thread, message);
+    }
     /*
      * if we reach the end of the list without finding a top-level
      * message, that means the thread is a cycle (or set of cycles)
@@ -439,7 +469,15 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
 	message = first_node->message;
         if (_notmuch_message_list_empty(thread->toplevel_list) ||
 	    ! _parent_via_in_reply_to (thread, message)) {
-	    _notmuch_message_list_add_message (thread->toplevel_list, message);
+	    /*
+	     * If the oldest message happens to be in-reply-to a
+	     * missing message, we only check for references if there
+	     * is some other candidate for root message.
+	     */
+	    if (! _notmuch_message_list_empty (thread->toplevel_list))
+		_parent_or_toplevel (thread, message);
+	    else
+		_notmuch_message_list_add_message (thread->toplevel_list, message);
 	}
     }
 
@@ -459,6 +497,7 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
      * correctly in the thread even when an intermediate message is
      * missing from the thread.
      */
+    talloc_free (local);
 }
 
 /* Create a new notmuch_thread_t object by finding the thread
