@@ -56,6 +56,7 @@ NOTMUCH_BEGIN_DECLS
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
+# define DEBUG_THREADING 1
 # define DEBUG_QUERY 1
 #endif
 

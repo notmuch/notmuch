@@ -24,6 +24,12 @@
 #include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
+#ifdef DEBUG_THREADING
+#define THREAD_DEBUG(format, ...) fprintf(stderr, format " (%s).\n", ##__VA_ARGS__, __location__)
+#else
+#define THREAD_DEBUG(format, ...) do {} while (0) /* ignored */
+#endif
+
 #define EMPTY_STRING(s) ((s)[0] == '\0')
 
 struct _notmuch_thread {
