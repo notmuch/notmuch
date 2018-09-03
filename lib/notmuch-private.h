@@ -477,6 +477,9 @@ struct _notmuch_messages {
 notmuch_message_list_t *
 _notmuch_message_list_create (const void *ctx);
 
+bool
+_notmuch_message_list_empty (notmuch_message_list_t *list);
+
 void
 _notmuch_message_list_add_message (notmuch_message_list_t *list,
 				   notmuch_message_t *message);

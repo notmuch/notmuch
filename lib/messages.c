@@ -56,6 +56,15 @@ _notmuch_message_list_add_message (notmuch_message_list_t *list,
     list->tail = &node->next;
 }
 
+bool
+_notmuch_message_list_empty (notmuch_message_list_t *list)
+{
+    if (list == NULL)
+	return TRUE;
+
+    return (list->head == NULL);
+}
+
 notmuch_messages_t *
 _notmuch_messages_create (notmuch_message_list_t *list)
 {

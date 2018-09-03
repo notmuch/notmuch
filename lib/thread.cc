@@ -425,7 +425,7 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
     if (first_node) {
 	message = first_node->message;
 	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (thread->toplevel_list->head &&
+	if (! _notmuch_message_list_empty (thread->toplevel_list) &&
 	    in_reply_to && strlen (in_reply_to) &&
 	    g_hash_table_lookup_extended (thread->message_hash,
 					  in_reply_to, NULL,
