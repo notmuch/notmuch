@@ -402,7 +402,7 @@ _parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
     THREAD_DEBUG("checking message = %s in_reply_to=%s\n",
 		 notmuch_message_get_message_id (message), in_reply_to);
 
-    if (in_reply_to && strlen (in_reply_to) &&
+    if (in_reply_to && (! EMPTY_STRING(in_reply_to)) &&
 	g_hash_table_lookup_extended (thread->message_hash,
 				      in_reply_to, NULL,
 				      (void **) &parent)) {
