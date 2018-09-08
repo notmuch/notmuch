@@ -660,7 +660,19 @@ _config_set_list (notmuch_config_t *config,
 const char *
 notmuch_config_get_database_path (notmuch_config_t *config)
 {
-    return _config_get (config, &config->database_path, "database", "path");
+    char *db_path = (char *)_config_get (config, &config->database_path, "database", "path");
+
+    if (db_path && *db_path != '/') {
+	/* If the path in the configuration file begins with any
+	 * character other than /, presume that it is relative to
+	 * $HOME and update as appropriate.
+	 */
+	char *abs_path = talloc_asprintf (config, "%s/%s", getenv ("HOME"), db_path);
+	talloc_free (db_path);
+	db_path = config->database_path = abs_path;
+    }
+
+    return db_path;
 }
 
 void
