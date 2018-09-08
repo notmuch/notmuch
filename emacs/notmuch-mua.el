@@ -115,7 +115,44 @@ multiple parts get a header."
 		(function :tag "Other"))
   :group 'notmuch-reply)
 
+(defcustom notmuch-mua-attachment-regexp
+  "\\b\\(attache\?ment\\|attached\\|attach\\|pi[èe]ce\s+jointe?\\)\\b"
+  "Message body text indicating that an attachment is expected.
+
+This is not used unless `notmuch-mua-attachment-check' is added
+to `notmuch-mua-send-hook'.")
+
 ;;
+
+(defun notmuch-mua-attachment-check ()
+  "Signal an error if the message text indicates that an
+attachment is expected but no MML referencing an attachment is
+found.
+
+Typically this is added to `notmuch-mua-send-hook'."
+  (when (and
+	 ;; When the message mentions attachment...
+	 (save-excursion
+	   (message-goto-body)
+	   (loop while (re-search-forward notmuch-mua-attachment-regexp (point-max) t)
+		 ;; For every instance of the "attachment" string
+		 ;; found, examine the text properties. If the text
+		 ;; has either a `face' or `syntax-table' property
+		 ;; then it is quoted text and should *not* cause the
+		 ;; user to be asked about a missing attachment.
+		 if (let ((props (text-properties-at (match-beginning 0))))
+		      (not (or (memq 'syntax-table props)
+			       (memq 'face props))))
+		 return t
+		 finally return nil))
+	 ;; ...but doesn't have a part with a filename...
+	 (save-excursion
+	   (message-goto-body)
+	   (not (re-search-forward "^<#part [^>]*filename=" nil t)))
+	 ;; ...and that's not okay...
+	 (not (y-or-n-p "Attachment mentioned, but no attachment - is that okay?")))
+    ;; ...signal an error.
+    (error "Missing attachment")))
 
 (defun notmuch-mua-get-switch-function ()
   "Get a switch function according to `notmuch-mua-compose-in'."
