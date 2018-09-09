@@ -1,3 +1,2 @@
 single-debian-patch
-tar-ignore
 tar-ignore=performance-test/download/*.tar.xz
