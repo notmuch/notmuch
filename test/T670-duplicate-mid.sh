@@ -48,7 +48,11 @@ notmuch search --output=files subject:'"message 2"' | notmuch_dir_sanitize > OUT
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest 'Regexp search for second subject'
-test_subtest_known_broken
+# Note that missing field processor support really means the test
+# doesn't make sense, but it happens to pass.
+if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 1 ]; then
+    test_subtest_known_broken
+fi
 cat <<EOF >EXPECTED
 MAIL_DIR/copy0
 MAIL_DIR/copy1
