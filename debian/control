@@ -8,7 +8,7 @@ Uploaders:
 Build-Conflicts: ruby1.8, gdb-minimal, gdb [ia64 mips mips64el]
 Build-Depends:
  dpkg-dev (>= 1.17.14),
- debhelper (>= 10~),
+ debhelper (>= 11~),
  pkg-config,
  libxapian-dev,
  libgmime-3.0-dev (>= 3.0.3~) | libgmime-2.6-dev (>= 2.6.7~),
