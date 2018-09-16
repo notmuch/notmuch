@@ -54,6 +54,7 @@ fi
 # Set several defaults (optionally specified by the user in
 # environment variables)
 BASH=${BASH:-bash}
+PERL=${PERL:-perl}
 CC=${CC:-cc}
 CXX=${CXX:-c++}
 CFLAGS=${CFLAGS:--g -O2}
@@ -566,6 +567,16 @@ if command -v ${BASH} > /dev/null; then
 else
     have_bash=0
     printf "No. (%s not found)\n" "${BASH}"
+fi
+
+printf "Checking for perl... "
+if command -v ${PERL} > /dev/null; then
+    have_perl=1
+    perl_absolute=$(command -v ${PERL})
+    printf "Yes (%s).\n" "$perl_absolute"
+else
+    have_perl=0
+    printf "No. (%s not found)\n" "${PERL}"
 fi
 
 printf "Checking for python... "
@@ -1096,6 +1107,10 @@ emacsetcdir=${EMACSETCDIR}
 HAVE_BASH = ${have_bash}
 BASH_ABSOLUTE = ${bash_absolute}
 
+# Whether perl exists, and if so where
+HAVE_PERL = ${have_perl}
+PERL_ABSOLUTE = ${perl_absolute}
+
 # Whether there's an emacs binary available for byte-compiling
 HAVE_EMACS = ${have_emacs}
 
@@ -1280,6 +1295,10 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 # Whether bash exists, and if so where
 NOTMUCH_HAVE_BASH=${have_bash}
 NOTMUCH_BASH_ABSOLUTE=${bash_absolute}
+
+# Whether perl exists, and if so where
+NOTMUCH_HAVE_PERL=${have_perl}
+NOTMUCH_PERL_ABSOLUTE=${perl_absolute}
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}
