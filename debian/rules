@@ -31,4 +31,5 @@ override_dh_auto_install:
 	dh_auto_install
 	dh_auto_install --sourcedirectory bindings/python
 	cd bindings/python && $(python3_all) setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp
+	$(MAKE) -C contrib/notmuch-mutt DESTDIR=$(CURDIR)/debian/tmp install
 	dh_auto_install --sourcedirectory bindings/ruby
