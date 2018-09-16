@@ -110,7 +110,10 @@ endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
-	install $(emacs_mua) "$(DESTDIR)$(prefix)/bin"
+ifeq ($(HAVE_BASH),1)
+	sed "1s|^#!.*|#! $(BASH_ABSOLUTE)|" < $(emacs_mua) > $(DESTDIR)$(prefix)/bin/notmuch-emacs-mua
+	chmod 755 $(DESTDIR)$(prefix)/bin/notmuch-emacs-mua
+endif
 ifeq ($(WITH_DESKTOP),1)
 	mkdir -p "$(DESTDIR)$(desktop_dir)"
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" $(emacs_mua_desktop)
