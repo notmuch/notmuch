@@ -482,7 +482,7 @@ class Message(Python3StringMixIn):
         if status != 0:
             raise NotmuchError(status)
 
-        return value.value.decode('utf-8')
+        return value.value.decode('utf-8') if value is not None else None
 
     def get_properties(self, prop="", exact=False):
         """ Get the properties of the message, returning a generator of
