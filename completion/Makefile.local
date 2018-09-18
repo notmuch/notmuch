@@ -6,7 +6,7 @@ dir := completion
 # directly in any shell commands. Instead we save its value in other,
 # private variables that we can use in the commands.
 bash_script := $(srcdir)/$(dir)/notmuch-completion.bash
-zsh_script := $(srcdir)/$(dir)/notmuch-completion.zsh
+zsh_scripts := $(srcdir)/$(dir)/zsh/_notmuch $(srcdir)/$(dir)/zsh/_email-notmuch
 
 install: install-$(dir)
 
@@ -18,5 +18,5 @@ ifeq ($(WITH_BASH),1)
 endif
 ifeq ($(WITH_ZSH),1)
 	mkdir -p "$(DESTDIR)$(zsh_completion_dir)"
-	install -m0644 $(zsh_script) "$(DESTDIR)$(zsh_completion_dir)/_notmuch"
+	install -m0644 $(zsh_scripts) "$(DESTDIR)$(zsh_completion_dir)"
 endif
