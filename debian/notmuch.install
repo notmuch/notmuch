@@ -1,3 +1,4 @@
 usr/bin/notmuch
 usr/bin/notmuch-emacs-mua
 usr/share/bash-completion
+usr/share/zsh/vendor-completions
