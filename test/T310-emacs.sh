@@ -1106,4 +1106,30 @@ output=$(test_emacs "(mapcar 'notmuch-escape-boolean-term (list
 	\"\\x201cxyz\\x201d\"))")
 test_expect_equal "$output" '("\"\"" "abc`~!@#$%^&*-=_+123" "\"(abc\"" "\")abc\"" "\"\"\"abc\"" "\"'$'\x01''xyz\"" "\"“xyz”\"")'
 
+test_begin_subtest "Sending a message calls the send message hooks"
+test_subtest_known_broken
+emacs_deliver_message \
+    'Testing message sending hooks' \
+    'This is a test of the message sending hooks.' \
+    "(message-goto-to)
+     (kill-whole-line)
+     (insert \"To: user@example.com\n\")
+     (add-hook 'notmuch-mua-send-hook (lambda () (goto-char (point-max)) (insert \"\nThis text added by the hook.\")))"
+sed \
+    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' \
+    -e s',^\(Content-Type: text/plain\); charset=us-ascii$,\1,' < sent_message >OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: user@example.com
+Subject: Testing message sending hooks
+Date: 01 Jan 2000 12:00:00 -0000
+Message-ID: <XXX>
+MIME-Version: 1.0
+Content-Type: text/plain
+
+This is a test of the message sending hooks.
+This text added by the hook.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
