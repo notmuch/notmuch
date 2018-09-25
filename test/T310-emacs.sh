@@ -1107,7 +1107,6 @@ output=$(test_emacs "(mapcar 'notmuch-escape-boolean-term (list
 test_expect_equal "$output" '("\"\"" "abc`~!@#$%^&*-=_+123" "\"(abc\"" "\")abc\"" "\"\"\"abc\"" "\"'$'\x01''xyz\"" "\"“xyz”\"")'
 
 test_begin_subtest "Sending a message calls the send message hooks"
-test_subtest_known_broken
 emacs_deliver_message \
     'Testing message sending hooks' \
     'This is a test of the message sending hooks.' \
