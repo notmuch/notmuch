@@ -77,6 +77,19 @@ test_expect_equal_file cworth.msg-ids OUTPUT
 test_begin_subtest "xapian wildcard search for subject:"
 test_expect_equal $(notmuch count 'subject:count*') 1
 
+add_message '[from]="and"' '[subject]="and-and-and"'
+printf "id:$gen_msg_id\n" > EXPECTED
+
+test_begin_subtest "quoted xapian keyword search for from:"
+test_subtest_known_broken
+notmuch search --output=messages 'from:"and"' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "quoted xapian keyword search for subject:"
+test_subtest_known_broken
+notmuch search --output=messages 'subject:"and-and-and"' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "regexp from search, case sensitive"
 notmuch search --output=messages from:/carl/ > OUTPUT
 test_expect_equal_file /dev/null OUTPUT
