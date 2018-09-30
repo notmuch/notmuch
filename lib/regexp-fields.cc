@@ -194,7 +194,7 @@ RegexpFieldProcessor::operator() (const std::string & str)
 	     * phrase parsing, when possible */
 	    std::string query_str;
 
-	    if (str.find (' ') != std::string::npos)
+	    if (*str.rbegin () != '*' || str.find (' ') != std::string::npos)
 		query_str = '"' + str + '"';
 	    else
 		query_str = str;
