@@ -388,6 +388,7 @@ output=$(notmuch reply --decrypt=true subject:"test encrypted message 002" \
     | notmuch_drop_mail_headers In-Reply-To References)
 expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002
+To: test_suite@notmuchmail.org
 
 On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > This is another test encrypted message.'
@@ -401,10 +402,10 @@ test_emacs "(let ((message-hidden-headers '())
   (notmuch-show \"subject:test.encrypted.message.002\")
   (notmuch-show-reply)
   (test-output))"
-# the empty To: is probably a bug, but it's not to do with encryption
-grep -v -e '^In-Reply-To:' -e '^References:' -e '^Fcc:' -e 'To:' < OUTPUT > OUTPUT.clean
+grep -v -e '^In-Reply-To:' -e '^References:' -e '^Fcc:' < OUTPUT > OUTPUT.clean
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
 Subject: Re: test encrypted message 002
 --text follows this line--
 <#secure method=pgpmime mode=signencrypt>

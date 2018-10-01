@@ -369,6 +369,14 @@ add_recipients_from_message (GMimeMessage *reply,
 	}
     }
 
+    /* If no recipients were added but we found one of the user's
+     * addresses to use as a from address then the message is from the
+     * user to the user - add the discovered from address to the list
+     * of recipients so that the reply goes back to the user.
+     */
+    if (n == 0 && from_addr)
+	g_mime_message_add_recipient (reply, GMIME_ADDRESS_TYPE_TO, NULL, from_addr);
+
     return from_addr;
 }
 

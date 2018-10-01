@@ -180,6 +180,7 @@ test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.or
 Subject: Re: This subject is exactly 200 bytes in length. Other than its
  length there is not much of note here. Note that the length of 200 bytes
  includes the Subject: and Re: prefixes with two spaces
+To: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 

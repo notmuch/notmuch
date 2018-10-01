@@ -610,7 +610,7 @@ test_emacs "(let ((message-hidden-headers '()))
 	    (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
-To: 
+To: test_suite@notmuchmail.org
 Subject: Re: Reply within emacs to an html-only message
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
@@ -623,7 +623,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs to message from self"
-test_subtest_known_broken
 add_message '[from]="test_suite@notmuchmail.org"' \
 	    '[to]="test_suite@notmuchmail.org"'
 test_emacs "(let ((message-hidden-headers '()))
@@ -657,7 +656,7 @@ test_emacs "(let ((message-hidden-headers '()))
 	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
-To: 
+To: test_suite@notmuchmail.org
 Subject: Re: Quote MML tags in reply
 In-Reply-To: <test-emacs-mml-quoting@message.id>
 Fcc: ${MAIL_DIR}/sent
