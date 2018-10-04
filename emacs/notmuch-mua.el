@@ -306,7 +306,7 @@ modified. This function is notmuch addaptation of
 	  (if window
 	      ;; Raise the frame already displaying the message buffer.
 	      (progn
-		(gnus-select-frame-set-input-focus (window-frame window))
+		(select-frame-set-input-focus (window-frame window))
 		(select-window window))
 	    (funcall switch-function buffer)
 	    (set-buffer buffer))

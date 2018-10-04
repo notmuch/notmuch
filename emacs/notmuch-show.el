@@ -604,7 +604,7 @@ will return nil if the CID is unknown or cannot be retrieved."
     (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
       (push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
 	    w3m-cid-retrieve-function-alist)))
-  (setq mm-inline-text-html-with-images t))
+  (setq mm-html-inhibit-images nil))
 
 (defvar w3m-current-buffer) ;; From `w3m.el'.
 (defun notmuch-show--cid-w3m-retrieve (url &rest args)
