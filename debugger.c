@@ -32,13 +32,14 @@ bool
 debugger_is_active (void)
 {
     char buf[1024];
+    char buf2[1024];
 
     if (RUNNING_ON_VALGRIND)
 	return true;
 
     sprintf (buf, "/proc/%d/exe", getppid ());
-    if (readlink (buf, buf, sizeof (buf)) != -1 &&
-	strncmp (basename (buf), "gdb", 3) == 0)
+    if (readlink (buf, buf2, sizeof (buf2)) != -1 &&
+	strncmp (basename (buf2), "gdb", 3) == 0)
     {
 	return true;
     }
