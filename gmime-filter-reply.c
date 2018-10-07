@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include "gmime-filter-reply.h"
+#include "notmuch-client.h"
 
 /**
  * SECTION: gmime-filter-reply
@@ -29,7 +30,7 @@
  **/
 
 
-static void g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass);
+static void g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass, void *class_data);
 static void g_mime_filter_reply_init (GMimeFilterReply *filter, GMimeFilterReplyClass *klass);
 static void g_mime_filter_reply_finalize (GObject *object);
 
@@ -50,16 +51,16 @@ g_mime_filter_reply_get_type (void)
 
 	if (!type) {
 		static const GTypeInfo info = {
-			sizeof (GMimeFilterReplyClass),
-			NULL, /* base_class_init */
-			NULL, /* base_class_finalize */
-			(GClassInitFunc) g_mime_filter_reply_class_init,
-			NULL, /* class_finalize */
-			NULL, /* class_data */
-			sizeof (GMimeFilterReply),
-			0,    /* n_preallocs */
-			(GInstanceInitFunc) g_mime_filter_reply_init,
-			NULL	/* value_table */
+			.class_size = sizeof (GMimeFilterReplyClass),
+			.base_init = NULL,
+			.base_finalize = NULL,
+			.class_init = (GClassInitFunc) g_mime_filter_reply_class_init,
+			.class_finalize = NULL,
+			.class_data = NULL,
+			.instance_size = sizeof (GMimeFilterReply),
+			.n_preallocs = 0,
+			.instance_init = (GInstanceInitFunc) g_mime_filter_reply_init,
+			.value_table = NULL,
 		};
 
 		type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterReply", &info, (GTypeFlags) 0);
@@ -70,7 +71,7 @@ g_mime_filter_reply_get_type (void)
 
 
 static void
-g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass)
+g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass, unused (void *class_data))
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);

@@ -142,7 +142,8 @@ static void filter_reset (GMimeFilter *filter);
 static GMimeFilterClass *parent_class = NULL;
 
 static void
-notmuch_filter_discard_non_term_class_init (NotmuchFilterDiscardNonTermClass *klass)
+notmuch_filter_discard_non_term_class_init (NotmuchFilterDiscardNonTermClass *klass,
+					    unused (void *class_data))
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
@@ -246,16 +247,16 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 
     if (!type) {
 	static const GTypeInfo info = {
-	    sizeof (NotmuchFilterDiscardNonTermClass),
-	    NULL, /* base_class_init */
-	    NULL, /* base_class_finalize */
-	    (GClassInitFunc) notmuch_filter_discard_non_term_class_init,
-	    NULL, /* class_finalize */
-	    NULL, /* class_data */
-	    sizeof (NotmuchFilterDiscardNonTerm),
-	    0,    /* n_preallocs */
-	    NULL, /* instance_init */
-	    NULL  /* value_table */
+	    .class_size = sizeof (NotmuchFilterDiscardNonTermClass),
+	    .base_init = NULL,
+	    .base_finalize = NULL,
+	    .class_init = (GClassInitFunc) notmuch_filter_discard_non_term_class_init,
+	    .class_finalize = NULL,
+	    .class_data = NULL,
+	    .instance_size = sizeof (NotmuchFilterDiscardNonTerm),
+	    .n_preallocs = 0,
+	    .instance_init = NULL,
+	    .value_table = NULL,
 	};
 
 	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info, (GTypeFlags) 0);
