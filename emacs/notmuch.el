@@ -1076,7 +1076,7 @@ current search results AND the additional query string provided."
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
   (interactive
-   (list (notmuch-select-tag-with-completion "Filter by tag: ")))
+   (list (notmuch-select-tag-with-completion "Filter by tag: " notmuch-search-query-string)))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
 ;;;###autoload
