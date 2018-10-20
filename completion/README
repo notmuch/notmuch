@@ -11,6 +11,6 @@ notmuch-completion.bash
 
   [1] https://github.com/scop/bash-completion
 
-notmuch-completion.zsh
+zsh
 
-  Command-line completion for the zsh shell.
+  Command-line completions for the zsh shell.

@@ -71,7 +71,7 @@ Supported options for **show** include
 
             http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 
-    **raw** (default if --part is given)
+    **raw** (default if ``--part`` is given)
         Write the raw bytes of the given MIME part of a message to
         standard out. For this format, it is an error to specify a
         query that matches more than one message.
@@ -105,16 +105,16 @@ Supported options for **show** include
 
 ``--verify``
     Compute and report the validity of any MIME cryptographic
-    signatures found in the selected content (ie. "multipart/signed"
+    signatures found in the selected content (e.g., "multipart/signed"
     parts). Status of the signature will be reported (currently only
-    supported with --format=json and --format=sexp), and the
+    supported with ``--format=json`` and ``--format=sexp``), and the
     multipart/signed part will be replaced by the signed data.
 
 ``--decrypt=(false|auto|true|stash)``
     If ``true``, decrypt any MIME encrypted parts found in the
-    selected content (i.e. "multipart/encrypted" parts). Status of
+    selected content (e.g., "multipart/encrypted" parts). Status of
     the decryption will be reported (currently only supported
-    with --format=json and --format=sexp) and on successful
+    with ``--format=json`` and ``--format=sexp``) and on successful
     decryption the multipart/encrypted part will be replaced by
     the decrypted content.
 
@@ -166,7 +166,7 @@ Supported options for **show** include
     excluded message will be marked with the exclude flag (except when
     output=mbox when there is nowhere to put the flag).
 
-    If --entire-thread is specified then complete threads are returned
+    If ``--entire-thread`` is specified then complete threads are returned
     regardless (with the excluded flag being set when appropriate) but
     threads that only match in an excluded message are not returned
     when ``--exclude=true.``
@@ -184,7 +184,7 @@ Supported options for **show** include
 
 ``--include-html``
     Include "text/html" parts as part of the output (currently only
-    supported with --format=json and --format=sexp). By default,
+    supported with ``--format=json`` and ``--format=sexp``). By default,
     unless ``--part=N`` is used to select a specific part or
     ``--include-html`` is used to include all "text/html" parts, no
     part with content type "text/html" is included in the output.

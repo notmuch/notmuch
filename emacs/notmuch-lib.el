@@ -909,7 +909,7 @@ invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
 
-  (let (err-file err-buffer proc
+  (let (err-file err-buffer proc err-proc
 	;; Find notmuch using Emacs' `exec-path'
 	(command (or (executable-find notmuch-command)
 		     (error "Command not found: %s" notmuch-command))))
@@ -926,11 +926,13 @@ status."
 		      :buffer buffer
 		      :command (cons command args)
 		      :connection-type 'pipe
-		      :stderr err-buffer))
+		      :stderr err-buffer)
+		err-proc (get-buffer-process err-buffer))
 	  (process-put proc 'err-buffer err-buffer)
-	  ;; Silence "Process NAME stderr finished" in stderr by adding a
-	  ;; no-op sentinel to the fake stderr process object
-	  (set-process-sentinel (get-buffer-process err-buffer) #'ignore))
+
+	  (process-put err-proc 'err-file err-file)
+	  (process-put err-proc 'err-buffer err-buffer)
+	  (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel))
 
       ;; On Emacs versions before 25, there is no way to capture
       ;; stdout and stderr separately for asynchronous processes, or
@@ -990,8 +992,15 @@ status."
        ;; Emacs behaves strangely if an error escapes from a sentinel,
        ;; so turn errors into messages.
        (message "%s" (error-message-string err))))
-    (when err-buffer (kill-buffer err-buffer))
     (when err-file (ignore-errors (delete-file err-file)))))
+
+(defun notmuch-start-notmuch-error-sentinel (proc event)
+  (let* ((err-file (process-get proc 'err-file))
+	 ;; When `make-process' is available, use the error buffer
+	 ;; associated with the process, otherwise the error file.
+	 (err-buffer (or (process-get proc 'err-buffer)
+			 (find-file-noselect err-file))))
+    (when err-buffer (kill-buffer err-buffer))))
 
 ;; This variable is used only buffer local, but it needs to be
 ;; declared globally first to avoid compiler warnings.

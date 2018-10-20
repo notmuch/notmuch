@@ -7,7 +7,7 @@ SYNOPSIS
 
 **notmuch** **count** [option ...] <*search-term*> ...
 
-**notmuch** **dump** [--format=(batch-tag|sup)] [--] [--output=<*file*>] [--] [<*search-term*> ...]
+**notmuch** **dump** [--gzip] [--format=(batch-tag|sup)] [--output=<*file*>] [--] [<*search-term*> ...]
 
 **notmuch** **reindex** [option ...] <*search-term*> ...
 
@@ -150,7 +150,7 @@ lastmod:<initial-revision>..<final-revision>
     The **lastmod:** prefix can be used to restrict the result by the
     database revision number of when messages were last modified (tags
     were added/removed or filenames changed). This is usually used in
-    conjunction with the **--uuid** argument to **notmuch search** to
+    conjunction with the ``--uuid`` argument to **notmuch search** to
     find messages that have changed since an earlier query.
 
 query:<name>

@@ -130,6 +130,19 @@ EOF
 test_expect_equal_file batch_removeall.expected OUTPUT
 rm batch_removeall.expected
 
+test_begin_subtest "--batch, dependence on previous line"
+notmuch dump --format=batch-tag > backup.tags
+notmuch tag --batch<<EOF
++trigger -- One
++second_tag -- tag:trigger
+EOF
+NOTMUCH_DUMP_TAGS tag:second_tag > OUTPUT
+notmuch restore --format=batch-tag < backup.tags
+cat <<EOF >EXPECTED
++inbox +second_tag +tag5 +trigger +unread -- id:msg-001@notmuch-test-suite
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "--batch, blank lines and comments"
 notmuch dump | sort > EXPECTED
 notmuch tag --batch <<EOF

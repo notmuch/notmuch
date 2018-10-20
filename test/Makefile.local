@@ -15,6 +15,9 @@ smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 $(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS)
 
+$(dir)/message-id-parse: $(dir)/message-id-parse.o lib/libnotmuch.a util/libnotmuch_util.a
+	$(call quiet,CC) $^ -o $@ $(LDFLAGS) $(TALLOC_LDFLAGS)
+
 $(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS) $(TALLOC_LDFLAGS)
 
@@ -50,7 +53,8 @@ test_main_srcs=$(dir)/arg-test.c \
 	      $(dir)/smtp-dummy.c \
 	      $(dir)/symbol-test.cc \
 	      $(dir)/make-db-version.cc \
-	      $(dir)/ghost-report.cc
+	      $(dir)/ghost-report.cc \
+	      $(dir)/message-id-parse.c
 
 test_srcs=$(test_main_srcs) $(dir)/database-test.c
 

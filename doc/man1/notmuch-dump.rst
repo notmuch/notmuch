@@ -21,7 +21,7 @@ incremental backup than the native database files.)
 
 See **notmuch-search-terms(7)** for details of the supported syntax
 for <search-terms>. With no search terms, a dump of all messages in
-the database will be generated. A "--" argument instructs notmuch that
+the database will be generated. A ``--`` argument instructs notmuch that
 the remaining arguments are search terms.
 
 Supported options for **dump** include

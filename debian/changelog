@@ -1,3 +1,37 @@
+notmuch (0.28-2) unstable; urgency=medium
+
+  * Override location of bash, because /usr/bin/bash might exist
+    thanks to usrmerge.
+
+ -- David Bremner <bremner@debian.org>  Fri, 12 Oct 2018 20:54:00 -0300
+
+notmuch (0.28-1) unstable; urgency=medium
+
+  * New upstream releases.
+  * Includes threading fixes, support for relative database paths, and
+    rewritten zsh completion.
+
+ -- David Bremner <bremner@debian.org>  Fri, 12 Oct 2018 20:17:27 -0300
+
+notmuch (0.28~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+
+ -- David Bremner <bremner@debian.org>  Wed, 03 Oct 2018 20:36:57 -0300
+
+notmuch (0.27-3) unstable; urgency=medium
+
+  * Update Vcs-Git to use https and specify correct branch
+  * Update Build-depends for unversioned emacs packages.
+
+ -- David Bremner <bremner@debian.org>  Sat, 08 Sep 2018 18:20:10 -0300
+
+notmuch (0.27-2) unstable; urgency=medium
+
+  * Add texinfo as a build-dep, build info version of documentation.
+
+ -- David Bremner <bremner@debian.org>  Thu, 28 Jun 2018 21:01:29 -0300
+
 notmuch (0.27-1~bpo9+2) stretch-backports; urgency=medium
 
   * Disable test T460-emacs-tree on arm64. The failures seems to be an upstream

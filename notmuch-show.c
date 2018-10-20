@@ -272,6 +272,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
     GMimeFilter *crlf_filter = NULL;
+    GMimeFilter *windows_filter = NULL;
     GMimeDataWrapper *wrapper;
     const char *charset;
 
@@ -282,13 +283,37 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
     if (stream_out == NULL)
 	return;
 
+    charset = g_mime_object_get_content_type_parameter (part, "charset");
+    charset = charset ? g_mime_charset_canon_name (charset) : NULL;
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    if (wrapper && charset && !g_ascii_strncasecmp (charset, "iso-8859-", 9)) {
+	GMimeStream *null_stream = NULL;
+	GMimeStream *null_stream_filter = NULL;
+
+	/* Check for mislabeled Windows encoding */
+	null_stream = g_mime_stream_null_new ();
+	null_stream_filter = g_mime_stream_filter_new (null_stream);
+	windows_filter = g_mime_filter_windows_new (charset);
+	g_mime_stream_filter_add(GMIME_STREAM_FILTER (null_stream_filter),
+				 windows_filter);
+	g_mime_data_wrapper_write_to_stream (wrapper, null_stream_filter);
+	charset = g_mime_filter_windows_real_charset(
+	    (GMimeFilterWindows *) windows_filter);
+
+	if (null_stream_filter)
+	    g_object_unref (null_stream_filter);
+	if (null_stream)
+	    g_object_unref (null_stream);
+	/* Keep a reference to windows_filter in order to prevent the
+	 * charset string from deallocation. */
+    }
+
     stream_filter = g_mime_stream_filter_new (stream_out);
     crlf_filter = g_mime_filter_crlf_new (false, false);
     g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
 			     crlf_filter);
     g_object_unref (crlf_filter);
 
-    charset = g_mime_object_get_content_type_parameter (part, "charset");
     if (charset) {
 	GMimeFilter *charset_filter;
 	charset_filter = g_mime_filter_charset_new (charset, "UTF-8");
@@ -313,11 +338,12 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	}
     }
 
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
     if (wrapper && stream_filter)
 	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
     if (stream_filter)
 	g_object_unref(stream_filter);
+    if (windows_filter)
+	g_object_unref (windows_filter);
 }
 
 static const char*

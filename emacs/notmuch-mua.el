@@ -543,6 +543,7 @@ unencrypted.  Really send? "))))
 
 (defun notmuch-mua-send-common (arg &optional exit)
   (interactive "P")
+  (run-hooks 'notmuch-mua-send-hook)
   (when (and (notmuch-mua-check-no-misplaced-secure-tag)
 	     (notmuch-mua-check-secure-tag-has-newline))
     (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))

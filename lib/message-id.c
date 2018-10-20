@@ -1,4 +1,5 @@
 #include "notmuch-private.h"
+#include "string-util.h"
 
 /* Advance 'str' past any whitespace or RFC 822 comments. A comment is
  * a (potentially nested) parenthesized sequence with '\' used to
@@ -93,4 +94,33 @@ _notmuch_message_id_parse (void *ctx, const char *message_id, const char **next)
     }
 
     return result;
+}
+
+char *
+_notmuch_message_id_parse_strict (void *ctx, const char *message_id)
+{
+    const char *s, *end;
+
+    if (message_id == NULL || *message_id == '\0')
+	return NULL;
+
+    s = skip_space (message_id);
+    if (*s == '<')
+	s++;
+    else
+	return NULL;
+
+    for (end = s; *end && *end != '>'; end++)
+	if (isspace (*end))
+	    return NULL;
+
+    if (*end != '>')
+	return NULL;
+    else {
+	const char *last = skip_space (end + 1);
+	if (*last != '\0')
+	    return NULL;
+    }
+
+    return talloc_strndup (ctx, s, end - s);
 }

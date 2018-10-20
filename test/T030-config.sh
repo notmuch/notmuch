@@ -99,4 +99,14 @@ test_expect_equal "$(notmuch --config=alt-config-link config get user.name)" \
 test_begin_subtest "Writing config file through symlink follows symlink"
 test_expect_equal "$(readlink alt-config-link)" "alt-config"
 
+test_begin_subtest "Absolute database path returned"
+notmuch config set database.path ${HOME}/Maildir
+test_expect_equal "$(notmuch config get database.path)" \
+		  "${HOME}/Maildir"
+
+test_begin_subtest "Relative database path properly expanded"
+notmuch config set database.path Maildir
+test_expect_equal "$(notmuch config get database.path)" \
+		  "${HOME}/Maildir"
+
 test_done

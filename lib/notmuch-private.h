@@ -56,6 +56,7 @@ NOTMUCH_BEGIN_DECLS
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
+# define DEBUG_THREADING 1
 # define DEBUG_QUERY 1
 #endif
 
@@ -476,12 +477,18 @@ struct _notmuch_messages {
 notmuch_message_list_t *
 _notmuch_message_list_create (const void *ctx);
 
+bool
+_notmuch_message_list_empty (notmuch_message_list_t *list);
+
 void
 _notmuch_message_list_add_message (notmuch_message_list_t *list,
 				   notmuch_message_t *message);
 
 notmuch_messages_t *
 _notmuch_messages_create (notmuch_message_list_t *list);
+
+bool
+_notmuch_messages_has_next (notmuch_messages_t *messages);
 
 /* query.cc */
 
@@ -526,6 +533,20 @@ _notmuch_query_count_documents (notmuch_query_t *query,
 char *
 _notmuch_message_id_parse (void *ctx, const char *message_id, const char **next);
 
+/* Parse a message-id, discarding leading and trailing whitespace, and
+ * '<' and '>' delimiters.
+ *
+ * Apply a probably-stricter-than RFC definition of what is allowed in
+ * a message-id. In particular, forbid whitespace.
+ *
+ * Returns a newly talloc'ed string belonging to 'ctx'.
+ *
+ * Returns NULL if there is any error parsing the message-id.
+ */
+
+char *
+_notmuch_message_id_parse_strict (void *ctx, const char *message_id);
+
 
 /* message.cc */
 
@@ -538,6 +559,15 @@ _notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
 
 const char *
 _notmuch_message_get_thread_id_only(notmuch_message_t *message);
+
+size_t _notmuch_message_get_thread_depth (notmuch_message_t *message);
+
+void
+_notmuch_message_label_depths (notmuch_message_t *message,
+			       size_t depth);
+
+notmuch_message_list_t *
+_notmuch_message_sort_subtrees (void *ctx, notmuch_message_list_t *list);
 
 /* sha1.c */
 
@@ -579,6 +609,9 @@ _notmuch_string_list_append (notmuch_string_list_t *list,
 
 void
 _notmuch_string_list_sort (notmuch_string_list_t *list);
+
+const notmuch_string_list_t *
+_notmuch_message_get_references(notmuch_message_t *message);
 
 /* string-map.c */
 typedef struct _notmuch_string_map  notmuch_string_map_t;

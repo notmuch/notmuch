@@ -45,10 +45,10 @@ expected='[[[{"id": "foo@one.com",
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
-test_begin_subtest "Prefer References to In-Reply-To"
+test_begin_subtest "Prefer References to dodgy In-Reply-To"
 add_message '[id]="foo@two.com"' \
     '[subject]=two'
-add_message '[in-reply-to]="<bar@baz.com>"' \
+add_message '[in-reply-to]="Your message of December 31 1999 <bar@baz.com>"' \
     '[references]="<foo@two.com>"' \
     '[subject]="Re: two"'
 output=$(notmuch show --format=json 'subject:two' | notmuch_json_show_sanitize)
@@ -101,12 +101,12 @@ expected='[[[{"id": "foo@three.com", "match": true, "excluded": false,
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
-test_begin_subtest "Use last Reference"
+test_begin_subtest "Use last Reference when In-Reply-To is dodgy"
 add_message '[id]="foo@four.com"' \
     '[subject]="four"'
 add_message '[id]="bar@four.com"' \
     '[subject]="not-four"'
-add_message '[in-reply-to]="<baz@four.com>"' \
+add_message '[in-reply-to]="<baz@four.com> (RFC822 4lyfe)"' \
     '[references]="<baz@four.com> <foo@four.com>"' \
     '[subject]="neither"'
 output=$(notmuch show --format=json 'subject:four' | notmuch_json_show_sanitize)
@@ -164,5 +164,62 @@ expected='[[[{"id": "XXXXX", "match": true, "excluded": false,
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
+add_email_corpus threading
+
+test_begin_subtest "reply to ghost"
+notmuch show --entire-thread=true id:000-real-root@example.org | grep ^Subject: | head -1  > OUTPUT
+cat <<EOF > EXPECTED
+Subject: root message
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (tree view)"
+test_emacs '(notmuch-tree "id:000-real-root@example.org")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-17  Alice                 ┬►root message                                        (inbox unread)
+  2016-06-18  Alice                 ╰┬►child message                                      (inbox unread)
+  2016-06-17  Mallory                ├─►fake root message                                 (inbox unread)
+  2016-06-18  Alice                  ├┬►grand-child message                               (inbox unread)
+  2016-06-18  Alice                  │╰─►great grand-child message                        (inbox unread)
+  2016-06-18  Daniel                 ╰─►grand-child message 2                             (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (RT)"
+notmuch show --entire-thread=true id:87bmc6lp3h.fsf@len.workgroup | grep ^Subject: | head -1  > OUTPUT
+cat <<EOF > EXPECTED
+Subject: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply to ghost (RT/tree view)"
+test_emacs '(notmuch-tree "id:87bmc6lp3h.fsf@len.workgroup")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-19  Gregor Zattler       ┬┬►FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx                (inbox unread)
+  2016-06-19   via RT              │╰─►[support.xxxxxxxxxxx-xxxxxxxxx-xxxxxxxxx.de #33575] AutoReply: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx (inbox unread)
+  2016-06-26   via RT              ╰─►[support.xxxxxxxxxxx-xxxxxxxxx-xxxxxxxxx.de #33575] Resolved: FYI: xxxx  xxxxxxx  xxxxxxxxxxxx xxx (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "trusting reply-to (tree view)"
+test_emacs '(notmuch-tree "id:B00-root@example.org")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+cat <<EOF > EXPECTED
+  2016-06-17  Alice                 ┬►root message                                        (inbox unread)
+  2016-06-18  Alice                 ╰┬►child message                                      (inbox unread)
+  2016-06-18  Alice                  ╰─►grand-child message                               (inbox unread)
+End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

@@ -1,3 +1,66 @@
+Notmuch 0.28 (2018-10-12)
+=========================
+
+General
+-------
+
+Improve threading
+
+  The threading algorithm has been updated to consider all references,
+  not just the heuristically chosen parent (e.g. when that parent is
+  not in the database). The heuristic for choosing a parent message
+  has also been updated to again consider the In-Reply-To header, if
+  it looks sensible. Re-indexing might be needed to take advantage of
+  the latter change.
+
+Handle mislabelled Windows-1252 parts
+
+  Messages that contain Windows-1252 are apparently frequently
+  mislabelled as ISO 8859-1. Use GMime functionality to apply the
+  correct encoding for such messages.
+
+Command Line Interface
+----------------------
+
+Support relative database paths
+
+  Database paths (i.e. parameters to `notmuch config set
+  database.path`) without a leading `/` are now interpreted relative
+  to $HOME of the invoking user.
+
+Emacs
+-----
+
+Improve stderr handling
+
+  Add a real sentinel process to clean up stderr buffer. This is
+  needed on e.g. macOS.
+
+Call `notmuch-mua-send-hook` hooks when sending a message
+
+  This hook was documented, but not functional for a very long time.
+
+Completion
+----------
+
+The zsh completion has been updated to cover most of the notmuch
+CLI. Internally it uses regexp searching, so needs at least Notmuch
+0.24.
+
+Build System
+------------
+
+The build system now installs notmuch-mutt and notmuch-emacs-mua with
+absolute shebangs, following the conventions of most Linux
+distributions.
+
+Test Suite
+----------
+
+Fix certain tests that were failing with GMime 2.6. Users are reminded
+that support for versions of GMime before 3.0.3 has been deprecated
+since Notmuch 0.25.
+
 Notmuch 0.27 (2018-06-13)
 =========================
 
@@ -41,7 +104,7 @@ Notmuch 0.26.2 (2018-04-28)
 Library Changes
 ---------------
 
-Work around Xapian bug with `get_mset(0,0, x)`.
+Work around Xapian bug with `get_mset(0,0, x)`
 
   This causes aborts in `_notmuch_query_count_documents` on
   e.g. Fedora 28.  The underlying bug is fixed in Xapian commit
@@ -178,11 +241,11 @@ Change of return value of `notmuch_thread_get_authors`
 
 Transition `notmuch_database_add_message` to `notmuch_database_index_file`
 
-   When indexing an e-mail message, the new
-   `notmuch_database_index_file` function is the preferred form, and
-   the old `notmuch_database_add_message` is deprecated.  The new form
-   allows passing a set of options to the indexing engine, which the
-   operator may decide to change from message to message.
+  When indexing an e-mail message, the new
+  `notmuch_database_index_file` function is the preferred form, and
+  the old `notmuch_database_add_message` is deprecated.  The new form
+  allows passing a set of options to the indexing engine, which the
+  operator may decide to change from message to message.
 
 Test Suite
 ----------

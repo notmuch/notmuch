@@ -24,6 +24,12 @@
 #include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
+#ifdef DEBUG_THREADING
+#define THREAD_DEBUG(format, ...) fprintf(stderr, format " (%s).\n", ##__VA_ARGS__, __location__)
+#else
+#define THREAD_DEBUG(format, ...) do {} while (0) /* ignored */
+#endif
+
 #define EMPTY_STRING(s) ((s)[0] == '\0')
 
 struct _notmuch_thread {
@@ -387,27 +393,84 @@ _thread_add_matched_message (notmuch_thread_t *thread,
     _thread_add_matched_author (thread, _notmuch_message_get_author (hashed_message));
 }
 
+static bool
+_parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
+    notmuch_message_t *parent;
+    const char *in_reply_to;
+
+    in_reply_to = _notmuch_message_get_in_reply_to (message);
+    THREAD_DEBUG("checking message = %s in_reply_to=%s\n",
+		 notmuch_message_get_message_id (message), in_reply_to);
+
+    if (in_reply_to && (! EMPTY_STRING(in_reply_to)) &&
+	g_hash_table_lookup_extended (thread->message_hash,
+				      in_reply_to, NULL,
+				      (void **) &parent)) {
+	_notmuch_message_add_reply (parent, message);
+	return true;
+    } else {
+	return false;
+    }
+}
+
+static void
+_parent_or_toplevel (notmuch_thread_t *thread, notmuch_message_t *message)
+{
+    size_t max_depth = 0;
+    notmuch_message_t *new_parent;
+    notmuch_message_t *parent = NULL;
+    const notmuch_string_list_t *references =
+	_notmuch_message_get_references (message);
+
+    THREAD_DEBUG("trying to reparent via references: %s\n",
+		     notmuch_message_get_message_id (message));
+
+    for (notmuch_string_node_t *ref_node = references->head;
+	 ref_node; ref_node = ref_node->next) {
+	THREAD_DEBUG("checking reference=%s\n", ref_node->string);
+	if ((g_hash_table_lookup_extended (thread->message_hash,
+					   ref_node->string, NULL,
+					   (void **) &new_parent))) {
+	    size_t new_depth = _notmuch_message_get_thread_depth (new_parent);
+	    THREAD_DEBUG("got depth %lu\n", new_depth);
+	    if (new_depth > max_depth || !parent) {
+		THREAD_DEBUG("adding at depth %lu parent=%s\n", new_depth, ref_node->string);
+		max_depth = new_depth;
+		parent = new_parent;
+	    }
+	}
+    }
+    if (parent) {
+	THREAD_DEBUG("adding reply %s to parent=%s\n",
+		 notmuch_message_get_message_id (message),
+		 notmuch_message_get_message_id (parent));
+	_notmuch_message_add_reply (parent, message);
+    } else {
+	THREAD_DEBUG("adding as toplevel %s\n",
+		 notmuch_message_get_message_id (message));
+	_notmuch_message_list_add_message (thread->toplevel_list, message);
+    }
+}
+
 static void
 _resolve_thread_relationships (notmuch_thread_t *thread)
 {
     notmuch_message_node_t *node, *first_node;
-    notmuch_message_t *message, *parent;
-    const char *in_reply_to;
+    notmuch_message_t *message;
+    void *local;
+    notmuch_message_list_t *maybe_toplevel_list;
 
     first_node = thread->message_list->head;
     if (! first_node)
 	return;
 
+    local = talloc_new (thread);
+    maybe_toplevel_list = _notmuch_message_list_create (local);
+
     for (node = first_node->next; node; node = node->next) {
 	message = node->message;
-	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (in_reply_to && strlen (in_reply_to) &&
-	    g_hash_table_lookup_extended (thread->message_hash,
-					  in_reply_to, NULL,
-					  (void **) &parent))
-	    _notmuch_message_add_reply (parent, message);
-	else
-	    _notmuch_message_list_add_message (thread->toplevel_list, message);
+	if (! _parent_via_in_reply_to (thread, message))
+	    _notmuch_message_list_add_message (maybe_toplevel_list, message);
     }
 
     /*
@@ -418,27 +481,42 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
      */
     if (first_node) {
 	message = first_node->message;
-	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (thread->toplevel_list->head &&
-	    in_reply_to && strlen (in_reply_to) &&
-	    g_hash_table_lookup_extended (thread->message_hash,
-					  in_reply_to, NULL,
-					  (void **) &parent))
-	    _notmuch_message_add_reply (parent, message);
+	THREAD_DEBUG("checking first message  %s\n",
+		     notmuch_message_get_message_id (message));
+
+        if (_notmuch_message_list_empty (maybe_toplevel_list) ||
+	    ! _parent_via_in_reply_to (thread, message)) {
+
+	    THREAD_DEBUG("adding first message as toplevel = %s\n",
+			 notmuch_message_get_message_id (message));
+	    _notmuch_message_list_add_message (maybe_toplevel_list, message);
+	}
+    }
+
+    for (notmuch_messages_t *messages = _notmuch_messages_create (maybe_toplevel_list);
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
+    {
+	notmuch_message_t *message = notmuch_messages_get (messages);
+	_notmuch_message_label_depths (message, 0);
+    }
+
+    for (notmuch_messages_t *roots = _notmuch_messages_create (maybe_toplevel_list);
+	 notmuch_messages_valid (roots);
+	 notmuch_messages_move_to_next (roots)) {
+	notmuch_message_t *message = notmuch_messages_get (roots);
+	if (_notmuch_messages_has_next (roots) || ! _notmuch_message_list_empty (thread->toplevel_list))
+	    _parent_or_toplevel (thread, message);
 	else
 	    _notmuch_message_list_add_message (thread->toplevel_list, message);
     }
 
-    /* XXX: After scanning through the entire list looking for parents
-     * via "In-Reply-To", we should do a second pass that looks at the
-     * list of messages IDs in the "References" header instead. (And
-     * for this the parent would be the "deepest" message of all the
-     * messages found in the "References" list.)
-     *
-     * Doing this will allow messages and sub-threads to be positioned
-     * correctly in the thread even when an intermediate message is
-     * missing from the thread.
+    /* XXX this could be made conditional on messages being inserted
+     * (out of order) in later passes
      */
+    thread->toplevel_list = _notmuch_message_sort_subtrees (thread, thread->toplevel_list);
+
+    talloc_free (local);
 }
 
 /* Create a new notmuch_thread_t object by finding the thread

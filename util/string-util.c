@@ -141,7 +141,7 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
     return 0;
 }
 
-static const char*
+const char*
 skip_space (const char *str)
 {
     while (*str && isspace ((unsigned char) *str))
