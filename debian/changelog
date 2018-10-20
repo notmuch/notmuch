@@ -1,3 +1,9 @@
+notmuch (0.28-2~bpo9+1) stretch-backports; urgency=medium
+
+  * Rebuild for stretch-backports.
+
+ -- David Bremner <bremner@debian.org>  Sat, 20 Oct 2018 14:25:09 -0300
+
 notmuch (0.28-2) unstable; urgency=medium
 
   * Override location of bash, because /usr/bin/bash might exist
