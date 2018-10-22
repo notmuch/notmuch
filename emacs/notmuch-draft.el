@@ -2,6 +2,7 @@
 ;;
 ;; Copyright © Mark Walters
 ;; Copyright © David Bremner
+;; Copyright © Leo Gaspard
 ;;
 ;; This file is part of Notmuch.
 ;;
@@ -20,6 +21,7 @@
 ;;
 ;; Authors: Mark Walters <markwalters1009@gmail.com>
 ;;	    David Bremner <david@tethera.net>
+;;	    Leo Gaspard <leo@gaspard.io>
 
 ;;; Code:
 
@@ -225,7 +227,7 @@ applied to newly inserted messages)."
 			      "--exclude=false" id))
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
     (when (or draft
-	      (yes-or-no-p "Message does not appear to be a draft: really resume? "))
+	      (yes-or-no-p "Message does not appear to be a draft: edit as new? "))
       (switch-to-buffer (get-buffer-create (concat "*notmuch-draft-" id "*")))
       (setq buffer-read-only nil)
       (erase-buffer)
@@ -244,6 +246,7 @@ applied to newly inserted messages)."
 	  (message-remove-header "Message-ID"))
 	(when (member 'Date message-deletable-headers)
 	  (message-remove-header "Date"))
+	(unless draft (notmuch-fcc-header-setup))
 	;; The X-Notmuch-Emacs-Draft header is a more reliable
 	;; indication of whether the message really is a draft.
 	(setq draft (> (message-remove-header "X-Notmuch-Emacs-Draft") 0)))
