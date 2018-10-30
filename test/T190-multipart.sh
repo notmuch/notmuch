@@ -190,6 +190,21 @@ Non-text part: application/pgp-signature
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "--format=text --part=0 --body=false, message header"
+notmuch show --format=text --part=0  --body=false 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+message{ id:87liy5ap00.fsf@yoom.home.cworth.org depth:0 match:1 excluded:0 filename:${MAIL_DIR}/multipart
+header{
+Carl Worth <cworth@cworth.org> (2001-01-05) (attachment inbox signed unread)
+Subject: Multipart message
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Date: Fri, 05 Jan 2001 15:43:57 +0000
+header}
+message}
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "--format=text --part=1, message body"
 notmuch show --format=text --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED

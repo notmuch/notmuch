@@ -574,6 +574,11 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	g_mime_stream_printf (stream, "Date: %s\n", date_string);
 	g_mime_stream_printf (stream, "\fheader}\n");
 
+	if (!params->output_body)
+	{
+	    g_mime_stream_printf (stream, "\f%s}\n", part_type);
+	    return NOTMUCH_STATUS_SUCCESS;
+	}
 	g_mime_stream_printf (stream, "\fbody{\n");
     }
 
@@ -1204,9 +1209,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
 	    params.output_body = true;
 	} else {
-	    if (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)
+	    if (format != NOTMUCH_FORMAT_TEXT &&
+		format != NOTMUCH_FORMAT_JSON &&
+		format != NOTMUCH_FORMAT_SEXP)
 		fprintf (stderr,
-			 "Warning: --body=false only implemented for format=json and format=sexp\n");
+			 "Warning: --body=false only implemented for format=text, format=json and format=sexp\n");
 	}
     }
 

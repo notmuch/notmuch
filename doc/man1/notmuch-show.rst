@@ -176,8 +176,8 @@ Supported options for **show** include
 ``--body=(true|false)``
     If true (the default) **notmuch show** includes the bodies of the
     messages in the output; if false, bodies are omitted.
-    ``--body=false`` is only implemented for the json and sexp formats
-    and it is incompatible with ``--part > 0.``
+    ``--body=false`` is only implemented for the text, json and sexp
+    formats and it is incompatible with ``--part > 0.``
 
     This is useful if the caller only needs the headers as body-less
     output is much faster and substantially smaller.
