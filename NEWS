@@ -4,7 +4,8 @@ Notmuch 0.29 (UNRELEASED)
 Command Line Interface
 ----------------------
 
-`notmuch show` now supports --body=false with --format=text
+`notmuch show` now supports --body=false and --include-html with
+--format=text
 
 Notmuch 0.28 (2018-10-12)
 =========================

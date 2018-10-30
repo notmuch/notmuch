@@ -183,11 +183,12 @@ Supported options for **show** include
     output is much faster and substantially smaller.
 
 ``--include-html``
-    Include "text/html" parts as part of the output (currently only
-    supported with ``--format=json`` and ``--format=sexp``). By default,
-    unless ``--part=N`` is used to select a specific part or
-    ``--include-html`` is used to include all "text/html" parts, no
-    part with content type "text/html" is included in the output.
+    Include "text/html" parts as part of the output (currently
+    only supported with ``--format=text``, ``--format=json`` and
+    ``--format=sexp``). By default, unless ``--part=N`` is used to
+    select a specific part or ``--include-html`` is used to include all
+    "text/html" parts, no part with content type "text/html" is included
+    in the output.
 
 A common use of **notmuch show** is to display a single thread of email
 messages. For this, use a search term of "thread:<thread-id>" as can be

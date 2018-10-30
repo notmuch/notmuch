@@ -325,6 +325,15 @@ Non-text part: text/html
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "--format=text --include-html --part=5, rfc822's html part"
+notmuch show --format=text --include-html --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+part{ ID: 5, Content-type: text/html
+<p>This is an embedded message, with a multipart/alternative part.</p>
+part}
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "--format=text --part=6, rfc822's text part"
 notmuch show --format=text --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED

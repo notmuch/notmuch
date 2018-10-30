@@ -584,7 +584,8 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     if (leaf) {
 	if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	    !g_mime_content_type_is_type (content_type, "text", "html"))
+	    (params->include_html ||
+	     ! g_mime_content_type_is_type (content_type, "text", "html")))
 	{
 	    show_text_part_content (node->part, stream, 0);
 	} else {
@@ -1218,8 +1219,10 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     if (params.include_html &&
-        (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)) {
-	fprintf (stderr, "Warning: --include-html only implemented for format=json and format=sexp\n");
+        (format != NOTMUCH_FORMAT_TEXT &&
+	 format != NOTMUCH_FORMAT_JSON &&
+	 format != NOTMUCH_FORMAT_SEXP)) {
+	fprintf (stderr, "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
     }
 
     query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
