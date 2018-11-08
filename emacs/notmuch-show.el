@@ -1511,6 +1511,7 @@ reset based on the original query."
     (define-key map "<" 'notmuch-show-toggle-thread-indentation)
     (define-key map "t" 'toggle-truncate-lines)
     (define-key map "." 'notmuch-show-part-map)
+    (define-key map "B" 'notmuch-show-browse-urls)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -1573,6 +1574,8 @@ All currently available key bindings:
 ;; region a->b is not found when point is at b. We walk backwards
 ;; until finding the property.
 (defun notmuch-show-message-extent ()
+  "Return a cons cell containing the start and end buffer offset
+of the current message."
   (let (r)
     (save-excursion
       (while (not (setq r (get-text-property (point) :notmuch-message-extent)))
@@ -2518,6 +2521,32 @@ beginning of the line."
 				      (line-beginning-position)
 				    (point))
 				  (line-end-position)))
+
+(defmacro notmuch-show--with-currently-shown-message (&rest body)
+  "Evaluate BODY with display restricted to the currently shown
+message."
+  `(save-excursion
+     (save-restriction
+      (let ((extent (notmuch-show-message-extent)))
+	(narrow-to-region (car extent) (cdr extent))
+	,@body))))
+
+(defun notmuch-show--gather-urls ()
+  "Gather any URLs in the current message."
+  (notmuch-show--with-currently-shown-message
+   (let (urls)
+     (goto-char (point-min))
+     (while (re-search-forward goto-address-url-regexp (point-max) t)
+       (push (match-string-no-properties 0) urls))
+     (reverse urls))))
+
+(defun notmuch-show-browse-urls ()
+  "Offer to browse any URLs in the current message."
+  (interactive)
+  (let ((urls (notmuch-show--gather-urls)))
+    (if urls
+	(browse-url (completing-read "Browse URL: " (cdr urls) nil nil (car urls)))
+      (message "No URLs found."))))
 
 (provide 'notmuch-show)
 
