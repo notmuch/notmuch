@@ -676,6 +676,8 @@ struct _notmuch_indexopts {
     _notmuch_crypto_t crypto;
 };
 
+#define CONFIG_HEADER_PREFIX "index.header."
+
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus

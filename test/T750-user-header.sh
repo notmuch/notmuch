@@ -70,4 +70,25 @@ index.header.Spam=X-Spam
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "parse user prefix"
+NOTMUCH_DEBUG_QUERY=t notmuch count 'List:"notmuch"' 2>&1 | grep Tmail >OUTPUT
+cat <<EOF > EXPECTED
+Query((Tmail AND XUList:notmuch@1))
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "parse user prefix, stemmed"
+NOTMUCH_DEBUG_QUERY=t notmuch count 'List:notmuch' 2>&1 | grep Tmail >OUTPUT
+cat <<EOF > EXPECTED
+Query((Tmail AND ZXUList:notmuch@1))
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "parse user prefix, phrase"
+NOTMUCH_DEBUG_QUERY=t notmuch count 'List:notmuchmail.org' 2>&1 | grep Tmail >OUTPUT
+cat <<EOF > EXPECTED
+Query((Tmail AND (XUList:notmuchmail@1 PHRASE 2 XUList:org@2)))
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

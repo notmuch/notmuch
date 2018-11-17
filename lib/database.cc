@@ -322,6 +322,42 @@ _setup_query_field_default (const prefix_t *prefix, notmuch_database_t *notmuch)
 	notmuch->query_parser->add_boolean_prefix (prefix->name, prefix->prefix);
 }
 
+const char *
+_user_prefix (void *ctx, const char* name)
+{
+    return talloc_asprintf(ctx, "XU%s:", name);
+}
+
+static notmuch_status_t
+_setup_user_query_fields (notmuch_database_t *notmuch)
+{
+    notmuch_config_list_t *list;
+    notmuch_status_t status;
+
+    status = notmuch_database_get_config_list (notmuch, CONFIG_HEADER_PREFIX, &list);
+    if (status)
+	return status;
+
+    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+
+	prefix_t query_field;
+
+	const char *key = notmuch_config_list_key (list)
+	    + sizeof (CONFIG_HEADER_PREFIX) - 1;
+
+	query_field.name = talloc_strdup (notmuch, key);
+	query_field.prefix = _user_prefix (notmuch, key);
+	query_field.flags = NOTMUCH_FIELD_PROBABILISTIC
+	    | NOTMUCH_FIELD_EXTERNAL;
+
+	_setup_query_field_default (&query_field, notmuch);
+    }
+
+    notmuch_config_list_destroy (list);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 #if HAVE_XAPIAN_FIELD_PROCESSOR
 static void
 _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
@@ -986,6 +1022,7 @@ notmuch_database_open_verbose (const char *path,
 		_setup_query_field (prefix, notmuch);
 	    }
 	}
+	status = _setup_user_query_fields (notmuch);
     } catch (const Xapian::Error &error) {
 	IGNORE_RESULT (asprintf (&message, "A Xapian exception occurred opening database: %s\n",
 				 error.get_msg().c_str()));
