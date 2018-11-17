@@ -792,18 +792,40 @@ _item_split (char *item, char **group, char **key)
 
 #define BUILT_WITH_PREFIX "built_with."
 
+typedef struct config_key {
+    const char *name;
+    bool in_db;
+    bool prefix;
+    bool (*validate)(const char *);
+} config_key_info_t;
+
+static struct config_key
+config_key_table[] = {
+    {"index.decrypt",	true,	false,	NULL},
+    {"query.",		true,	true,	NULL},
+};
+
+static config_key_info_t *
+_config_key_info (const char *item)
+{
+    for (size_t i = 0; i < ARRAY_SIZE (config_key_table); i++) {
+	if (config_key_table[i].prefix &&
+	    strncmp (item, config_key_table[i].name,
+		     strlen(config_key_table[i].name)) == 0)
+	    return config_key_table+i;
+	if (strcmp (item, config_key_table[i].name) == 0)
+	    return config_key_table+i;
+    }
+    return NULL;
+}
+
 static bool
 _stored_in_db (const char *item)
 {
-    const char * db_configs[] = {
-	"index.decrypt",
-    };
-    if (STRNCMP_LITERAL (item, "query.") == 0)
-	return true;
-    for (size_t i = 0; i < ARRAY_SIZE (db_configs); i++)
-	if (strcmp (item, db_configs[i]) == 0)
-	    return true;
-    return false;
+    config_key_info_t *info;
+    info = _config_key_info (item);
+
+    return (info && info->in_db);
 }
 
 static int
@@ -918,13 +940,18 @@ static int
 notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char *argv[])
 {
     char *group, *key;
+    config_key_info_t *key_info;
 
     if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
 	fprintf (stderr, "Error: read only option: %s\n", item);
 	return 1;
     }
 
-    if (_stored_in_db (item)) {
+    key_info = _config_key_info (item);
+    if (key_info && key_info->validate && (! key_info->validate (item)))
+	return 1;
+
+    if (key_info && key_info->in_db) {
 	return _set_db_config (config, item, argc, argv);
     }
 
