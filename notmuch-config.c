@@ -802,6 +802,7 @@ typedef struct config_key {
 static struct config_key
 config_key_table[] = {
     {"index.decrypt",	true,	false,	NULL},
+    {"index.header.",	true,	true,	NULL},
     {"query.",		true,	true,	NULL},
 };
 
