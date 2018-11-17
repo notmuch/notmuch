@@ -221,6 +221,11 @@ struct _notmuch_database {
     Xapian::ValueRangeProcessor *value_range_processor;
     Xapian::ValueRangeProcessor *date_range_processor;
     Xapian::ValueRangeProcessor *last_mod_range_processor;
+
+    /* XXX it's slightly gross to use two parallel string->string maps
+     * here, but at least they are small */
+    notmuch_string_map_t *user_prefix;
+    notmuch_string_map_t *user_header;
 };
 
 /* Prior to database version 3, features were implied by the database

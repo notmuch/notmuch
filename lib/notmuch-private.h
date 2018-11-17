@@ -678,6 +678,8 @@ struct _notmuch_indexopts {
 
 #define CONFIG_HEADER_PREFIX "index.header."
 
+#define EMPTY_STRING(s) ((s)[0] == '\0')
+
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus

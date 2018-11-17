@@ -334,6 +334,14 @@ _setup_user_query_fields (notmuch_database_t *notmuch)
     notmuch_config_list_t *list;
     notmuch_status_t status;
 
+    notmuch->user_prefix = _notmuch_string_map_create (notmuch);
+    if (notmuch->user_prefix == NULL)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    notmuch->user_header = _notmuch_string_map_create (notmuch);
+    if (notmuch->user_header == NULL)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
     status = notmuch_database_get_config_list (notmuch, CONFIG_HEADER_PREFIX, &list);
     if (status)
 	return status;
@@ -344,6 +352,14 @@ _setup_user_query_fields (notmuch_database_t *notmuch)
 
 	const char *key = notmuch_config_list_key (list)
 	    + sizeof (CONFIG_HEADER_PREFIX) - 1;
+
+	_notmuch_string_map_append (notmuch->user_prefix,
+				    key,
+				    _user_prefix (notmuch, key));
+
+	_notmuch_string_map_append (notmuch->user_header,
+				    key,
+				    notmuch_config_list_value (list));
 
 	query_field.name = talloc_strdup (notmuch, key);
 	query_field.prefix = _user_prefix (notmuch, key);

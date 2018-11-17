@@ -30,8 +30,6 @@
 #define THREAD_DEBUG(format, ...) do {} while (0) /* ignored */
 #endif
 
-#define EMPTY_STRING(s) ((s)[0] == '\0')
-
 struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
