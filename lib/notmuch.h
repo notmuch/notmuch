@@ -1400,6 +1400,8 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
  * If there are no replies to 'message', this function will return
  * NULL. (Note that notmuch_messages_valid will accept that NULL
  * value as legitimate, and simply return FALSE for it.)
+ *
+ * The returned list will be destroyed when the thread is destroyed.
  */
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
