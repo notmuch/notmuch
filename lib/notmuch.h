@@ -889,10 +889,12 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  *     notmuch_query_t *query;
  *     notmuch_threads_t *threads;
  *     notmuch_thread_t *thread;
+ *     notmuch_status_t stat;
  *
  *     query = notmuch_query_create (database, query_string);
  *
- *     for (threads = notmuch_query_search_threads (query);
+ *     for (stat = notmuch_query_search_threads (query, &threads);
+ *	    stat == NOTMUCH_STATUS_SUCCESS &&
  *          notmuch_threads_valid (threads);
  *          notmuch_threads_move_to_next (threads))
  *     {
