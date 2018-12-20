@@ -38,7 +38,7 @@ INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 	rm -f $@ && gzip --stdout $^ > $@
 
 ifeq ($(WITH_EMACS),1)
-sphinx-html sphinx-texinfo: docstring.stamp
+$(DOCBUILDDIR)/.roff.stamp sphinx-html sphinx-texinfo: docstring.stamp
 endif
 
 sphinx-html:
