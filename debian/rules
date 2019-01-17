@@ -6,7 +6,7 @@ python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 	dh $@ --with python2,python3,elpa
 
 override_dh_auto_configure:
-	BASH=/bin/bash	./configure --prefix=/usr \
+	BASHCMD=/bin/bash ./configure --prefix=/usr \
 		--libdir=/usr/lib/$$(dpkg-architecture -q DEB_TARGET_MULTIARCH) \
 		--includedir=/usr/include \
 		--mandir=/usr/share/man \
