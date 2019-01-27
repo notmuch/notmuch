@@ -92,7 +92,7 @@ Supported options for **address** include
 
 ``--exclude=(true|false)``
     A message is called "excluded" if it matches at least one tag in
-    search.tag\_exclude that does not appear explicitly in the search
+    search.exclude\_tags that does not appear explicitly in the search
     terms. This option specifies whether to omit excluded messages in
     the search process.
 

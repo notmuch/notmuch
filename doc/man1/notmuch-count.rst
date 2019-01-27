@@ -36,7 +36,7 @@ Supported options for **count** include
         same message-id).
 
 ``--exclude=(true|false)``
-    Specify whether to omit messages matching search.tag\_exclude from
+    Specify whether to omit messages matching search.exclude\_tags from
     the count (the default) or not.
 
 ``--batch``

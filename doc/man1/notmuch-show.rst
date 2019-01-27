@@ -161,7 +161,7 @@ Supported options for **show** include
     Default: ``auto``
 
 ``--exclude=(true|false)``
-    Specify whether to omit threads only matching search.tag\_exclude
+    Specify whether to omit threads only matching search.exclude\_tags
     from the search results (the default) or not. In either case the
     excluded message will be marked with the exclude flag (except when
     output=mbox when there is nowhere to put the flag).
