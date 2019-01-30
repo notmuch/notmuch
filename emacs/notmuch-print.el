@@ -69,7 +69,7 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 
 (defun notmuch-print-ps-print/evince (msg)
   "Preview a message buffer using ps-print and evince."
-  (let ((ps-file (make-temp-file "notmuch"))
+  (let ((ps-file (make-temp-file "notmuch" nil ".ps"))
 	(subject (notmuch-prettify-subject
 		  (plist-get (notmuch-show-get-prop :headers msg) :Subject))))
     (rename-buffer subject t)
@@ -82,7 +82,7 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 
 (defun notmuch-print-muttprint/evince (msg)
   "Preview a message buffer using muttprint and evince."
-  (let ((ps-file (make-temp-file "notmuch")))
+  (let ((ps-file (make-temp-file "notmuch" nil ".ps")))
     (notmuch-print-run-muttprint (list "--printer" (concat "TO_FILE:" ps-file)))
     (notmuch-print-run-evince ps-file)))
 
