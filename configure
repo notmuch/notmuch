@@ -53,7 +53,7 @@ fi
 
 # Set several defaults (optionally specified by the user in
 # environment variables)
-BASH=${BASH:-bash}
+BASHCMD=${BASHCMD:-bash}
 PERL=${PERL:-perl}
 CC=${CC:-cc}
 CXX=${CXX:-c++}
@@ -560,13 +560,13 @@ else
 fi
 
 printf "Checking for bash... "
-if command -v ${BASH} > /dev/null; then
+if command -v ${BASHCMD} > /dev/null; then
     have_bash=1
-    bash_absolute=$(command -v ${BASH})
+    bash_absolute=$(command -v ${BASHCMD})
     printf "Yes (%s).\n" "$bash_absolute"
 else
     have_bash=0
-    printf "No. (%s not found)\n" "${BASH}"
+    printf "No. (%s not found)\n" "${BASHCMD}"
 fi
 
 printf "Checking for perl... "

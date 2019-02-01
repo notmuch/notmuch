@@ -7,6 +7,15 @@ Command Line Interface
 `notmuch show` now supports --body=false and --include-html with
 --format=text
 
+Notmuch 0.28.1 (2019-02-01)
+===========================
+
+Build System
+------------
+
+`configure` no longer uses the special variable BASH, as this causes
+problems on systems where /bin/sh is bash.
+
 Notmuch 0.28 (2018-10-12)
 =========================
 
