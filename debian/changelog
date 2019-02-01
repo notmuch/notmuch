@@ -1,3 +1,11 @@
+notmuch (0.28.1-1) unstable; urgency=medium
+
+  * New upstream bug fix release
+  * Bug fix: "muttprint/evince fails to show "print", thanks to
+    Joerg Jaspert (Closes: #920856).
+
+ -- David Bremner <bremner@debian.org>  Fri, 01 Feb 2019 08:05:05 -0400
+
 notmuch (0.28-2) unstable; urgency=medium
 
   * Override location of bash, because /usr/bin/bash might exist
