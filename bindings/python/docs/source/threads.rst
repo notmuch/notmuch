@@ -11,4 +11,4 @@
       iterator and broke list(Threads()). Use `len(list(msgs))`
       instead.
 
-.. automethod:: __str__
+   .. automethod:: __str__
