@@ -42,8 +42,8 @@ $(TAR_FILE):
 $(SHA256_FILE): $(TAR_FILE)
 	sha256sum $^ > $@
 
-$(GPG_FILE): $(SHA256_FILE)
-	gpg --armor --sign $^
+$(GPG_FILE): $(TAR_FILE)
+	gpg --armor --detach-sign $^
 
 .PHONY: dist
 dist: $(TAR_FILE)
