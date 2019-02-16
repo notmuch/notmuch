@@ -62,6 +62,7 @@ notmuch-hello key bindings
 ``<return>``
     Activate the current widget.
 
+``g``
 ``=``
     Refresh the buffer; mainly update the counts of messages for various
     saved searches.
@@ -158,6 +159,10 @@ menu of results that the user can explore further by pressing
 
 ``<return>``
     Open thread on current line in :ref:`notmuch-show` mode
+
+``g``
+``=``
+    Refresh the buffer
 
 ``?``
     Display full set of key bindings
@@ -295,6 +300,10 @@ tags.
 
 ``p``
     Move to previous matching message
+
+``g``
+``=``
+    Refresh the buffer
 
 ``?``
     Display full set of key bindings
