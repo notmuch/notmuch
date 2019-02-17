@@ -1,0 +1,24 @@
+From: "Jjgod Jiang" <gzjjgod@gmail.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 14:14:27 +0800
+Subject: [notmuch] Mac OS X/Darwin compatibility issues
+In-Reply-To: <86einw2xof.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me>
+References: <ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com>
+	<86einw2xof.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me>
+Message-ID: <ddd65cda0911172214t60d22b63hcfeb5a19ab54a39b@mail.gmail.com>
+
+Hi,
+
+On Wed, Nov 18, 2009 at 1:45 PM, Alexander Botero-Lowry
+<alex.boterolowry at gmail.com> wrote:
+> for getline do you mind trying #define _GNU_SOURCE 1
+> before #include <stdio.h> in the offending files? The FreeBSD man pages
+> mentions that as a way of enabling the GNU version of getline().
+
+It seems even _GNU_SOURCE is defined, getline is still not present.
+the C lib in Mac OS X simply doesn't have it. See also [1].
+
+- Jiang
+
+[1] http://stackoverflow.com/questions/1117108/compiling-c-code-using-gnu-c-getline-on-mac-osx
+

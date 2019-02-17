@@ -1,0 +1,11 @@
+This file contains some more detailed information about building and
+installing the documentation.
+
+- You need sphinx at least version 1.0.
+
+- You can build build and install man pages with 'make install-man'
+
+- You can build man, info, html, and pdf versions of the docs
+  (currently only the man pages) with
+
+     'make install-{man|info|html|pdf}'

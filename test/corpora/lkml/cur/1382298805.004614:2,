@@ -1,0 +1,89 @@
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
+Subject: [PATCH 2/6] x86: ifdef enable_IR_x2apic() out
+Date: Mon, 14 Feb 2011 11:00:08 +0100
+Lines: 48
+Message-ID: <1297677612-12405-2-git-send-email-henne@nachtwindheim.de>
+References: <1297677612-12405-1-git-send-email-henne@nachtwindheim.de>
+Cc: tglx@linutronix.de, hpa@zytor.com, x86@kernel.org, tj@kernel.org,
+	yinghai@kernel.org, ak@linux.intel.com, robert.richter@amd.com,
+	linux-kernel@vger.kernel.org, henne@nachtwindheim.de
+To: mingo@readhat.com
+X-From: linux-kernel-owner@vger.kernel.org Mon Feb 14 11:00:34 2011
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PovEP-0006ED-LT
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 14 Feb 2011 11:00:34 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1752908Ab1BNKA1 (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 14 Feb 2011 05:00:27 -0500
+Received: from server103.greatnet.de ([83.133.97.6]:38321 "EHLO
+	server103.greatnet.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab1BNKAX (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 14 Feb 2011 05:00:23 -0500
+Received: from localhost.localdomain (cmnz-d9bab6be.pool.mediaWays.net [217.186.182.190])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by server103.greatnet.de (Postfix) with ESMTPSA id 1AFC7950DB3;
+	Mon, 14 Feb 2011 10:59:06 +0100 (CET)
+X-Mailer: git-send-email 1.7.1
+In-Reply-To: <1297677612-12405-1-git-send-email-henne@nachtwindheim.de>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099646>
+
+The only caller of enable_IR_x2apic() is probe_64.c, which is only
+compiled on x86-64 bit machines.
+This function causes compilation problems on 32-bit machines with no
+io-apic enabled, so we remove it from 32s and keep the way it was on 64s.
+
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+---
+ arch/x86/include/asm/apic.h |    2 ++
+ arch/x86/kernel/apic/apic.c |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
+index b8a3484..b1d77e1 100644
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -216,7 +216,9 @@ static inline void x2apic_force_phys(void)
+ #define	x2apic_supported()	0
+ #endif
+ 
++#ifdef CONFIG_X86_64
+ extern void enable_IR_x2apic(void);
++#endif
+ 
+ extern int get_physical_broadcast(void);
+ 
+diff --git a/arch/x86/kernel/apic/apic.c b/arch/x86/kernel/apic/apic.c
+index 306386f..27a7497 100644
+--- a/arch/x86/kernel/apic/apic.c
++++ b/arch/x86/kernel/apic/apic.c
+@@ -1467,6 +1467,7 @@ int __init enable_IR(void)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_X86_64
+ void __init enable_IR_x2apic(void)
+ {
+ 	unsigned long flags;
+@@ -1540,7 +1541,6 @@ out:
+ 		pr_info("Not enabling x2apic, Intr-remapping init failed.\n");
+ }
+ 
+-#ifdef CONFIG_X86_64
+ /*
+  * Detect and enable local APICs on non-SMP boards.
+  * Original code written by Keir Fraser.
+-- 
+1.7.2.3
+
+
+

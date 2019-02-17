@@ -1,0 +1,77 @@
+Notmuch - thread-based email index, search and tagging.
+
+Notmuch is a system for indexing, searching, reading, and tagging
+large collections of email messages in maildir or mh format. It uses
+the Xapian library to provide fast, full-text search with a convenient
+search syntax.
+
+Notmuch is free software, released under the GNU General Public
+License version 3 (or later).
+
+Building notmuch
+----------------
+See the INSTALL file for notes on compiling and installing notmuch.
+
+Running notmuch
+---------------
+After installing notmuch, start by running "notmuch setup" which will
+interactively prompt for configuration information such as your name,
+email address, and the directory which contains your mail archive to
+be indexed. You can change any answers later by running "notmuch
+setup" again or by editing the .notmuch-config file in your home
+directory.
+
+With notmuch configured you should next run "notmuch new" which will
+index all of your existing mail. This can take a long time, (several
+hours) if you have a lot of email, (hundreds of thousands of
+files). When new mail is delivered to your mail archive in the future,
+you will want to run "notmuch new" again. These runs will be much
+faster as they will only index new messages.
+
+Finally, you can prove to yourself that things are working by running
+some command-line searches such as "notmuch search
+from:someone@example.com" or "notmuch search subject:topic". See
+"notmuch help search-terms" for more details on the available search
+syntax.
+
+The command-line search output is not expected to be particularly
+friendly for day-to-day usage. Instead, it is expected that you will
+use an email interface that builds on the notmuch command-line tool or
+the libnotmuch library.
+
+Notmuch installs a full-featured email interface for use within
+emacs. To use this, first add the following line to your .emacs file:
+
+	(autoload 'notmuch "notmuch" "Notmuch mail" t)
+
+Then, either run "emacs -f notmuch" or execute the command "M-x
+notmuch" from within a running emacs.
+
+If you're interested in a non-emacs-based interface to notmuch, then
+please join the notmuch community. Various other interfaces are
+already in progress, (an interface within vim, a curses interface,
+graphical interfaces based on evolution, and various web-based
+interfaces). The authors of these interfaces would love further
+testing or contribution. See contact information below.
+
+Contacting users and developers
+-------------------------------
+The website for Notmuch is:
+
+	https://notmuchmail.org
+
+The mailing list address for the notmuch community is:
+
+	notmuch@notmuchmail.org
+
+We welcome any sort of questions, comments, kudos, or code there.
+
+Subscription is not required, (but if you do subscribe you'll avoid
+any delay due to moderation). See the website for subscription
+information.
+
+There is also an IRC channel dedicated to talk about using and
+developing notmuch:
+
+	IRC server:	irc.freenode.net
+	Channel:	#notmuch

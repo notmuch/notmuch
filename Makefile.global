@@ -1,0 +1,65 @@
+# Here's the (hopefully simple) versioning scheme.
+#
+# Releases of notmuch have a two-digit version (0.1, 0.2, etc.). We
+# increment the second digit for each release and increment the first
+# digit when we reach particularly major milestones of usability.
+#
+# Between releases, (such as when compiling notmuch from the git
+# repository), we let git append identification of the actual commit.
+PACKAGE=notmuch
+
+IS_GIT:=$(if $(wildcard ${srcdir}/.git),yes,no)
+
+ifeq ($(IS_GIT),yes)
+DATE:=$(shell git --git-dir=${srcdir}/.git log --date=short -1 --pretty=format:%cd)
+else
+DATE:=$(shell date +%F)
+endif
+
+VERSION:=$(shell cat ${srcdir}/version)
+ELPA_VERSION:=$(subst ~,_,$(VERSION))
+ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
+ifeq ($(IS_GIT),yes)
+VERSION:=$(shell git --git-dir=${srcdir}/.git describe --abbrev=7 --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
+# drop the ~g$sha1 part
+ELPA_VERSION:=$(word 1,$(subst ~, ,$(VERSION)))
+# convert git version to package.el friendly form
+ELPA_VERSION:=$(subst +,snapshot,$(ELPA_VERSION))
+
+# Write the file 'version.stamp' in case its contents differ from $(VERSION)
+FILE_VERSION:=$(shell test -f version.stamp && read vs < version.stamp || vs=; echo $$vs)
+ifneq ($(FILE_VERSION),$(VERSION))
+       $(shell echo "$(VERSION)" > version.stamp)
+endif
+endif
+endif
+
+UPSTREAM_TAG=$(subst ~,_,$(VERSION))
+DEB_TAG=debian/$(UPSTREAM_TAG)-1
+
+RELEASE_HOST=notmuchmail.org
+RELEASE_DIR=/srv/notmuchmail.org/www/releases
+RELEASE_URL=https://notmuchmail.org/releases
+TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
+ELPA_FILE:=$(PACKAGE)-emacs-$(ELPA_VERSION).tar
+DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
+SHA256_FILE=$(TAR_FILE).sha256
+GPG_FILE=$(SHA256_FILE).asc
+
+PV_FILE=bindings/python/notmuch/version.py
+
+# Smash together user's values with our extra values
+STD_CFLAGS := -std=gnu99
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(STD_CFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(extra_cflags) $(CONFIGURE_CFLAGS)
+FINAL_CXXFLAGS = $(CPPFLAGS) $(CXXFLAGS) $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CONFIGURE_CXXFLAGS)
+FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lnotmuch_util -Llib -lnotmuch
+ifeq ($(LIBDIR_IN_LDCONFIG),0)
+FINAL_NOTMUCH_LDFLAGS += $(RPATH_LDFLAGS)
+endif
+FINAL_NOTMUCH_LDFLAGS += $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS) $(ZLIB_LDFLAGS)
+FINAL_NOTMUCH_LINKER = CC
+ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
+FINAL_NOTMUCH_LDFLAGS += $(CONFIGURE_LDFLAGS)
+FINAL_NOTMUCH_LINKER = CXX
+endif
+FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(AS_NEEDED_LDFLAGS) $(CONFIGURE_LDFLAGS)

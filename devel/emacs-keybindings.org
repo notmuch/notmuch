@@ -1,0 +1,58 @@
+|-----------+----------------------------------------+-------------------------------------------------------+-----------------------------------------|
+| Key       | Search Mode                            | Show Mode                                             | Tree Mode                               |
+|-----------+----------------------------------------+-------------------------------------------------------+-----------------------------------------|
+| a         | notmuch-search-archive-thread          | notmuch-show-archive-message-then-next-or-next-thread | notmuch-tree-archive-message-then-next  |
+| b         | notmuch-search-scroll-down             | notmuch-show-resend-message                           | notmuch-show-resend-message             |
+| c         | notmuch-search-stash-map               | notmuch-show-stash-map                                | notmuch-show-stash-map                  |
+| d         |                                        |                                                       |                                         |
+| e         |                                        |                                                       | (notmuch-tree-button-activate)          |
+| f         |                                        | notmuch-show-forward-message                          | notmuch-show-forward-message            |
+| g         |                                        |                                                       |                                         |
+| h         |                                        | notmuch-show-toggle-visibility-headers                |                                         |
+| i         |                                        |                                                       |                                         |
+| j         | notmuch-jump-search                    | notmuch-jump-search                                   | notmuch-jump-search                     |
+| k         | notmuch-tag-jump                       | notmuch-tag-jump                                      | notmuch-tag-jump                        |
+| l         | notmuch-search-filter                  | notmuch-show-filter-thread                            |                                         |
+| m         | notmuch-mua-new-mail                   | notmuch-mua-new-mail                                  | notmuch-mua-new-mail                    |
+| n         | notmuch-search-next-thread             | notmuch-show-next-open-message                        | notmuch-tree-next-matching-message      |
+| o         | notmuch-search-toggle-order            |                                                       |                                         |
+| p         | notmuch-search-previous-thread         | notmuch-show-previous-open-message                    | notmuch-tree-prev-matching-message      |
+| q         | notmuch-bury-or-kill-this-buffer       | notmuch-bury-or-kill-this-buffer                      | notmuch-bury-or-kill-this-buffer        |
+| r         | notmuch-search-reply-to-thread-sender  | notmuch-show-reply-sender                             | notmuch-show-reply-sender               |
+| s         | notmuch-search                         | notmuch-search                                        | notmuch-search                          |
+| t         | notmuch-search-filter-by-tag           | toggle-truncate-lines                                 |                                         |
+| u         |                                        |                                                       |                                         |
+| v         |                                        |                                                       | notmuch-show-view-all-mime-parts        |
+| w         |                                        | notmuch-show-save-attachments                         | notmuch-show-save-attachments           |
+| x         | notmuch-bury-or-kill-this-buffer       | notmuch-show-archive-message-then-next-or-exit        | notmuch-tree-quit                       |
+| y         |                                        |                                                       |                                         |
+| z         | notmuch-tree                           | notmuch-tree                                          | notmuch-tree-to-tree                    |
+| A         |                                        | notmuch-show-archive-thread-then-next                 | notmuch-tree-archive-thread             |
+| F         |                                        | notmuch-show-forward-open-messages                    |                                         |
+| G         | notmuch-poll-and-refresh-this-buffer   | notmuch-poll-and-refresh-this-buffer                  | notmuch-poll-and-refresh-this-buffer    |
+| N         |                                        | notmuch-show-next-message                             | notmuch-tree-next-message               |
+| O         |                                        |                                                       |                                         |
+| P         |                                        | notmuch-show-previous-message                         | notmuch-tree-prev-message               |
+| R         | notmuch-search-reply-to-thread         | notmuch-show-reply                                    | notmuch-show-reply                      |
+| S         |                                        |                                                       | notmuch-search-from-tree-current-query  |
+| V         |                                        | notmuch-show-view-raw-message                         | notmuch-show-view-raw-message           |
+| X         |                                        | notmuch-show-archive-thread-then-exit                 |                                         |
+| Z         | notmuch-tree-from-search-current-query | notmuch-tree-from-show-current-query                  |                                         |
+| =!=       |                                        | notmuch-show-toggle-elide-non-matching                |                                         |
+| =#=       |                                        | notmuch-show-print-message                            |                                         |
+| =$=       |                                        | notmuch-show-toggle-process-crypto                    |                                         |
+| =*=       | notmuch-search-tag-all                 | notmuch-show-tag-all                                  | notmuch-tree-tag-thread                 |
+| +         | notmuch-search-add-tag                 | notmuch-show-add-tag                                  | notmuch-tree-add-tag                    |
+| -         | notmuch-search-remove-tag              | notmuch-show-remove-tag                               | notmuch-tree-remove-tag                 |
+| .         |                                        | notmuch-show-part-map                                 |                                         |
+| <         | notmuch-search-first-thread            | notmuch-show-toggle-thread-indentation                |                                         |
+| <DEL>     | notmuch-search-scroll-down             | notmuch-show-rewind                                   | notmuch-tree-scroll-message-window-back |
+| <RET>     | notmuch-search-show-thread             | notmuch-show-toggle-message                           | notmuch-tree-show-message               |
+| <SPC>     | notmuch-search-scroll-up               | notmuch-show-advance                                  | notmuch-tree-scroll-or-next             |
+| <TAB>     |                                        | notmuch-show-next-button                              | notmuch-show-next-button                |
+| <backtab> |                                        | notmuch-show-previous-button                          | notmuch-show-previous-button            |
+| =         | notmuch-refresh-this-buffer            | notmuch-refresh-this-buffer                           | notmuch-tree-refresh-view               |
+| >         | notmuch-search-last-thread             |                                                       |                                         |
+| ?         | notmuch-help                           | notmuch-help                                          | notmuch-help                            |
+| \vert     |                                        | notmuch-show-pipe-message                             | notmuch-show-pipe-message               |
+|-----------+----------------------------------------+-------------------------------------------------------+-----------------------------------------|

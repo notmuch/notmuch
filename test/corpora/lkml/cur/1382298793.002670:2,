@@ -1,0 +1,52 @@
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 07/44] drivers/isdn: Remove unnecessary semicolons
+Date: Mon, 15 Nov 2010 11:08:40 -0800 (PST)
+Lines: 11
+Message-ID: <20101115.110840.45901337.davem@davemloft.net>
+References: <cover.1289789604.git.joe@perches.com>
+	<c7a38f65340aafb208d50fc3a781602c07aebb0c.1289789604.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Cc: trivial@kernel.org, isdn@linux-pingi.de, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: joe@perches.com
+X-From: netdev-owner@vger.kernel.org Mon Nov 15 20:09:14 2010
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1PI4QU-00030Y-5P
+	for linux-netdev-2@lo.gmane.org; Mon, 15 Nov 2010 20:09:14 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S933584Ab0KOTIR (ORCPT <rfc822;linux-netdev-2@m.gmane.org>);
+	Mon, 15 Nov 2010 14:08:17 -0500
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51842
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933494Ab0KOTIP (ORCPT
+	<rfc822;netdev@vger.kernel.org>); Mon, 15 Nov 2010 14:08:15 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by sunset.davemloft.net (Postfix) with ESMTP id 88D8924C088;
+	Mon, 15 Nov 2010 11:08:40 -0800 (PST)
+In-Reply-To: <c7a38f65340aafb208d50fc3a781602c07aebb0c.1289789604.git.joe@perches.com>
+X-Mailer: Mew version 6.3 on Emacs 23.1 / Mule 6.0 (HANACHIRUSATO)
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062695>
+
+From: Joe Perches <joe@perches.com>
+Date: Sun, 14 Nov 2010 19:04:26 -0800
+
+> Signed-off-by: Joe Perches <joe@perches.com>
+
+Applied.
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

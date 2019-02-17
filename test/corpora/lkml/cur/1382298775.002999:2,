@@ -1,0 +1,109 @@
+From: "Bounine, Alexandre" <Alexandre.Bounine@idt.com>
+Subject: RE: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Date: Tue, 3 Aug 2010 06:24:47 -0700
+Lines: 40
+Message-ID: <0CE8B6BE3C4AD74AB97D9D29BD24E552011430BC@CORPEXCH1.na.ads.idt.com>
+References: <20100308191005.GE4324@amak.tundra.com>
+	<AANLkTine3pc2Ai2Woj81Y9fS_KgGs1sIMb2NMR6G74ww@mail.gmail.com>
+	<AANLkTinKbimKyLpvFD7KOvavshu_n8gRcp2BvEJj0XZQ@mail.gmail.com>
+	<4381.1280815590@neuling.org>
+	<0CE8B6BE3C4AD74AB97D9D29BD24E5520114309D@CORPEXCH1.na.ads.idt.com>
+	<AANLkTinpwYnyc1oN1VbtBgUF6bk6E5q_Gq1Dj3WXV3wc@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: Michael Neuling <mikey@neuling.org>, linux-kernel@vger.kernel.org,
+	Alexandre Bounine <abounine@tundra.com>, thomas.moll@sysgo.com,
+	linuxppc-dev@lists.ozlabs.org
+To: "Timur Tabi" <timur@freescale.com>
+X-From: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org Tue Aug 03 15:25:22 2010
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Envelope-to: glppe-linuxppc-embedded-2@m.gmane.org
+Received: from ozlabs.org ([203.10.76.45])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>)
+	id 1OgHUd-0006wG-MW
+	for glppe-linuxppc-embedded-2@m.gmane.org; Tue, 03 Aug 2010 15:25:20 +0200
+Received: from bilbo.ozlabs.org (localhost [127.0.0.1])
+	by ozlabs.org (Postfix) with ESMTP id 54FA51007E4
+	for <glppe-linuxppc-embedded-2@m.gmane.org>; Tue,  3 Aug 2010 23:25:09 +1000 (EST)
+Received: from mxout1.idt.com (mxout1.idt.com [157.165.5.25])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "mxout1.idt.com", Issuer "idt.com" (not verified))
+	by ozlabs.org (Postfix) with ESMTPS id 5C917B70A6
+	for <linuxppc-dev@lists.ozlabs.org>;
+	Tue,  3 Aug 2010 23:25:00 +1000 (EST)
+Received: from mail.idt.com (localhost [127.0.0.1])
+	by mxout1.idt.com (8.13.1/8.13.1) with ESMTP id o73DOrjO005661;
+	Tue, 3 Aug 2010 06:24:54 -0700
+Received: from corpml1.corp.idt.com (corpml1.corp.idt.com [157.165.140.20])
+	by mail.idt.com (8.13.8/8.13.8) with ESMTP id o73DOndw022603;
+	Tue, 3 Aug 2010 06:24:50 -0700 (PDT)
+Received: from CORPEXCH1.na.ads.idt.com (localhost [127.0.0.1])
+	by corpml1.corp.idt.com (8.11.7p1+Sun/8.11.7) with ESMTP id
+	o73DOml00291; Tue, 3 Aug 2010 06:24:48 -0700 (PDT)
+X-MimeOLE: Produced By Microsoft Exchange V6.5
+Content-class: urn:content-classes:message
+In-Reply-To: <AANLkTinpwYnyc1oN1VbtBgUF6bk6E5q_Gq1Dj3WXV3wc@mail.gmail.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Thread-Index: AcszC8UElBYHaZlHSsmvZEE2KBL+0wAAhg7A
+X-Scanned-By: MIMEDefang 2.43
+X-BeenThere: linuxppc-dev@lists.ozlabs.org
+X-Mailman-Version: 2.1.13
+Precedence: list
+List-Id: Linux on PowerPC Developers Mail List <linuxppc-dev.lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1018016>
+
+Yang Li pointed to these patches in his post from July 23, 2010.
+It would be nice to have these patches in mainline code. 
+
+> -----Original Message-----
+> From: timur.tabi@gmail.com [mailto:timur.tabi@gmail.com] On Behalf Of
+Timur Tabi
+> Sent: Tuesday, August 03, 2010 9:02 AM
+> To: Bounine, Alexandre
+> Cc: Michael Neuling; Alexandre Bounine; linuxppc-dev@lists.ozlabs.org;
+linux-kernel@vger.kernel.org;
+> thomas.moll@sysgo.com; Kumar Gala
+> Subject: Re: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO
+port
+> 
+> On Tue, Aug 3, 2010 at 7:17 AM, Bounine, Alexandre
+> <Alexandre.Bounine@idt.com> wrote:
+> > This happened after change to book-e definitions.
+> > There are patches that address this issue.
+> 
+> And those patches should have been applied before 2.6.35 was released.
+>  Someone dropped the ball.  2.6.35 is broken for a number of PowerPC
+> boards:
+> 
+> $ make mpc85xx_defconfig
+> ....
+> $ make
+> ....
+>   CC      arch/powerpc/sysdev/fsl_rio.o
+> arch/powerpc/sysdev/fsl_rio.c: In function 'fsl_rio_mcheck_exception':
+> arch/powerpc/sysdev/fsl_rio.c:248: error: 'MCSR_MASK' undeclared
+> (first use in this function)
+> arch/powerpc/sysdev/fsl_rio.c:248: error: (Each undeclared identifier
+> is reported only once
+> arch/powerpc/sysdev/fsl_rio.c:248: error: for each function it appears
+in.)
+> make[1]: *** [arch/powerpc/sysdev/fsl_rio.o] Error 1
+> 
+> --
+> Timur Tabi
+> Linux kernel developer at Freescale
+
+

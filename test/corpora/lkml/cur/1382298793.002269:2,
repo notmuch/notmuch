@@ -1,0 +1,74 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 32/44] fs/9p: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:51 -0800
+Lines: 35
+Message-ID: <f6ae29dfdd0b9ad401f5eb77ae670212689ee921.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Eric Van Hensbergen <ericvh@gmail.com>,
+	Ron Minnich <rminnich@sandia.gov>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	v9fs-developer@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:07:26 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpPg-0001H8-Sy
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:07:25 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932992Ab0KODGD (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:06:03 -0500
+Received: from mail.perches.com ([173.55.12.10]:1227 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932846Ab0KODF4 (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:56 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id C9F2E2436F;
+	Sun, 14 Nov 2010 19:04:23 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062288>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ fs/9p/acl.c   |    2 +-
+ fs/9p/xattr.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/9p/acl.c b/fs/9p/acl.c
+index 12d6023..bc4da9a 100644
+--- a/fs/9p/acl.c
++++ b/fs/9p/acl.c
+@@ -28,7 +28,7 @@ static struct posix_acl *__v9fs_get_acl(struct p9_fid *fid, char *name)
+ {
+ 	ssize_t size;
+ 	void *value = NULL;
+-	struct posix_acl *acl = NULL;;
++	struct posix_acl *acl = NULL;
+ 
+ 	size = v9fs_fid_xattr_get(fid, name, NULL, 0);
+ 	if (size > 0) {
+diff --git a/fs/9p/xattr.c b/fs/9p/xattr.c
+index 43ec7df..d288773 100644
+--- a/fs/9p/xattr.c
++++ b/fs/9p/xattr.c
+@@ -133,7 +133,7 @@ int v9fs_xattr_set(struct dentry *dentry, const char *name,
+ 			"p9_client_xattrcreate failed %d\n", retval);
+ 		goto error;
+ 	}
+-	msize = fid->clnt->msize;;
++	msize = fid->clnt->msize;
+ 	while (value_len) {
+ 		if (value_len > (msize - P9_IOHDRSZ))
+ 			write_count = msize - P9_IOHDRSZ;
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

@@ -1,0 +1,125 @@
+From: Colin Cross <ccross@android.com>
+Subject: Re: [PATCH] ARM: vfp: Always save VFP state in vfp_pm_suspend
+Date: Mon, 14 Feb 2011 10:35:37 -0800
+Lines: 50
+Message-ID: <AANLkTik_Jey_PtRmr530FVckA6RXHESeX+CyoJC=ZTkR@mail.gmail.com>
+References: <1297638813-1315-1-git-send-email-ccross@android.com>
+	<1297683742.30092.11.camel@e102109-lin.cambridge.arm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-kernel@vger.kernel.org
+To: Catalin Marinas <catalin.marinas@arm.com>
+X-From: linux-kernel-owner@vger.kernel.org Mon Feb 14 19:36:14 2011
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1Pp3HR-0002ph-ME
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 14 Feb 2011 19:36:14 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1751716Ab1BNSf7 convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 14 Feb 2011 13:35:59 -0500
+Received: from smtp-out.google.com ([74.125.121.67]:16138 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab1BNSf5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 14 Feb 2011 13:35:57 -0500
+Received: from kpbe14.cbf.corp.google.com (kpbe14.cbf.corp.google.com [172.25.105.78])
+	by smtp-out.google.com with ESMTP id p1EIZtnZ010066
+	for <linux-kernel@vger.kernel.org>; Mon, 14 Feb 2011 10:35:55 -0800
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; d=google.com; s=beta;
+	t=1297708556; bh=zHQvHco6EycqYjYMR9YZftpchts=;
+	h=MIME-Version:Sender:In-Reply-To:References:Date:Message-ID:
+	 Subject:From:To:Cc:Content-Type:Content-Transfer-Encoding;
+	b=vMdLxEMc5VUxTbXeXOfO9iAKtgTlVwOwZrVZEhG7GNUReOYWZKzblAuPHuJUWHr5q
+	 8s7bNLIdGKiRH4q28mv9w==
+Received: from vws17 (vws17.prod.google.com [10.241.21.145])
+	by kpbe14.cbf.corp.google.com with ESMTP id p1EIYaTC004311
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-kernel@vger.kernel.org>; Mon, 14 Feb 2011 10:35:54 -0800
+Received: by vws17 with SMTP id 17so3300387vws.2
+        for <linux-kernel@vger.kernel.org>; Mon, 14 Feb 2011 10:35:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=beta;
+        h=domainkey-signature:mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type
+         :content-transfer-encoding;
+        bh=FyW95sl8WRQv1ev+TqjP0gzPcCabtWdW1//GAc6oFnY=;
+        b=MNkyYY1htITiUX23N5enGCjsYq2mGBCW4BadxXMha/29ZeIyVP6jrUHlViT88u79RG
+         SxLMzz7lijwW38xTiBfw==
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=google.com; s=beta;
+        h=mime-version:sender:in-reply-to:references:date
+         :x-google-sender-auth:message-id:subject:from:to:cc:content-type
+         :content-transfer-encoding;
+        b=Lio4jom4+RruCzH/a6zheXvUcTpZvSX7eMk6Ld1+PQQybP02I0+Cv4+PgGac2GoAYX
+         tXciu0c/KOGts2phbyMg==
+Received: by 10.220.94.201 with SMTP id a9mr1430388vcn.56.1297708537386; Mon,
+ 14 Feb 2011 10:35:37 -0800 (PST)
+Received: by 10.220.43.142 with HTTP; Mon, 14 Feb 2011 10:35:37 -0800 (PST)
+In-Reply-To: <1297683742.30092.11.camel@e102109-lin.cambridge.arm.com>
+X-Google-Sender-Auth: 47_39DbBbWrnAh28bpWvfpwmbLw
+X-System-Of-Record: true
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099943>
+
+On Mon, Feb 14, 2011 at 3:42 AM, Catalin Marinas
+<catalin.marinas@arm.com> wrote:
+> On Sun, 2011-02-13 at 23:13 +0000, Colin Cross wrote:
+>> vfp_pm_suspend should save the VFP state any time there is
+>> a last_VFP_context. =A0If it only saves when the VFP is enabled,
+>> the state can get lost when, on a UP system:
+>> =A0 =A0Thread 1 uses the VFP
+>> =A0 =A0Context switch occurs to thread 2, VFP is disabled but the
+>> =A0 =A0 =A0 VFP context is not saved to allow lazy save and restore
+>> =A0 =A0Thread 2 initiates suspend
+>> =A0 =A0vfp_pm_suspend is called with the VFP disabled, but the
+>> =A0 =A0 =A0 context has not been saved.
+>
+> At this point is it guaranteed that the thread won't migrate to anoth=
+er
+> CPU? If not, we should use get/put_cpu.
+
+Yes, VFP suspend is implemented with a sysdev, which is suspended
+after disable_nonboot_cpus.
+
+>> --- a/arch/arm/vfp/vfpmodule.c
+>> +++ b/arch/arm/vfp/vfpmodule.c
+>> @@ -415,13 +415,12 @@ static int vfp_pm_suspend(struct sys_device *d=
+ev, pm_message_t state)
+>> =A0 =A0 =A0 =A0 struct thread_info *ti =3D current_thread_info();
+>> =A0 =A0 =A0 =A0 u32 fpexc =3D fmrx(FPEXC);
+>>
+>> - =A0 =A0 =A0 /* if vfp is on, then save state for resumption */
+>> - =A0 =A0 =A0 if (fpexc & FPEXC_EN) {
+>> + =A0 =A0 =A0 /* save state for resume */
+>> + =A0 =A0 =A0 if (last_VFP_context[ti->cpu]) {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "%s: saving vfp st=
+ate\n", __func__);
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 vfp_save_state(&ti->vfpstate, fpexc);
+>> -
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* disable, just in case */
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 fmxr(FPEXC, fmrx(FPEXC) & ~FPEXC_EN);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 fmxr(FPEXC, fpexc | FPEXC_EN);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 vfp_save_state(last_VFP_context[ti->cp=
+u], fpexc);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 fmxr(FPEXC, fpexc & ~FPEXC_EN);
+>> =A0 =A0 =A0 =A0 }
+>
+> We may want to set the last_VFP_context to NULL so that after resumin=
+g
+> (to the same thread) we force the VFP reload from the vfpstate
+> structure. The vfp_support_entry code ignores the reloading if the
+> last_VFP_context is the same as vfpstate.
+
+Right, will fix.
+
+

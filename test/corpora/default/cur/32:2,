@@ -1,0 +1,165 @@
+From: "Jan Janak" <jan@ryngle.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 05:57:03 +0100
+Subject: [notmuch] [PATCH] notmuch new: Support for conversion of spool
+	subdirectories into tags
+Message-ID: <1258520223-15328-1-git-send-email-jan@ryngle.com>
+
+This patch makes it possible to convert subdirectory names inside the
+spool directory into message tags. Messages stored in subdirectory
+"foo" will be marked with tag "foo". Message duplicates found in several
+subdirectories will be given one tag per subdirectory.
+
+This feature can be used to synchronize notmuch's tags with with gmail
+tags, for example. Gmail IMAP servers convert tags to IMAP
+subdirectories and those subdirectories can be converted back to tags
+in notmuch.
+
+The patch modifies notmuch_database_add_message function to return a
+pointer to the message even if a message duplicate was found in the
+database. This is needed if we want to add a tag for each subdirectory
+in which a message duplicate was found.
+
+In addition to that, it makes the pointer to notmuch_config_t global
+(previously it was a local variable in notmuch_new_command). The
+configuration data structure is used by the function which converts
+subdirectory names to tags.
+
+Finally, there is a new function called subdir_to_tag. The function
+extracts the name of the subdirectory inside the spool from the full
+path of the message (also removing Maildir's cur,dir,and tmp
+subdirectories) and adds it as a new tag to the message.
+
+Signed-off-by: Jan Janak <jan at ryngle.com>
+---
+ lib/database.cc |    3 +-
+ notmuch-new.c   |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 74 insertions(+), 3 deletions(-)
+
+diff --git a/lib/database.cc b/lib/database.cc
+index 3c8d626..f7799d2 100644
+--- a/lib/database.cc
++++ b/lib/database.cc
+@@ -949,7 +949,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
+ 
+   DONE:
+     if (message) {
+-	if (ret == NOTMUCH_STATUS_SUCCESS && message_ret)
++		if ((ret == NOTMUCH_STATUS_SUCCESS ||
++			 ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) && message_ret)
+ 	    *message_ret = message;
+ 	else
+ 	    notmuch_message_destroy (message);
+diff --git a/notmuch-new.c b/notmuch-new.c
+index 83a05ba..d94ce16 100644
+--- a/notmuch-new.c
++++ b/notmuch-new.c
+@@ -19,6 +19,9 @@
+  */
+ 
+ #include "notmuch-client.h"
++#include <libgen.h>
++
++static notmuch_config_t *config = 0;
+ 
+ static volatile sig_atomic_t do_add_files_print_progress = 0;
+ 
+@@ -45,6 +48,69 @@ tag_inbox_and_unread (notmuch_message_t *message)
+     notmuch_message_add_tag (message, "unread");
+ }
+ 
++/*
++ * Extracts the sub-directory from the filename and adds it as a new tag to
++ * the message. The filename must begin with the database directory configured
++ * in the configuration file. This prefix is then removed. If the remaining
++ * sub-directory ends with one of the Maildir special directories (/tmp, /new,
++ * /cur) then they are removed as well. If there is anything left then the
++ * function adds it as a new tag to the message.
++ *
++ * The function does nothing if it cannot extract a sub-directory from
++ * filename.
++ */
++static void
++subdir_to_tag (char* filename, notmuch_message_t *message)
++{
++	const char* db_path;
++	char *msg_dir, *tmp;
++	int db_path_len, msg_dir_len;
++
++	if (config == NULL) return;
++    db_path = notmuch_config_get_database_path (config);
++	if (db_path == NULL) return;
++	db_path_len = strlen(db_path);
++
++	/* Make a copy of the string as dirname may need to modify it. */
++	tmp = talloc_strdup(message, filename);
++	msg_dir = dirname(tmp);
++	msg_dir_len = strlen(msg_dir);
++
++	/* If msg_dir starts with db_path, remove it, including the / which delimits
++	 * it from the rest of the directory name. */
++	if (db_path_len < msg_dir_len &&
++		!strncmp(db_path, msg_dir, db_path_len)) {
++		msg_dir += db_path_len + 1;
++		msg_dir_len -= db_path_len + 1;
++	} else {
++		/* If we get here, either the message filename is not inside the
++		 * database directory configured in the configuration file, or it is a
++		 * file in the root directory of the database. Either way we just skip
++		 * it because we do not know how to convert it to a meaningful
++		 * subdirectory string that we could add as tag. */
++		goto out;
++	}
++
++	/* Special conditioning for Maildirs. If the remainder of the directory
++	 * name ends with /new, /cur, or /tmp then remove it. */
++	if ((msg_dir_len >= 4) &&
++		(!strncmp(msg_dir + msg_dir_len - 4, "/new", 4) ||
++		 !strncmp(msg_dir + msg_dir_len - 4, "/cur", 4) ||
++		 !strncmp(msg_dir + msg_dir_len - 4, "/tmp", 4))) {
++		msg_dir[msg_dir_len - 4] = '\0';
++	}
++
++	/* If, after all the modifications, we still have a subdirectory, add it
++	 * as tag. */
++	if (strlen(msg_dir)) {
++		notmuch_message_add_tag (message, msg_dir);
++	}
++
++out:
++	talloc_free(tmp);
++}
++
++
+ static void
+ add_files_print_progress (add_files_state_t *state)
+ {
+@@ -186,10 +252,15 @@ add_files_recursive (notmuch_database_t *notmuch,
+ 		    case NOTMUCH_STATUS_SUCCESS:
+ 			state->added_messages++;
+ 			tag_inbox_and_unread (message);
++			subdir_to_tag(next, message);
+ 			break;
+ 		    /* Non-fatal issues (go on to next file) */
+ 		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+-		        /* Stay silent on this one. */
++		        /* Stay silent on this one. The message already exists in the
++				 * database, that means we may have found a duplicate in
++				 * another directory. If that's the case then we add another
++				 * tag to the message with the sub-directory. */
++				subdir_to_tag(next, message);
+ 			break;
+ 		    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+ 			fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+@@ -386,7 +457,6 @@ int
+ notmuch_new_command (void *ctx,
+ 		     unused (int argc), unused (char *argv[]))
+ {
+-    notmuch_config_t *config;
+     notmuch_database_t *notmuch;
+     add_files_state_t add_files_state;
+     double elapsed;
+-- 
+1.6.3.3
+
+

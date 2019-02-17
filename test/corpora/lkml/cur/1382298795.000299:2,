@@ -1,0 +1,79 @@
+From: Artem Bityutskiy <dedekind1@gmail.com>
+Subject: Re: [PATCH 37/44] fs/ubifs: Remove unnecessary semicolons
+Date: Fri, 19 Nov 2010 15:21:08 +0200
+Lines: 13
+Message-ID: <1290172868.4768.2.camel@localhost>
+References: <cover.1289789604.git.joe@perches.com>
+	 <902d76520da2f65e5dc44339dccb07159947f23d.1289789605.git.joe@perches.com>
+Reply-To: dedekind1@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: Jiri Kosina <trivial@kernel.org>,
+	Adrian Hunter <adrian.hunter@nokia.com>,
+	linux-mtd@lists.infradead.org, linux-kernel@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+X-From: linux-kernel-owner@vger.kernel.org Fri Nov 19 14:22:08 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PJQuj-00008T-0Z
+	for glk-linux-kernel-3@lo.gmane.org; Fri, 19 Nov 2010 14:22:05 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1754099Ab0KSNVg convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Fri, 19 Nov 2010 08:21:36 -0500
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60443 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270Ab0KSNVf (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Fri, 19 Nov 2010 08:21:35 -0500
+Received: by bwz15 with SMTP id 15so3864554bwz.19
+        for <linux-kernel@vger.kernel.org>; Fri, 19 Nov 2010 05:21:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:received:received:subject:from:reply-to:to:cc
+         :in-reply-to:references:content-type:date:message-id:mime-version
+         :x-mailer:content-transfer-encoding;
+        bh=I+JFeMB9svh3ZIIGdVlHav4mOQmOa+QTh4VZGVL0a/0=;
+        b=hLukn/U4YkodFZ8CEkuJJmYvpTDXhavKiL1YZ12QApXyCb9xBeYORheXEIQUygjUpL
+         Fy9zyFIWzw3YAiLEa4WUJnC4L+VWq4Nhtua9a1XBQBCK8HZuDITUcmtYcobib1kBg4KE
+         0nBOF7IL6d17HN8QGC+Nn+YTu7JxHSq4cHy8Y=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=subject:from:reply-to:to:cc:in-reply-to:references:content-type
+         :date:message-id:mime-version:x-mailer:content-transfer-encoding;
+        b=WiSerhUAnUL/tGRi8PqwwkXymz8N1Uf58rludUDWzSk+L3KSJqGtAvdv8xYqW8x4PQ
+         Vla/qoLPjcqQQmaLgLKtDvGIL9BFQ86dXrgokJhcrT1qSs2xN3VKGdhm49MOd/HrYZ/F
+         v4wespzjVohrMt2tOP38nOKZpPeu4t1wUJYOQ=
+Received: by 10.204.79.142 with SMTP id p14mr1988895bkk.175.1290172893650;
+        Fri, 19 Nov 2010 05:21:33 -0800 (PST)
+Received: from ?IPv6:::1? (shutemov.name [188.40.19.243])
+        by mx.google.com with ESMTPS id v25sm850549bkt.6.2010.11.19.05.21.30
+        (version=SSLv3 cipher=RC4-MD5);
+        Fri, 19 Nov 2010 05:21:31 -0800 (PST)
+In-Reply-To: <902d76520da2f65e5dc44339dccb07159947f23d.1289789605.git.joe@perches.com>
+X-Mailer: Evolution 2.32.0 (2.32.0-2.fc14) 
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1065301>
+
+On Sun, 2010-11-14 at 19:04 -0800, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  fs/ubifs/scan.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+
+Thanks, I'll pick this up.
+
+--=20
+Best Regards,
+Artem Bityutskiy (=D0=90=D1=80=D1=82=D1=91=D0=BC =D0=91=D0=B8=D1=82=D1=8E=
+=D1=86=D0=BA=D0=B8=D0=B9)
+
+
+

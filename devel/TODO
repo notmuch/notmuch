@@ -1,0 +1,255 @@
+Fix the things that are causing the most pain to new users
+----------------------------------------------------------
+1. A new import is tagging all messages as "inbox" -- total pain
+
+Emacs interface (notmuch.el)
+----------------------------
+Add notmuch-bcc and notmuch-cc for setting default Bcc and Cc values,
+(should affect the message-setup-hook).
+
+Switch the notmuch-search view to use "notmuch search --format=json"
+to fix large classes of bugs regarding poorly-escaped output and lame
+regular expressions. (The most recently found, unfixed example is the
+sender's name containing ';' which causes emacs to drop a search
+result.) This may require removing the outer array from the current
+"notmuch search --format=json" results.
+
+Add a global keybinding table for notmuch, and then view-specific
+tables that add to it.
+	
+Add a '|' binding from the search view.
+
+Add support for choosing from one of the user's configured email
+addresses for the From line.
+
+Make 'notmuch-show-pipe-message have a private history.
+
+Add support for a delete keybinding that adds a "deleted" tag to the
+current message/thread and make searches not return deleted messages
+by default, (unless the user asks explicitly for deleted messages in
+the search query).
+
+Add support to "mute" a thread (add a "muted" tag and then don't
+display threads in searches by default where any message of the thread
+has the "muted" tag).
+
+Make '=' count from the end rather than from the beginning if more
+than half-way through the buffer.
+
+Fix to automatically wrap long headers (for RFC compliance) before
+sending. This should probably just be fixed in message-mode itself,
+(but perhaps we can have a notmuch-message-mode that layers this on
+top).
+
+Stop hiding the headers so much in the thread-view mode.
+
+Allow opening a message in thread-view mode by clicking on either
+line.
+
+Automatically open a message when navigating to it with N or P.
+
+Change 'a' command in thread-view mode to only archive open messages.
+
+notmuch command-line tool
+-------------------------
+Add support to "notmuch search" and "notmuch show" to allow for
+listing of duplicate messages, (distinct filenames with the same
+Message-ID). I'm not sure what the option should be named. Perhaps
+--with-duplicates ?
+
+Replace "notmuch reply" with "notmuch compose --reply <search-terms>".
+This would enable a plain "notmuch compose" to be used to construct an
+initial message, (which would then have the properly configured name
+and email address in the From: line. We could also then easily support
+"notmuch compose --from <something>" to support getting at alternate
+email addresses.
+
+Implement "notmuch search --exclude-threads=<search-terms>" to allow
+for excluding muted threads, (and any other negative, thread-based
+filtering that the user wants to do).
+
+Fix "notmuch show" so that the UI doesn't fail to show a thread that
+is visible in a search buffer, but happens to no longer match the
+current search. (Perhaps add a --matching=<secondary-search-terms>
+option (or similar) to "notmuch show".) For now, this is being worked
+around in the emacs interface by noticing that "notmuch show" returns
+nothing and re-rerunning the command without the extra arguments.
+
+Add a "--format" option to "notmuch search", (something printf-like
+for selecting what gets printed).
+
+Give "notmuch restore" some progress indicator.
+
+Fix "notmuch restore" to operate in a single pass much like "notmuch
+dump" does, rather than doing N searches into the database, each
+matching 1/N messages.
+
+Allow configuration for filename patterns that should be ignored when
+indexing.
+
+Fix to avoid this ugly message:
+
+	(process:17197): gmime-CRITICAL **: g_mime_message_get_mime_part: assertion `GMIME_IS_MESSAGE (message)' failed
+	Warning: Not indexing empty mime part.
+
+  This probably means adding a test case to generate that message,
+  filing an upstream bug against GMime, and then silencing the
+  notmuch-generated portion of the warning (so that once GMime is
+  fixed, this is all silent).
+
+Simplify notmuch-reply to simply print the headers (we have the
+original values) rather than calling GMime (which encodes) and adding
+the confusing gmime-filter-headers.c code (which decodes).
+
+Properly handle replying to multiple messages. Currently, the JSON
+reply format only supports a single message, but the default reply
+format accepts searches returning multiple messages. The expected
+behavior of replying to multiple messages is not obvious, and there
+are multiple ideas that might make sense. Some consensus needs to be
+reached on this issue, and then both reply formats should be updated
+to be consistent.
+
+Return docid-based queries in thread search results, instead of
+message-id-based queries.  These are much more compact and much faster
+to later query.  This will require support from the library, both for
+retrieving docids (probably as an opaque "get a query that identifies
+this message") and for docid queries.
+
+notmuch library
+---------------
+Add support for custom flag<->tag mappings. In the notmuch
+configuration file this could be
+
+	[maildir]
+	synchronize_flags = R:replied; D*:deleted; S:~unread;
+
+In the library interface this could be implemented with an array of
+structures to define the mapping (flag character, tag name,
+inverse-sense bit (~ above), and tag-when-any-file-flagged
+vs. tag-when-all-files-flagged (* above)).
+
+Add an interface to accept a "key" and a byte stream, rather than a
+filename.
+
+Improve syntax for date ranges queries. date:expr should be
+interpreted as date:expr..expr so that, for example, "date:2013-01-22"
+would cover the whole of the specified day (currently that's not even
+recognized as a date range expression). It might be nice to be able to
+use things like "since:2013-01-22" and "until:2013-01-22" as synonyms
+to "date:2013-01-22.." and "date:..2013-01-22", respectively. To do
+any of this we're probably going to need to break down and write our
+own parser for the query string rather than using Xapian's QueryParser
+class.
+
+Make failure to read a file (such as a permissions problem) a warning
+rather than an error (should be similar to the existing warning for a
+non-mail file).
+
+Fix to use the *last* Message-ID header if multiple such headers are
+encountered, (I noticed this is one thing that kept me from seeing the
+same message-ID values as sup).
+
+Add support for configuring "virtual tags" which are a tuple of
+(tag-name, search-specification). The database is responsible for
+ensuring that the virtual tag is always consistent.
+
+Indicate to the user if two files with the same message ID have
+content that is actually different in some interesting way. Perhaps
+notmuch initially sees all changes as interesting, and quickly learns
+from the user which changes are not interesting (such as the very
+common mailing-list footer).
+
+Fix notmuch_query_count_messages to share code with
+notmuch_query_search_messages rather than duplicating code. (And
+consider renaming it as well.)
+
+Provide a mechanism for doing automatic address completion based on
+notmuch searches. Here was one proposal made in IRC:
+
+	<cworth> I guess all it would really have to be would be a way
+	         to configure a series of searches to try in turn,
+	         (presenting ambiguities at a given single level, and
+	         advancing to the next level only if one level
+	         returned no matches).
+	<cworth> So then I might have a series that looks like this:
+	<cworth> notmuch search --output=address_from tag:address_book_alias
+	<cworth> notmuch search --output=address_to tag:sent
+	<cworth> notmuch search --output=address_from
+	<cworth> I think I might like that quite a bit.
+	<cworth> And then we have a story for an address book for
+	         non-emacs users.
+
+Provide a ~me Xapian synonym for all of the user's configured email
+addresses.
+
+Add symbol hiding so that we don't risk leaking any private symbols
+into the shared-library interface.
+
+Audit all libnotmuch entry points to ensure that all Xapian calls are
+wrapped in a try/catch block.
+
+Fix the threading of a message that has a References: header but no
+In-Reply-To: header (see id:"87lixxnxpb.fsf@yoom.home.cworth.org").
+
+Search syntax
+-------------
+Implement support for "tag:*" to expand to all tags.
+
+Fix "notmuch search to:" to be less confusing. Many users expect this
+to search for all messages with a To: header, but it instead searches
+for all messages with the word "to". If we don't provide the first
+behavior, perhaps we should exit on an error when a configured prefix
+is provided with no value?
+
+Support "*" in all cases and not just as a special case. That is, "* "
+should also work, as well as "* and tag:inbox".
+
+Implement a syntax for requesting set-theoertic operations on results
+of multiple searches. For example, I would like to do:
+
+	"tag:inbox" SET-SUBTRACT "tag:muted"
+
+    as well as:
+
+	"tag:notmuch and <date-range>" SET-INTERSECT
+	"tag:notmuch and not (tag:merged or tag:postponed)"
+
+    See id:3wdpr282yz2.fsf@testarossa.amd.com for more details on the
+    use cases of the above.
+
+Database changes
+----------------
+Store a reference term for every message-id that appears in
+References. We just started doing this for newly-added documents, but
+at the next convenient database-schema upgrade, we should go back and
+fix old messages to be consistent.
+
+Start indexing the List-Id header, (and re-index this header for
+existing messages at the next database upgrade).
+
+Add support for the user to specify custom headers to be indexed (and
+re-index these for existing messages at the next database upgrade).
+
+Save filenames for files detected as "not an email file" in the
+database. This would allow for two things: 1. Optimizing "notmuch new"
+to not have to look at these files again (since they are potentially
+large so the detection could be potentially slow). 2. A "notmuch
+search" syntax could be added to allow the user to find these files,
+(and perhaps delete them or move them away as appropriate).
+
+Fix filesystem/notmuch-new race condition by not updating database
+mtime for a directory if it is the same as the current mtime.
+
+Test suite
+----------
+Achieve 100% test coverage with the test suite.
+
+General
+-------
+Audit everything for dealing with out-of-memory (and drop xutil.c).
+
+Investigate why the notmuch database is slightly larger than the sup
+database for the same corpus of email.
+
+Makefile should print message teaching user about LD_LIBRARY_PATH (or
+similar) if libdir is not set to a directory examined by ldconfig.

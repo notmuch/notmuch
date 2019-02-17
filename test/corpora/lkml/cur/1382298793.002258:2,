@@ -1,0 +1,86 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 31/44] drivers/xen: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:50 -0800
+Lines: 20
+Message-ID: <b3f95cd997859d5d714de322ce17810fe73460cd.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: virtualization@lists.osdl.org,
+	Jeremy Fitzhardinge <jeremy.fitzhardinge@citrix.com>,
+	xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Jiri Kosina <trivial@kernel.org>
+X-From: xen-devel-bounces@lists.xensource.com Mon Nov 15 04:06:05 2010
+Return-path: <xen-devel-bounces@lists.xensource.com>
+Envelope-to: gcvxd-xen-devel@m.gmane.org
+Received: from lists.colo.xensource.com ([70.42.241.110] helo=lists.xensource.com)
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <xen-devel-bounces@lists.xensource.com>)
+	id 1PHpON-0000fV-A9
+	for gcvxd-xen-devel@m.gmane.org; Mon, 15 Nov 2010 04:06:03 +0100
+Received: from localhost ([127.0.0.1] helo=lists.colo.xensource.com)
+	by lists.xensource.com with esmtp (Exim 4.43)
+	id 1PHpOK-0008Sa-VZ; Sun, 14 Nov 2010 19:06:01 -0800
+Received: from spam.xensource.com ([70.42.241.90])
+	by lists.xensource.com with esmtp (Exim 4.43) id 1PHpOG-0008R4-01
+	for xen-devel@lists.xensource.com; Sun, 14 Nov 2010 19:05:56 -0800
+X-ASG-Debug-ID: 1289790355-0739cd1c0001-8pertM
+Received: from mail.perches.com (mail.perches.com [173.55.12.10]) by
+	spam.xensource.com with ESMTP id XhkGr3VGEwXLx5vl for
+	<xen-devel@lists.xensource.com>;
+	Sun, 14 Nov 2010 19:05:55 -0800 (PST)
+X-Barracuda-Envelope-From: joe@perches.com
+X-Barracuda-Apparent-Source-IP: 173.55.12.10
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 044672436E;
+	Sun, 14 Nov 2010 19:04:23 -0800 (PST)
+X-ASG-Orig-Subj: [PATCH 31/44] drivers/xen: Remove unnecessary semicolons
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+X-Barracuda-Connect: mail.perches.com[173.55.12.10]
+X-Barracuda-Start-Time: 1289790355
+X-Barracuda-URL: http://spam.xensource.com:8000/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at xensource.com
+X-Barracuda-Spam-Score: 0.00
+X-Barracuda-Spam-Status: No, SCORE=0.00 using per-user scores of TAG_LEVEL=3.5
+	QUARANTINE_LEVEL=6.0 KILL_LEVEL=1000.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.2.46657
+	Rule breakdown below
+	pts rule name              description
+	---- ----------------------
+	--------------------------------------------------
+X-BeenThere: xen-devel@lists.xensource.com
+X-Mailman-Version: 2.1.5
+Precedence: list
+List-Id: Xen developer discussion <xen-devel.lists.xensource.com>
+List-Unsubscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xensource.com>
+List-Help: <mailto:xen-devel-request@lists.xensource.com?subject=help>
+List-Subscribe: <http://lists.xensource.com/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=subscribe>
+Sender: xen-devel-bounces@lists.xensource.com
+Errors-To: xen-devel-bounces@lists.xensource.com
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062277>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/xen/swiotlb-xen.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
+index 54469c3..65ea21a 100644
+--- a/drivers/xen/swiotlb-xen.c
++++ b/drivers/xen/swiotlb-xen.c
+@@ -54,7 +54,7 @@ u64 start_dma_addr;
+ 
+ static dma_addr_t xen_phys_to_bus(phys_addr_t paddr)
+ {
+-	return phys_to_machine(XPADDR(paddr)).maddr;;
++	return phys_to_machine(XPADDR(paddr)).maddr;
+ }
+ 
+ static phys_addr_t xen_bus_to_phys(dma_addr_t baddr)
+-- 
+1.7.3.1.g432b3.dirty
+
+

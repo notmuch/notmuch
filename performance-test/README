@@ -1,0 +1,90 @@
+Performance Tests
+-----------------
+
+This directory contains two kinds of performance tests: time tests,
+and memory tests. The former use gnu time, and the latter use
+valgrind.
+
+Pre-requisites
+--------------
+
+In addition to having notmuch, you need:
+
+- gpg
+- gnu tar
+- gnu time (for the time tests)
+- xz. Some speedup can be gotten by installing "pixz", but this is
+  probably only worthwhile if you are debugging the tests.
+- valgrind (for the memory tests)
+
+Getting set up to run tests:
+----------------------------
+
+First, you need to get the corpus.  If you don't already have the gpg
+key for David Bremner, run
+
+   % gpg --search 'david@tethera.net'
+
+This should get you a key with fingerprint
+
+    815B 6398 2A79 F8E7 C727  86C4 762B 57BB 7842 06AD
+
+(the last 8 digits are printed as the "key id").
+
+To fetch the actual corpus it should work to run
+
+   % make download-corpus
+
+In case that fails or is too slow, check
+
+   https://notmuchmail.org/corpus
+
+for a list of mirrors.
+
+Running tests
+-------------
+
+The easiest way to run performance tests is to say "make perf-test".
+This will run all time and memory tests.  Be aware that the memory
+tests are quite time consuming when run on the full corpus, and that
+depending on your interests it may be more sensible to run "make
+time-test" or "make memory-test".  You can also invoke one of the
+scripts notmuch-time-test or notmuch-memory-test or run a more
+specific subset of tests by simply invoking one of the executable
+scripts in this directory, (such as ./T00-new).  Each test script
+supports the following arguments
+
+--small / --medium / --large	Choose corpus size.
+--debug				Enable debugging. In particular don't delete
+				temporary directories.
+
+When using the make targets, you can pass arguments to all test
+scripts by defining the make variable OPTIONS.
+
+Writing tests
+-------------
+
+Have a look at "T01-dump-restore" for an example time test and
+"M00-new" for an example memory test. In both cases sourcing
+"perf-test-lib.sh" is mandatory.
+
+Basics:
+
+- '(time|memory)_start' unpacks the mail corpus and calls notmuch new if it
+   cannot find a cache of the appropriate corpus.
+- '(time|memory)_run' runs the command under time or valgrind. Currently
+  "memory_run" does not support i/o redirection in the command.
+- '(time|memory)_done' does the cleanup; comment it out or pass --debug to the
+  script to leave the temporary files around.
+
+Utility functions include
+
+- 'add_email_corpus' unpacks a set of messages and tags
+- 'cache_database': makes a snapshot of the current database
+- 'uncache_database': forces the next '(time|memory)_start' to rebuild the
+  database.
+
+Scripts are run in the order specified in notmuch-perf-test. In the
+future this order might be chosen automatically so please follow the
+convention of starting the name with 'T' or 'M' followed by two digits
+to specify the order.

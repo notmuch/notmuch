@@ -1,0 +1,28 @@
+# -*- makefile -*-
+
+dir := compat
+extra_cflags += -I$(srcdir)/$(dir)
+
+notmuch_compat_srcs :=
+
+ifneq ($(HAVE_CANONICALIZE_FILE_NAME),1)
+notmuch_compat_srcs += $(dir)/canonicalize_file_name.c
+endif
+
+ifneq ($(HAVE_GETLINE),1)
+notmuch_compat_srcs += $(dir)/getline.c $(dir)/getdelim.c
+endif
+
+ifneq ($(HAVE_STRCASESTR),1)
+notmuch_compat_srcs += $(dir)/strcasestr.c
+endif
+
+ifneq ($(HAVE_STRSEP),1)
+notmuch_compat_srcs += $(dir)/strsep.c
+endif
+
+ifneq ($(HAVE_TIMEGM),1)
+notmuch_compat_srcs += $(dir)/timegm.c
+endif
+
+SRCS := $(SRCS) $(notmuch_compat_srcs)

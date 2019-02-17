@@ -1,0 +1,66 @@
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 44/44] sound/soc/codecs: Remove unnecessary semicolons
+Date: Mon, 15 Nov 2010 10:30:29 -0800
+Lines: 16
+Message-ID: <1289845830.16461.149.camel@Joe-Laptop>
+References: <cover.1289789604.git.joe@perches.com>
+	 <97fd199b7dac50613f6843156687223928cce44a.1289789605.git.joe@perches.com>
+	 <20101115134939.GC12986@rakim.wolfsonmicro.main>
+	 <1289840957.16461.138.camel@Joe-Laptop>
+	 <20101115173031.GI12986@rakim.wolfsonmicro.main>
+	 <1289842444.16461.140.camel@Joe-Laptop>
+	 <20101115182708.GJ12986@rakim.wolfsonmicro.main>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Cc: Jiri Kosina <trivial@kernel.org>,
+	Ian Lartey <ian@opensource.wolfsonmicro.com>,
+	Dimitris Papastamos <dp@opensource.wolfsonmicro.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>,
+	alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 19:31:55 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PI3qN-0000mO-6u
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 19:31:55 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1758106Ab0KOSad (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 15 Nov 2010 13:30:33 -0500
+Received: from mail.perches.com ([173.55.12.10]:1314 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756843Ab0KOSac (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 15 Nov 2010 13:30:32 -0500
+Received: from [192.168.1.162] (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 2BC7724368;
+	Mon, 15 Nov 2010 10:28:43 -0800 (PST)
+In-Reply-To: <20101115182708.GJ12986@rakim.wolfsonmicro.main>
+X-Mailer: Evolution 2.30.3 
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062667>
+
+On Mon, 2010-11-15 at 18:27 +0000, Mark Brown wrote:
+> On Mon, Nov 15, 2010 at 09:34:04AM -0800, Joe Perches wrote:
+> > On Mon, 2010-11-15 at 17:30 +0000, Mark Brown wrote:
+> > > Please try to use changelog formats consistent with the code you're
+> > > modifying.
+> > I think it's more important to use consistent changelogs
+> > for a patch series.
+> ...since...?
+
+1995...
+
+Since there isn't a consistent standard for subsystems
+changelogs and automating scripts for the desires of
+individual subsystem maintainers is not feasible.
+
+
+
+

@@ -1,0 +1,41 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 02:49:52 -0800
+Subject: [notmuch] What a great idea!
+In-Reply-To: <f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com>
+References: <f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com>
+Message-ID: <87fx8cqf8v.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 23:35:30 +0100, Jan Janak <jan at ryngle.com> wrote:
+> First of all, notmuch is a wonderful idea, both the cmdline tool and
+> the emacs interface! Thanks a lot for writing it, I was really excited
+> when I read the announcement today.
+
+Ah, here's where I planned a nice welcome. So welcome (again), Jan! :-)
+
+I've been having a lot of fun with notmuch already, (though there have
+been some days of pain before it was functional enough and my
+email-reply latency went way up). But regardless---I got through that,
+and I'm able to work more efficiently with notmuch now than I could with
+sup before. So I'm happy.
+
+And I'm delighted when other people find this interesting as well.
+
+> Have you considered sending an announcement to the org-mode mailing list?
+> http://orgmode.org
+
+Thanks for the idea. I think I may have looked into org-mode years ago,
+(when I was investigating planner-mode and various emacs "personal wiki"
+systems for keeping random notes and what-not).
+
+> Various ways of searching/referencing emails from emacs were discussed
+> there several times and none of them were as elegant as notmuch (not
+> even close). Maybe notmuch would attract some of the developers
+> there..
+
+Yeah. I'll drop them a mail. Having a real emacs wizard on board would
+be nice. (I'm afraid the elisp I've written so far for this project is
+fairly grim.)
+
+-Carl
+

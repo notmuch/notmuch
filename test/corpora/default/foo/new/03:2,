@@ -1,0 +1,93 @@
+Date: Tue, 17 Nov 2009 14:00:54 -0500
+From: Lars Kellogg-Stedman <lars@seas.harvard.edu>
+To: notmuch@notmuchmail.org
+Message-ID: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+MIME-Version: 1.0
+User-Agent: Mutt/1.5.19 (2009-01-05)
+Subject: [notmuch] Working with Maildir storage?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1685355122=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+
+--===============1685355122==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="5Dr6Wqe9hdyl7LAI"
+Content-Disposition: inline
+
+
+--5Dr6Wqe9hdyl7LAI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+I saw the LWN article and decided to take a look at notmuch.  I'm
+currently using mutt and mairix to index and read a collection of
+Maildir mail folders (around 40,000 messages total).
+
+notmuch indexed the messages without complaint, but my attempt at
+searching bombed out. Running, for example:
+
+  notmuch search storage
+
+Resulted in 4604 lines of errors along the lines of:
+
+  Error opening
+  /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostname,U=
+=3D3026:2,S:
+  Too many open files
+
+I'm curious if this is expected behavior (i.e., notmuch does not work
+with Maildir) or if something else is going on.
+
+Cheers,
+
+--=20
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+
+--5Dr6Wqe9hdyl7LAI
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBCAAGBQJLAvLmAAoJENdGlQYxQazYRtcH/0usClQ1Z+EoTsA+URwIK6hD
+FsZUxFxRjMuOQRn2idZ/zhhg5jJj11ZaHjqxSkDvi2ywkTKUf1vX9LLzVy5hSR9M
+E6XQUd5QWAQXo1VsTeKkukIL0YqsPjdgrT8+Yt+OS2NvhEncql23oxnL2/pHkIFq
+r0NdTmVV5Jcar7w9J6X1Mi9m229a/9jV5FImsWISkIhIWznXU5SiU6zIw8xhP4E0
+xhvVSNJnFryjVHtva870aSQduhHfeLPzpYhqbkMPvlq+bcz6Q/Q2SwxJcGLNMPHa
+os9s9FGhCvFKUhVzezHWPgXNCcNT8qK89rcUldb5Oq4jaJb8RCZCYABplfoyaFs=
+=vO4s
+-----END PGP SIGNATURE-----
+
+--5Dr6Wqe9hdyl7LAI--
+
+--===============1685355122==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============1685355122==--
+

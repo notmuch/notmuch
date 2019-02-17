@@ -1,0 +1,1329 @@
+#! /bin/sh
+
+set -u
+
+# Test whether this shell is capable of parameter substring processing.
+( option='a/b'; : ${option#*/} ) 2>/dev/null || {
+    echo "
+The shell interpreting '$0' is lacking some required features.
+
+To work around this problem you may try to execute:
+
+    ksh $0 $*
+ or
+    bash $0 $*
+"
+    exit 1
+}
+
+# Store original IFS value so it can be changed (and restored) in many places.
+readonly DEFAULT_IFS="$IFS"
+
+# The top-level directory for the source. This ./configure and all Makefiles
+# are good with ${srcdir} usually being relative. Some components (e.g. tests)
+# are executed in subdirectories and for those it is simpler to use
+# ${NOTMUCH_SRCDIR} which holds absolute path to the source.
+srcdir=$(dirname "$0")
+NOTMUCH_SRCDIR=$(cd "$srcdir" && pwd)
+
+subdirs="util compat lib parse-time-string completion doc emacs"
+subdirs="${subdirs} performance-test test test/test-databases"
+subdirs="${subdirs} bindings"
+
+# For a non-srcdir configure invocation (such as ../configure), create
+# the directory structure and copy Makefiles.
+if [ "$srcdir" != "." ]; then
+
+    for dir in . ${subdirs}; do
+	mkdir -p "$dir"
+	cp "$srcdir"/"$dir"/Makefile.local "$dir"
+	cp "$srcdir"/"$dir"/Makefile "$dir"
+    done
+
+    # Emacs only likes to generate compiled files next to the .el files
+    # by default so copy these as well (which is not ideal).
+    cp -a "$srcdir"/emacs/*.el emacs
+
+    # We were not able to create fully working Makefile using ruby mkmf.rb
+    # so ruby bindings source files are copied as well (ditto -- not ideal).
+    mkdir bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/*.[ch] bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/extconf.rb bindings/ruby
+fi
+
+# Set several defaults (optionally specified by the user in
+# environment variables)
+BASHCMD=${BASHCMD:-bash}
+PERL=${PERL:-perl}
+CC=${CC:-cc}
+CXX=${CXX:-c++}
+CFLAGS=${CFLAGS:--g -O2}
+CPPFLAGS=${CPPFLAGS:-}
+CXXFLAGS_for_sh=${CXXFLAGS:-${CFLAGS}}
+CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
+LDFLAGS=${LDFLAGS:-}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-}
+PYTHON=${PYTHON:-}
+RUBY=${RUBY:-ruby}
+
+# We don't allow the EMACS or GZIP Makefile variables inherit values
+# from the environment as we do with CC and CXX above. The reason is
+# that these names as environment variables have existing uses other
+# than the program name that we want. (EMACS is set to 't' when a
+# shell is running within emacs and GZIP specifies arguments to pass
+# on the gzip command line).
+
+# Set the defaults for values the user can specify with command-line
+# options.
+PREFIX=/usr/local
+LIBDIR=
+WITH_DOCS=1
+WITH_API_DOCS=1
+WITH_EMACS=1
+WITH_DESKTOP=1
+WITH_BASH=1
+WITH_RUBY=1
+WITH_ZSH=1
+WITH_RETRY_LOCK=1
+
+usage ()
+{
+    cat <<EOF
+Usage: ./configure [options]...
+
+This script configures notmuch to build on your system.
+
+It verifies that dependencies are available, determines flags needed
+to compile and link against various required libraries, and identifies
+whether various system functions can be used or if locally-provided
+replacements will be built instead.
+
+Finally, it allows you to control various aspects of the build and
+installation process.
+
+First, some common variables can specified via environment variables:
+
+	CC		The C compiler to use
+	CFLAGS		Flags to pass to the C compiler
+	CPPFLAGS	Flags to pass to the C preprocessor
+	CXX		The C++ compiler to use
+	CXXFLAGS	Flags to pass to the C compiler
+	LDFLAGS		Flags to pass when linking
+
+Each of these values can further be controlled by specifying them
+later on the "make" command line.
+
+Other environment variables can be used to control configure itself,
+(and for which there is no equivalent build-time control):
+
+	XAPIAN_CONFIG	The program to use to determine flags for
+			compiling and linking against the Xapian
+			library. [$XAPIAN_CONFIG]
+	PYTHON		Name of python command to use in
+			configure and the test suite.
+	RUBY		Name of ruby command to use in
+			configure and the test suite.
+
+Additionally, various options can be specified on the configure
+command line.
+
+	--prefix=PREFIX	Install files in PREFIX [$PREFIX]
+
+By default, "make install" will install the resulting program to
+$PREFIX/bin, documentation to $PREFIX/man, etc. You can
+specify an installation prefix other than $PREFIX using
+--prefix, for instance:
+
+	./configure --prefix=\$HOME
+
+Fine tuning of some installation directories is available:
+
+	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
+	--includedir=DIR	Install header files to DIR [PREFIX/include]
+	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--infodir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
+	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
+	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
+	--bashcompletiondir=DIR Bash completions files [PREFIX/share/bash-completion/completions]
+	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
+
+Some features can be disabled (--with-feature=no is equivalent to
+--without-feature) :
+
+	--without-bash-completion	Do not install bash completions files
+	--without-docs			Do not install documentation
+	--without-api-docs		Do not install API man page
+	--without-emacs			Do not install lisp file
+	--without-desktop		Do not install desktop file
+	--without-ruby			Do not install ruby bindings
+	--without-zsh-completion	Do not install zsh completions files
+	--without-retry-lock		Do not use blocking xapian opens, even if available
+
+Additional options are accepted for compatibility with other
+configure-script calling conventions, but don't do anything yet:
+
+	--build=<cpu>-<vendor>-<os>	Currently ignored
+	--host=<cpu>-<vendor>-<os>	Currently ignored
+	--datadir=DIR			Currently ignored
+	--localstatedir=DIR		Currently ignored
+	--libexecdir=DIR		Currently ignored
+	--disable-maintainer-mode	Currently ignored
+	--disable-dependency-tracking	Currently ignored
+
+EOF
+}
+
+# Parse command-line options
+for option; do
+    if [ "${option}" = '--help' ] ; then
+	usage
+	exit 0
+    elif [ "${option%%=*}" = '--prefix' ] ; then
+	PREFIX="${option#*=}"
+    elif [ "${option%%=*}" = '--libdir' ] ; then
+	LIBDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--includedir' ] ; then
+	INCLUDEDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--mandir' ] ; then
+	MANDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--infodir' ] ; then
+	INFODIR="${option#*=}"
+    elif [ "${option%%=*}" = '--sysconfdir' ] ; then
+	SYSCONFDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--emacslispdir' ] ; then
+	EMACSLISPDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--emacsetcdir' ] ; then
+	EMACSETCDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--bashcompletiondir' ] ; then
+	BASHCOMPLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
+	ZSHCOMLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--with-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_DOCS=0
+	    WITH_API_DOCS=0
+	else
+	    WITH_DOCS=1
+	fi
+    elif [ "${option}" = '--without-docs' ] ; then
+	WITH_DOCS=0
+	WITH_API_DOCS=0
+    elif [ "${option%%=*}" = '--with-api-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_API_DOCS=0
+	else
+	    WITH_API_DOCS=1
+	fi
+    elif [ "${option}" = '--without-api-docs' ] ; then
+	WITH_API_DOCS=0
+    elif [ "${option%%=*}" = '--with-emacs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_EMACS=0
+	else
+	    WITH_EMACS=1
+	fi
+    elif [ "${option}" = '--without-emacs' ] ; then
+	WITH_EMACS=0
+    elif [ "${option%%=*}" = '--with-desktop' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_DESKTOP=0
+	else
+	    WITH_DESKTOP=1
+	fi
+    elif [ "${option}" = '--without-desktop' ] ; then
+	WITH_DESKTOP=0
+    elif [ "${option%%=*}" = '--with-bash-completion' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_BASH=0
+	else
+	    WITH_BASH=1
+	fi
+    elif [ "${option}" = '--without-bash-completion' ] ; then
+	WITH_BASH=0
+    elif [ "${option%%=*}" = '--with-ruby' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_RUBY=0
+	else
+	    WITH_RUBY=1
+	fi
+    elif [ "${option}" = '--without-ruby' ] ; then
+	WITH_RUBY=0
+    elif [ "${option%%=*}" = '--with-retry-lock' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_RETRY_LOCK=0
+	else
+	    WITH_RETRY_LOCK=1
+	fi
+    elif [ "${option}" = '--without-retry-lock' ] ; then
+	WITH_RETRY_LOCK=0
+    elif [ "${option%%=*}" = '--with-zsh-completion' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_ZSH=0
+	else
+	    WITH_ZSH=1
+	fi
+    elif [ "${option}" = '--without-zsh-completion' ] ; then
+	WITH_ZSH=0
+    elif [ "${option%%=*}" = '--build' ] ; then
+	true
+    elif [ "${option%%=*}" = '--host' ] ; then
+	true
+    elif [ "${option%%=*}" = '--datadir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--localstatedir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--libexecdir' ] ; then
+	true
+    elif [ "${option}" = '--disable-maintainer-mode' ] ; then
+	true
+    elif [ "${option}" = '--disable-dependency-tracking' ] ; then
+	true
+    else
+	echo "Unrecognized option: ${option}"
+	echo "See:"
+	echo "	$0 --help"
+	echo ""
+	exit 1
+    fi
+done
+
+# We set this value early, (rather than just while printing the
+# Makefile.config file later like most values), because we need to
+# actually investigate this value compared to the ldconfig_paths value
+# below.
+if [ -z "$LIBDIR" ] ; then
+    libdir_expanded="${PREFIX}/lib"
+else
+    # very non-general variable expansion
+    libdir_expanded=$(printf %s "$LIBDIR" | sed "s|\${prefix}|${PREFIX}|; s|\$prefix\>|${PREFIX}|; s|//*|/|g")
+fi
+
+cat <<EOF
+Welcome to Notmuch, a system for indexing, searching and tagging your email.
+
+We hope that the process of building and installing notmuch is quick
+and smooth so that you can soon be reading and processing your email
+more efficiently than ever.
+
+If anything goes wrong in the configure process, you can override any
+decisions it makes by manually editing the Makefile.config file that
+it creates. Also please do as much as you can to figure out what could
+be different on your machine compared to those of the notmuch
+developers. Then, please email those details to the Notmuch list
+(notmuch@notmuchmail.org) so that we can hopefully make future
+versions of notmuch easier for you to use.
+
+We'll now investigate your system to verify that all required
+dependencies are available:
+
+EOF
+
+errors=0
+printf "int main(void){return 0;}\n" > minimal.c
+
+printf "Sanity checking C compilation environment... "
+test_cmdline="${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if  ${test_cmdline} > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
+fi
+
+printf "Sanity checking C++ compilation environment... "
+test_cmdline="${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if ${test_cmdline} > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
+fi
+unset test_cmdline
+
+if [ $errors -gt 0 ]; then
+    cat <<EOF
+*** Error: Initial sanity checking of environment failed.  Please try
+running configure in a clean environment, and if the problem persists,
+report a bug.
+EOF
+    rm -f minimal minimal.c
+    exit 1
+fi
+
+printf "Reading libnotmuch version from source... "
+cat > _libversion.c <<EOF
+#include <stdio.h>
+#include "lib/notmuch.h"
+int main(void) {
+    printf("libnotmuch_version_major=%d\n",
+		LIBNOTMUCH_MAJOR_VERSION);
+    printf("libnotmuch_version_minor=%d\n",
+		LIBNOTMUCH_MINOR_VERSION);
+    printf("libnotmuch_version_release=%d\n",
+		LIBNOTMUCH_MICRO_VERSION);
+    return 0;
+}
+EOF
+if ${CC} ${CFLAGS} -I"$srcdir" _libversion.c -o _libversion > /dev/null 2>&1 \
+       && ./_libversion > _libversion.sh && . ./_libversion.sh
+then
+    printf "OK.\n"
+else
+    cat <<EOF
+
+*** Error: Reading lib/notmuch.h failed.
+Please try running configure again in a clean environment, and if the
+problem persists, report a bug.
+EOF
+    rm -f _libversion _libversion.c _libversion.sh
+    exit 1
+fi
+
+if pkg-config --version > /dev/null 2>&1; then
+    have_pkg_config=1
+else
+    have_pkg_config=0
+fi
+
+printf "Checking for Xapian development files... "
+have_xapian=0
+for xapian_config in ${XAPIAN_CONFIG} xapian-config xapian-config-1.3; do
+    if ${xapian_config} --version > /dev/null 2>&1; then
+	xapian_version=$(${xapian_config} --version | sed -e 's/.* //')
+	printf "Yes (%s).\n" ${xapian_version}
+	have_xapian=1
+	xapian_cxxflags=$(${xapian_config} --cxxflags)
+	xapian_ldflags=$(${xapian_config} --libs)
+	break
+    fi
+done
+if [ ${have_xapian} = "0" ]; then
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
+have_xapian_compact=0
+have_xapian_field_processor=0
+if [ ${have_xapian} = "1" ]; then
+    printf "Checking for Xapian compaction support... "
+    cat>_compact.cc<<EOF
+#include <xapian.h>
+class TestCompactor : public Xapian::Compactor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _compact.cc -o _compact.o > /dev/null 2>&1
+    then
+	have_xapian_compact=1
+	printf "Yes.\n"
+    else
+	printf "No.\n"
+	errors=$((errors + 1))
+    fi
+
+    rm -f _compact.o _compact.cc
+
+    printf "Checking for Xapian FieldProcessor API... "
+    cat>_field_processor.cc<<EOF
+#include <xapian.h>
+class TitleFieldProcessor : public Xapian::FieldProcessor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _field_processor.cc -o _field_processor.o > /dev/null 2>&1
+    then
+	have_xapian_field_processor=1
+	printf "Yes.\n"
+    else
+	printf "No. (optional)\n"
+    fi
+
+    rm -f _field_processor.o _field_processor.cc
+
+    default_xapian_backend=""
+    # DB_RETRY_LOCK is only supported on Xapian > 1.3.2
+    have_xapian_db_retry_lock=0
+    if [ $WITH_RETRY_LOCK = "1" ]; then
+	printf "Checking for Xapian lock retry support... "
+	cat>_retry.cc<<EOF
+#include <xapian.h>
+int flag = Xapian::DB_RETRY_LOCK;
+EOF
+	if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _retry.cc -o _retry.o > /dev/null 2>&1
+	then
+	    have_xapian_db_retry_lock=1
+	    printf "Yes.\n"
+	else
+	    printf "No. (optional)\n"
+	fi
+	rm -f _retry.o _retry.cc
+    fi
+
+    printf "Testing default Xapian backend... "
+    cat >_default_backend.cc <<EOF
+#include <xapian.h>
+int main(int argc, char** argv) {
+   Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
+}
+EOF
+    ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
+    ./_default_backend
+    if [ -f test.db/iamglass ]; then
+	default_xapian_backend=glass
+    else
+	default_xapian_backend=chert
+    fi
+    printf "%s\n" "${default_xapian_backend}";
+    rm -rf test.db _default_backend _default_backend.cc
+fi
+
+# we need to have a version >= 2.6.5 to avoid a crypto bug. We need
+# 2.6.7 for permissive "From " header handling.
+GMIME_MINVER=2.6.7
+GMIME3_MINVER=3.0.3
+
+printf "Checking for GMime development files... "
+if pkg-config --exists "gmime-3.0 > $GMIME3_MINVER"; then
+    printf "Yes (3.0).\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-3.0)
+    gmime_ldflags=$(pkg-config --libs gmime-3.0)
+    gmime_major=3
+    have_gmime_session_keys=1
+elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
+    printf "Yes (2.6).\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-2.6)
+    gmime_ldflags=$(pkg-config --libs gmime-2.6)
+    gmime_major=2
+    if pkg-config --exists "gmime-2.6 >= 2.6.21"; then
+        have_gmime_session_keys=1
+    else
+        have_gmime_session_keys=0
+    fi
+else
+    have_gmime=0
+    have_gmime_session_keys=0
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
+# GMime already depends on Glib >= 2.12, but we use at least one Glib
+# function that only exists as of 2.22, (g_array_unref)
+printf "Checking for Glib development files (>= 2.22)... "
+have_glib=0
+if pkg-config --exists 'glib-2.0 >= 2.22'; then
+    printf "Yes.\n"
+    have_glib=1
+    # these are included in gmime cflags and ldflags
+    # glib_cflags=$(pkg-config --cflags glib-2.0)
+    # glib_ldflags=$(pkg-config --libs glib-2.0)
+else
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
+if ! pkg-config --exists zlib; then
+  ${CC} -o compat/gen_zlib_pc "$srcdir"/compat/gen_zlib_pc.c >/dev/null 2>&1 &&
+  compat/gen_zlib_pc > compat/zlib.pc &&
+  PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
+  export PKG_CONFIG_PATH
+  rm -f compat/gen_zlib_pc
+fi
+
+printf "Checking for zlib (>= 1.2.5.2)... "
+have_zlib=0
+if pkg-config --atleast-version=1.2.5.2 zlib; then
+    printf "Yes.\n"
+    have_zlib=1
+    zlib_cflags=$(pkg-config --cflags zlib)
+    zlib_ldflags=$(pkg-config --libs zlib)
+else
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
+printf "Checking for talloc development files... "
+if pkg-config --exists talloc; then
+    printf "Yes.\n"
+    have_talloc=1
+    talloc_cflags=$(pkg-config --cflags talloc)
+    talloc_ldflags=$(pkg-config --libs talloc)
+else
+    printf "No.\n"
+    have_talloc=0
+    talloc_cflags=
+    errors=$((errors + 1))
+fi
+
+printf "Checking for bash... "
+if command -v ${BASHCMD} > /dev/null; then
+    have_bash=1
+    bash_absolute=$(command -v ${BASHCMD})
+    printf "Yes (%s).\n" "$bash_absolute"
+else
+    have_bash=0
+    printf "No. (%s not found)\n" "${BASHCMD}"
+fi
+
+printf "Checking for perl... "
+if command -v ${PERL} > /dev/null; then
+    have_perl=1
+    perl_absolute=$(command -v ${PERL})
+    printf "Yes (%s).\n" "$perl_absolute"
+else
+    have_perl=0
+    printf "No. (%s not found)\n" "${PERL}"
+fi
+
+printf "Checking for python... "
+have_python=0
+
+for name in ${PYTHON} python3 python python2; do
+    if command -v $name > /dev/null; then
+	have_python=1
+	python=$name
+	printf "Yes (%s).\n" "$name"
+	break
+    fi
+done
+
+if [ $have_python -eq 0 ]; then
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
+printf "Checking for valgrind development files... "
+if pkg-config --exists valgrind; then
+    printf "Yes.\n"
+    have_valgrind=1
+    valgrind_cflags=$(pkg-config --cflags valgrind)
+else
+    printf "No (but that's fine).\n"
+    have_valgrind=0
+    valgrind_cflags=
+fi
+
+printf "Checking for bash-completion (>= 1.90)... "
+if pkg-config --atleast-version=1.90 bash-completion; then
+    printf "Yes.\n"
+else
+    printf "No (will not install bash completion).\n"
+    WITH_BASH=0
+fi
+
+if [ -z "${EMACSLISPDIR-}" ]; then
+    EMACSLISPDIR="\$(prefix)/share/emacs/site-lisp"
+fi
+
+if [ -z "${EMACSETCDIR-}" ]; then
+    EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
+fi
+
+printf "Checking if emacs is available... "
+if emacs --quick --batch > /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_emacs=1
+else
+    printf "No (so will not byte-compile emacs code)\n"
+    have_emacs=0
+fi
+
+have_doxygen=0
+if [ $WITH_API_DOCS = "1" ] ; then
+    printf "Checking if doxygen is available... "
+    if command -v doxygen > /dev/null; then
+	printf "Yes.\n"
+	have_doxygen=1
+    else
+	printf "No (so will not install api docs)\n"
+    fi
+fi
+
+have_ruby_dev=0
+if [ $WITH_RUBY = "1" ] ; then
+    printf "Checking for ruby development files... "
+    if ${RUBY} -e "require 'mkmf'"> /dev/null 2>&1; then
+	printf "Yes.\n"
+	have_ruby_dev=1
+    else
+	printf "No (skipping ruby bindings)\n"
+    fi
+fi
+
+have_sphinx=0
+have_makeinfo=0
+have_install_info=0
+if [ $WITH_DOCS = "1" ] ; then
+    printf "Checking if sphinx is available and supports nroff output... "
+    if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+	printf "Yes.\n"
+	have_sphinx=1
+    else
+	printf "No (so will not install man pages).\n"
+    fi
+    printf "Checking if makeinfo is available... "
+    if command -v makeinfo > /dev/null; then
+	printf "Yes.\n"
+	have_makeinfo=1
+    else
+	printf "No (so will not build info pages).\n"
+    fi
+    printf "Checking if install-info is available... "
+    if command -v install-info > /dev/null; then
+	printf "Yes.\n"
+	have_install_info=1
+    else
+	printf "No (so will not install info pages).\n"
+    fi
+fi
+
+if [ $WITH_DESKTOP = "1" ]; then
+    printf "Checking if desktop-file-install is available... "
+    if command -v desktop-file-install > /dev/null; then
+	printf "Yes.\n"
+    else
+	printf "No (so will not install .desktop file).\n"
+	WITH_DESKTOP=0
+    fi
+fi
+
+printf "Checking for cppcheck... "
+if command -v cppcheck > /dev/null; then
+    have_cppcheck=1
+    printf "Yes.\n"
+else
+    have_cppcheck=0
+    printf "No.\n"
+fi
+
+libdir_in_ldconfig=0
+
+printf "Checking which platform we are on... "
+uname=$(uname)
+if [ $uname = "Darwin" ] ; then
+    printf "Mac OS X.\n"
+    platform=MACOSX
+    linker_resolves_library_dependencies=0
+elif [ $uname = "SunOS" ] ; then
+    printf "Solaris.\n"
+    platform=SOLARIS
+    linker_resolves_library_dependencies=0
+elif [ $uname = "FreeBSD" ] ; then
+    printf "FreeBSD.\n"
+    platform=FREEBSD
+    linker_resolves_library_dependencies=0
+elif [ $uname = "OpenBSD" ] ; then
+    printf "OpenBSD.\n"
+    platform=OPENBSD
+    linker_resolves_library_dependencies=0
+elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
+    printf "%s\n" "$uname"
+    platform="$uname"
+    linker_resolves_library_dependencies=1
+
+    printf "Checking for %s in ldconfig... " "$libdir_expanded"
+    ldconfig_paths=$(/sbin/ldconfig -N -X -v 2>/dev/null | sed -n -e 's,^\(/.*\):\( (.*)\)\?$,\1,p')
+    # Separate ldconfig_paths only on newline (not on any potential
+    # embedded space characters in any filenames). Note, we use a
+    # literal newline in the source here rather than something like:
+    #
+    #	IFS=$(printf '\n')
+    #
+    # because the shell's command substitution deletes any trailing newlines.
+    IFS="
+"
+    for path in $ldconfig_paths; do
+	if [ "$path" -ef "$libdir_expanded" ]; then
+	    libdir_in_ldconfig=1
+	fi
+    done
+    IFS=$DEFAULT_IFS
+    if [ "$libdir_in_ldconfig" = '0' ]; then
+	printf "No (will set RPATH)\n"
+    else
+	printf "Yes\n"
+    fi
+else
+    printf "Unknown.\n"
+    platform="$uname"
+    linker_resolves_library_dependencies=0
+    cat <<EOF
+
+*** Warning: Unknown platform. Notmuch might or might not build correctly.
+
+EOF
+fi
+
+if [ $errors -gt 0 ]; then
+    cat <<EOF
+
+*** Error: The dependencies of notmuch could not be satisfied. You will
+need to install the following packages before being able to compile
+notmuch:
+
+EOF
+    if [ $have_python -eq 0 ]; then
+	echo "  python interpreter"
+    fi
+    if [ $have_xapian -eq 0 -o $have_xapian_compact -eq 0 ]; then
+	echo "	Xapian library (>= version 1.2.6, including development files such as headers)"
+	echo "	https://xapian.org/"
+    fi
+    if [ $have_zlib -eq 0 ]; then
+	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
+	echo "	https://zlib.net/"
+	echo
+    fi
+    if [ $have_gmime -eq 0 ]; then
+	echo "	GMime 2.6 library >= $GMIME_MINVER"
+	echo "	(including development files such as headers)"
+	echo "	https://github.com/jstedfast/gmime/"
+	echo
+    fi
+    if [ $have_glib -eq 0 ]; then
+	echo "	Glib library >= 2.22 (including development files such as headers)"
+	echo "	https://ftp.gnome.org/pub/gnome/sources/glib/"
+	echo
+    fi
+    if [ $have_talloc -eq 0 ]; then
+	echo "	The talloc library (including development files such as headers)"
+	echo "	https://talloc.samba.org/"
+	echo
+    fi
+    cat <<EOF
+With any luck, you're using a modern, package-based operating system
+that has all of these packages available in the distribution. In that
+case a simple command will install everything you need. For example:
+
+On Debian and similar systems:
+
+	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev
+
+Or on Fedora and similar systems:
+
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel
+
+On other systems, similar commands can be used, but the details of the
+package names may be different.
+
+EOF
+    if [ $have_pkg_config -eq 0 ]; then
+cat <<EOF
+Note: the pkg-config program is not available. This configure script
+uses pkg-config to find the compilation flags required to link against
+the various libraries needed by notmuch. It's possible you simply need
+to install pkg-config with a command such as:
+
+	sudo apt-get install pkg-config
+Or:
+	sudo yum install pkgconfig
+
+But if pkg-config is not available for your system, then you will need
+to modify the configure script to manually set the cflags and ldflags
+variables to the correct values to link against each library in each
+case that pkg-config could not be used to determine those values.
+
+EOF
+    fi
+cat <<EOF
+When you have installed the necessary dependencies, you can run
+configure again to ensure the packages can be found, or simply run
+"make" to compile notmuch.
+
+EOF
+    exit 1
+fi
+
+printf "Checking for canonicalize_file_name... "
+if ${CC} -o compat/have_canonicalize_file_name "$srcdir"/compat/have_canonicalize_file_name.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_canonicalize_file_name=1
+else
+    printf "No (will use our own instead).\n"
+    have_canonicalize_file_name=0
+fi
+rm -f compat/have_canonicalize_file_name
+
+
+printf "Checking for getline... "
+if ${CC} -o compat/have_getline "$srcdir"/compat/have_getline.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_getline=1
+else
+    printf "No (will use our own instead).\n"
+    have_getline=0
+fi
+rm -f compat/have_getline
+
+printf "Checking for strcasestr... "
+if ${CC} -o compat/have_strcasestr "$srcdir"/compat/have_strcasestr.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_strcasestr=1
+else
+    printf "No (will use our own instead).\n"
+    have_strcasestr=0
+fi
+rm -f compat/have_strcasestr
+
+printf "Checking for strsep... "
+if ${CC} -o compat/have_strsep "$srcdir"/compat/have_strsep.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_strsep="1"
+else
+    printf "No (will use our own instead).\n"
+    have_strsep="0"
+fi
+rm -f compat/have_strsep
+
+printf "Checking for timegm... "
+if ${CC} -o compat/have_timegm "$srcdir"/compat/have_timegm.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_timegm="1"
+else
+    printf "No (will use our own instead).\n"
+    have_timegm="0"
+fi
+rm -f compat/have_timegm
+
+printf "Checking for dirent.d_type... "
+if ${CC} -o compat/have_d_type "$srcdir"/compat/have_d_type.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_d_type="1"
+else
+    printf "No (will use stat instead).\n"
+    have_d_type="0"
+fi
+rm -f compat/have_d_type
+
+printf "Checking for standard version of getpwuid_r... "
+if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_getpwuid=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_getpwuid=0
+fi
+rm -f compat/check_getpwuid
+
+printf "Checking for standard version of asctime_r... "
+if ${CC} -o compat/check_asctime "$srcdir"/compat/check_asctime.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_asctime=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_asctime=0
+fi
+rm -f compat/check_asctime
+
+printf "Checking for rpath support... "
+if ${CC} -Wl,--enable-new-dtags -Wl,-rpath,/tmp/ -o minimal minimal.c >/dev/null 2>&1
+then
+    printf "Yes.\n"
+    rpath_ldflags="-Wl,--enable-new-dtags -Wl,-rpath,\$(libdir)"
+else
+    printf "No (nothing to worry about).\n"
+    rpath_ldflags=""
+fi
+
+printf "Checking for -Wl,--as-needed... "
+if ${CC} -Wl,--as-needed -o minimal minimal.c >/dev/null 2>&1
+then
+    printf "Yes.\n"
+    as_needed_ldflags="-Wl,--as-needed"
+else
+    printf "No (nothing to worry about).\n"
+    as_needed_ldflags=""
+fi
+
+printf "Checking for -Wl,--no-undefined... "
+if ${CC} -Wl,--no-undefined -o minimal minimal.c >/dev/null 2>&1
+then
+    printf "Yes.\n"
+    no_undefined_ldflags="-Wl,--no-undefined"
+else
+    printf "No (nothing to worry about).\n"
+    no_undefined_ldflags=""
+fi
+
+WARN_CXXFLAGS=""
+printf "Checking for available C++ compiler warning flags... "
+for flag in -Wall -Wextra -Wwrite-strings; do
+    if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
+    then
+	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
+    fi
+done
+printf "\n\t%s\n" "${WARN_CXXFLAGS}"
+
+WARN_CFLAGS="${WARN_CXXFLAGS}"
+printf "Checking for available C compiler warning flags... "
+for flag in -Wmissing-declarations; do
+    if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
+    then
+	WARN_CFLAGS="${WARN_CFLAGS}${WARN_CFLAGS:+ }${flag}"
+    fi
+done
+printf "\n\t%s\n" "${WARN_CFLAGS}"
+
+rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
+
+# construct the Makefile.config
+cat > Makefile.config <<EOF
+# This Makefile.config was automatically generated by the ./configure
+# script of notmuch. If the configure script identified anything
+# incorrectly, then you can edit this file to try to correct things,
+# but be warned that if configure is run again it will destroy your
+# changes, (and this could happen by simply calling "make" if the
+# configure script is updated).
+
+# The top-level directory for the source, (the directory containing
+# the configure script). This may be different than the build
+# directory (the current directory at the time configure was run).
+srcdir = ${srcdir}
+NOTMUCH_SRCDIR = ${NOTMUCH_SRCDIR}
+
+# subdirectories to build
+subdirs = ${subdirs}
+
+configure_options = $@
+
+# We use vpath directives (rather than the VPATH variable) since the
+# VPATH variable matches targets as well as prerequisites, (which is
+# not useful since then a target left-over from a srcdir build would
+# cause a target to not be built in the non-srcdir build).
+#
+# Also, we don't use a single "vpath % \$(srcdir)" here because we
+# don't want the vpath to trigger for our emacs lisp compilation,
+# (unless we first find a way to convince emacs to build the .elc
+# target in a directory other than the directory of the .el
+# prerequisite). In the meantime, we're actually copying in the .el
+# files, (which is quite ugly).
+vpath %.c \$(srcdir)
+vpath %.cc \$(srcdir)
+vpath Makefile.% \$(srcdir)
+vpath %.py \$(srcdir)
+vpath %.rst \$(srcdir)
+
+# Library versions (used to make SONAME)
+# The major version of the library interface. This will control the soname.
+# As such, this number must be incremented for any incompatible change to
+# the library interface, (such as the deletion of an API or a major
+# semantic change that breaks formerly functioning code).
+#
+LIBNOTMUCH_VERSION_MAJOR = ${libnotmuch_version_major}
+
+# The minor version of the library interface. This should be incremented at
+# the time of release for any additions to the library interface,
+# (and when it is incremented, the release version of the library should
+#  be reset to 0).
+LIBNOTMUCH_VERSION_MINOR = ${libnotmuch_version_minor}
+
+# The release version the library interface. This should be incremented at
+# the time of release if there have been no changes to the interface, (but
+# simply compatible changes to the implementation).
+LIBNOTMUCH_VERSION_RELEASE = ${libnotmuch_version_release}
+
+# These are derived from the VERSION macros in lib/notmuch.h so
+# if you have to change them, something is wrong.
+
+# The C compiler to use
+CC = ${CC}
+
+# The C++ compiler to use
+CXX = ${CXX}
+
+# Command to execute emacs from Makefiles
+EMACS = emacs --quick
+
+# Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
+CFLAGS = ${CFLAGS}
+
+# Default FLAGS for C preprocessor (can be overridden by user such as "make CPPFLAGS=-I/usr/local/include")
+CPPFLAGS = ${CPPFLAGS}
+
+# Default FLAGS for C++ compiler (can be overridden by user such as "make CXXFLAGS=-g")
+CXXFLAGS = ${CXXFLAGS}
+
+# Default FLAGS for the linker (can be overridden by user such as "make LDFLAGS=-znow")
+LDFLAGS = ${LDFLAGS}
+
+# Flags to enable warnings when using the C++ compiler
+WARN_CXXFLAGS=${WARN_CXXFLAGS}
+
+# Flags to enable warnings when using the C compiler
+WARN_CFLAGS=${WARN_CFLAGS}
+
+# Name of python interpreter
+PYTHON = ${python}
+
+# Name of ruby interpreter
+RUBY = ${RUBY}
+
+# The prefix to which notmuch should be installed
+# Note: If you change this value here, be sure to ensure that the
+# LIBDIR_IN_LDCONFIG value below is still set correctly.
+prefix = ${PREFIX}
+
+# The directory to which libraries should be installed
+# Note: If you change this value here, be sure to ensure that the
+# LIBDIR_IN_LDCONFIG value below is still set correctly.
+libdir = ${LIBDIR:=\$(prefix)/lib}
+
+# Whether libdir is in a path configured into ldconfig
+LIBDIR_IN_LDCONFIG = ${libdir_in_ldconfig}
+
+# The directory to which header files should be installed
+includedir = ${INCLUDEDIR:=\$(prefix)/include}
+
+# The directory to which man pages should be installed
+mandir = ${MANDIR:=\$(prefix)/share/man}
+
+# The directory to which man pages should be installed
+infodir = ${INFODIR:=\$(prefix)/share/info}
+
+# The directory to which read-only (configuration) files should be installed
+sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
+
+# The directory to which emacs lisp files should be installed
+emacslispdir=${EMACSLISPDIR}
+
+# The directory to which emacs miscellaneous (machine-independent) files should
+# be installed
+emacsetcdir=${EMACSETCDIR}
+
+# Whether bash exists, and if so where
+HAVE_BASH = ${have_bash}
+BASH_ABSOLUTE = ${bash_absolute}
+
+# Whether perl exists, and if so where
+HAVE_PERL = ${have_perl}
+PERL_ABSOLUTE = ${perl_absolute}
+
+# Whether there's an emacs binary available for byte-compiling
+HAVE_EMACS = ${have_emacs}
+
+# Whether there's a sphinx-build binary available for building documentation
+HAVE_SPHINX=${have_sphinx}
+
+# Whether there's a makeinfo binary available for building info format documentation
+HAVE_MAKEINFO=${have_makeinfo}
+
+# Whether there's an install-info binary available for installing info format documentation
+HAVE_INSTALL_INFO=${have_install_info}
+
+# Whether there's a doxygen binary available for building api documentation
+HAVE_DOXYGEN=${have_doxygen}
+
+# The directory to which desktop files should be installed
+desktop_dir = \$(prefix)/share/applications
+
+# The directory to which bash completions files should be installed
+bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
+
+# The directory to which zsh completions files should be installed
+zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
+
+# Whether the canonicalize_file_name function is available (if not, then notmuch will
+# build its own version)
+HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
+
+# Whether the cppcheck static checker is available
+HAVE_CPPCHECK = ${have_cppcheck}
+
+# Whether the getline function is available (if not, then notmuch will
+# build its own version)
+HAVE_GETLINE = ${have_getline}
+
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+HAVE_RUBY_DEV = ${have_ruby_dev}
+
+# Whether the strcasestr function is available (if not, then notmuch will
+# build its own version)
+HAVE_STRCASESTR = ${have_strcasestr}
+
+# Whether the strsep function is available (if not, then notmuch will
+# build its own version)
+HAVE_STRSEP = ${have_strsep}
+
+# Whether the timegm function is available (if not, then notmuch will
+# build its own version)
+HAVE_TIMEGM = ${have_timegm}
+
+# Whether struct dirent has d_type (if not, then notmuch will use stat)
+HAVE_D_TYPE = ${have_d_type}
+
+# Whether the GMime version can handle extraction and reuse of session keys
+HAVE_GMIME_SESSION_KEYS = ${have_gmime_session_keys}
+
+# Whether the Xapian version in use supports compaction
+HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
+
+# Whether the Xapian version in use supports field processors
+HAVE_XAPIAN_FIELD_PROCESSOR = ${have_xapian_field_processor}
+
+# Whether the Xapian version in use supports DB_RETRY_LOCK
+HAVE_XAPIAN_DB_RETRY_LOCK = ${have_xapian_db_retry_lock}
+
+# Whether the getpwuid_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_GETPWUID = ${std_getpwuid}
+
+# Whether the asctime_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_ASCTIME = ${std_asctime}
+
+# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD, OPENBSD
+PLATFORM = ${platform}
+
+# Whether the linker will automatically resolve the dependency of one
+# library on another (if not, then linking a binary requires linking
+# directly against both)
+LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
+
+# Flags needed to compile and link against Xapian
+XAPIAN_CXXFLAGS = ${xapian_cxxflags}
+XAPIAN_LDFLAGS = ${xapian_ldflags}
+
+# Which backend will Xapian use by default?
+DEFAULT_XAPIAN_BACKEND = ${default_xapian_backend}
+
+# Flags needed to compile and link against GMime
+GMIME_CFLAGS = ${gmime_cflags}
+GMIME_LDFLAGS = ${gmime_ldflags}
+
+# Flags needed to compile and link against zlib
+ZLIB_CFLAGS = ${zlib_cflags}
+ZLIB_LDFLAGS = ${zlib_ldflags}
+
+# Flags needed to compile and link against talloc
+TALLOC_CFLAGS = ${talloc_cflags}
+TALLOC_LDFLAGS = ${talloc_ldflags}
+
+# Flags needed to have linker set rpath attribute
+RPATH_LDFLAGS = ${rpath_ldflags}
+
+# Flags needed to have linker link only to necessary libraries
+AS_NEEDED_LDFLAGS = ${as_needed_ldflags}
+
+# Flags to have the linker flag undefined symbols in object files
+NO_UNDEFINED_LDFLAGS = ${no_undefined_ldflags}
+
+# Whether valgrind header files are available
+HAVE_VALGRIND = ${have_valgrind}
+
+# And if so, flags needed at compile time for valgrind macros
+VALGRIND_CFLAGS = ${valgrind_cflags}
+
+# Support for emacs
+WITH_EMACS = ${WITH_EMACS}
+
+# Support for desktop file
+WITH_DESKTOP = ${WITH_DESKTOP}
+
+# Support for bash completion
+WITH_BASH = ${WITH_BASH}
+
+# Support for zsh completion
+WITH_ZSH = ${WITH_ZSH}
+
+# Combined flags for compiling and linking against all of the above
+COMMON_CONFIGURE_CFLAGS = \\
+	\$(GMIME_CFLAGS) \$(TALLOC_CFLAGS) \$(ZLIB_CFLAGS)	\\
+	-DHAVE_VALGRIND=\$(HAVE_VALGRIND) \$(VALGRIND_CFLAGS)	\\
+	-DHAVE_GETLINE=\$(HAVE_GETLINE)				\\
+	-DWITH_EMACS=\$(WITH_EMACS)				\\
+	-DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
+	-DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)			\\
+	-DHAVE_STRSEP=\$(HAVE_STRSEP)				\\
+	-DHAVE_TIMEGM=\$(HAVE_TIMEGM)				\\
+	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
+	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
+	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
+	-DHAVE_GMIME_SESSION_KEYS=\$(HAVE_GMIME_SESSION_KEYS)	\\
+	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
+	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
+	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
+	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK)
+
+CONFIGURE_CFLAGS = \$(COMMON_CONFIGURE_CFLAGS)
+
+CONFIGURE_CXXFLAGS = \$(COMMON_CONFIGURE_CFLAGS) \$(XAPIAN_CXXFLAGS)
+
+CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
+EOF
+
+# construct the sh.config
+cat > sh.config <<EOF
+# This sh.config was automatically generated by the ./configure
+# script of notmuch.
+
+NOTMUCH_SRCDIR='${NOTMUCH_SRCDIR}'
+
+# Whether the Xapian version in use supports compaction
+NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+
+# Whether the Xapian version in use supports field processors
+NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
+
+# Whether the Xapian version in use supports lock retry
+NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${have_xapian_db_retry_lock}
+
+# Whether the GMime version can handle extraction and reuse of session keys
+NOTMUCH_HAVE_GMIME_SESSION_KEYS=${have_gmime_session_keys}
+
+# Which backend will Xapian use by default?
+NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
+
+# do we have man pages?
+NOTMUCH_HAVE_MAN=$((have_sphinx))
+
+# Whether bash exists, and if so where
+NOTMUCH_HAVE_BASH=${have_bash}
+NOTMUCH_BASH_ABSOLUTE=${bash_absolute}
+
+# Whether perl exists, and if so where
+NOTMUCH_HAVE_PERL=${have_perl}
+NOTMUCH_PERL_ABSOLUTE=${perl_absolute}
+
+# Name of python interpreter
+NOTMUCH_PYTHON=${python}
+
+# Name of ruby interpreter
+NOTMUCH_RUBY=${RUBY}
+
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
+
+# Major version of gmime
+NOTMUCH_GMIME_MAJOR=${gmime_major}
+
+# Platform we are run on
+PLATFORM=${platform}
+EOF
+
+# Finally, after everything configured, inform the user how to continue.
+cat <<EOF
+
+All required packages were found. You may now run the following
+commands to compile and install notmuch:
+
+	make
+	sudo make install
+
+EOF

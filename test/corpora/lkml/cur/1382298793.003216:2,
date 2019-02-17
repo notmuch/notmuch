@@ -1,0 +1,113 @@
+From: Florian Mickler <florian@mickler.org>
+Subject: Re: rfc: rewrite commit subject line for subsystem maintainer
+ preference tool
+Date: Tue, 16 Nov 2010 18:37:07 +0100
+Lines: 59
+Message-ID: <20101116183707.179964dd@schatten.dmk.lab>
+References: <20101115134939.GC12986@rakim.wolfsonmicro.main>
+	<1289840957.16461.138.camel@Joe-Laptop>
+	<20101115173031.GI12986@rakim.wolfsonmicro.main>
+	<1289842444.16461.140.camel@Joe-Laptop>
+	<20101115182708.GJ12986@rakim.wolfsonmicro.main>
+	<1289845830.16461.149.camel@Joe-Laptop>
+	<20101115190738.GF3338@sirena.org.uk>
+	<1289848458.16461.150.camel@Joe-Laptop>
+	<20101115193407.GK12986@rakim.wolfsonmicro.main>
+	<1289850773.16461.166.camel@Joe-Laptop>
+	<20101116104921.GL12986@rakim.wolfsonmicro.main>
+	<1289919077.28741.50.camel@Joe-Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Jiri Kosina <trivial@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+X-From: linux-kernel-owner@vger.kernel.org Tue Nov 16 18:37:57 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PIPTh-0007Ey-5Q
+	for glk-linux-kernel-3@lo.gmane.org; Tue, 16 Nov 2010 18:37:57 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1756054Ab0KPRhi (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Tue, 16 Nov 2010 12:37:38 -0500
+Received: from ist.d-labs.de ([213.239.218.44]:44291 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754101Ab0KPRhh (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Tue, 16 Nov 2010 12:37:37 -0500
+Received: from schatten.dmk.lab (f053209081.adsl.alicedsl.de [78.53.209.81])
+	by mx01.d-labs.de (Postfix) with ESMTPSA id 1EB9E7FFD4;
+	Tue, 16 Nov 2010 18:36:55 +0100 (CET)
+In-Reply-To: <1289919077.28741.50.camel@Joe-Laptop>
+X-Mailer: Claws Mail 3.7.6cvs31 (GTK+ 2.20.1; x86_64-unknown-linux-gnu)
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1063246>
+
+On Tue, 16 Nov 2010 06:51:17 -0800
+Joe Perches <joe@perches.com> wrote:
+
+> On Tue, 2010-11-16 at 10:49 +0000, Mark Brown wrote:
+> > On Mon, Nov 15, 2010 at 11:52:53AM -0800, Joe Perches wrote:
+> > > On Mon, 2010-11-15 at 19:34 +0000, Mark Brown wrote:
+> > > > It appears your scripts are already hooked into get_maintainers.pl which
+> > > > would seem the obvious place to do this?  Sadly I don't do perl, though
+> > > > it looks like you're doing pretty much all the work on that anyway.
+> > > Sadly, no it's not the right place.
+> > To query MAINTAINERS?  I'd assume that's where you'd want to put that
+> > stuff?
+> 
+> I trimmed cc's and added Andrew Morton and Florian Mickler.
+> First thread link for them: http://lkml.org/lkml/2010/11/15/262
+> 
+> I use get_maintainer to find email addresses with
+> "git send-email --cc-cmd=" but sure it could be extended
+> to find some other new information in the MAINTAINERS file.
+> 
+> Anyway, I think that get_maintainers isn't the proper tool
+> to rewrite commit subject lines, though it could certainly
+> do the lookup of a key in the MAINTAINERS file.
+> 
+> Maybe add a new MAINTAINERS section line something like:
+> 	"C:	CommitSubjectGrammarStyle"
+> where CommitSubjectGrammarStyle is something more
+> information rich than "style 1", "style 2".
+> 
+> Perhaps you'll propose a grammar to convert path to header
+> and go through and add these "C:" style entries to the
+> sections you maintain.
+> 
+> Also, what would you expect the output to be when a single
+> patch modified files from 2 subsystems that use different
+> styles?
+> 
+> cheers, Joe
+> 
+
+My first reaction to this is, it's silly. Certainly a
+subsystem-maintainer is capable of hacking something together that
+suits his needs or may just use a good editor to get the job done.
+After all, he might want to edit the commit message anyway. Also he has
+to have his act together for all non-conforming submitters anyway,
+because shurely, telling people to re-edit their patches subject line
+is not what one would consider "welcoming to newbies",  or whatever it
+is kernel subsystem maintainers have to be nowadays *g*... 
+
+On second thought, if that facility existed, i think nobody would mind
+it either. So, why not. I don't see a way to specify what to do with
+cross-subsystem patches though. 
+
+(MAINTAINERS seems to be the logical place to put this
+information.)
+
+Regards,
+Flo
+
+
+

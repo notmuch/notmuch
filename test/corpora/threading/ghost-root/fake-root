@@ -1,0 +1,9 @@
+From: Mallory <mallory@example.org>
+To: Daniel <daniel@example.org>
+Subject: fake root message
+Message-ID: <001-fake-message-root@example.org>
+In-Reply-to: <nonexistent-message@example.org>
+References: <000-real-root@example.org> <001-child@example.org> <nonexistent-message@example.org>
+Date: Thu, 16 Jun 2016 22:14:41 -0400
+
+This message has an in-reply-to pointing to a non-existent message

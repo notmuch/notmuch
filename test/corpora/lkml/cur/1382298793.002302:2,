@@ -1,0 +1,85 @@
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH 25/44] drivers/scsi/pm8001: Remove unnecessary semicolons
+Date: Mon, 15 Nov 2010 11:27:32 +0800
+Lines: 33
+Message-ID: <1671200DA80140558ED0D17FB55585AD@usish.com.cn>
+References: <cover.1289789604.git.joe@perches.com> <20b352f91642ca45ad730d8eeec0bbd323d26626.1289789605.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Cc: <lindar_liu@usish.com>,
+	"'James E.J. Bottomley'" <James.Bottomley@suse.de>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+To: "'Joe Perches'" <joe@perches.com>,
+	"'Jiri Kosina'" <trivial@kernel.org>
+X-From: linux-scsi-owner@vger.kernel.org Mon Nov 15 04:28:10 2010
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Envelope-to: lnx-linux-scsi@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-scsi-owner@vger.kernel.org>)
+	id 1PHpjl-0002I8-68
+	for lnx-linux-scsi@lo.gmane.org; Mon, 15 Nov 2010 04:28:09 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932669Ab0KOD15 convert rfc822-to-quoted-printable (ORCPT
+	<rfc822;lnx-linux-scsi@m.gmane.org>); Sun, 14 Nov 2010 22:27:57 -0500
+Received: from sr-smtp.usish.com ([210.5.144.203]:58240 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932514Ab0KOD14 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Nov 2010 22:27:56 -0500
+Received: from outbound.usish.com (unknown [192.168.40.103])
+	by sr-smtp.usish.com (Postfix) with ESMTP id 782BE778067;
+	Mon, 15 Nov 2010 11:20:06 +0800 (CST)
+Received: from outbound.usish.com (outbound.usish.com [127.0.0.1])
+	by postfix.imss70 (Postfix) with ESMTP id 8E538428070;
+	Mon, 15 Nov 2010 11:27:48 +0800 (CST)
+Received: from usishe7a1977d2 (unknown [192.168.58.33])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by outbound.usish.com (Postfix) with ESMTP id 5437142807A;
+	Mon, 15 Nov 2010 11:27:48 +0800 (CST)
+X-Mailer: Microsoft Office Outlook 11
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.5994
+Thread-Index: AcuEcgXhz8cjF31qQU6VXNE8zpGc0wAAnu4g
+In-Reply-To: <20b352f91642ca45ad730d8eeec0bbd323d26626.1289789605.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-scsi.vger.kernel.org>
+X-Mailing-List: linux-scsi@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062321>
+
+>=20
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_init.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c
+> b/drivers/scsi/pm8001/pm8001_init.c
+> index f8c86b2..be210dd 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -160,7 +160,7 @@ static void pm8001_free(struct pm8001_hba_info
+*pm8001_ha)
+>  static void pm8001_tasklet(unsigned long opaque)
+>  {
+>  	struct pm8001_hba_info *pm8001_ha;
+> -	pm8001_ha =3D (struct pm8001_hba_info *)opaque;;
+> +	pm8001_ha =3D (struct pm8001_hba_info *)opaque;
+>  	if (unlikely(!pm8001_ha))
+>  		BUG_ON(1);
+>  	PM8001_CHIP_DISP->isr(pm8001_ha);
+> --
+> 1.7.3.1.g432b3.dirty
+[Jack Wang] Acked-by: Jack Wang <jack_wang@usish.com>
+Thanks=A3=A1
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

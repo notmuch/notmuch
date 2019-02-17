@@ -1,0 +1,33 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 03:31:23 -0800
+Subject: [notmuch] [PATCH] Error out if no query is supplied to search
+ instead of going into an infinite loop
+In-Reply-To: <cf0c4d610911171623q3e27a0adx802e47039b57604b@mail.gmail.com>
+References: <cf0c4d610911171623q3e27a0adx802e47039b57604b@mail.gmail.com>
+Message-ID: <877htoqdbo.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 16:23:53 -0800, Alex Botero-Lowry <alex.boterolowry at gmail.com> wrote:
+> In this case error out when no query is supplied. There seems to be an
+> infinite-loop casued by i think notmuch_query_search_threads having
+> an exception:
+> A Xapian exception occurred: Syntax: <expression> AND <expression>
+> A Xapian exception occurred: Syntax: <expression> AND <expression>
+> A Xapian exception occurred: Syntax: <expression> AND <expression>
+> 
+> I'll look into that bug specifically a bit later.
+> 
+> It might be better to do a usage instead of just throwing an error here?
+
+Definitely.
+
+Priit Laes reported the same thing in IRC and I've just committed a
+patch to give a nice error message:
+
+$ ./notmuch search
+Error: notmuch search requires at least one search term.
+
+Thanks for the report!
+
+-Carl
+

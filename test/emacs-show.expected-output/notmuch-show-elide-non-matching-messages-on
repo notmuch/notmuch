@@ -1,0 +1,78 @@
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
+Subject: [notmuch] Working with Maildir storage?
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 14:00:54 -0500
+
+[ multipart/mixed ]
+[ multipart/signed ]
+[ Unknown key ID 0xD74695063141ACD8 or unsupported algorithm ]
+[ text/plain ]
+I saw the LWN article and decided to take a look at notmuch.  I'm
+currently using mutt and mairix to index and read a collection of
+Maildir mail folders (around 40,000 messages total).
+
+notmuch indexed the messages without complaint, but my attempt at
+searching bombed out. Running, for example:
+
+  notmuch search storage
+
+Resulted in 4604 lines of errors along the lines of:
+
+  Error opening
+  /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostname,U=3026:2,S:
+  Too many open files
+
+I'm curious if this is expected behavior (i.e., notmuch does not work
+with Maildir) or if something else is going on.
+
+Cheers,
+
+[ 4-line signature. Click/Enter to show. ]
+[ application/pgp-signature ]
+[ text/plain ]
+[ 4-line signature. Click/Enter to show. ]
+  Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
+  Subject: Re: [notmuch] Working with Maildir storage?
+  To: Mikhail Gusarov <dottedmag@dottedmag.net>
+  Cc: notmuch@notmuchmail.org
+  Date: Tue, 17 Nov 2009 15:33:01 -0500
+
+  [ multipart/mixed ]
+  [ multipart/signed ]
+  [ Unknown key ID 0xD74695063141ACD8 or unsupported algorithm ]
+  [ text/plain ]
+  > See the patch just posted here.
+
+  Is the list archived anywhere?  The obvious archives
+  (http://notmuchmail.org/pipermail/notmuch/) aren't available, and I
+  think I subscribed too late to get the patch (I only just saw the
+  discussion about it).
+
+  It doesn't look like the patch is in git yet.
+
+  -- Lars
+
+  [ 4-line signature. Click/Enter to show. ]
+  [ application/pgp-signature ]
+  [ text/plain ]
+  [ 4-line signature. Click/Enter to show. ]
+    Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox signed unread)
+    Subject: Re: [notmuch] Working with Maildir storage?
+    To: Keith Packard <keithp@keithp.com>
+    Cc: notmuch@notmuchmail.org
+    Date: Tue, 17 Nov 2009 19:50:40 -0500
+
+    [ multipart/mixed ]
+    [ multipart/signed ]
+    [ Unknown key ID 0xD74695063141ACD8 or unsupported algorithm ]
+    [ text/plain ]
+    > I've also pushed a slightly more complicated (and complete) fix to my
+    > private notmuch repository
+
+    The version of lib/messages.cc in your repo doesn't build because it's
+    missing "#include <stdint.h>" (for the uint32_t on line 466).
+
+    [ 4-line signature. Click/Enter to show. ]
+    [ application/pgp-signature ]
+    [ text/plain ]
+    [ 4-line signature. Click/Enter to show. ]

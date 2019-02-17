@@ -1,0 +1,64 @@
+Return-Path: <kha@treskal.com>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 54307431FBC
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 03:41:18 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id TBdvxm5kBScu for <notmuch@notmuchmail.org>;
+	Thu, 26 Nov 2009 03:41:13 -0800 (PST)
+Received: from mail1.space2u.com (mail1.space2u.com [62.20.1.135])
+	by olra.theworths.org (Postfix) with ESMTP id 80538431FAE
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 03:41:13 -0800 (PST)
+Received: from mail-bw0-f224.google.com (mail-bw0-f224.google.com
+	[209.85.218.224]) (authenticated bits=0)
+	by mail1.space2u.com (8.14.3/8.14.3) with ESMTP id nAQBf0Ar018995
+	(version=TLSv1/SSLv3 cipher=DES-CBC3-SHA bits=168 verify=NOT)
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 12:41:01 +0100
+Received: by bwz24 with SMTP id 24so480173bwz.30
+	for <notmuch@notmuchmail.org>; Thu, 26 Nov 2009 03:41:11 -0800 (PST)
+MIME-Version: 1.0
+Received: by 10.204.153.3 with SMTP id i3mr2263267bkw.26.1259235670122; Thu, 
+	26 Nov 2009 03:41:10 -0800 (PST)
+In-Reply-To: <20091126110505.GI25119@ryngle.com>
+References: <1259223435-29656-1-git-send-email-stefan@datenfreihafen.org>
+	<20091126110505.GI25119@ryngle.com>
+Date: Thu, 26 Nov 2009 12:41:10 +0100
+Message-ID: <b8197bcb0911260341o480edc2bof8a30f0b724dd96@mail.gmail.com>
+From: Karl Wiberg <kha@treskal.com>
+To: Jan Janak <jan@ryngle.com>
+Content-Type: text/plain; charset=UTF-8
+Cc: notmuch@notmuchmail.org
+Subject: Re: [notmuch] [PATCH] Makefile: Enable backslash escapes for echo.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Thu, 26 Nov 2009 11:41:18 -0000
+
+On Thu, Nov 26, 2009 at 12:05 PM, Jan Janak <jan@ryngle.com> wrote:
+
+> I sent exactly the same patch a couple of days ago and it was
+> rejected because it does not work everywhere, see:
+>
+> http://notmuchmail.org/pipermail/notmuch/2009/000370.html
+
+And as I said in that thread, I believe you should use printf instead.
+(http://www.in-ulm.de/~mascheck/various/echo+printf/ seems like a good
+reference in this matter.)
+
+-- 
+Karl Wiberg, kha@treskal.com
+   subrabbit.wordpress.com
+   www.treskal.com/kalle
+

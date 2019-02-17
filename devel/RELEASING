@@ -1,0 +1,113 @@
+Here are the steps to follow to create a new notmuch release.
+
+These steps assume that a process (not described here) has already
+been followed to determine the features and bug fixes to be included
+in a release, and that adequate testing by the community has already
+been performed. The little bit of testing performed here is a safety
+check, and not a substitute for wider testing.
+
+OK, so the code to be released is present and committed to your git
+repository. From here, there are just a few steps to release:
+
+1) Verify that the NEWS file is up to date.
+
+	Read through the entry at the top of the NEWS file and see if
+	you are aware of any major features recently added that are
+	not mentioned there. If so, please add them, (and ask the
+	authors of the commits to update NEWS in the future).
+
+2) Verify that the library version in lib/Makefile.local is correct
+
+	See the instructions there for how to increment it.
+
+	The version should have been updated with any commits that
+	added API _in a non-upwardly compatible_ way, but do check
+	that that is the case. The command below can be useful for
+	inspecting header-file changes since the last release X.Y:
+
+		git diff X.Y..HEAD -- lib/notmuch.h
+
+	Commit this change, if any.
+
+3) Update the debian/libnotmuchX.symbols file
+
+	If the library version changed at all (step 2) it probably
+	means that symbols have changed/been added, in which case the
+	debian symbols file also needs to be updated:
+
+	       dpkg-buildpackage -uc -us
+	       dpkg-gensymbols -plibnotmuchX | patch -p0
+
+	Carefully review the changes to debian/libnotmuch1.symbols to
+	make sure there are no unexpected changes.  Remove any debian
+	versions from symbols.
+
+	Commit this change, if any.
+
+4) Upgrade the version in the file "version"
+
+	The scheme for the release number is as follows:
+
+	A major milestone in usability causes an increase in the major
+	number, yielding a two-component version with a minor number
+	of 0, (such as "1.0" or "2.0").
+
+	Otherwise, releases with changes in features cause an increase
+	in the minor number, yielding a two-component version, (such
+	as "1.1" or "1.2").
+
+	Finally, releases that do not change "features" but are merely
+	bug fixes either increase the micro number or add it (starting
+	at ".1" if not present). So a bug-fix release from "1.0" would
+	be "1.0.1" and a subsequent bug-fix release would be "1.0.2"
+	etc.
+
+	When you are happy with the file 'version', run
+
+	     make update-versions
+
+	to propagate the version to the other places needed.
+
+	Commit these changes.
+
+5) Create an entry for the new release in debian/changelog
+
+	The syntax of this file is tightly restricted, but the
+	available emacs mode (see the dpkg-dev-el package) helps.
+	The entries here will be the Debian-relevant single-line
+	description of changes from the NEWS entry. And the version
+	must match the version in the next step.
+
+	Commit this change.
+
+	XXX: It would be great if this step were automated as part of
+	release, (taking entries from NEWS and the version from the
+	version file, and creating a new commit, etc.)
+
+6) Run "make release" which will perform the following steps.
+
+   Note: in order to really upload anything, set the make variable
+   REALLY_UPLOAD=yes
+
+	* Ensure that the version consists only of digits and periods
+	* Ensure that version and debian/changelog have the same version
+	* Verify that the source tree is clean
+	* Compile the current notmuch code (aborting release if it fails)
+	* Run the notmuch test suite (aborting release if it fails)
+	* Check that no release exists with the current version
+	* Make a signed tag
+	* Generate a tar file from this tag
+	* Generate a .sha1 sum file for the tar file and GPG sign it.
+	* Commit a (delta for a) copy of the tar file using pristine-tar
+	* Tag for the debian version
+	* if REALLY_UPLOAD=yes
+	  - push the signed tag to the origin
+	    XXX FIXME push debian tag
+	  - scp tarball to web site
+	* Provide some text for the release announcement (see below).
+
+7) Send a message to notmuch@notmuchmail.org to announce the release.
+
+	Use the text provided from "make release" above, (if for some
+	reason you lose this message, "make release-message" prints
+	it again for you.

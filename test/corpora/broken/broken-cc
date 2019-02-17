@@ -1,0 +1,9 @@
+From: Alice <alice@example.org>
+To: Daniel <daniel@example.org>
+Cc: Bob <bob@example.org>
+Subject: wowsers!
+cc: Charles <charles@example.org>
+Message-Id: <multiple-cc@example.org>
+Date: Thu, 16 Jun 2016 22:14:41 -0400
+
+Note the Cc: and cc: headers.

@@ -1,0 +1,99 @@
+Return-Path: <stefan@datenfreihafen.org>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 055BC431FBF
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:11:31 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Vz+mNzdau2Gh for <notmuch@notmuchmail.org>;
+	Sat, 21 Nov 2009 16:11:30 -0800 (PST)
+Received: from sirius.lasnet.de (sirius.lasnet.de [78.47.116.19])
+	by olra.theworths.org (Postfix) with ESMTP id CFD61431FAE
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:11:29 -0800 (PST)
+Received: from p5b034af6.dip.t-dialin.net ([91.3.74.246] helo=excalibur)
+	by sirius.lasnet.de with esmtpsa 
+	(Cipher TLS-1.0:RSA_AES_256_CBC_SHA1:32) (Exim 4.63 #1)
+	id 1NC032-0000td-2v by authid <stefan@sostec.de> with cram_md5;
+	Sun, 22 Nov 2009 01:11:28 +0100
+Received: from stefan by excalibur with local (Exim 4.69)
+	(envelope-from <stefan@excalibur.local>)
+	id 1NC031-0001Dm-H7; Sun, 22 Nov 2009 01:11:23 +0100
+From: Stefan Schmidt <stefan@datenfreihafen.org>
+To: notmuch@notmuchmail.org
+Date: Sun, 22 Nov 2009 01:11:01 +0100
+Message-Id: <1258848661-4660-2-git-send-email-stefan@datenfreihafen.org>
+X-Mailer: git-send-email 1.6.5.3
+In-Reply-To: <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+References: <yes> <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+Subject: [notmuch] [PATCH 2/2] notmuch-new: Tag mails not as unread when the
+	seen flag in the maildir is set.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Sun, 22 Nov 2009 00:11:31 -0000
+
+With the new notmuch_message_get_flags() function we can get the information if
+a message was already flagged as seen in maildir by another mailer or tool. This
+gives a more realistic picture instead of flagging all as unread.
+
+Signed-off-by: Stefan Schmidt <stefan@datenfreihafen.org>
+---
+ Makefile      |    2 +-
+ notmuch-new.c |   16 +++++++++++++++-
+ 2 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 3fedcf1..dfcfc70 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+ # Default FLAGS, (can be overridden by user such as "make CFLAGS=-O2")
+ WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
+-CFLAGS=-O2
++CFLAGS=-O0 -ggdb3
+ 
+ # Additional flags that we will append to whatever the user set.
+ # These aren't intended for the user to manipulate.
+diff --git a/notmuch-new.c b/notmuch-new.c
+index bc35b4e..ef4429d 100644
+--- a/notmuch-new.c
++++ b/notmuch-new.c
+@@ -41,8 +41,22 @@ handle_sigint (unused (int sig))
+ static void
+ tag_inbox_and_unread (notmuch_message_t *message)
+ {
+-    notmuch_message_add_tag (message, "inbox");
++    char *buf;
++    int i;
++
++    buf = notmuch_message_get_flags (message);
++    for (i = 0; i < strlen (buf); i++) {
++        /* If the S flag is set the message can be tagged as read */
++        if (buf[i] == 'S') {
++            notmuch_message_add_tag (message, "read");
++            goto inbox;
++        }
++    }
++
+     notmuch_message_add_tag (message, "unread");
++
++inbox:
++    notmuch_message_add_tag (message, "inbox");
+ }
+ 
+ static void
+-- 
+1.6.5.3
+
+

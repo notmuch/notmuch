@@ -1,0 +1,11 @@
+From: Alice <alice@example.org>
+To: Daniel <daniel@example.org>
+Subject: child message
+Message-ID: <B01-child@example.org>
+In-Reply-To: <B00-root@example.org>
+References:  <B00--root@example.org>
+Date: Fri, 17 Jun 2016 22:14:41 -0400
+
+This is a normal-ish reply, and has both a references header and an
+in-reply-to header.
+

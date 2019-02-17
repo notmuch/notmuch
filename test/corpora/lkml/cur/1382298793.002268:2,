@@ -1,0 +1,66 @@
+From: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH 42/44] net/sunrpc/addr.c: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:05:01 -0800
+Lines: 26
+Message-ID: <aca92092a705e0d21176b5ac7d3581c4f9140dbc.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>,
+	Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>,
+	Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>,
+	"David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jiri Kosina <trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+X-From: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Mon Nov 15 04:07:25 2010
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glN-linux-nfs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1PHpPh-0001H8-D9
+	for glN-linux-nfs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Mon, 15 Nov 2010 04:07:25 +0100
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S932828Ab0KODGd (ORCPT <rfc822;glN-linux-nfs@m.gmane.org>);
+	Sun, 14 Nov 2010 22:06:33 -0500
+Received: from mail.perches.com ([173.55.12.10]:1267 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932988Ab0KODGD (ORCPT <rfc822;linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+	Sun, 14 Nov 2010 22:06:03 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 3EB452436E;
+	Sun, 14 Nov 2010 19:04:30 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-nfs.vger.kernel.org>
+X-Mailing-List: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062287>
+
+Signed-off-by: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+---
+ net/sunrpc/addr.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/sunrpc/addr.c b/net/sunrpc/addr.c
+index 1419d0c..4195233 100644
+--- a/net/sunrpc/addr.c
++++ b/net/sunrpc/addr.c
+@@ -151,7 +151,7 @@ static size_t rpc_pton4(const char *buf, const size_t buflen,
+ 		return 0;
+ 
+ 	sin->sin_family = AF_INET;
+-	return sizeof(struct sockaddr_in);;
++	return sizeof(struct sockaddr_in);
+ }
+ 
+ #if defined(CONFIG_IPV6) || defined(CONFIG_IPV6_MODULE)
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

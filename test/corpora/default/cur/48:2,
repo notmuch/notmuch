@@ -1,0 +1,17 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 03:22:32 -0800
+Subject: [notmuch] [PATCH] Typsos
+In-Reply-To: <1258500222-32066-1-git-send-email-ingmar@exherbo.org>
+References: <1258500222-32066-1-git-send-email-ingmar@exherbo.org>
+Message-ID: <878we4qdqf.fsf@yoom.home.cworth.org>
+
+On Wed, 18 Nov 2009 00:23:42 +0100, Ingmar Vanhassel <ingmar at exherbo.org> wrote:
+>  17 files changed, 30 insertions(+), 30 deletions(-)
+
+Yikes. That's a lot of typos.
+
+Thanks Ingmar, for cleaning up after my sloppy keyboarding. Pushed.
+
+-Carl
+

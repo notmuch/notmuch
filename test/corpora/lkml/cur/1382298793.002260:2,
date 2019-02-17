@@ -1,0 +1,57 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 20/44] drivers/power: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:39 -0800
+Lines: 21
+Message-ID: <2f2ed8aa6745be23063fed55243313839d7ba523.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:06:22 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpOe-0000ny-TB
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:06:21 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932773Ab0KODFm (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:05:42 -0500
+Received: from mail.perches.com ([173.55.12.10]:1185 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932746Ab0KODFk (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:40 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 3664A2436B;
+	Sun, 14 Nov 2010 19:04:08 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062279>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/power/intel_mid_battery.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/power/intel_mid_battery.c b/drivers/power/intel_mid_battery.c
+index 2a10cd3..8397978 100644
+--- a/drivers/power/intel_mid_battery.c
++++ b/drivers/power/intel_mid_battery.c
+@@ -522,7 +522,7 @@ static int pmic_battery_set_charger(struct pmic_power_module_info *pbi,
+ 	if (retval) {
+ 		dev_warn(pbi->dev, "%s(): ipc pmic read failed\n",
+ 								__func__);
+-		return retval;;
++		return retval;
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

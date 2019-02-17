@@ -1,0 +1,58 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 11/44] drivers/mmc: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:30 -0800
+Lines: 21
+Message-ID: <6391af02ba7ec4a76c5c5f462d8013fc1f52f999.1289789604.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Chris Ball <cjb@laptop.org>, linux-mmc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 04:06:20 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PHpOe-0000ny-CV
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 04:06:20 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932688Ab0KODFg (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Sun, 14 Nov 2010 22:05:36 -0500
+Received: from mail.perches.com ([173.55.12.10]:1153 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932652Ab0KODFe (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:34 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id DD07924374;
+	Sun, 14 Nov 2010 19:04:01 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062278>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/mmc/host/davinci_mmc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/mmc/host/davinci_mmc.c b/drivers/mmc/host/davinci_mmc.c
+index e15547c..b643dde 100644
+--- a/drivers/mmc/host/davinci_mmc.c
++++ b/drivers/mmc/host/davinci_mmc.c
+@@ -480,7 +480,7 @@ static void mmc_davinci_send_dma_request(struct mmc_davinci_host *host,
+ 	struct scatterlist	*sg;
+ 	unsigned		sg_len;
+ 	unsigned		bytes_left = host->bytes_left;
+-	const unsigned		shift = ffs(rw_threshold) - 1;;
++	const unsigned		shift = ffs(rw_threshold) - 1;
+ 
+ 	if (host->data_dir == DAVINCI_MMC_DATADIR_WRITE) {
+ 		template = &host->tx_template;
+-- 
+1.7.3.1.g432b3.dirty
+
+
+

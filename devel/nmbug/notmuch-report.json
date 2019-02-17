@@ -1,0 +1,70 @@
+{
+    "meta": {
+        "title": "Notmuch Patches",
+        "blurb": "For more information see <a href=\"https://notmuchmail.org/nmbug\">nmbug</a>"
+    },
+
+    "views": [
+	{
+	    "comment": "Unresolved bugs (or just need tag updating).",
+	    "query": [
+		"tag:notmuch::bug",
+		"not tag:notmuch::fixed",
+		"not tag:notmuch::wontfix"
+	    ],
+	    "title": "Bugs"
+	},
+	{
+	    "comment": "These patches are under consideration for pushing.",
+	    "query": [
+		"tag:notmuch::patch and not tag:notmuch::pushed",
+		"not tag:notmuch::obsolete and not tag:notmuch::wip",
+		"not tag:notmuch::stale and not tag:notmuch::contrib",
+		"not tag:notmuch::moreinfo",
+		"not tag:notmuch::python",
+		"not tag:notmuch::vim",
+		"not tag:notmuch::wontfix",
+		"not tag:notmuch::needs-review"
+	    ],
+	    "title": "Maybe Ready (Core and Emacs)"
+	},
+	{
+	    "comment": "These python related patches might be ready to push, or they might just need updated tags.",
+	    "query": [
+		"tag:notmuch::patch and not tag:notmuch::pushed",
+		"not tag:notmuch::obsolete and not tag:notmuch::wip",
+		"not tag:notmuch::stale and not tag:notmuch::contrib",
+		"not tag:notmuch::moreinfo",
+		"not tag:notmuch::wontfix",
+		" tag:notmuch::python",
+		"not tag:notmuch::needs-review"
+	    ],
+	    "title": "Maybe Ready (Python)"
+	},
+	{
+	    "comment": "These vim related patches might be ready to push, or they might just need updated tags.",
+	    "query": [
+		"tag:notmuch::patch and not tag:notmuch::pushed",
+		"not tag:notmuch::obsolete and not tag:notmuch::wip",
+		"not tag:notmuch::stale and not tag:notmuch::contrib",
+		"not tag:notmuch::moreinfo",
+		"not tag:notmuch::wontfix",
+		"tag:notmuch::vim",
+		"not tag:notmuch::needs-review"
+	    ],
+	    "title": "Maybe Ready (vim)"
+	},
+	{
+	    "comment": "These patches are under review, or waiting for feedback.",
+	    "query": [
+		"tag:notmuch::patch",
+		"not tag:notmuch::pushed",
+		"not tag:notmuch::obsolete",
+		"not tag:notmuch::stale",
+		"not tag:notmuch::wontfix",
+		"tag:notmuch::moreinfo or tag:notmuch::needs-review"
+	    ],
+	    "title": "Review"
+	}
+    ]
+}

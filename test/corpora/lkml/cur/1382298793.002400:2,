@@ -1,0 +1,102 @@
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: [PATCH 40/44] mm/hugetlb.c: Remove unnecessary semicolons
+Date: Mon, 15 Nov 2010 09:52:44 +0000
+Lines: 44
+Message-ID: <20101115095244.GI27362@csn.ul.ie>
+References: <cover.1289789604.git.joe@perches.com> <59705f848d35b12ace640f92afcffea02cee0976.1289789605.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-15
+Cc: Jiri Kosina <trivial@kernel.org>, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+X-From: owner-linux-mm@kvack.org Mon Nov 15 10:53:02 2010
+Return-path: <owner-linux-mm@kvack.org>
+Envelope-to: glkm-linux-mm-2@m.gmane.org
+Received: from kanga.kvack.org ([205.233.56.17])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <owner-linux-mm@kvack.org>)
+	id 1PHvkD-0001DG-RE
+	for glkm-linux-mm-2@m.gmane.org; Mon, 15 Nov 2010 10:53:02 +0100
+Received: by kanga.kvack.org (Postfix)
+	id BA7DD8D0050; Mon, 15 Nov 2010 04:53:00 -0500 (EST)
+Delivered-To: linux-mm-outgoing@kvack.org
+Received: by kanga.kvack.org (Postfix, from userid 40)
+	id B3E4F8D0017; Mon, 15 Nov 2010 04:53:00 -0500 (EST)
+X-Original-To: int-list-linux-mm@kvack.org
+Delivered-To: int-list-linux-mm@kvack.org
+Received: by kanga.kvack.org (Postfix, from userid 63042)
+	id 985338D0050; Mon, 15 Nov 2010 04:53:00 -0500 (EST)
+X-Original-To: linux-mm@kvack.org
+Delivered-To: linux-mm@kvack.org
+Received: from mail144.messagelabs.com (mail144.messagelabs.com [216.82.254.51])
+	by kanga.kvack.org (Postfix) with ESMTP id 3FA8F8D0017
+	for <linux-mm@kvack.org>; Mon, 15 Nov 2010 04:53:00 -0500 (EST)
+X-VirusChecked: Checked
+X-Env-Sender: mel@csn.ul.ie
+X-Msg-Ref: server-6.tower-144.messagelabs.com!1289814777!96428158!1
+X-StarScan-Version: 6.2.9; banners=-,-,-
+X-Originating-IP: [193.1.99.77]
+X-SpamReason: No, hits=0.5 required=7.0 tests=BODY_RANDOM_LONG
+Received: (qmail 13284 invoked from network); 15 Nov 2010 09:52:59 -0000
+Received: from gir.skynet.ie (HELO gir.skynet.ie) (193.1.99.77)
+  by server-6.tower-144.messagelabs.com with DHE-RSA-AES256-SHA encrypted SMTP; 15 Nov 2010 09:52:59 -0000
+Received: from skynet.skynet.ie (skynet.skynet.ie [193.1.99.74])
+	by gir.skynet.ie (Postfix) with ESMTP id E3A5E1244B;
+	Mon, 15 Nov 2010 09:52:44 +0000 (GMT)
+Received: by skynet.skynet.ie (Postfix, from userid 2391)
+	id D7AF750911; Mon, 15 Nov 2010 09:52:44 +0000 (GMT)
+Content-Disposition: inline
+In-Reply-To: <59705f848d35b12ace640f92afcffea02cee0976.1289789605.git.joe@perches.com>
+User-Agent: Mutt/1.5.17+20080114 (2008-01-14)
+X-Bogosity: Ham, tests=bogofilter, spamicity=0.000000, version=1.2.2
+Sender: owner-linux-mm@kvack.org
+Precedence: bulk
+X-Loop: owner-majordomo@kvack.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062420>
+
+On Sun, Nov 14, 2010 at 07:04:59PM -0800, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  mm/hugetlb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+
+Acked-by: Mel Gorman <mel@csn.ul.ie>
+
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index c4a3558..8875242 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -540,7 +540,7 @@ static struct page *dequeue_huge_page_vma(struct hstate *h,
+>  
+>  	/* If reserves cannot be used, ensure enough pages are in the pool */
+>  	if (avoid_reserve && h->free_huge_pages - h->resv_huge_pages == 0)
+> -		goto err;;
+> +		goto err;
+>  
+>  	for_each_zone_zonelist_nodemask(zone, z, zonelist,
+>  						MAX_NR_ZONES - 1, nodemask) {
+> -- 
+> 1.7.3.1.g432b3.dirty
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+
+-- 
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom policy in Canada: sign http://dissolvethecrtc.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+
