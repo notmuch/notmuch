@@ -1,3 +1,17 @@
+Notmuch 0.28.2 (2019-02-17)
+===========================
+
+Emacs
+-----
+
+Invoke gpg with --batch and --no-tty.
+
+Python Bindings
+---------------
+
+Fix documentation build with Python 3.7. Note that Python >= 3.3 is
+now needed to build this documentation.
+
 Notmuch 0.28.1 (2019-02-01)
 ===========================
 
