@@ -15,7 +15,7 @@ Files and directories
       instead.
 
 :class:`Directory` -- A directory entry in the database
-------------------------------------------------------
+-------------------------------------------------------
 
 .. autoclass:: Directory
 
