@@ -1,3 +1,9 @@
+notmuch (0.28.2-1) unstable; urgency=medium
+
+  * [notmuch-emacs] Invoke gpg from with --batch and --no-tty
+
+ -- David Bremner <bremner@debian.org>  Sun, 17 Feb 2019 07:30:33 -0400
+
 notmuch (0.28.1-1) unstable; urgency=medium
 
   * New upstream bug fix release
