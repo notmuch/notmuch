@@ -169,6 +169,9 @@ property:<key>=<value>
     can be present on a given message with several different values.
     See **notmuch-properties(7)** for more details.
 
+User defined prefixes are also supported, see **notmuch-config(1)** for
+details.
+
 Operators
 ---------
 

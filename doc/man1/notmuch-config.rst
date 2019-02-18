@@ -195,6 +195,15 @@ The available configuration items are described below.
 
     Default: ``auto``.
 
+**index.header.<prefix>** **[STORED IN DATABASE]**
+    Define the query prefix <prefix>, based on a mail header. For
+    example ``index.header.List=List-Id`` will add a probabilistic
+    prefix ``List:`` that searches the ``List-Id`` field.  User
+    defined prefixes must not start with 'a'...'z'; in particular
+    adding a prefix with same name as a predefined prefix is not
+    supported. See **notmuch-search-terms(7)** for a list of existing
+    prefixes, and an explanation of probabilistic prefixes.
+
 **built_with.<name>**
     Compile time feature <name>. Current possibilities include
     "compact" (see **notmuch-compact(1)**) and "field_processor" (see
