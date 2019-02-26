@@ -422,6 +422,26 @@ _find_prefix (const char *name)
     return "";
 }
 
+/* Like find prefix, but include the possibility of user defined
+ * prefixes specific to this database */
+
+const char *
+_notmuch_database_prefix (notmuch_database_t *notmuch, const char *name)
+{
+    unsigned int i;
+
+    /*XXX TODO: reduce code duplication */
+    for (i = 0; i < ARRAY_SIZE (prefix_table); i++) {
+	if (strcmp (name, prefix_table[i].name) == 0)
+	    return prefix_table[i].prefix;
+    }
+
+    if (notmuch->user_prefix)
+	return _notmuch_string_map_get (notmuch->user_prefix, name);
+
+    return NULL;
+}
+
 static const struct {
     /* NOTMUCH_FEATURE_* value. */
     _notmuch_features value;

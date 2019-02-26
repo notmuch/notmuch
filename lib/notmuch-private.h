@@ -136,6 +136,7 @@ typedef enum _notmuch_private_status {
     /* Then add our own private values. */
     NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG = NOTMUCH_STATUS_LAST_STATUS,
     NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND,
+    NOTMUCH_PRIVATE_STATUS_BAD_PREFIX,
 
     NOTMUCH_PRIVATE_STATUS_LAST_STATUS
 } notmuch_private_status_t;
@@ -180,6 +181,11 @@ typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
  * _notmuch_message_add/remove_term functions. */
 const char *
 _find_prefix (const char *name);
+
+/* Lookup a prefix value by name, including possibly user defined prefixes
+ */
+const char *
+_notmuch_database_prefix (notmuch_database_t  *notmuch, const char *name);
 
 char *
 _notmuch_message_id_compressed (void *ctx, const char *message_id);

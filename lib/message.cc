@@ -1446,8 +1446,12 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
     term_gen->set_termpos (message->termpos);
 
     if (prefix_name) {
+	const char *prefix = _notmuch_database_prefix (message->notmuch, prefix_name);
+	if (prefix == NULL)
+	    return NOTMUCH_PRIVATE_STATUS_BAD_PREFIX;
+
 	_notmuch_message_invalidate_metadata (message, prefix_name);
-	term_gen->index_text (text, 1, _find_prefix (prefix_name));
+	term_gen->index_text (text, 1, prefix);
     } else {
 	term_gen->index_text (text);
     }
