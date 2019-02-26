@@ -572,6 +572,31 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 
 }
 
+static notmuch_status_t
+_notmuch_message_index_user_headers (notmuch_message_t *message, GMimeMessage *mime_message)
+{
+
+    notmuch_database_t *notmuch = notmuch_message_get_database (message);
+    notmuch_string_map_iterator_t *iter = _notmuch_database_user_headers (notmuch);
+
+    for (; _notmuch_string_map_iterator_valid (iter);
+	 _notmuch_string_map_iterator_move_to_next (iter)) {
+
+	const char *prefix_name = _notmuch_string_map_iterator_key (iter);
+
+	const char *header_name = _notmuch_string_map_iterator_value (iter);
+
+	const char *header = g_mime_object_get_header (GMIME_OBJECT (mime_message), header_name);
+	if (header)
+	    _notmuch_message_gen_terms (message, prefix_name, header);
+    }
+
+    if (iter)
+	_notmuch_string_map_iterator_destroy (iter);
+    return NOTMUCH_STATUS_SUCCESS;
+
+}
+
 notmuch_status_t
 _notmuch_message_index_file (notmuch_message_t *message,
 			     notmuch_indexopts_t *indexopts,
@@ -600,6 +625,8 @@ _notmuch_message_index_file (notmuch_message_t *message,
 
     subject = g_mime_message_get_subject (mime_message);
     _notmuch_message_gen_terms (message, "subject", subject);
+
+    status = _notmuch_message_index_user_headers (message, mime_message);
 
     _index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message));
 

@@ -652,6 +652,11 @@ _notmuch_string_map_iterator_value (notmuch_string_map_iterator_t *iterator);
 void
 _notmuch_string_map_iterator_destroy (notmuch_string_map_iterator_t *iterator);
 
+/* Create an iterator for user headers. Destroy with
+ * _notmuch_string_map_iterator_destroy. Actually in database.cc*/
+notmuch_string_map_iterator_t *
+_notmuch_database_user_headers (notmuch_database_t *notmuch);
+
 /* tags.c */
 
 notmuch_tags_t *

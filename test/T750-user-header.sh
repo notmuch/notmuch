@@ -91,4 +91,21 @@ Query((Tmail AND (XUList:notmuchmail@1 PHRASE 2 XUList:org@2)))
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "index user header"
+notmuch config set index.header.List "List-Id"
+notmuch reindex '*'
+notmuch search --output=files List:notmuch | notmuch_search_files_sanitize | sort > OUTPUT
+cat <<EOF > EXPECTED
+MAIL_DIR/bar/baz/05:2,
+MAIL_DIR/bar/baz/23:2,
+MAIL_DIR/bar/baz/24:2,
+MAIL_DIR/bar/cur/20:2,
+MAIL_DIR/bar/new/21:2,
+MAIL_DIR/bar/new/22:2,
+MAIL_DIR/foo/cur/08:2,
+MAIL_DIR/foo/new/03:2,
+MAIL_DIR/new/04:2,
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

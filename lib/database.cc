@@ -322,6 +322,12 @@ _setup_query_field_default (const prefix_t *prefix, notmuch_database_t *notmuch)
 	notmuch->query_parser->add_boolean_prefix (prefix->name, prefix->prefix);
 }
 
+notmuch_string_map_iterator_t *
+_notmuch_database_user_headers (notmuch_database_t *notmuch)
+{
+    return _notmuch_string_map_iterator_create (notmuch->user_header, "", false);
+}
+
 const char *
 _user_prefix (void *ctx, const char* name)
 {
