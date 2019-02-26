@@ -82,6 +82,7 @@ WITH_API_DOCS=1
 WITH_EMACS=1
 WITH_DESKTOP=1
 WITH_BASH=1
+WITH_RPATH=1
 WITH_RUBY=1
 WITH_ZSH=1
 WITH_RETRY_LOCK=1
@@ -241,6 +242,14 @@ for option; do
 	fi
     elif [ "${option}" = '--without-bash-completion' ] ; then
 	WITH_BASH=0
+    elif [ "${option%%=*}" = '--with-rpath' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_RPATH=0
+	else
+	    WITH_RPATH=1
+	fi
+    elif [ "${option}" = '--without-rpath' ] ; then
+	WITH_RPATH=0
     elif [ "${option%%=*}" = '--with-ruby' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_RUBY=0
@@ -928,7 +937,7 @@ fi
 rm -f compat/check_asctime
 
 printf "Checking for rpath support... "
-if ${CC} -Wl,--enable-new-dtags -Wl,-rpath,/tmp/ -o minimal minimal.c >/dev/null 2>&1
+if [ $WITH_RPATH = "1" ] && ${CC} -Wl,--enable-new-dtags -Wl,-rpath,/tmp/ -o minimal minimal.c >/dev/null 2>&1
 then
     printf "Yes.\n"
     rpath_ldflags="-Wl,--enable-new-dtags -Wl,-rpath,\$(libdir)"
