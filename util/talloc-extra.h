@@ -3,6 +3,10 @@
 
 #include <talloc.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Like talloc_strndup, but take an extra parameter for the internal talloc
  * name (for debugging) */
 
@@ -14,5 +18,9 @@ talloc_strndup_named_const (void *ctx, const char *str,
  * source location */
 
 #define talloc_strndup_debug(ctx, str, len) talloc_strndup_named_const (ctx, str, len, __location__)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

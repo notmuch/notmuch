@@ -25,6 +25,10 @@
 #include <sys/types.h>
 #include <regex.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* xutil.c */
 void *
 xcalloc (size_t nmemb, size_t size);
@@ -48,5 +52,9 @@ xregcomp (regex_t *preg, const char *regex, int cflags);
 int
 xregexec (const regex_t *preg, const char *string,
 	  size_t nmatch, regmatch_t pmatch[], int eflags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

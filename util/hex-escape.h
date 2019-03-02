@@ -1,6 +1,10 @@
 #ifndef _HEX_ESCAPE_H
 #define _HEX_ESCAPE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum hex_status {
     HEX_SUCCESS = 0,
     HEX_SYNTAX_ERROR,
@@ -38,4 +42,9 @@ hex_decode (void *talloc_ctx, const char *in, char **out,
  */
 hex_status_t
 hex_decode_inplace (char *s);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

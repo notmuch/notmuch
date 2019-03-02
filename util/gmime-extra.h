@@ -1,11 +1,13 @@
 #ifndef _GMIME_EXTRA_H
 #define _GMIME_EXTRA_H
 #include <gmime/gmime.h>
-
-GMimeStream *g_mime_stream_stdout_new(void);
-
 #include <talloc.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+GMimeStream *g_mime_stream_stdout_new(void);
 
 #if (GMIME_MAJOR_VERSION < 3)
 
@@ -99,5 +101,9 @@ gint64 g_mime_utils_header_decode_date_unix (const char *date);
  * Return string for valid User ID (or NULL if no valid User ID exists)
  */
 const char * g_mime_certificate_get_valid_userid (GMimeCertificate *cert);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

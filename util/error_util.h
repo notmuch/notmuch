@@ -25,6 +25,10 @@
 
 #include "function-attributes.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).
@@ -44,4 +48,7 @@ _internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2) NORETURN_ATTRI
     _internal_error (format " (%s).\n",			\
 		     ##__VA_ARGS__, __location__)
 
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -4,6 +4,10 @@
 #include "util.h"
 #include <zlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Like getline, but read from a gzFile. Allocation is with talloc.
  * Returns:
  *
@@ -22,4 +26,9 @@ gz_getline (void *ctx, char **lineptr, ssize_t *bytes_read, gzFile stream);
 
 const char *
 gz_error_string (util_status_t status, gzFile stream);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

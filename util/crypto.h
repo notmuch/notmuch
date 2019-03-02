@@ -5,6 +5,10 @@
 #include "gmime-extra.h"
 #include "notmuch.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _notmuch_crypto {
     bool verify;
     notmuch_decryption_policy_t decrypt;
@@ -34,4 +38,7 @@ _notmuch_crypto_get_gmime_ctx_for_protocol (_notmuch_crypto_t *crypto,
 void
 _notmuch_crypto_cleanup (_notmuch_crypto_t *crypto);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
