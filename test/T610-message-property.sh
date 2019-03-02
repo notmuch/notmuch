@@ -101,7 +101,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "testing string map binary search (via message properties)"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {
    char *keys[] = {"a", "b", "c", "d", "e", NULL};

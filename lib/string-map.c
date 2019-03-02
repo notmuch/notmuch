@@ -106,7 +106,7 @@ _notmuch_string_map_sort (notmuch_string_map_t *map)
     map->sorted = true;
 }
 
-static bool
+static int
 string_cmp (const char *a, const char *b, bool exact)
 {
     if (exact)
