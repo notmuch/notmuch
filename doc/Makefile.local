@@ -37,6 +37,14 @@ INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 %.gz: %
 	rm -f $@ && gzip --stdout $^ > $@
 
+# Sequentialize the calls to sphinx-build to avoid races with
+# reading/writing cached state. This uses GNU make specific
+# "order-only" prerequisites.
+
+sphinx-html: | $(DOCBUILDDIR)/.roff.stamp
+sphinx-texinfo: | sphinx-html
+sphinx-info: | sphinx-texinfo
+
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 
