@@ -1,3 +1,12 @@
+notmuch (0.28.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+  * Fix for bug in message property search
+  * Fix for race condition leading to (very) occasional build failures
+    when building the documentation.
+
+ -- David Bremner <bremner@debian.org>  Tue, 05 Mar 2019 15:39:09 -0400
+
 notmuch (0.28.2-1) unstable; urgency=medium
 
   * [notmuch-emacs] Invoke gpg from with --batch and --no-tty
