@@ -1,3 +1,17 @@
+Notmuch 0.28.3 (2019-03-05)
+===========================
+
+Library
+-------
+
+Fix a bug with the internal data structure _notmuch_string_map_t used
+by message properties.
+
+Build System
+------------
+
+Serialize calls to sphinx-build to avoid race condition.
+`
 Notmuch 0.28.2 (2019-02-17)
 ===========================
 
