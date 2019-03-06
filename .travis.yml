@@ -1,7 +1,6 @@
 language: c
 
-dist: trusty
-sudo: false
+dist: xenial
 
 addons:
   apt:
