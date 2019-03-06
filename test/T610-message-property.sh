@@ -100,6 +100,41 @@ cat <<'EOF' >EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "testing string map binary search (via message properties)"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+   char *keys[] = {"a", "b", "c", "d", "e", NULL};
+   for (int i=0; keys[i]; i++)
+       EXPECT0(notmuch_message_add_property (message, keys[i], keys[i]));
+
+   for (int i=0; keys[i]; i++) {
+      EXPECT0(notmuch_message_get_property (message, keys[i], &val));
+      printf("%s = %s\n", keys[i], val);
+   }
+
+   for (int i=0; keys[i]; i++) {
+      EXPECT0(notmuch_message_remove_property (message, keys[i], keys[i]));
+      EXPECT0(notmuch_message_get_property (message, keys[i], &val));
+      printf("%s = %s\n", keys[i], val == NULL ? "NULL" : val);
+   }
+}
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+a = a
+b = b
+c = c
+d = d
+e = e
+a = NULL
+b = NULL
+c = NULL
+d = NULL
+e = NULL
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "notmuch_message_get_properties: empty list"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {

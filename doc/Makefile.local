@@ -41,6 +41,14 @@ ifeq ($(WITH_EMACS),1)
 $(DOCBUILDDIR)/.roff.stamp sphinx-html sphinx-texinfo: docstring.stamp
 endif
 
+# Sequentialize the calls to sphinx-build to avoid races with
+# reading/writing cached state. This uses GNU make specific
+# "order-only" prerequisites.
+
+sphinx-html: | $(DOCBUILDDIR)/.roff.stamp
+sphinx-texinfo: | sphinx-html
+sphinx-info: | sphinx-texinfo
+
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 
