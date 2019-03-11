@@ -137,10 +137,10 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "regexp error reporting"
-notmuch search 'from:/unbalanced[/' 1>OUTPUT 2>&1
+notmuch search 'from:/unbalanced[/' 2>&1 | sed -e '/^A Xapian/ s/[^:]*$//' > OUTPUT
 cat <<EOF > EXPECTED
 notmuch search: A Xapian exception occurred
-A Xapian exception occurred parsing query: Invalid regular expression
+A Xapian exception occurred parsing query: Regexp error:
 Query string was: from:/unbalanced[/
 EOF
 test_expect_equal_file EXPECTED OUTPUT

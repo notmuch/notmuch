@@ -35,9 +35,9 @@ compile_regex (regex_t &regexp, const char *str)
     if (err != 0) {
 	size_t len = regerror (err, &regexp, NULL, 0);
 	char *buffer = new char[len];
-	std::string msg;
+	std::string msg = "Regexp error: ";
 	(void) regerror (err, &regexp, buffer, len);
-	msg.assign (buffer, len);
+	msg.append (buffer, len);
 	delete[] buffer;
 
 	throw Xapian::QueryParserError (msg);
