@@ -43,7 +43,8 @@ notmuch config set foo.nonexistent
 test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
-notmuch config list 2>&1 | notmuch_config_sanitize > OUTPUT
+notmuch config list > STDOUT 2> STDERR
+printf "%s\n====\n%s\n" "$(< STDOUT)" "$(< STDERR)" | notmuch_config_sanitize > OUTPUT
 
 if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
     config_gpg_path="crypto.gpg_path=gpg
@@ -51,7 +52,6 @@ if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
 fi
 
 cat <<EOF > EXPECTED
-Error opening database at MAIL_DIR/.notmuch: No such file or directory
 database.path=MAIL_DIR
 user.name=Notmuch Test Suite
 user.primary_email=test_suite@notmuchmail.org
@@ -65,6 +65,8 @@ foo.list=this;is another;list value;
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
+====
+Error opening database at MAIL_DIR/.notmuch: No such file or directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
