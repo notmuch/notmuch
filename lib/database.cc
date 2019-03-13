@@ -124,9 +124,11 @@ typedef struct {
  *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
- * user in searching. Similarly, terms from the path of the mail
- * message are added with "folder" and "path" prefixes. But the
- * database doesn't really care itself about any of these.
+ * user in searching.
+ *
+ * The path of the containing folder is added with the "folder" prefix
+ * (see _notmuch_message_add_folder_terms).  Sub-paths of the the path
+ * of the mail message are added with the "path" prefix.
  *
  * The data portion of a mail document is empty.
  *
