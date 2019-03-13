@@ -63,6 +63,12 @@ typedef struct {
  * We currently have three different types of documents (mail, ghost,
  * and directory) and also some metadata.
  *
+ * There are two kinds of prefixes used in notmuch. There are the
+ * human friendly 'prefix names' like "thread:", which are also used
+ * in the query parser, and the actual prefix terms in the database
+ * (e.g. "G"). The correspondence is maintained in the file scope data
+ * structure 'prefix_table'.
+ *
  * Mail document
  * -------------
  * A mail document is associated with a particular email message. It
