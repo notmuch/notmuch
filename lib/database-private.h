@@ -108,6 +108,12 @@ enum _notmuch_features {
      *
      * Introduced: version 3. */
     NOTMUCH_FEATURE_LAST_MOD = 1 << 6,
+
+    /* If set, unprefixed terms are stored only for the message body,
+     * not for headers.
+     *
+     * Introduced: version 3. */
+    NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY = 1 << 7,
 };
 
 /* In C++, a named enum is its own type, so define bitwise operators

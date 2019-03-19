@@ -117,4 +117,20 @@ MAIL_DIR/bar/new/21:2,
 MAIL_DIR/bar/new/22:2,
 MAIL_DIR/cur/51:2,"
 
+test_begin_subtest "body: same as unprefixed before reindex"
+notmuch search --output=messages body:close > OUTPUT
+notmuch search --output=messages close  > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "body: subset of unprefixed after reindex"
+notmuch reindex '*'
+notmuch search --output=messages body:close | sort > BODY
+notmuch search --output=messages close | sort > UNPREFIXED
+diff -e UNPREFIXED BODY | cut -c2- > OUTPUT
+cat <<EOF > EXPECTED
+d
+d
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

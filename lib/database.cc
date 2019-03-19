@@ -122,9 +122,12 @@ typedef struct {
  *	LAST_MOD:	The revision number as of the last tag or
  *			filename change.
  *
- * In addition, terms from the content of the message are added with
- * "from", "to", "attachment", and "subject" prefixes for use by the
- * user in searching.
+ * The prefixed terms described above are also searchable without an
+ * explicit field name, but as of notmuch 0.29 this is due to
+ * query-parser setup, not extra terms in the database.  In addition,
+ * terms from the content of the message are added without a prefix
+ * for use by the user in searching. Note that the prefix name "body"
+ * is used to refer to the empty prefix string in the database.
  *
  * The path of the containing folder is added with the "folder" prefix
  * (see _notmuch_message_add_folder_terms).  Sub-paths of the the path
@@ -266,6 +269,8 @@ prefix_t prefix_table[] = {
     { "directory",		"XDIRECTORY",	NOTMUCH_FIELD_NO_FLAGS },
     { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
+    { "body",			"",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC},
     { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROCESSOR },
     { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL |
@@ -309,6 +314,8 @@ prefix_t prefix_table[] = {
 static void
 _setup_query_field_default (const prefix_t *prefix, notmuch_database_t *notmuch)
 {
+    if (prefix->prefix)
+	notmuch->query_parser->add_prefix ("",prefix->prefix);
     if (prefix->flags & NOTMUCH_FIELD_PROBABILISTIC)
 	notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
     else
@@ -333,6 +340,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 					    *notmuch->query_parser, notmuch))->release ();
 
 	/* we treat all field-processor fields as boolean in order to get the raw input */
+	if (prefix->prefix)
+	    notmuch->query_parser->add_prefix ("",prefix->prefix);
 	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);
     } else {
 	_setup_query_field_default (prefix, notmuch);
@@ -390,6 +399,10 @@ static const struct {
       "indexed MIME types", "w"},
     { NOTMUCH_FEATURE_LAST_MOD,
       "modification tracking", "w"},
+    /* Existing databases will work fine for all queries not involving
+     * 'body:' */
+    { NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY,
+      "index body and headers separately", "w"},
 };
 
 const char *
@@ -663,6 +676,7 @@ notmuch_database_create_verbose (const char *path,
      * new databases have them. */
     notmuch->features |= NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES;
     notmuch->features |= NOTMUCH_FEATURE_INDEXED_MIMETYPES;
+    notmuch->features |= NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY;
 
     status = notmuch_database_upgrade (notmuch, NULL, NULL);
     if (status) {

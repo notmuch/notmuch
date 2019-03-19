@@ -1419,8 +1419,9 @@ _notmuch_message_add_term (notmuch_message_t *message,
 }
 
 /* Parse 'text' and add a term to 'message' for each parsed word. Each
- * term will be added both prefixed (if prefix_name is not NULL) and
- * also non-prefixed). */
+ * term will be added with the appropriate prefix if prefix_name is
+ * non-NULL.
+ */
 notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
@@ -1432,22 +1433,17 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
 
     term_gen->set_document (message->doc);
+    term_gen->set_termpos (message->termpos);
 
     if (prefix_name) {
-	const char *prefix = _find_prefix (prefix_name);
-
-	term_gen->set_termpos (message->termpos);
-	term_gen->index_text (text, 1, prefix);
-	/* Create a gap between this an the next terms so they don't
-	 * appear to be a phrase. */
-	message->termpos = term_gen->get_termpos () + 100;
-
 	_notmuch_message_invalidate_metadata (message, prefix_name);
+	term_gen->index_text (text, 1, _find_prefix (prefix_name));
+    } else {
+	term_gen->index_text (text);
     }
 
-    term_gen->set_termpos (message->termpos);
-    term_gen->index_text (text);
-    /* Create a term gap, as above. */
+    /* Create a gap between this an the next terms so they don't
+     * appear to be a phrase. */
     message->termpos = term_gen->get_termpos () + 100;
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;

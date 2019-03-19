@@ -44,6 +44,9 @@ results to those whose value matches a regular expression (see
 
    notmuch search 'from:"/bob@.*[.]example[.]com/"'
 
+body:<word-or-quoted-phrase>
+    Match terms in the body of messages.
+
 from:<name-or-address> or from:/<regex>/
     The **from:** prefix is used to match the name or address of
     the sender of an email message.
@@ -249,7 +252,7 @@ follows.
 Boolean
    **tag:**, **id:**, **thread:**, **folder:**, **path:**, **property:**
 Probabilistic
-  **to:**, **attachment:**, **mimetype:**
+  **body:**, **to:**, **attachment:**, **mimetype:**
 Special
    **from:**, **query:**, **subject:**
 
