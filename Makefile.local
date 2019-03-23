@@ -68,7 +68,7 @@ release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
-	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
+	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(GPG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
 	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
