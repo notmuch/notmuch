@@ -44,7 +44,7 @@ TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
 ELPA_FILE:=$(PACKAGE)-emacs-$(ELPA_VERSION).tar
 DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
 SHA256_FILE=$(TAR_FILE).sha256.asc
-GPG_FILE=$(TAR_FILE).asc
+DETACHED_SIG_FILE=$(TAR_FILE).asc
 
 PV_FILE=bindings/python/notmuch/version.py
 
