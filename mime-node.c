@@ -21,13 +21,16 @@
  *          Austin Clements <aclements@csail.mit.edu>
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "notmuch-client.h"
 
 /* Context that gets inherited from the root node. */
 typedef struct mime_node_context {
     /* Per-message resources.  These are allocated internally and must
      * be destroyed. */
-    FILE *file;
     GMimeStream *stream;
     GMimeParser *parser;
     GMimeMessage *mime_message;
@@ -48,9 +51,6 @@ _mime_node_context_free (mime_node_context_t *res)
     if (res->stream)
 	g_object_unref (res->stream);
 
-    if (res->file)
-	fclose (res->file);
-
     return 0;
 }
 
@@ -62,6 +62,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     mime_node_context_t *mctx;
     mime_node_t *root;
     notmuch_status_t status;
+    int fd;
 
     root = talloc_zero (ctx, mime_node_t);
     if (root == NULL) {
@@ -80,8 +81,8 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     talloc_set_destructor (mctx, _mime_node_context_free);
 
     /* Fast path */
-    mctx->file = fopen (filename, "r");
-    if (! mctx->file) {
+    fd = open (filename, O_RDONLY);
+    if (fd == -1) {
 	/* Slow path - for some reason the first file in the list is
 	 * not available anymore. This is clearly a problem in the
 	 * database, but we are not going to let this problem be a
@@ -92,13 +93,13 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	     notmuch_filenames_move_to_next (filenames))
 	{
 	    filename = notmuch_filenames_get (filenames);
-	    mctx->file = fopen (filename, "r");
-	    if (mctx->file)
+	    fd = open (filename, O_RDONLY);
+	    if (fd != -1)
 		break;
 	}
 
 	talloc_free (filenames);
-	if (! mctx->file) {
+	if (fd == -1) {
 	    /* Give up */
 	    fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
 		status = NOTMUCH_STATUS_FILE_ERROR;
@@ -106,13 +107,12 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	    }
 	}
 
-    mctx->stream = g_mime_stream_file_new (mctx->file);
+    mctx->stream = g_mime_stream_gzfile_new (fd);
     if (!mctx->stream) {
 	fprintf (stderr, "Out of memory.\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (mctx->stream), false);
 
     mctx->parser = g_mime_parser_new_with_stream (mctx->stream);
     if (!mctx->parser) {

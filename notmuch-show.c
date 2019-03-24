@@ -21,6 +21,7 @@
 #include "notmuch-client.h"
 #include "gmime-filter-reply.h"
 #include "sprinter.h"
+#include "zlib-extra.h"
 
 static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
@@ -758,7 +759,7 @@ format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
     notmuch_message_t *message = node->envelope_file;
 
     const char *filename;
-    FILE *file;
+    gzFile file;
     const char *from;
 
     time_t date;
@@ -766,14 +767,14 @@ format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
     char date_asctime[26];
 
     char *line = NULL;
-    size_t line_size;
+    ssize_t line_size;
     ssize_t line_len;
 
     if (!message)
 	INTERNAL_ERROR ("format_part_mbox requires a root part");
 
     filename = notmuch_message_get_filename (message);
-    file = fopen (filename, "r");
+    file = gzopen (filename, "r");
     if (file == NULL) {
 	fprintf (stderr, "Failed to open %s: %s\n",
 		 filename, strerror (errno));
@@ -789,7 +790,7 @@ format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
 
     printf ("From %s %s", from, date_asctime);
 
-    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
+    while ((line_len = gz_getline (message, &line, &line_size, file)) != UTIL_EOF ) {
 	if (_is_from_line (line))
 	    putchar ('>');
 	printf ("%s", line);
@@ -797,7 +798,7 @@ format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
 
     printf ("\n");
 
-    fclose (file);
+    gzclose (file);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -810,39 +811,44 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
     if (node->envelope_file) {
 	/* Special case the entire message to avoid MIME parsing. */
 	const char *filename;
-	FILE *file;
-	size_t size;
+	GMimeStream *stream = NULL;
+	ssize_t ssize;
 	char buf[4096];
+	notmuch_status_t ret = NOTMUCH_STATUS_FILE_ERROR;
 
 	filename = notmuch_message_get_filename (node->envelope_file);
 	if (filename == NULL) {
 	    fprintf (stderr, "Error: Cannot get message filename.\n");
-	    return NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
 
-	file = fopen (filename, "r");
-	if (file == NULL) {
+	stream = g_mime_stream_gzfile_open (filename);
+	if (stream == NULL) {
 	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
-	    return NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
 
-	while (!feof (file)) {
-	    size = fread (buf, 1, sizeof (buf), file);
-	    if (ferror (file)) {
+	while (! g_mime_stream_eos (stream)) {
+	    ssize = g_mime_stream_read (stream, buf, sizeof(buf));
+	    if (ssize < 0) {
 		fprintf (stderr, "Error: Read failed from %s\n", filename);
-		fclose (file);
-		return NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
 	    }
 
-	    if (fwrite (buf, size, 1, stdout) != 1) {
-		fprintf (stderr, "Error: Write failed\n");
-		fclose (file);
-		return NOTMUCH_STATUS_FILE_ERROR;
+	    if (ssize > 0 && fwrite (buf, ssize, 1, stdout) != 1) {
+		fprintf (stderr, "Error: Write %ld chars to stdout failed\n", ssize);
+		goto DONE;
 	    }
 	}
 
-	fclose (file);
-	return NOTMUCH_STATUS_SUCCESS;
+	ret = NOTMUCH_STATUS_SUCCESS;
+
+	/* XXX This DONE is just for the special case of a node in a single file */
+    DONE:
+	if (stream)
+	    g_object_unref (stream);
+
+	return ret;
     }
 
     GMimeStream *stream_filter = g_mime_stream_filter_new (params->out_stream);

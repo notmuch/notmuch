@@ -91,8 +91,35 @@ This is just a test message (#6)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "show un-gzipped message (format mbox)"
+notmuch show --format=mbox id:msg-006@notmuch-test-suite | notmuch_show_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+From test_suite@notmuchmail.org Fri Jan  5 15:43:51 2001
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Message-Id: <msg-006@notmuch-test-suite>
+Subject: Multiple new messages, one gzipped (full-scan)
+Date: Fri, 05 Jan 2001 15:43:51 +0000
+
+This is just a test message (#6)
+
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "show un-gzipped message (format raw)"
+notmuch show --format=raw id:msg-006@notmuch-test-suite | notmuch_show_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Message-Id: <msg-006@notmuch-test-suite>
+Subject: Multiple new messages, one gzipped (full-scan)
+Date: Fri, 05 Jan 2001 15:43:51 +0000
+
+This is just a test message (#6)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "show gzipped message"
-test_subtest_known_broken
 notmuch show id:msg-007@notmuch-test-suite | notmuch_show_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 message{ id:msg-007@notmuch-test-suite depth:0 match:1 excluded:0 filename:/XXX/mail/msg-007.gz
@@ -109,6 +136,34 @@ This is just a test message (#7)
 part}
 body}
 message}
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "show gzipped message (mbox)"
+notmuch show --format=mbox id:msg-007@notmuch-test-suite | notmuch_show_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+From test_suite@notmuchmail.org Fri Jan  5 15:43:50 2001
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Message-Id: <msg-007@notmuch-test-suite>
+Subject: Renamed (gzipped) message
+Date: Fri, 05 Jan 2001 15:43:50 +0000
+
+This is just a test message (#7)
+
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "show gzipped message (raw)"
+notmuch show --format=raw id:msg-007@notmuch-test-suite | notmuch_show_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Message-Id: <msg-007@notmuch-test-suite>
+Subject: Renamed (gzipped) message
+Date: Fri, 05 Jan 2001 15:43:50 +0000
+
+This is just a test message (#7)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
