@@ -27,8 +27,8 @@
 #include <glib.h> /* GHashTable */
 
 struct _notmuch_message_file {
-    /* File object */
-    FILE *file;
+    /* open stream to (possibly gzipped) file */
+    GMimeStream *stream;
     char *filename;
 
     /* Cache for decoded headers */
@@ -46,9 +46,6 @@ _notmuch_message_file_destructor (notmuch_message_file_t *message)
     if (message->message)
 	g_object_unref (message->message);
 
-    if (message->file)
-	fclose (message->file);
-
     return 0;
 }
 
@@ -64,15 +61,14 @@ _notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
     if (unlikely (message == NULL))
 	return NULL;
 
-    /* Only needed for error messages during parsing. */
     message->filename = talloc_strdup (message, filename);
     if (message->filename == NULL)
 	goto FAIL;
 
     talloc_set_destructor (message, _notmuch_message_file_destructor);
 
-    message->file = fopen (filename, "r");
-    if (message->file == NULL)
+    message->stream = g_mime_stream_gzfile_open (filename);
+    if (message->stream == NULL)
 	goto FAIL;
 
     return message;
@@ -105,17 +101,17 @@ _notmuch_message_file_close (notmuch_message_file_t *message)
 }
 
 static bool
-_is_mbox (FILE *file)
+_is_mbox (GMimeStream *stream)
 {
     char from_buf[5];
     bool ret = false;
 
     /* Is this mbox? */
-    if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
+    if (g_mime_stream_read (stream, from_buf, sizeof (from_buf)) == sizeof(from_buf) &&
 	strncmp (from_buf, "From ", 5) == 0)
 	ret = true;
 
-    rewind (file);
+    g_mime_stream_reset (stream);
 
     return ret;
 }
@@ -123,7 +119,6 @@ _is_mbox (FILE *file)
 notmuch_status_t
 _notmuch_message_file_parse (notmuch_message_file_t *message)
 {
-    GMimeStream *stream;
     GMimeParser *parser;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
@@ -132,7 +127,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     if (message->message)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    is_mbox = _is_mbox (message->file);
+    is_mbox = _is_mbox (message->stream);
 
     if (! initialized) {
 	g_mime_init ();
@@ -144,12 +139,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     if (! message->headers)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
-    stream = g_mime_stream_file_new (message->file);
-
-    /* We'll own and fclose the FILE* ourselves. */
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), false);
-
-    parser = g_mime_parser_new_with_stream (stream);
+    parser = g_mime_parser_new_with_stream (message->stream);
     g_mime_parser_set_scan_from (parser, is_mbox);
 
     message->message = g_mime_parser_construct_message (parser, NULL);
@@ -167,7 +157,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     }
 
   DONE:
-    g_object_unref (stream);
+    g_mime_stream_reset (message->stream);
     g_object_unref (parser);
 
     if (status) {
@@ -179,7 +169,6 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
 	    message->message = NULL;
 	}
 
-	rewind (message->file);
     }
 
     return status;
