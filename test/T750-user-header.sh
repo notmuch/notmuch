@@ -15,6 +15,36 @@ notmuch search '*' | notmuch_search_sanitize > initial-threads
 notmuch search --output=messages '*' > initial-message-ids
 notmuch dump > initial-dump
 
+test_begin_subtest "adding illegal prefix name, bad utf8"
+notmuch config set index.header.$'\xFF' "List-Id" 2>&1 | sed 's/:.*$//' >OUTPUT
+cat <<EOF > EXPECTED
+Invalid utf8
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "adding illegal prefix name, reserved for notmuch"
+notmuch config set index.header.list "List-Id" 2>OUTPUT
+cat <<EOF > EXPECTED
+Prefix names starting with lower case letters are reserved: list
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "adding illegal prefix name, non-word character."
+notmuch config set index.header.l:st "List-Id" 2>OUTPUT
+cat <<EOF > EXPECTED
+Non-word character in prefix name: l:st
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "adding empty prefix name."
+notmuch config set index.header. "List-Id" 2>OUTPUT
+Non-word character in prefix name: l:st
+cat <<EOF > EXPECTED
+Empty prefix name: index.header.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_begin_subtest "adding user header"
 test_expect_code 0 "notmuch config set index.header.List \"List-Id\""
 

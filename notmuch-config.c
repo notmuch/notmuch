@@ -24,6 +24,8 @@
 #include <netdb.h>
 #include <assert.h>
 
+#include "unicode-util.h"
+
 static const char toplevel_config_comment[] =
     " .notmuch-config - Configuration file for the notmuch mail system\n"
     "\n"
@@ -790,6 +792,43 @@ _item_split (char *item, char **group, char **key)
     return 0;
 }
 
+/* These are more properly called Xapian fields, but the user facing
+   docs call them prefixes, so make the error message match */
+static bool
+validate_field_name (const char *str)
+{
+    const char *key;
+
+    if (! g_utf8_validate (str, -1, NULL)) {
+	fprintf (stderr, "Invalid utf8: %s\n", str);
+	return false;
+    }
+
+    key = g_utf8_strrchr (str, -1, '.');
+    if (! key ) {
+	INTERNAL_ERROR ("Impossible code path on input: %s\n", str);
+    }
+
+    key++;
+
+    if (! *key) {
+	fprintf (stderr, "Empty prefix name: %s\n", str);
+	return false;
+    }
+
+    if (! unicode_word_utf8 (key)) {
+	fprintf (stderr, "Non-word character in prefix name: %s\n", key);
+	return false;
+    }
+
+    if (key[0] >= 'a' && key[0] <= 'z') {
+	fprintf (stderr, "Prefix names starting with lower case letters are reserved: %s\n", key);
+	return false;
+    }
+
+    return true;
+}
+
 #define BUILT_WITH_PREFIX "built_with."
 
 typedef struct config_key {
@@ -802,7 +841,7 @@ typedef struct config_key {
 static struct config_key
 config_key_table[] = {
     {"index.decrypt",	true,	false,	NULL},
-    {"index.header.",	true,	true,	NULL},
+    {"index.header.",	true,	true,	validate_field_name},
     {"query.",		true,	true,	NULL},
 };
 
