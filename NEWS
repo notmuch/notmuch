@@ -7,6 +7,12 @@ Command Line Interface
 `notmuch show` now supports --body=false and --include-html with
 --format=text
 
+Emacs
+-----
+
+Support for GNU Emacs older than 25.1 is deprecated with this release,
+and may be removed in a future release.
+
 Notmuch 0.28.3 (2019-03-05)
 ===========================
 
