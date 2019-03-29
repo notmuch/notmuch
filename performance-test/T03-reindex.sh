@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test_description='tagging'
+test_description='reindexing'
 
 . $(dirname "$0")/perf-test-lib.sh || exit 1
 
