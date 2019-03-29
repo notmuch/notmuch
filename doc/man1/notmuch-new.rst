@@ -43,6 +43,10 @@ Supported options for **new** include
 ``--quiet``
     Do not print progress or results.
 
+``--verbose``
+    Print file names being processed. Ignored when combined with
+    ``--quiet``.
+
 ``--decrypt=(true|nostash|auto|false)``
     If ``true``, when encountering an encrypted message, try to
     decrypt it while indexing, and stash any discovered session keys.
