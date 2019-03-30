@@ -108,7 +108,7 @@ class Query(object):
 
     _set_sort = nmlib.notmuch_query_set_sort
     _set_sort.argtypes = [NotmuchQueryP, c_uint]
-    _set_sort.argtypes = None
+    _set_sort.restype = None
 
     def set_sort(self, sort):
         """Set the sort order future results will be delivered in
@@ -121,7 +121,7 @@ class Query(object):
 
     _exclude_tag = nmlib.notmuch_query_add_tag_exclude
     _exclude_tag.argtypes = [NotmuchQueryP, c_char_p]
-    _exclude_tag.resttype = None
+    _exclude_tag.restype = None
 
     def exclude_tag(self, tagname):
         """Add a tag that will be excluded from the query results by default.
