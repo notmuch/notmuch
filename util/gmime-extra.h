@@ -9,6 +9,14 @@ extern "C" {
 
 GMimeStream *g_mime_stream_stdout_new(void);
 
+/* Return a GMime stream for this open file descriptor, un-gzipping if
+ * necessary */
+GMimeStream *g_mime_stream_gzfile_new (int fd);
+
+/* Return a GMime stream for this path, un-gzipping if
+ * necessary */
+GMimeStream *g_mime_stream_gzfile_open (const char *filename);
+
 /**
  * Get last 16 hex digits of fingerprint ("keyid")
  */

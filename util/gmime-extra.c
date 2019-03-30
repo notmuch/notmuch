@@ -1,6 +1,63 @@
 #include "gmime-extra.h"
 #include <string.h>
 
+static
+GMimeStream *
+_gzfile_maybe_filter (GMimeStream *file_stream) {
+    char buf[4];
+    int bytes_read;
+
+    if ((bytes_read = g_mime_stream_read (file_stream, buf, sizeof (buf))) < 0)
+	return NULL;
+
+    if (g_mime_stream_reset (file_stream))
+	return NULL;
+
+    /* check for gzipped input */
+    if (bytes_read >= 2 && buf[0] == 0x1f && (unsigned char)buf[1] == 0x8b) {
+	GMimeStream *gzstream;
+	GMimeFilter *gzfilter;
+
+	gzfilter = g_mime_filter_gzip_new (GMIME_FILTER_GZIP_MODE_UNZIP, 0);
+	if (! gzfilter)
+	    return NULL;
+
+	gzstream = g_mime_stream_filter_new (file_stream);
+	if (! gzstream)
+	    return NULL;
+
+	/* ignore filter id */
+	(void)g_mime_stream_filter_add ((GMimeStreamFilter *)gzstream, gzfilter);
+	return gzstream;
+    } else {
+	return file_stream;
+    }
+}
+
+GMimeStream *
+g_mime_stream_gzfile_new (int fd)
+{
+    GMimeStream *file_stream;
+
+    file_stream = g_mime_stream_fs_new (fd);
+    if (! file_stream)
+	return NULL;
+
+    return _gzfile_maybe_filter (file_stream);
+}
+
+GMimeStream *
+g_mime_stream_gzfile_open (const char *filename)
+{
+    GMimeStream *file_stream;
+
+    file_stream = g_mime_stream_fs_open (filename, 0, 0, NULL);
+    if (! file_stream)
+	return NULL;
+
+    return _gzfile_maybe_filter (file_stream);
+}
+
 GMimeStream *
 g_mime_stream_stdout_new()
 {
