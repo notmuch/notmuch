@@ -2256,7 +2256,7 @@ message will be \"unarchived\", i.e. the tag changes in
 	   (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 (defun notmuch-show-archive-message-then-next-or-exit ()
-  "Archive the current message, then show the next open message in the current thread.
+  "Archive current message, then show next open message in current thread.
 
 If at the last open message in the current thread, then exit back
 to search results."
@@ -2265,7 +2265,7 @@ to search results."
   (notmuch-show-next-open-message t))
 
 (defun notmuch-show-archive-message-then-next-or-next-thread ()
-  "Archive the current message, then show the next open message in the current thread.
+  "Archive current message, then show next open message in current or next thread.
 
 If at the last open message in the current thread, then show next
 thread from search."
