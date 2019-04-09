@@ -1008,6 +1008,15 @@ status."
 (defvar notmuch-show-process-crypto nil)
 (make-variable-buffer-local 'notmuch-show-process-crypto)
 
+(defun notmuch-interactive-region ()
+  "Return the bounds of the current interactive region.
+
+This returns (BEG END), where BEG and END are the bounds of the
+region if the region is active, or both `point' otherwise."
+  (if (region-active-p)
+      (list (region-beginning) (region-end))
+    (list (point) (point))))
+
 (provide 'notmuch-lib)
 
 ;; Local Variables:
