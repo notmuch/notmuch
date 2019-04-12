@@ -478,7 +478,8 @@ the From: address."
 	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
 	 forward-subject  ;; Comes from the first message and is
 			  ;; applied later.
-	 forward-references) ;; List of accumulated message-references of forwarded messages
+	 forward-references ;; List of accumulated message-references of forwarded messages
+	 forward-queries) ;; List of corresponding message-query
 
     ;; Generate the template for the outgoing message.
     (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
@@ -497,7 +498,8 @@ the From: address."
 		  ;; always generate a forwarded subject, then use the
 		  ;; last (i.e. first) one.
 		  (setq forward-subject (message-make-forward-subject))
-		  (push (message-fetch-field "Message-ID") forward-references))
+		  (push (message-fetch-field "Message-ID") forward-references)
+		  (push id forward-queries))
 		;; Make a copy ready to be forwarded in the
 		;; composition buffer.
 		(message-forward-make-body temp-buffer)
@@ -515,6 +517,14 @@ the From: address."
 	(message-remove-header "References")
 	(message-add-header (concat "References: "
 				    (mapconcat 'identity forward-references " "))))
+
+      ;; Create a buffer-local queue for tag changes triggered when sending the message
+      (when notmuch-message-forwarded-tags
+	(setq-local notmuch-message-queued-tag-changes
+		    (loop for id in forward-queries
+			  collect
+			  (cons id
+				notmuch-message-forwarded-tags))))
 
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.

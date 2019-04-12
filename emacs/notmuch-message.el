@@ -37,6 +37,19 @@ the \"inbox\" and \"todo\" tags, you would set:
   :type '(repeat string)
   :group 'notmuch-send)
 
+(defcustom notmuch-message-forwarded-tags '("+forwarded")
+  "List of tag changes to apply to a message when it has been forwarded.
+
+Tags starting with \"+\" (or not starting with either \"+\" or
+\"-\") in the list will be added, and tags starting with \"-\"
+will be removed from the message being forwarded.
+
+For example, if you wanted to add a \"forwarded\" tag and remove
+the \"inbox\" tag, you would set:
+    (\"+forwarded\" \"-inbox\")"
+  :type '(repeat string)
+  :group 'notmuch-send)
+
 (defconst notmuch-message-queued-tag-changes nil
   "List of messages and corresponding tag-changes to be applied when sending a message.
 
