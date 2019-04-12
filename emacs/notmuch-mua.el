@@ -28,6 +28,7 @@
 (require 'notmuch-lib)
 (require 'notmuch-address)
 (require 'notmuch-draft)
+(require 'notmuch-message)
 
 (eval-when-compile (require 'cl))
 
@@ -258,6 +259,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 			    (notmuch-sanitize (plist-get reply-headers :Subject))
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
+
+      ;; Create a buffer-local queue for tag changes triggered when sending the reply
+      (when notmuch-message-replied-tags
+	(setq-local notmuch-message-queued-tag-changes
+		    (list (cons query-string notmuch-message-replied-tags))))
 
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
