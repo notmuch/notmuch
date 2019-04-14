@@ -4,6 +4,8 @@ dist: xenial
 
 addons:
   apt:
+    sources:
+    - sourceline: 'ppa:xapian-backports/ppa'
     packages:
     - dtach
     - libxapian-dev
