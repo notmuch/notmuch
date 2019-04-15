@@ -121,7 +121,9 @@ multiple parts get a header."
   "Message body text indicating that an attachment is expected.
 
 This is not used unless `notmuch-mua-attachment-check' is added
-to `notmuch-mua-send-hook'.")
+to `notmuch-mua-send-hook'."
+  :type 'regexp
+  :group 'notmuch-send)
 
 ;;
 
