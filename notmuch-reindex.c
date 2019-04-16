@@ -71,6 +71,7 @@ reindex_query (notmuch_database_t *notmuch, const char *query_string,
 	ret = notmuch_message_reindex(message, indexopts);
 	if (ret != NOTMUCH_STATUS_SUCCESS)
 	    break;
+	notmuch_message_destroy (message);
     }
 
     if (!ret)
