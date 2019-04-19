@@ -675,7 +675,10 @@ class Database(object):
         if not config.has_option('database', 'path'):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
-        return config.get('database', 'path')
+        db_path = config.get('database', 'path')
+        if not os.path.isabs(db_path):
+            db_path = os.path.expanduser(os.path.join("~", db_path))
+        return db_path
 
     """notmuch_database_get_config"""
     _get_config = nmlib.notmuch_database_get_config
