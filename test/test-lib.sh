@@ -117,6 +117,9 @@ add_gnupg_home ()
 	echo debug-quick-random >> "$GNUPGHOME"/gpg.conf
     fi
     echo no-emit-version >> "$GNUPGHOME"/gpg.conf
+
+    # Change this if we ship a new test key
+    FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 }
 
 # Each test should start with something like this, after copyright notices:

@@ -10,8 +10,6 @@ test_description='PGP/MIME signature verification and decryption'
 ##################################################
 
 add_gnupg_home
-# Change this if we ship a new test key
-FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 
 test_begin_subtest "emacs delivery of signed message"
 test_expect_success \
