@@ -218,12 +218,12 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
     }
 
     node->decrypt_success = true;
-    node->verify_attempted = true;
 
     if (decrypt_result) {
 	/* This may be NULL if the part is not signed. */
 	node->sig_list = g_mime_decrypt_result_get_signatures (decrypt_result);
 	if (node->sig_list) {
+	    node->verify_attempted = true;
 	    g_object_ref (node->sig_list);
 	    set_signature_list_destructor (node);
 	}
