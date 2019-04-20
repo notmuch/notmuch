@@ -429,12 +429,10 @@ format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 
 /* Signature status sprinter (GMime 2.6) */
 static void
-format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
+format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 {
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
-
-    GMimeSignatureList *siglist = node->sig_list;
 
     sp->begin_list (sp);
 
@@ -684,7 +682,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     if (node->verify_attempted) {
 	sp->map_key (sp, "sigstatus");
-	format_part_sigstatus_sprinter (sp, node);
+	format_part_sigstatus_sprinter (sp, node->sig_list);
     }
 
     sp->map_key (sp, "content-type");
