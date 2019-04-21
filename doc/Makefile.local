@@ -16,6 +16,7 @@ MAN1_RST := $(wildcard $(srcdir)/doc/man1/*.rst)
 MAN5_RST := $(wildcard $(srcdir)/doc/man5/*.rst)
 MAN7_RST := $(wildcard $(srcdir)/doc/man7/*.rst)
 MAN_RST_FILES := $(MAN1_RST) $(MAN5_RST) $(MAN7_RST)
+ALL_RST_FILES := $(MAN_RST_FILES) $(srcdir)/doc/notmuch-emacs.rst
 
 MAN1_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN1_RST:.rst=.1))
 MAN5_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN5_RST:.rst=.5))
@@ -52,8 +53,11 @@ sphinx-info: | sphinx-texinfo
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 
-sphinx-texinfo:
+sphinx-texinfo: $(DOCBUILDDIR)/.texi.stamp
+
+$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES)
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
+	touch $@
 
 sphinx-info: sphinx-texinfo
 	$(MAKE) -C $(DOCBUILDDIR)/texinfo info
@@ -137,5 +141,5 @@ $(dir)/config.dox: version.stamp
 	echo "PROJECT_NAME = \"Notmuch $(VERSION)\"" > $@
 	echo "INPUT=${srcdir}/lib/notmuch.h" >> $@
 
-CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp
+CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.texi.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
