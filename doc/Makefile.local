@@ -50,8 +50,11 @@ sphinx-html: | $(DOCBUILDDIR)/.roff.stamp
 sphinx-texinfo: | sphinx-html
 sphinx-info: | sphinx-texinfo
 
-sphinx-html:
+sphinx-html: $(DOCBUILDDIR)/.html.stamp
+
+$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
+	touch $@
 
 sphinx-texinfo: $(DOCBUILDDIR)/.texi.stamp
 
@@ -142,4 +145,5 @@ $(dir)/config.dox: version.stamp
 	echo "INPUT=${srcdir}/lib/notmuch.h" >> $@
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.texi.stamp
+CLEAN := $(CLEAN) $(DOCBUILDDIR)/.html.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
