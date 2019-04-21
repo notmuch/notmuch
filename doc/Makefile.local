@@ -4,7 +4,7 @@ dir := doc
 
 # You can set these variables from the command line.
 SPHINXOPTS    := -q
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = HAVE_EMACS=${HAVE_EMACS} sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
 # Internal variables.

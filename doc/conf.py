@@ -29,6 +29,11 @@ release = version
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
+# If we don't have emacs, don't build the notmuch-emacs docs, as they need
+# emacs to generate the docstring include files
+if os.environ.get('HAVE_EMACS') != '1':
+    exclude_patterns.append('notmuch-emacs.rst')
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
