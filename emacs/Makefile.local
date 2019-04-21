@@ -47,8 +47,13 @@ emacs_images := \
 emacs_bytecode = $(emacs_sources:.el=.elc)
 emacs_docstrings = $(emacs_sources:.el=.rsti)
 
+ifneq ($(HAVE_SPHINX)$(HAVE_EMACS),11)
+docstring.stamp:
+	@echo "Missing prerequisites, not collecting docstrings"
+else
 docstring.stamp: ${emacs_docstrings}
 	touch $@
+endif
 
 # Because of defmacro's and defsubst's, we have to account for load
 # dependencies between Elisp files when byte compiling.  Otherwise,
