@@ -169,8 +169,7 @@ This is taken from the function message-do-fcc."
   (message-encode-message-body)
   (save-restriction
     (message-narrow-to-headers)
-    (let ((mail-parse-charset message-default-charset))
-      (mail-encode-encoded-word-buffer)))
+    (mail-encode-encoded-word-buffer))
   (goto-char (point-min))
   (when (re-search-forward
 	 (concat "^" (regexp-quote mail-header-separator) "$")
