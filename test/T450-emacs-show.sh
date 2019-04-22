@@ -223,4 +223,10 @@ test_emacs '(notmuch-show "id:simple-encrypted@crypto.notmuchmail.org")
             (test-visible-output)'
 test_expect_equal_file $EXPECTED/notmuch-show-undecryptable-message OUTPUT
 
+test_begin_subtest "show encrypted message when not processing crypto"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+             (notmuch-show "id:basic-encrypted@crypto.notmuchmail.org")
+             (test-visible-output))'
+test_expect_equal_file $EXPECTED/notmuch-show-decrypted-message-no-crypto OUTPUT
+
 test_done
