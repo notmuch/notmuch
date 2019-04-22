@@ -93,7 +93,8 @@ mode."
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
   (let* ((status (plist-get sigstatus :status))
 	 (help-msg nil)
-	 (label "Signature not processed")
+	 (show-button t)
+	 (label nil)
 	 (face 'notmuch-crypto-signature-unknown)
 	 (button-action (lambda (button) (message (button-get button 'help-echo)))))
     (cond
@@ -118,19 +119,21 @@ mode."
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
 	(setq face 'notmuch-crypto-signature-bad)))
+     (status
+      (setq label (concat "Unknown signature status: " status)))
      (t
-      (setq label (concat "Unknown signature status"
-			  (if status (concat ": " status))))))
-    (insert-button
-     (concat "[ " label " ]")
-     :type 'notmuch-crypto-status-button-type
-     'help-echo help-msg
-     'face face
-     'mouse-face face
-     'action button-action
-     :notmuch-sigstatus sigstatus
-     :notmuch-from from)
-    (insert "\n")))
+      (setq show-button nil)))
+    (when show-button
+      (insert-button
+       (concat "[ " label " ]")
+       :type 'notmuch-crypto-status-button-type
+       'help-echo help-msg
+       'face face
+       'mouse-face face
+       'action button-action
+       :notmuch-sigstatus sigstatus
+       :notmuch-from from)
+      (insert "\n"))))
 
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
 
