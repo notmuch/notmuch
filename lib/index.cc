@@ -531,7 +531,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     GMimeCryptoContext* crypto_ctx = NULL;
     bool attempted = false;
     GMimeDecryptResult *decrypt_result = NULL;
-    bool get_sk = (HAVE_GMIME_SESSION_KEYS && notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
+    bool get_sk = (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
     clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
 				     message, crypto_ctx, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
     if (!attempted)
@@ -554,7 +554,6 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	return;
     }
     if (decrypt_result) {
-#if HAVE_GMIME_SESSION_KEYS
 	if (get_sk) {
 	    status = notmuch_message_add_property (message, "session-key",
 						   g_mime_decrypt_result_get_session_key (decrypt_result));
@@ -562,7 +561,6 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 		_notmuch_database_log (notmuch, "failed to add session-key "
 				       "property (%d)\n", status);
 	}
-#endif
 	g_object_unref (decrypt_result);
     }
     _index_mime_part (message, indexopts, clear);

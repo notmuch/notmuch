@@ -228,7 +228,6 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 	    set_signature_list_destructor (node);
 	}
 
-#if HAVE_GMIME_SESSION_KEYS
 	if (node->ctx->crypto->decrypt == NOTMUCH_DECRYPT_TRUE && message) {
 	    notmuch_database_t *db = notmuch_message_get_database (message);
 	    const char *session_key = g_mime_decrypt_result_get_session_key (decrypt_result);
@@ -238,7 +237,6 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 				      notmuch_message_add_property (message, "session-key",
 								    session_key));
 	}
-#endif
 	g_object_unref (decrypt_result);
     }
 

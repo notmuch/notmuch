@@ -894,7 +894,6 @@ show_message (void *ctx,
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
     if (part)
 	status = format->part (local, sp, part, indent, params);
-#if HAVE_GMIME_SESSION_KEYS
     if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE && session_key_count_error == NOTMUCH_STATUS_SUCCESS) {
 	unsigned int new_session_keys = 0;
 	if (notmuch_message_count_properties (message, "session-key", &new_session_keys) == NOTMUCH_STATUS_SUCCESS &&
@@ -908,7 +907,6 @@ show_message (void *ctx,
 	    }
 	}
     }
-#endif
   DONE:
     talloc_free (local);
     return status;

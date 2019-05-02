@@ -42,7 +42,6 @@ _notmuch_crypto_decrypt (bool *attempted,
 	return NULL;
 
     /* the versions of notmuch that can support session key decryption */
-#if HAVE_GMIME_SESSION_KEYS
     if (message) {
 	notmuch_message_properties_t *list = NULL;
 
@@ -66,7 +65,6 @@ _notmuch_crypto_decrypt (bool *attempted,
 	if (ret)
 	    return ret;
     }
-#endif
 
     if (err && *err) {
 	g_error_free (*err);
@@ -78,26 +76,10 @@ _notmuch_crypto_decrypt (bool *attempted,
 
     if (attempted)
 	*attempted = true;
-#if (GMIME_MAJOR_VERSION < 3)
-#if HAVE_GMIME_SESSION_KEYS
-    gboolean oldgetsk = g_mime_crypto_context_get_retrieve_session_key (crypto_ctx);
-    gboolean newgetsk = (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result);
-    if (newgetsk != oldgetsk)
-	/* This could return an error, but we can't do anything about it, so ignore it */
-	g_mime_crypto_context_set_retrieve_session_key (crypto_ctx, newgetsk, NULL);
-#endif
-    ret = g_mime_multipart_encrypted_decrypt(part, crypto_ctx,
-					     decrypt_result, err);
-#if HAVE_GMIME_SESSION_KEYS
-    if (newgetsk != oldgetsk)
-	g_mime_crypto_context_set_retrieve_session_key (crypto_ctx, oldgetsk, NULL);
-#endif
-#else
     GMimeDecryptFlags flags = GMIME_DECRYPT_NONE;
     if (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result)
 	flags |= GMIME_DECRYPT_EXPORT_SESSION_KEY;
     ret = g_mime_multipart_encrypted_decrypt(part, flags, NULL,
 					     decrypt_result, err);
-#endif
     return ret;
 }
