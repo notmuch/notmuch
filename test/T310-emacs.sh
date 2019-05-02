@@ -86,7 +86,7 @@ test_emacs "(let ((notmuch-show-indent-messages-width 4))
 test_expect_equal_file $EXPECTED/notmuch-show-thread-maildir-storage-with-fourfold-indentation OUTPUT
 
 test_begin_subtest "notmuch-show for message with invalid From"
-test_subtest_broken_gmime_3
+test_subtest_known_broken
 add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)

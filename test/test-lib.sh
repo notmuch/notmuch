@@ -1079,22 +1079,6 @@ TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
 
 . "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 
-if [ "${NOTMUCH_GMIME_MAJOR}" = 3 ]; then
-    test_subtest_broken_gmime_3 () {
-	test_subtest_known_broken
-    }
-    test_subtest_broken_gmime_2 () {
-	true
-    }
-else
-    test_subtest_broken_gmime_3 () {
-	true
-    }
-    test_subtest_broken_gmime_2 () {
-	test_subtest_known_broken
-    }
-fi
-
 emacs_generate_script
 
 

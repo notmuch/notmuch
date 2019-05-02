@@ -489,7 +489,6 @@ notmuch show --format=raw --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
 
 test_begin_subtest "--format=raw --part=1, message body"
-test_subtest_broken_gmime_2
 notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 test_expect_equal_file multipart_body OUTPUT
 
@@ -543,7 +542,6 @@ notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 test_expect_equal_file embedded_message OUTPUT
 
 test_begin_subtest "--format=raw --part=4, rfc822's multipart"
-test_subtest_broken_gmime_2
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 test_expect_equal_file embedded_message_body OUTPUT
 
