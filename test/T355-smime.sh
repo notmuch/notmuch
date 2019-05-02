@@ -48,12 +48,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "signature verification (notmuch CLI)"
-if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
-    # gmime 2 can't report User IDs properly for S/MIME
-    USERID=''
-else
-    USERID='"userid": "CN=Notmuch Test Suite",'
-fi
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [-1234567890]*|"created": 946728000|' \
@@ -71,7 +65,8 @@ expected='[[[{"id": "XXXXX",
  "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"fingerprint": "'$FINGERPRINT'",
- "status": "good",'$USERID'
+ "status": "good",
+ "userid": "CN=Notmuch Test Suite",
  "expires": 424242424,
  "created": 946728000}],
  "content-type": "multipart/signed",
