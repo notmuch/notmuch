@@ -367,7 +367,6 @@ _index_content_type (notmuch_message_t *message, GMimeObject *part)
 
 static void
 _index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *indexopts,
-			    GMimeContentType *content_type,
 			    GMimeMultipartEncrypted *part);
 
 /* Callback to generate terms for each mime part of a message. */
@@ -392,7 +391,6 @@ _index_mime_part (notmuch_message_t *message,
     }
 
     _index_content_type (message, part);
-    content_type = g_mime_object_get_content_type (part);
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
@@ -421,7 +419,6 @@ _index_mime_part (notmuch_message_t *message,
 				     g_mime_multipart_get_part (multipart, i));
 		if (i == GMIME_MULTIPART_ENCRYPTED_CONTENT) {
 		    _index_encrypted_mime_part(message, indexopts,
-					       content_type,
 					       GMIME_MULTIPART_ENCRYPTED (part));
 		} else {
 		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
@@ -476,6 +473,7 @@ _index_mime_part (notmuch_message_t *message,
 
     filter = g_mime_stream_filter_new (stream);
 
+    content_type = g_mime_object_get_content_type (part);
     discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
 
     g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
@@ -518,7 +516,6 @@ _index_mime_part (notmuch_message_t *message,
 static void
 _index_encrypted_mime_part (notmuch_message_t *message,
 			    notmuch_indexopts_t *indexopts,
-			    g_mime_3_unused(GMimeContentType *content_type),
 			    GMimeMultipartEncrypted *encrypted_data)
 {
     notmuch_status_t status;
@@ -532,23 +529,6 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     notmuch = notmuch_message_get_database (message);
 
     GMimeCryptoContext* crypto_ctx = NULL;
-#if (GMIME_MAJOR_VERSION < 3)
-    {
-	const char *protocol = NULL;
-	protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-	status = _notmuch_crypto_get_gmime_ctx_for_protocol (&(indexopts->crypto),
-							 protocol, &crypto_ctx);
-	if (status) {
-	    _notmuch_database_log (notmuch, "Warning: setup failed for decrypting "
-				   "during indexing. (%d)\n", status);
-	    status = notmuch_message_add_property (message, "index.decryption", "failure");
-	    if (status)
-		_notmuch_database_log_append (notmuch, "failed to add index.decryption "
-					      "property (%d)\n", status);
-	    return;
-	}
-    }
-#endif
     bool attempted = false;
     GMimeDecryptResult *decrypt_result = NULL;
     bool get_sk = (HAVE_GMIME_SESSION_KEYS && notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
