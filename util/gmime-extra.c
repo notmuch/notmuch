@@ -31,97 +31,6 @@ g_string_talloc_strdup (void *ctx, char *g_string)
     return new_str;
 }
 
-#if (GMIME_MAJOR_VERSION < 3)
-
-const char *
-g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
-{
-    /* output user id only if validity is FULL or ULTIMATE. */
-    /* note that gmime 2.6 is using the term "trust" here, which
-     * is WRONG.  It's actually user id "validity". */
-    const char *name = g_mime_certificate_get_name (cert);
-    if (name == NULL)
-	return name;
-    GMimeCertificateTrust trust = g_mime_certificate_get_trust (cert);
-    if (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE)
-	return name;
-    return NULL;
-}
-
-char *
-g_mime_message_get_address_string (GMimeMessage *message, GMimeRecipientType type)
-{
-    InternetAddressList *list = g_mime_message_get_recipients (message, type);
-    return internet_address_list_to_string (list, 0);
-}
-
-inline InternetAddressList *
-g_mime_message_get_addresses (GMimeMessage *message, GMimeRecipientType type)
-{
-    return g_mime_message_get_recipients (message, type);
-}
-
-char *
-g_mime_message_get_date_string (void *ctx, GMimeMessage *message)
-{
-    char *date = g_mime_message_get_date_as_string (message);
-    return g_string_talloc_strdup (ctx, date);
-}
-
-InternetAddressList *
-g_mime_message_get_from (GMimeMessage *message)
-{
-    return internet_address_list_parse_string (g_mime_message_get_sender (message));
-}
-
-const char *
-g_mime_message_get_from_string (GMimeMessage *message) {
-    return  g_mime_message_get_sender (message);
-}
-
-InternetAddressList *
-g_mime_message_get_reply_to_list (GMimeMessage *message)
-{
-    const char *reply_to;
-
-    reply_to = g_mime_message_get_reply_to (message);
-    if (reply_to && *reply_to)
-	return internet_address_list_parse_string (reply_to);
-    else
-	return NULL;
-}
-
-/**
- * return talloc allocated reply-to string
- */
-char *
-g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
-{
-    return talloc_strdup(ctx, g_mime_message_get_reply_to (message));
-}
-
-gboolean
-g_mime_signature_status_good (GMimeSignatureStatus status) {
-    return (status == GMIME_SIGNATURE_STATUS_GOOD);
-}
-
-gboolean
-g_mime_signature_status_bad (GMimeSignatureStatus status) {
-    return (status == GMIME_SIGNATURE_STATUS_BAD);
-}
-
-gboolean
-g_mime_signature_status_error (GMimeSignatureError error) {
-    return (error != GMIME_SIGNATURE_ERROR_NONE);
-}
-
-gint64
-g_mime_utils_header_decode_date_unix (const char *date) {
-    return (gint64) g_mime_utils_header_decode_date (date, NULL);
-}
-
-#else /* GMime >= 3.0 */
-
 const char *
 g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
 {
@@ -223,5 +132,3 @@ g_mime_utils_header_decode_date_unix (const char *date) {
 
     return ret;
 }
-
-#endif

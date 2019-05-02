@@ -383,26 +383,6 @@ do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
     sp->end (sp);
 }
 
-#if (GMIME_MAJOR_VERSION < 3)
-static void
-format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
-{
-    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
-
-    if (errors == GMIME_SIGNATURE_ERROR_NONE)
-	return;
-
-    struct key_map_struct key_map[] = {
-	{ GMIME_SIGNATURE_ERROR_EXPSIG, "sig-expired" },
-	{ GMIME_SIGNATURE_ERROR_NO_PUBKEY, "key-missing"},
-	{ GMIME_SIGNATURE_ERROR_EXPKEYSIG, "key-expired"},
-	{ GMIME_SIGNATURE_ERROR_REVKEYSIG, "key-revoked"},
-	{ GMIME_SIGNATURE_ERROR_UNSUPP_ALGO, "alg-unsupported"},
-    };
-
-    do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
-}
-#else
 static void
 format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 {
@@ -425,7 +405,6 @@ format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 
     do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
 }
-#endif
 
 /* Signature status sprinter */
 static void

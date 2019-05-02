@@ -238,47 +238,6 @@ _extend_header (char *combined, const char *value) {
     return combined;
 }
 
-#if (GMIME_MAJOR_VERSION < 3)
-static char *
-_notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
-					   const char *header)
-{
-    GMimeHeaderList *headers;
-    GMimeHeaderIter *iter;
-    char *combined = NULL;
-
-    headers = g_mime_object_get_header_list (GMIME_OBJECT (message->message));
-    if (! headers)
-	return NULL;
-
-    iter = g_mime_header_iter_new ();
-    if (! iter)
-	return NULL;
-
-    if (! g_mime_header_list_get_iter (headers, iter))
-	goto DONE;
-
-    do {
-	const char *value;
-	if (strcasecmp (g_mime_header_iter_get_name (iter), header) != 0)
-	    continue;
-
-	/* Note that GMime retains ownership of value... */
-	value = g_mime_header_iter_get_value (iter);
-
-	combined = _extend_header (combined, value);
-    } while (g_mime_header_iter_next (iter));
-
-    /* Return empty string for non-existing headers. */
-    if (! combined)
-	combined = g_strdup ("");
-
-  DONE:
-    g_mime_header_iter_free (iter);
-
-    return combined;
-}
-#else
 static char *
 _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 					   const char *header)
@@ -310,7 +269,6 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 
     return combined;
 }
-#endif
 
 const char *
 _notmuch_message_file_get_header (notmuch_message_file_t *message,

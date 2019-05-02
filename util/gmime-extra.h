@@ -9,17 +9,6 @@ extern "C" {
 
 GMimeStream *g_mime_stream_stdout_new(void);
 
-#if (GMIME_MAJOR_VERSION < 3)
-
-#define GMIME_ADDRESS_TYPE_TO GMIME_RECIPIENT_TYPE_TO
-#define GMIME_ADDRESS_TYPE_CC GMIME_RECIPIENT_TYPE_CC
-#define GMIME_ADDRESS_TYPE_BCC GMIME_RECIPIENT_TYPE_BCC
-
-#define g_mime_2_6_unref(obj) g_object_unref (obj)
-#define g_mime_3_unused(arg) arg
-#define g_mime_certificate_get_fpr16(cert) g_mime_certificate_get_key_id (cert)
-#else /* GMime >= 3.0 */
-
 #define GMIME_ENABLE_RFC_2047_WORKAROUNDS 0xdeadbeef
 #define g_mime_content_type_to_string(c) g_mime_content_type_get_mime_type (c)
 #define g_mime_filter_crlf_new(encode,dots) g_mime_filter_dos2unix_new (FALSE)
@@ -47,7 +36,6 @@ typedef GMimeSignatureStatus GMimeSignatureError;
 
 #define g_mime_2_6_unref(obj) /*ignore*/
 #define g_mime_3_unused(arg) unused(arg)
-#endif
 
 /**
  * Get last 16 hex digits of fingerprint ("keyid")
