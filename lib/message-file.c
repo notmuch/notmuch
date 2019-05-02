@@ -135,7 +135,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     is_mbox = _is_mbox (message->file);
 
     if (! initialized) {
-	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
+	g_mime_init ();
 	initialized = 1;
     }
 

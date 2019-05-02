@@ -880,7 +880,7 @@ notmuch_database_open_verbose (const char *path,
 
     /* Initialize gmime */
     if (! initialized) {
-	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
+	g_mime_init ();
 	initialized = 1;
     }
 
