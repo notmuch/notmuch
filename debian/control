@@ -11,7 +11,7 @@ Build-Depends:
  debhelper (>= 11~),
  pkg-config,
  libxapian-dev,
- libgmime-3.0-dev (>= 3.0.3~) | libgmime-2.6-dev (>= 2.6.7~),
+ libgmime-3.0-dev (>= 3.0.3~),
  libtalloc-dev,
  libz-dev,
  python-all (>= 2.6.6-3~),

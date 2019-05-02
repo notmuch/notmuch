@@ -489,30 +489,16 @@ EOF
     rm -rf test.db _default_backend _default_backend.cc
 fi
 
-# we need to have a version >= 2.6.5 to avoid a crypto bug. We need
-# 2.6.7 for permissive "From " header handling.
-GMIME_MINVER=2.6.7
-GMIME3_MINVER=3.0.3
+GMIME_MINVER=3.0.3
 
 printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-3.0 > $GMIME3_MINVER"; then
-    printf "Yes (3.0).\n"
+if pkg-config --exists "gmime-3.0 > $GMIME_MINVER"; then
+    printf "Yes.\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-3.0)
     gmime_ldflags=$(pkg-config --libs gmime-3.0)
     gmime_major=3
     have_gmime_session_keys=1
-elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
-    printf "Yes (2.6).\n"
-    have_gmime=1
-    gmime_cflags=$(pkg-config --cflags gmime-2.6)
-    gmime_ldflags=$(pkg-config --libs gmime-2.6)
-    gmime_major=2
-    if pkg-config --exists "gmime-2.6 >= 2.6.21"; then
-        have_gmime_session_keys=1
-    else
-        have_gmime_session_keys=0
-    fi
 else
     have_gmime=0
     have_gmime_session_keys=0
@@ -788,7 +774,7 @@ EOF
 	echo
     fi
     if [ $have_gmime -eq 0 ]; then
-	echo "	GMime 2.6 library >= $GMIME_MINVER"
+	echo "	GMime library >= $GMIME_MINVER"
 	echo "	(including development files such as headers)"
 	echo "	https://github.com/jstedfast/gmime/"
 	echo
@@ -810,7 +796,7 @@ case a simple command will install everything you need. For example:
 
 On Debian and similar systems:
 
-	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev
+	sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev
 
 Or on Fedora and similar systems:
 

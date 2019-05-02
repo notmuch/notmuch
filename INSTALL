@@ -20,7 +20,7 @@ configure stage.
 
 Dependencies
 ------------
-Notmuch depends on four libraries: Xapian, GMime 2.6,
+Notmuch depends on four libraries: Xapian, GMime 3.0,
 Talloc, and zlib which are each described below:
 
 	Xapian

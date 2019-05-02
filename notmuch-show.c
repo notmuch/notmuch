@@ -427,7 +427,7 @@ format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 }
 #endif
 
-/* Signature status sprinter (GMime 2.6) */
+/* Signature status sprinter */
 static void
 format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 {

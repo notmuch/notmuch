@@ -325,12 +325,6 @@ add_recipients_from_message (GMimeMessage *reply,
 			     GMimeMessage *message,
 			     bool reply_all)
 {
-
-    /* There is a memory leak here with gmime-2.6 because get_sender
-     * returns a newly allocated list, while the others return
-     * references to libgmime owned data. This leak will be fixed with
-     * the transition to gmime-3.0.
-     */
     struct {
 	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeRecipientType recipient_type;

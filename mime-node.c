@@ -149,7 +149,7 @@ DONE:
     return status;
 }
 
-/* Signature list destructor (GMime 2.6) */
+/* Signature list destructor */
 static int
 _signature_list_free (GMimeSignatureList **proxy)
 {
@@ -157,7 +157,7 @@ _signature_list_free (GMimeSignatureList **proxy)
     return 0;
 }
 
-/* Set up signature list destructor (GMime 2.6) */
+/* Set up signature list destructor */
 static void
 set_signature_list_destructor (mime_node_t *node)
 {
@@ -168,7 +168,7 @@ set_signature_list_destructor (mime_node_t *node)
     }
 }
 
-/* Verify a signed mime node (GMime 2.6) */
+/* Verify a signed mime node */
 static void
 node_verify (mime_node_t *node, GMimeObject *part,
 	     g_mime_3_unused(GMimeCryptoContext *cryptoctx))
@@ -189,7 +189,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 	g_error_free (err);
 }
 
-/* Decrypt and optionally verify an encrypted mime node (GMime 2.6) */
+/* Decrypt and optionally verify an encrypted mime node */
 static void
 node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 			 g_mime_3_unused(GMimeCryptoContext *cryptoctx))
