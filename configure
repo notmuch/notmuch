@@ -497,7 +497,6 @@ if pkg-config --exists "gmime-3.0 > $GMIME_MINVER"; then
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-3.0)
     gmime_ldflags=$(pkg-config --libs gmime-3.0)
-    gmime_major=3
 else
     have_gmime=0
     printf "No.\n"
@@ -1295,9 +1294,6 @@ NOTMUCH_RUBY=${RUBY}
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
-
-# Major version of gmime
-NOTMUCH_GMIME_MAJOR=${gmime_major}
 
 # Platform we are run on
 PLATFORM=${platform}
