@@ -18,7 +18,6 @@ GMimeObject *
 _notmuch_crypto_decrypt (bool *attempted,
 			 notmuch_decryption_policy_t decrypt,
 			 notmuch_message_t *message,
-			 GMimeCryptoContext* crypto_ctx,
 			 GMimeMultipartEncrypted *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err);

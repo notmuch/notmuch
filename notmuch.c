@@ -112,7 +112,7 @@ const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
 
 
 notmuch_status_t
-notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, g_mime_3_unused(notmuch_config_t *config))
+notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
 {
     if (indexing_cli_choices.opts == NULL)
 	indexing_cli_choices.opts = notmuch_database_get_default_indexopts (notmuch);

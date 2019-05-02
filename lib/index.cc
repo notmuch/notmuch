@@ -528,12 +528,11 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 
     notmuch = notmuch_message_get_database (message);
 
-    GMimeCryptoContext* crypto_ctx = NULL;
     bool attempted = false;
     GMimeDecryptResult *decrypt_result = NULL;
     bool get_sk = (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
     clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
-				     message, crypto_ctx, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
+				     message, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
     if (!attempted)
 	return;
     if (err || !clear) {

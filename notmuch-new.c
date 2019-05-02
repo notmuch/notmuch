@@ -1198,7 +1198,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch == NULL)
 	return EXIT_FAILURE;
 
-    status = notmuch_process_shared_indexing_options (notmuch, config);
+    status = notmuch_process_shared_indexing_options (notmuch);
     if (status != NOTMUCH_STATUS_SUCCESS) {
 	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
 		 notmuch_status_to_string (status));

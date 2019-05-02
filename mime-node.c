@@ -170,8 +170,7 @@ set_signature_list_destructor (mime_node_t *node)
 
 /* Verify a signed mime node */
 static void
-node_verify (mime_node_t *node, GMimeObject *part,
-	     g_mime_3_unused(GMimeCryptoContext *cryptoctx))
+node_verify (mime_node_t *node, GMimeObject *part)
 {
     GError *err = NULL;
 
@@ -191,8 +190,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 
 /* Decrypt and optionally verify an encrypted mime node */
 static void
-node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
-			 g_mime_3_unused(GMimeCryptoContext *cryptoctx))
+node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 {
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
@@ -209,7 +207,7 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
 	node->decrypted_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
 							 node->ctx->crypto->decrypt,
 							 message,
-							 cryptoctx, encrypteddata, &decrypt_result, &err);
+							 encrypteddata, &decrypt_result, &err);
     }
     if (! node->decrypted_child) {
 	fprintf (stderr, "Failed to decrypt part: %s\n",
@@ -249,7 +247,6 @@ static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
-    GMimeCryptoContext *cryptoctx = NULL;
 
     /* Set basic node properties */
     node->part = part;
@@ -290,7 +287,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 		     "message (must be exactly 2)\n",
 		     node->nchildren);
 	} else {
-	    node_decrypt_and_verify (node, part, cryptoctx);
+	    node_decrypt_and_verify (node, part);
 	}
     } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify) {
 	if (node->nchildren != 2) {
@@ -299,7 +296,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 		     "(must be exactly 2)\n",
 		     node->nchildren);
 	} else {
-	    node_verify (node, part, cryptoctx);
+	    node_verify (node, part);
 	}
     }
 

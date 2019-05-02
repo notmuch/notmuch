@@ -34,8 +34,6 @@ typedef GMimeAddressType GMimeRecipientType;
 
 typedef GMimeSignatureStatus GMimeSignatureError;
 
-#define g_mime_3_unused(arg) unused(arg)
-
 /**
  * Get last 16 hex digits of fingerprint ("keyid")
  */

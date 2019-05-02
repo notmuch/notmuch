@@ -506,6 +506,6 @@ struct _notmuch_client_indexing_cli_choices {
 extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;
 extern const notmuch_opt_desc_t  notmuch_shared_indexing_options [];
 notmuch_status_t
-notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, notmuch_config_t *config);
+notmuch_process_shared_indexing_options (notmuch_database_t *notmuch);
 
 #endif
