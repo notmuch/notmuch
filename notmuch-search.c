@@ -364,7 +364,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 
     /* name_addr has the name part quoted if necessary. Compare
      * 'John Doe <john@doe.com>' vs. '"Doe, John" <john@doe.com>' */
-    name_addr = internet_address_to_string (ia, false);
+    name_addr = internet_address_to_string (ia, NULL, false);
 
     if (format->is_text_printer) {
 	if (ctx->output & OUTPUT_COUNT) {
@@ -446,7 +446,7 @@ process_address_header (const search_context_t *ctx, const char *value)
     if (value == NULL)
 	return;
 
-    list = internet_address_list_parse_string (value);
+    list = internet_address_list_parse (NULL, value);
     if (list == NULL)
 	return;
 

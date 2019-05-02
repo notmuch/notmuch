@@ -284,7 +284,7 @@ _thread_add_message (notmuch_thread_t *thread,
 
     from = notmuch_message_get_header (message, "from");
     if (from)
-	list = internet_address_list_parse_string (from);
+	list = internet_address_list_parse (NULL, from);
 
     if (list) {
 	address = internet_address_list_get_address (list, 0);

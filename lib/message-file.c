@@ -212,7 +212,7 @@ static char *
 _extend_header (char *combined, const char *value) {
     char *decoded;
 
-    decoded = g_mime_utils_header_decode_text (value);
+    decoded = g_mime_utils_header_decode_text (NULL, value);
     if (! decoded) {
 	if (combined) {
 	    g_free (combined);
@@ -296,7 +296,7 @@ _notmuch_message_file_get_header (notmuch_message_file_t *message,
 	value = g_mime_object_get_header (GMIME_OBJECT (message->message),
 					  header);
 	if (value)
-	    decoded = g_mime_utils_header_decode_text (value);
+	    decoded = g_mime_utils_header_decode_text (NULL, value);
 	else
 	    decoded = g_strdup ("");
     }

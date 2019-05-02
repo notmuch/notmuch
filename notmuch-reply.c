@@ -28,7 +28,7 @@ static void
 show_reply_headers (GMimeStream *stream, GMimeMessage *message)
 {
     /* Output RFC 2822 formatted (and RFC 2047 encoded) headers. */
-    if (g_mime_object_write_to_stream (GMIME_OBJECT(message), stream) < 0) {
+    if (g_mime_object_write_to_stream (GMIME_OBJECT(message), NULL, stream) < 0) {
 	INTERNAL_ERROR("failed to write headers to stdout\n");
     }
 }
@@ -541,7 +541,7 @@ create_reply_message(void *ctx,
     in_reply_to = talloc_asprintf (ctx, "<%s>",
 				   notmuch_message_get_message_id (message));
 
-    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to, NULL);
 
     orig_references = notmuch_message_get_header (message, "references");
     if (orig_references && *orig_references)
@@ -550,7 +550,7 @@ create_reply_message(void *ctx,
     else
 	references = talloc_strdup (ctx, in_reply_to);
 
-    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references, NULL);
 
     from_addr = add_recipients_from_message (reply, config,
 					     mime_message, reply_all);
@@ -589,13 +589,13 @@ create_reply_message(void *ctx,
     from_addr = talloc_asprintf (ctx, "%s <%s>",
 				 notmuch_config_get_user_name (config),
 				 from_addr);
-    g_mime_object_set_header (GMIME_OBJECT (reply), "From", from_addr);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "From", from_addr, NULL);
 
     subject = notmuch_message_get_header (message, "subject");
     if (subject) {
 	if (strncasecmp (subject, "Re:", 3))
 	    subject = talloc_asprintf (ctx, "Re: %s", subject);
-	g_mime_message_set_subject (reply, subject);
+	g_mime_message_set_subject (reply, subject, NULL);
     }
 
     return reply;

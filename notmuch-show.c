@@ -146,7 +146,7 @@ _extract_email_address (const void *ctx, const char *from)
     InternetAddressMailbox *mailbox;
     const char *email = "MAILER-DAEMON";
 
-    addresses = internet_address_list_parse_string (from);
+    addresses = internet_address_list_parse (NULL, from);
 
     /* Bail if there is no address here. */
     if (addresses == NULL || internet_address_list_length (addresses) < 1)
@@ -862,7 +862,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	 * encapsulating part's headers).  For multipart parts,
 	 * this will include the headers. */
 	if (stream_filter)
-	    g_mime_object_write_to_stream (node->part, stream_filter);
+	    g_mime_object_write_to_stream (node->part, NULL, stream_filter);
     }
 
     if (stream_filter)
