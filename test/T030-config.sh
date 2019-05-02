@@ -46,11 +46,6 @@ test_begin_subtest "List all items"
 notmuch config list > STDOUT 2> STDERR
 printf "%s\n====\n%s\n" "$(< STDOUT)" "$(< STDERR)" | notmuch_config_sanitize > OUTPUT
 
-if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
-    config_gpg_path="crypto.gpg_path=gpg
-"
-fi
-
 cat <<EOF > EXPECTED
 database.path=MAIL_DIR
 user.name=Notmuch Test Suite
@@ -60,7 +55,7 @@ new.tags=unread;inbox;
 new.ignore=
 search.exclude_tags=
 maildir.synchronize_flags=true
-${config_gpg_path}foo.string=this is another string value
+foo.string=this is another string value
 foo.list=this;is another;list value;
 built_with.compact=something
 built_with.field_processor=something

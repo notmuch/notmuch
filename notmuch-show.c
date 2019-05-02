@@ -1213,10 +1213,6 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-#if (GMIME_MAJOR_VERSION < 3)
-    params.crypto.gpgpath = notmuch_config_get_crypto_gpg_path (config);
-#endif
-
     notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
     if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
 	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;

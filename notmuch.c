@@ -129,14 +129,6 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch, g_mime_3_u
 	    return status;
 	}
     }
-#if (GMIME_MAJOR_VERSION < 3)
-    if (indexing_cli_choices.opts && notmuch_indexopts_get_decrypt_policy (indexing_cli_choices.opts) != NOTMUCH_DECRYPT_FALSE) {
-	const char* gpg_path = notmuch_config_get_crypto_gpg_path (config);
-	if (gpg_path && strcmp(gpg_path, "gpg"))
-	    fprintf (stderr, "Warning: deprecated crypto.gpg_path is set to '%s'\n"
-		     "\tbut ignoring (use $PATH instead)\n", gpg_path);
-    }
-#endif
     return NOTMUCH_STATUS_SUCCESS;
 }
 

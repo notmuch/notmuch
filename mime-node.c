@@ -284,22 +284,6 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	return NULL;
     }
 
-#if (GMIME_MAJOR_VERSION < 3)
-    if ((GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE))
-	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
-	GMimeContentType *content_type = g_mime_object_get_content_type (part);
-	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
-	notmuch_status_t status;
-	status = _notmuch_crypto_get_gmime_ctx_for_protocol (node->ctx->crypto,
-							     protocol, &cryptoctx);
-	if (status) /* this is a warning, not an error */
-	    fprintf (stderr, "Warning: %s (%s).\n", notmuch_status_to_string (status),
-		     protocol ? protocol : "NULL");
-	if (!cryptoctx)
-	    return node;
-    }
-#endif
-
     /* Handle PGP/MIME parts */
     if (GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
 	if (node->nchildren != 2) {

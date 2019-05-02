@@ -104,19 +104,11 @@ static const char search_config_comment[] =
 static const char crypto_config_comment[] =
     " Cryptography related configuration\n"
     "\n"
-#if (GMIME_MAJOR_VERSION < 3)
-    " The following *deprecated* option is currently supported:\n"
-    "\n"
-    "\tgpg_path\n"
-    "\t\tbinary name or full path to invoke gpg.\n"
-    "\t\tNOTE: In a future build, this option will be ignored.\n"
-#else
     " The following old option is now ignored:\n"
     "\n"
     "\tgpgpath\n"
     "\t\tThis option was used by older builds of notmuch to choose\n"
     "\t\tthe version of gpg to use.\n"
-#endif
     "\t\tSetting $PATH is a better approach.\n";
 
 struct _notmuch_config {
@@ -470,12 +462,6 @@ notmuch_config_open (void *ctx,
 	g_error_free (error);
     }
 
-#if (GMIME_MAJOR_VERSION < 3)
-    if (notmuch_config_get_crypto_gpg_path (config) == NULL) {
-	notmuch_config_set_crypto_gpg_path (config, "gpg");
-    }
-#endif
-
     /* Whenever we know of configuration sections that don't appear in
      * the configuration file, we add some comments to help the user
      * understand what can be done. */
@@ -775,21 +761,6 @@ notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
     _config_set_list (config, "search", "exclude_tags", list, length,
 		      &(config->search_exclude_tags));
 }
-
-#if (GMIME_MAJOR_VERSION < 3)
-const char *
-notmuch_config_get_crypto_gpg_path (notmuch_config_t *config)
-{
-    return _config_get (config, &config->crypto_gpg_path, "crypto", "gpg_path");
-}
-
-void
-notmuch_config_set_crypto_gpg_path (notmuch_config_t *config,
-			      const char *gpg_path)
-{
-    _config_set (config, &config->crypto_gpg_path, "crypto", "gpg_path", gpg_path);
-}
-#endif
 
 
 /* Given a configuration item of the form <group>.<key> return the
