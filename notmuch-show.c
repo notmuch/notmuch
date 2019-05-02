@@ -278,14 +278,14 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 
     if (! g_mime_content_type_is_type (content_type, "text", "*"))
 	INTERNAL_ERROR ("Illegal request to format non-text part (%s) as text.",
-			g_mime_content_type_to_string (content_type));
+			g_mime_content_type_get_mime_type (content_type));
 
     if (stream_out == NULL)
 	return;
 
     charset = g_mime_object_get_content_type_parameter (part, "charset");
     charset = charset ? g_mime_charset_canon_name (charset) : NULL;
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    wrapper = g_mime_part_get_content (GMIME_PART (part));
     if (wrapper && charset && !g_ascii_strncasecmp (charset, "iso-8859-", 9)) {
 	GMimeStream *null_stream = NULL;
 	GMimeStream *null_stream_filter = NULL;
@@ -309,7 +309,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
     }
 
     stream_filter = g_mime_stream_filter_new (stream_out);
-    crlf_filter = g_mime_filter_crlf_new (false, false);
+    crlf_filter = g_mime_filter_dos2unix_new (false);
     g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
 			     crlf_filter);
     g_object_unref (crlf_filter);
@@ -524,7 +524,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (cid)
 	    g_mime_stream_printf (stream, ", Content-id: %s", cid);
 
-	content_string = g_mime_content_type_to_string (content_type);
+	content_string = g_mime_content_type_get_mime_type (content_type);
 	g_mime_stream_printf (stream, ", Content-type: %s\n", content_string);
 	g_free (content_string);
     }
@@ -566,7 +566,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	{
 	    show_text_part_content (node->part, stream, 0);
 	} else {
-	    char *content_string = g_mime_content_type_to_string (content_type);
+	    char *content_string = g_mime_content_type_get_mime_type (content_type);
 	    g_mime_stream_printf (stream, "Non-text part: %s\n", content_string);
 	    g_free (content_string);
 	}
@@ -588,7 +588,7 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 {
     const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
     const char *cte = g_mime_object_get_header (meta, "content-transfer-encoding");
-    GMimeDataWrapper *wrapper = g_mime_part_get_content_object (part);
+    GMimeDataWrapper *wrapper = g_mime_part_get_content (part);
     GMimeStream *stream = g_mime_data_wrapper_get_stream (wrapper);
     ssize_t content_length = g_mime_stream_length (stream);
 
@@ -665,7 +665,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     sp->map_key (sp, "content-type");
-    content_string = g_mime_content_type_to_string (content_type);
+    content_string = g_mime_content_type_get_mime_type (content_type);
     sp->string (sp, content_string);
     g_free (content_string);
 
@@ -851,7 +851,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	/* For leaf parts, we emit only the transfer-decoded
 	 * body. */
 	GMimeDataWrapper *wrapper;
-	wrapper = g_mime_part_get_content_object (GMIME_PART (node->part));
+	wrapper = g_mime_part_get_content (GMIME_PART (node->part));
 
 	if (wrapper && stream_filter)
 	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);

@@ -357,7 +357,7 @@ _index_content_type (notmuch_message_t *message, GMimeObject *part)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (part);
     if (content_type) {
-	char *mime_string = g_mime_content_type_to_string (content_type);
+	char *mime_string = g_mime_content_type_get_mime_type (content_type);
 	if (mime_string) {
 	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
 	    g_free (mime_string);
@@ -493,7 +493,7 @@ _index_mime_part (notmuch_message_t *message,
 	}
     }
 
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    wrapper = g_mime_part_get_content (GMIME_PART (part));
     if (wrapper)
 	g_mime_data_wrapper_write_to_stream (wrapper, filter);
 

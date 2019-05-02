@@ -75,10 +75,10 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 			       GMIME_DISPOSITION_ATTACHMENT) == 0) {
 	    const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
 	    g_mime_stream_printf (stream, "Attachment: %s (%s)\n", filename,
-				  g_mime_content_type_to_string (content_type));
+				  g_mime_content_type_get_mime_type (content_type));
 	} else {
 	    g_mime_stream_printf (stream, "Non-text part: %s\n",
-				  g_mime_content_type_to_string (content_type));
+				  g_mime_content_type_get_mime_type (content_type));
 	}
     }
 
@@ -209,7 +209,7 @@ scan_address_list (InternetAddressList *list,
 		if (user_from && *user_from == NULL)
 		    *user_from = addr;
 	    } else if (message) {
-		g_mime_message_add_recipient (message, type, name, addr);
+		g_mime_message_add_mailbox (message, type, name, addr);
 		n++;
 	    }
 	}
@@ -367,7 +367,7 @@ add_recipients_from_message (GMimeMessage *reply,
      * of recipients so that the reply goes back to the user.
      */
     if (n == 0 && from_addr)
-	g_mime_message_add_recipient (reply, GMIME_ADDRESS_TYPE_TO, NULL, from_addr);
+	g_mime_message_add_mailbox (reply, GMIME_ADDRESS_TYPE_TO, NULL, from_addr);
 
     return from_addr;
 }
