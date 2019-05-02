@@ -18,14 +18,9 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define g_mime_object_set_header(o,h,v) g_mime_object_set_header (o,h,v,NULL)
 #define g_mime_parser_construct_message(p) g_mime_parser_construct_message (p, g_mime_parser_options_get_default ())
 #define g_mime_part_get_content_object(p) g_mime_part_get_content (p)
-#define g_mime_signature_get_errors(sig) g_mime_signature_get_status (sig)
 #define g_mime_utils_header_decode_text(txt) g_mime_utils_header_decode_text (NULL, txt)
 #define internet_address_to_string(ia,encode) internet_address_to_string (ia,NULL,encode)
 #define internet_address_list_parse_string(str) internet_address_list_parse (NULL,str)
-
-typedef GMimeAddressType GMimeRecipientType;
-
-typedef GMimeSignatureStatus GMimeSignatureError;
 
 /**
  * Get last 16 hex digits of fingerprint ("keyid")
@@ -35,9 +30,9 @@ const char *g_mime_certificate_get_fpr16 (GMimeCertificate *cert);
  * Return the contents of the appropriate address header as a string
  * Should be freed using g_free
  */
-char *g_mime_message_get_address_string (GMimeMessage *message, GMimeRecipientType type);
+char *g_mime_message_get_address_string (GMimeMessage *message, GMimeAddressType type);
 
-InternetAddressList * g_mime_message_get_addresses (GMimeMessage *message, GMimeRecipientType type);
+InternetAddressList * g_mime_message_get_addresses (GMimeMessage *message, GMimeAddressType type);
 
 /**
  * return talloc allocated date string
@@ -71,7 +66,7 @@ gboolean g_mime_signature_status_good (GMimeSignatureStatus status);
 
 gboolean g_mime_signature_status_bad (GMimeSignatureStatus status);
 
-gboolean g_mime_signature_status_error (GMimeSignatureError status);
+gboolean g_mime_signature_status_error (GMimeSignatureStatus status);
 
 gint64 g_mime_utils_header_decode_date_unix (const char *date);
 

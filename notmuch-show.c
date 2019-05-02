@@ -363,13 +363,13 @@ signature_status_to_string (GMimeSignatureStatus status)
 
 /* Print signature flags */
 struct key_map_struct {
-    GMimeSignatureError bit;
+    GMimeSignatureStatus bit;
     const char * string;
 };
 
 static void
 do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
-			    unsigned int array_map_len, GMimeSignatureError errors) {
+			    unsigned int array_map_len, GMimeSignatureStatus errors) {
     sp->map_key (sp, "errors");
     sp->begin_map (sp);
 
@@ -386,7 +386,7 @@ do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
 static void
 format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 {
-    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+    GMimeSignatureStatus errors = g_mime_signature_get_status (signature);
 
     if (!(errors & GMIME_SIGNATURE_STATUS_ERROR_MASK))
 	return;
@@ -465,7 +465,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 	}
 
 	if (notmuch_format_version <= 3) {
-	    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+	    GMimeSignatureStatus errors = g_mime_signature_get_status (signature);
 	    if (g_mime_signature_status_error (errors)) {
 		sp->map_key (sp, "errors");
 		sp->integer (sp, errors);

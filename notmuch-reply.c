@@ -176,7 +176,7 @@ static unsigned int
 scan_address_list (InternetAddressList *list,
 		   notmuch_config_t *config,
 		   GMimeMessage *message,
-		   GMimeRecipientType type,
+		   GMimeAddressType type,
 		   const char **user_from)
 {
     InternetAddress *address;
@@ -325,7 +325,7 @@ add_recipients_from_message (GMimeMessage *reply,
 {
     struct {
 	InternetAddressList * (*get_header)(GMimeMessage *message);
-	GMimeRecipientType recipient_type;
+	GMimeAddressType recipient_type;
     } reply_to_map[] = {
 	{ get_sender,	GMIME_ADDRESS_TYPE_TO },
 	{ get_to,	GMIME_ADDRESS_TYPE_TO },
