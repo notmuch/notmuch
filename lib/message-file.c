@@ -152,7 +152,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     parser = g_mime_parser_new_with_stream (stream);
     g_mime_parser_set_scan_from (parser, is_mbox);
 
-    message->message = g_mime_parser_construct_message (parser);
+    message->message = g_mime_parser_construct_message (parser, NULL);
     if (! message->message) {
 	status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
 	goto DONE;

@@ -121,7 +121,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	goto DONE;
     }
 
-    mctx->mime_message = g_mime_parser_construct_message (mctx->parser);
+    mctx->mime_message = g_mime_parser_construct_message (mctx->parser, NULL);
     if (!mctx->mime_message) {
 	fprintf (stderr, "Failed to parse %s\n", filename);
 	status = NOTMUCH_STATUS_FILE_ERROR;

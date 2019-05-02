@@ -9,8 +9,6 @@ extern "C" {
 
 GMimeStream *g_mime_stream_stdout_new(void);
 
-#define g_mime_parser_construct_message(p) g_mime_parser_construct_message (p, g_mime_parser_options_get_default ())
-
 /**
  * Get last 16 hex digits of fingerprint ("keyid")
  */
