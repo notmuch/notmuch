@@ -285,8 +285,6 @@ static InternetAddressList *get_sender(GMimeMessage *message)
 	 */
 	if (! reply_to_header_is_redundant (message, reply_to_list))
 	    return reply_to_list;
-
-	g_mime_2_6_unref (G_OBJECT (reply_to_list));
     }
 
     return g_mime_message_get_from (message);
