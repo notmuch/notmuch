@@ -9,7 +9,7 @@ addons:
     packages:
     - dtach
     - libxapian-dev
-    - libgmime-2.6-dev
+    - libgmime-3.0-dev
     - libtalloc-dev
     - python3-sphinx
     - gpgsm
