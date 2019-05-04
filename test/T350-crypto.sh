@@ -135,8 +135,9 @@ test_expect_equal_json \
     "$output" \
     "$expected"
 
-test_begin_subtest "signature verification with full owner trust"
-# give the key full owner trust
+test_begin_subtest "signature verification with full user ID validity"
+# give the key ultimate owner trust, which confers full validity on
+# all user IDs in the certificate:
 echo "${FINGERPRINT}:6:" | gpg --no-tty --import-ownertrust >>"$GNUPGHOME"/trust.log 2>&1
 gpg --no-tty --check-trustdb >>"$GNUPGHOME"/trust.log 2>&1
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
