@@ -40,7 +40,8 @@ expected='[[[{"id": "XXXXX",
  "body": [{"id": 1,
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
- "created": 946728000}],
+ "created": 946728000,
+ "userid": "'"$SELF_USERID"'"}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",
@@ -135,11 +136,11 @@ test_expect_equal_json \
     "$output" \
     "$expected"
 
-test_begin_subtest "signature verification with full user ID validity"
-# give the key ultimate owner trust, which confers full validity on
-# all user IDs in the certificate:
-echo "${FINGERPRINT}:6:" | gpg --no-tty --import-ownertrust >>"$GNUPGHOME"/trust.log 2>&1
-gpg --no-tty --check-trustdb >>"$GNUPGHOME"/trust.log 2>&1
+test_begin_subtest "signature verification without full user ID validity"
+# give the key no owner trust, removes validity on all user IDs of the
+# certificate in the absence of other trusted certifiers:
+gpg --quiet --batch --no-tty --export-ownertrust > "$GNUPGHOME/ownertrust.bak"
+echo "${FINGERPRINT}:3:" | gpg --quiet --batch --no-tty --import-ownertrust
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
@@ -157,8 +158,7 @@ expected='[[[{"id": "XXXXX",
  "body": [{"id": 1,
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
- "created": 946728000,
- "userid": "'"$SELF_USERID"'"}],
+ "created": 946728000}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",
@@ -170,6 +170,7 @@ expected='[[[{"id": "XXXXX",
 test_expect_equal_json \
     "$output" \
     "$expected"
+gpg --quiet --batch --no-tty --import-ownertrust < "$GNUPGHOME/ownertrust.bak"
 
 test_begin_subtest "signature verification with signer key unavailable"
 # move the gnupghome temporarily out of the way
