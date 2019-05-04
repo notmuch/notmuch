@@ -851,7 +851,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 		return NOTMUCH_STATUS_FILE_ERROR;
 	    }
 
-	    if (fwrite (buf, size, 1, stdout) != 1) {
+	    if (size > 0 && fwrite (buf, size, 1, stdout) != 1) {
 		fprintf (stderr, "Error: Write failed\n");
 		fclose (file);
 		return NOTMUCH_STATUS_FILE_ERROR;

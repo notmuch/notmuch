@@ -30,4 +30,38 @@ Date: GENERATED_DATE
 
 This is just a test message (#2)"
 
+test_python <<EOF
+from email.message import EmailMessage
+for pow in range(10,21):
+    size = 2 ** pow
+    msg = EmailMessage()
+    msg['Subject'] = 'message with {:07d} bytes'.format(size)
+    msg['From'] = 'Notmuch Test Suite <test_suite@notmuchmail.org>'
+    msg['To'] = msg['From']
+    msg['Message-Id'] = 'size-{:07d}@notmuch-test-suite'.format(size)
+    content = ""
+    msg.set_content("")
+    padding = size - len(bytes(msg))
+    lines = []
+    while padding > 0:
+        line = '.' * min(padding, 72)
+        lines.append(line)
+        padding = padding - len(line) - 1
+    content ='\n'.join(lines)
+    msg.set_content(content)
+    with open('mail/size-{:07d}'.format(size), 'wb') as f:
+        f.write(bytes(msg))
+EOF
+
+notmuch new --quiet
+
+for pow in {10..20}; do
+    printf -v size "%07d" $((2**$pow))
+    test_begin_subtest "content, message of size $size"
+    notmuch show --format=raw subject:$size > OUTPUT
+    test_expect_equal_file mail/size-$size OUTPUT
+    test_begin_subtest "return value, message of size $size"
+    test_expect_success  "notmuch show --format=raw subject:$size > /dev/null"
+done
+
 test_done
