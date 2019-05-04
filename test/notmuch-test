@@ -40,17 +40,27 @@ fi
 
 trap 'e=$?; kill $!; exit $e' HUP INT TERM
 # Run the tests
-for test in $TESTS; do
-    $TEST_TIMEOUT_CMD $test "$@" &
-    wait $!
-    # If the test failed without producing results, then it aborted,
-    # so we should abort, too.
-    RES=$?
-    testname=$(basename $test .sh)
-    if [[ $RES != 0 && ! -e "$NOTMUCH_BUILDDIR/test/test-results/$testname" ]]; then
-        exit $RES
+if command -v parallel >/dev/null ; then
+    if parallel -h | grep -q GNU ; then
+        echo "INFO: running tests with GNU parallel"
+        printf '%s\n' $TESTS | $TEST_TIMEOUT_CMD parallel
+    else
+        echo "INFO: running tests with moreutils parallel"
+        $TEST_TIMEOUT_CMD parallel -- $TESTS
     fi
-done
+else
+    for test in $TESTS; do
+        $TEST_TIMEOUT_CMD $test "$@" &
+        wait $!
+        # If the test failed without producing results, then it aborted,
+        # so we should abort, too.
+        RES=$?
+        testname=$(basename $test .sh)
+        if [[ $RES != 0 && ! -e "$NOTMUCH_BUILDDIR/test/test-results/$testname" ]]; then
+            exit $RES
+        fi
+    done
+fi
 trap - HUP INT TERM
 
 # Report results
