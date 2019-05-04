@@ -56,7 +56,6 @@ output=$(notmuch search folder:duplicate/bad/olds | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)"
 
 # folder: and path: searches with full corpus
-rm -rf $MAIL_DIR
 add_email_corpus
 
 # add some more dupes

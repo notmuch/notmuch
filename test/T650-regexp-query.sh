@@ -47,7 +47,6 @@ output=$(notmuch search 'path:/^bad$/' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)"
 
 # Use "standard" corpus from here on.
-rm -rf $MAIL_DIR
 add_email_corpus
 
 notmuch search --output=messages from:cworth > cworth.msg-ids
