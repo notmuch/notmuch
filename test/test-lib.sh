@@ -396,14 +396,8 @@ add_email_corpus ()
     corpus=${1:-default}
 
     rm -rf ${MAIL_DIR}
-    if [ -d $TEST_DIRECTORY/corpora.mail/$corpus ]; then
-	cp -a $TEST_DIRECTORY/corpora.mail/$corpus ${MAIL_DIR}
-    else
-	cp -a $NOTMUCH_SRCDIR/test/corpora/$corpus ${MAIL_DIR}
-	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
-	mkdir -p $TEST_DIRECTORY/corpora.mail
-	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpora.mail/$corpus
-    fi
+    cp -a $NOTMUCH_SRCDIR/test/corpora/$corpus ${MAIL_DIR}
+    notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
 }
 
 test_begin_subtest ()

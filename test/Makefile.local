@@ -81,4 +81,4 @@ check: test
 SRCS := $(SRCS) $(test_srcs)
 CLEAN += $(TEST_BINARIES) $(addsuffix .o,$(TEST_BINARIES)) \
 	 $(dir)/database-test.o \
-	 $(dir)/corpora.mail $(dir)/test-results $(dir)/tmp.*
+	 $(dir)/test-results $(dir)/tmp.*

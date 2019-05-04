@@ -59,6 +59,6 @@ $NOTMUCH_SRCDIR/test/aggregate-results.sh $NOTMUCH_BUILDDIR/test/test-results/*
 ev=$?
 
 # Clean up
-rm -rf $NOTMUCH_BUILDDIR/test/test-results $NOTMUCH_BUILDDIR/test/corpora.mail
+rm -rf $NOTMUCH_BUILDDIR/test/test-results
 
 exit $ev
