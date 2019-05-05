@@ -1,3 +1,12 @@
+Notmuch 0.28.4 (2019-05-05)
+===========================
+
+Command line interface
+----------------------
+
+Fix a spurious error when using `notmuch show --raw` on messages whose
+size is a multiple of the internal buffer size.
+
 Notmuch 0.28.3 (2019-03-05)
 ===========================
 
