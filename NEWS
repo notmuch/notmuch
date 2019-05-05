@@ -13,6 +13,15 @@ Emacs
 Support for GNU Emacs older than 25.1 is deprecated with this release,
 and may be removed in a future release.
 
+Notmuch 0.28.4 (2019-05-05)
+===========================
+
+Command line interface
+----------------------
+
+Fix a spurious error when using `notmuch show --raw` on messages whose
+size is a multiple of the internal buffer size.
+
 Notmuch 0.28.3 (2019-03-05)
 ===========================
 
