@@ -1,3 +1,12 @@
+notmuch (0.28.4-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Fix for bug in 'notmuch show --raw' that causes spurious errors to be
+    reported when the mail file is a multiple of the libc buffer size
+    (e.g. 4096 bytes).
+
+ -- David Bremner <bremner@debian.org>  Sun, 05 May 2019 08:08:56 -0300
+
 notmuch (0.28.3-1) unstable; urgency=medium
 
   * New upstream bugfix release.
