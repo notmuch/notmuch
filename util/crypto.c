@@ -40,7 +40,7 @@ _notmuch_crypto_decrypt (bool *attempted,
     if (decrypt == NOTMUCH_DECRYPT_FALSE)
 	return NULL;
 
-    /* the versions of notmuch that can support session key decryption */
+    /* try decryption with session key if one is stashed */
     if (message) {
 	notmuch_message_properties_t *list = NULL;
 
