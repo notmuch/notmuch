@@ -40,7 +40,7 @@ fi
 
 trap 'e=$?; kill $!; exit $e' HUP INT TERM
 # Run the tests
-if command -v parallel >/dev/null ; then
+if test -z "$NOTMUCH_TEST_SERIALIZE" && command -v parallel >/dev/null ; then
     if parallel -h | grep -q GNU ; then
         echo "INFO: running tests with GNU parallel"
         printf '%s\n' $TESTS | $TEST_TIMEOUT_CMD parallel

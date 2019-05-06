@@ -43,7 +43,6 @@ these system tools. Most often the tests are written, reviewed and
 tested on Linux system so such portability issues arise from time to
 time.
 
-
 Running Tests
 -------------
 The easiest way to run tests is to say "make test", (or simply run the
@@ -105,9 +104,14 @@ to with emacs, e.g.
 
      make test TEST_CC=gcc TEST_CFLAGS="-g -O2"
 
+Parallel Execution
+------------------
+If either the moreutils or GNU "parallel" utility is available all
+tests will be run in parallel.  If the NOTMUCH_TEST_SERIALIZE variable
+is non-null all tests will be executed sequentially.
+
 Quiet Execution
 ---------------
-
 Normally, when new script starts and when test PASSes you get a message
 printed on screen. This printing can be disabled by setting the
 NOTMUCH_TEST_QUIET variable to a non-null value. Message on test
