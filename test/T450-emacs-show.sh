@@ -208,4 +208,19 @@ test_emacs '(notmuch-show "id:'$gen_msg_id'")
 output=$(head -1 OUTPUT.raw|cut -f1-4 -d' ')
 test_expect_equal "$output" "Notmuch Test Suite <test_suite@notmuchmail.org>"
 
+
+# switching to the crypto corpus, using gpg from here on:
+add_gnupg_home
+add_email_corpus crypto
+
+test_begin_subtest "show decrypted message"
+test_emacs '(notmuch-show "id:basic-encrypted@crypto.notmuchmail.org")
+            (test-visible-output)'
+test_expect_equal_file $EXPECTED/notmuch-show-decrypted-message OUTPUT
+
+test_begin_subtest "show undecryptable message"
+test_emacs '(notmuch-show "id:simple-encrypted@crypto.notmuchmail.org")
+            (test-visible-output)'
+test_expect_equal_file $EXPECTED/notmuch-show-undecryptable-message OUTPUT
+
 test_done

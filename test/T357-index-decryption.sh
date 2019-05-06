@@ -224,10 +224,11 @@ add_email_corpus crypto
 
 test_begin_subtest "indexing message fails when secret key not available"
 notmuch reindex --decrypt=true id:simple-encrypted@crypto.notmuchmail.org
-output=$(notmuch dump )
-expected='#notmuch-dump batch-tag:3 config,properties,tags
-+encrypted +inbox +unread -- id:simple-encrypted@crypto.notmuchmail.org
-#= simple-encrypted@crypto.notmuchmail.org index.decryption=failure'
+output=$(notmuch dump | LC_ALL=C sort)
+expected='#= simple-encrypted@crypto.notmuchmail.org index.decryption=failure
+#notmuch-dump batch-tag:3 config,properties,tags
++encrypted +inbox +unread -- id:basic-encrypted@crypto.notmuchmail.org
++encrypted +inbox +unread -- id:simple-encrypted@crypto.notmuchmail.org'
 test_expect_equal \
     "$output" \
     "$expected"
@@ -245,8 +246,8 @@ notmuch restore <<EOF
 #= simple-encrypted@crypto.notmuchmail.org session-key=9%3AFC09987F5F927CC0CC0EE80A96E4C5BBF4A499818FB591207705DFDDD6112CF9
 EOF
 notmuch reindex id:simple-encrypted@crypto.notmuchmail.org
-output=$(notmuch search sekrit)
-expected='thread:0000000000000001   2016-12-22 [1/1] Daniel Kahn Gillmor; encrypted message (encrypted inbox unread)'
+output=$(notmuch search sekrit | notmuch_search_sanitize)
+expected='thread:XXX   2016-12-22 [1/1] Daniel Kahn Gillmor; encrypted message (encrypted inbox unread)'
 test_expect_equal \
     "$output" \
     "$expected"

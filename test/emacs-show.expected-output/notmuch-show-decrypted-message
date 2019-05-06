@@ -1,0 +1,11 @@
+test_suite@notmuchmail.org (2000-01-01) (encrypted inbox)
+Subject: Here is the password
+To: test_suite@notmuchmail.org
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+
+[ multipart/encrypted ]
+[ Decryption successful ]
+[ Unknown signature status ]
+[ application/pgp-encrypted ]
+[ text/plain ]
+The password is "abcd1234!", please do not tell anyone.

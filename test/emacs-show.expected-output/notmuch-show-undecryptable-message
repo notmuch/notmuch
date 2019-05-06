@@ -1,0 +1,10 @@
+Daniel Kahn Gillmor <dkg@fifthhorseman.net> (2016-12-22) (encrypted inbox)
+Subject: encrypted message
+To: dkg@fifthhorseman.net
+Date: Thu, 22 Dec 2016 08:34:56 -0400
+
+[ multipart/encrypted ]
+[ Decryption error ]
+[ Unknown signature status ]
+[ application/pgp-encrypted ]
+[ application/octet-stream ]
