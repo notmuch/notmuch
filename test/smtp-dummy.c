@@ -129,6 +129,7 @@ main (int argc, char *argv[])
     int reuse;
     int background;
     int ret = 0;
+    socklen_t addrlen;
 
     progname = argv[0];
 
@@ -191,7 +192,7 @@ main (int argc, char *argv[])
 
     memset (&addr, 0, sizeof (addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons (25025);
+    addr.sin_port = 0;
     addr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
     err = bind (sock, (struct sockaddr *) &addr, sizeof (addr));
     if (err) {
@@ -201,6 +202,18 @@ main (int argc, char *argv[])
 	ret = 1;
 	goto DONE;
     }
+
+    addrlen = sizeof (addr);
+    err = getsockname (sock, (struct sockaddr *) &addr, &addrlen);
+    if (err) {
+	fprintf (stderr, "Error: getsockname() failed: %s\n",
+		 strerror (errno));
+	close (sock);
+	ret = 1;
+	goto DONE;
+    }
+
+    printf ("smtp_dummy_port='%d'\n", ntohs (addr.sin_port));
 
     err = listen (sock, 1);
     if (err) {
