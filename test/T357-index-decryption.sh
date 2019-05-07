@@ -8,8 +8,6 @@ test_description='indexing decrypted mail'
 ##################################################
 
 add_gnupg_home
-# get key fingerprint
-FINGERPRINT=$(gpg --no-tty --list-secret-keys --with-colons --fingerprint | grep '^fpr:' | cut -d: -f10)
 
 # create a test encrypted message
 test_begin_subtest 'emacs delivery of encrypted message'
