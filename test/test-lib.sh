@@ -134,15 +134,7 @@ add_gnupg_home ()
 # '
 # . ./test-lib.sh || exit 1
 
-[ "x$ORIGINAL_TERM" != "xdumb" ] && (
-		TERM=$ORIGINAL_TERM &&
-		export TERM &&
-		[ -t 1 ] &&
-		tput bold >/dev/null 2>&1 &&
-		tput setaf 1 >/dev/null 2>&1 &&
-		tput sgr0 >/dev/null 2>&1
-	) &&
-	color=t
+color=maybe
 
 while test "$#" -ne 0
 do
@@ -181,6 +173,21 @@ else
     print_subtest () {
 	true
     }
+fi
+
+test -n "$COLORS_WITHOUT_TTY" || [ -t 1 ] || color=
+
+if [ -n "$color" ] && [ "$ORIGINAL_TERM" != 'dumb' ] && (
+		TERM=$ORIGINAL_TERM &&
+		export TERM &&
+		tput bold
+		tput setaf
+		tput sgr0
+	) >/dev/null 2>&1
+then
+	color=t
+else
+	color=
 fi
 
 if test -n "$color"; then
