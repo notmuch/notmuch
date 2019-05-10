@@ -46,6 +46,9 @@ _notmuch_message_file_destructor (notmuch_message_file_t *message)
     if (message->message)
 	g_object_unref (message->message);
 
+    if (message->stream)
+	g_object_unref (message->stream);
+
     return 0;
 }
 
