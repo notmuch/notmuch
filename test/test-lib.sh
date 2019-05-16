@@ -320,14 +320,15 @@ emacs_deliver_message ()
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
-    # eval'ing smtp-dummy --background will set smtp_dummy_pid
-    smtp_dummy_pid=
+    # eval'ing smtp-dummy --background will set smtp_dummy_pid and -_port
+    local smtp_dummy_pid= smtp_dummy_port=
     eval `$TEST_DIRECTORY/smtp-dummy --background sent_message`
     test -n "$smtp_dummy_pid" || return 1
+    test -n "$smtp_dummy_port" || return 1
 
     test_emacs \
 	"(let ((message-send-mail-function 'message-smtpmail-send-it)
-               (mail-host-address \"example.com\")
+	       (mail-host-address \"example.com\")
 	       (smtpmail-smtp-server \"localhost\")
 	       (smtpmail-smtp-service \"${smtp_dummy_port}\"))
 	   (notmuch-mua-mail)
@@ -337,7 +338,7 @@ emacs_deliver_message ()
 	   (insert \"${subject}\")
 	   (message-goto-body)
 	   (insert \"${body}\")
-	   $@
+	   $*
 	   (notmuch-mua-send-and-exit))"
 
     # In case message was sent properly, client waits for confirmation
@@ -381,7 +382,7 @@ emacs_fcc_message ()
 	   (insert \"${subject}\")
 	   (message-goto-body)
 	   (insert \"${body}\")
-	   $@
+	   $*
 	   (notmuch-mua-send-and-exit))" || return 1
     notmuch new $nmn_args >/dev/null
 }
@@ -999,7 +1000,7 @@ test_emacs () {
 	rm -f OUTPUT
 	touch OUTPUT
 
-	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(notmuch-test-progn $@)"
+	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(notmuch-test-progn $*)"
 }
 
 test_python() {
