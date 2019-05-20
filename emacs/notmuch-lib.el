@@ -1017,6 +1017,11 @@ region if the region is active, or both `point' otherwise."
       (list (region-beginning) (region-end))
     (list (point) (point))))
 
+(define-obsolete-function-alias
+    'notmuch-search-interactive-region
+    'notmuch-interactive-region
+  "notmuch 0.29")
+
 (provide 'notmuch-lib)
 
 ;; Local Variables:
