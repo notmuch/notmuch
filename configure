@@ -532,7 +532,7 @@ EOF
     if ! TEMP_GPG=$(mktemp -d); then
         printf 'No.\nCould not make tempdir for testing session-key support.\n'
         errors=$((errors + 1))
-    elif ${CC} ${CFLAGS} ${gmime_cflags} ${gmime_ldflags}  _check_session_keys.c -o _check_session_keys \
+    elif ${CC} ${CFLAGS} ${gmime_cflags} _check_session_keys.c ${gmime_ldflags} -o _check_session_keys \
            && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < test/gnupg-secret-key.asc \
            && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
            && [ $SESSION_KEY = 9:0BACD64099D1468AB07C796F0C0AC4851948A658A15B34E803865E9FC635F2F5 ]
