@@ -529,7 +529,7 @@ int main () {
     return 0;
 }
 EOF
-    if ${CC} ${CFLAGS} ${gmime_cflags} ${gmime_ldflags}  _check_session_keys.c -o _check_session_keys > /dev/null 2>&1 \
+    if ${CC} ${CFLAGS} ${gmime_cflags} ${gmime_ldflags}  _check_session_keys.c -o _check_session_keys \
            && TEMP_GPG=$(mktemp -d) \
            && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < test/gnupg-secret-key.asc \
            && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
@@ -538,17 +538,21 @@ EOF
         printf "OK.\n"
     else
         cat <<EOF
-
+No.
 *** Error: Could not extract session keys from encrypted message.
 
 This is likely due to your GMime having been built against a old
 version of GPGME.
 
 Please try to rebuild your version of GMime against a more recent
-version of GPGME (at least GPGME 1.8.0).  Your current GPGME version
-is: $(gpgme-config --version)
+version of GPGME (at least GPGME 1.8.0).
 EOF
-        rm -rf _check_session_keys.c _check_session_keys "$TEMP_GPG"
+        if command -v gpgme-config >/dev/null; then
+            printf 'Your current GPGME development version is: %s\n' "$(gpgme-config --version)"
+        else
+            printf 'You do not have the GPGME development libraries installed.\n'
+        fi
+        rm -rf "$TEMP_GPG"
         errors=$((errors + 1))
     fi
 else
@@ -1023,7 +1027,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
-rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
+rm -f minimal minimal.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
