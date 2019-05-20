@@ -32,8 +32,9 @@ rm -rf $NOTMUCH_BUILDDIR/test/test-results
 
 # Test for timeout utility
 if command -v timeout >/dev/null; then
-    TEST_TIMEOUT_CMD="timeout 2m"
-    echo "INFO: using 2 minute timeout for tests"
+    TEST_TIMEOUT=${NOTMUCH_TEST_TIMEOUT:-2m}
+    TEST_TIMEOUT_CMD="timeout $TEST_TIMEOUT"
+    echo "INFO: using $TEST_TIMEOUT timeout for tests"
 else
     TEST_TIMEOUT_CMD=""
 fi
