@@ -49,6 +49,11 @@ if test -z "$NOTMUCH_TEST_SERIALIZE" && command -v parallel >/dev/null ; then
         echo "INFO: running tests with moreutils parallel"
         $TEST_TIMEOUT_CMD parallel -- $TESTS
     fi
+    RES=$?
+    if [[ $RES != 0 ]]; then
+        echo "parallel test suite returned error code $RES"
+        exit $RES
+    fi
 else
     for test in $TESTS; do
         $TEST_TIMEOUT_CMD $test "$@" &
