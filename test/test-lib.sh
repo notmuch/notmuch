@@ -55,6 +55,9 @@ done,*)
 	;;
 esac
 
+# STDIN from /dev/null. EOF for readers (and ENOTTY for tty related ioctls).
+exec </dev/null
+
 # Save STDOUT to fd 6 and STDERR to fd 7.
 exec 6>&1 7>&2
 # Make xtrace debugging (when used) use redirected STDERR, with verbose lead:
