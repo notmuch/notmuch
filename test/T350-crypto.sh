@@ -25,7 +25,7 @@ test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; t
 test_begin_subtest "signature verification"
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|g')
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -33,6 +33,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{ "status": "good", "created": 946728000, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'"}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -74,6 +75,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{ "status": "bad", "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'"}]}},
  "headers": {"Subject": "bad signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -112,6 +114,7 @@ output=$(notmuch show --format=json --verify subject:"bad signed message 002" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
+ "crypto": {},
  "match": true,
  "excluded": false,
  "filename": ["YYYYY"],
@@ -143,7 +146,7 @@ gpg --quiet --batch --no-tty --export-ownertrust > "$GNUPGHOME/ownertrust.bak"
 echo "${FINGERPRINT}:3:" | gpg --quiet --batch --no-tty --import-ownertrust
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|g')
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -151,6 +154,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{ "status": "good", "created": 946728000, "fingerprint": "'$FINGERPRINT'"}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -177,7 +181,7 @@ test_begin_subtest "signature verification with signer key unavailable"
 mv "${GNUPGHOME}"{,.bak}
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|g')
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -185,6 +189,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{"errors": {"key-missing": true}, "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'", "status": "error"}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -264,6 +269,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["encrypted","inbox"],
+ "crypto": {"decrypted": {"status": "full"}},
  "headers": {"Subject": "test encrypted message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -315,6 +321,7 @@ output=$(notmuch show --format=json --decrypt=true subject:"test encrypted messa
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
+ "crypto": {},
  "match": true,
  "excluded": false,
  "filename": ["YYYYY"],
@@ -350,7 +357,7 @@ test_expect_success \
 test_begin_subtest "decryption + signature verification"
 output=$(notmuch show --format=json --decrypt=true subject:"test encrypted message 002" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|g')
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -358,6 +365,9 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["encrypted","inbox"],
+ "crypto": {"signed": {"status": [{ "status": "good", "created": 946728000, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'"}],
+                       "encrypted": true },
+            "decrypted": {"status": "full"}},
  "headers": {"Subject": "test encrypted message 002",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -433,6 +443,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{"errors": {"key-revoked": true}, "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'", "status": "error"}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",

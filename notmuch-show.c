@@ -628,6 +628,35 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), true, include_html);
 	    sp->end (sp);
 	}
+
+	if (notmuch_format_version >= 4) {
+	    const _notmuch_message_crypto_t *msg_crypto = mime_node_get_message_crypto_status (node);
+	    sp->map_key (sp, "crypto");
+	    sp->begin_map (sp);
+	    if (msg_crypto->sig_list ||
+		msg_crypto->decryption_status != NOTMUCH_MESSAGE_DECRYPTED_NONE) {
+		if (msg_crypto->sig_list) {
+		    sp->map_key (sp, "signed");
+		    sp->begin_map (sp);
+		    sp->map_key (sp, "status");
+		    format_part_sigstatus_sprinter (sp, msg_crypto->sig_list);
+		    if (msg_crypto->signature_encrypted) {
+			sp->map_key (sp, "encrypted");
+			sp->boolean (sp, msg_crypto->signature_encrypted);
+		    }
+		    sp->end (sp);
+		}
+		if (msg_crypto->decryption_status != NOTMUCH_MESSAGE_DECRYPTED_NONE) {
+		    sp->map_key (sp, "decrypted");
+		    sp->begin_map (sp);
+		    sp->map_key (sp, "status");
+		    sp->string (sp, msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL ? "full" : "partial");
+		    sp->end (sp);
+		}
+	    }
+	    sp->end (sp);
+	}
+
 	sp->end (sp);
 	return;
     }

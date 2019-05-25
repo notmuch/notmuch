@@ -92,6 +92,7 @@ output=$(notmuch show --body=false --format=json id:duplicate |
 	     notmuch_json_show_sanitize | sed 's/message [0-9]/A_SUBJECT/')
 expected='[[[{
     "id": "XXXXX",
+    "crypto": {},
     "match": true,
     "excluded": false,
     "filename": [

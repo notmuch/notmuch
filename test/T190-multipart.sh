@@ -378,7 +378,7 @@ test_expect_success "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom
 test_begin_subtest "--format=json --part=0, full message"
 notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "excluded": false, "filename": ["${MAIL_DIR}/multipart"], "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
+{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "crypto": {}, "match": true, "excluded": false, "filename": ["${MAIL_DIR}/multipart"], "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
 {"id": 1, "content-type": "multipart/signed", "content": [
 {"id": 2, "content-type": "multipart/mixed", "content": [
 {"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
@@ -637,6 +637,7 @@ notmuch_json_show_sanitize <<EOF >EXPECTED
  "In-reply-to": "<87liy5ap00.fsf@yoom.home.cworth.org>",
  "References": "<87liy5ap00.fsf@yoom.home.cworth.org>"},
  "original": {"id": "XXXXX",
+ "crypto": {},
  "match": false,
  "excluded": false,
  "filename": ["YYYYY"],
@@ -728,6 +729,7 @@ cat_expected_head ()
 {
         cat <<EOF
 [[[{"id": "htmlmessage", "match":true, "excluded": false, "date_relative":"2000-01-01",
+   "crypto": {},
    "timestamp": 946684800,
    "filename": ["${MAIL_DIR}/include-html"],
    "tags": ["inbox", "unread"],

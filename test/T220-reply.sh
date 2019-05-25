@@ -278,6 +278,7 @@ test_expect_equal_json "$output" '
                 "id": 1
             }
         ],
+        "crypto": {},
         "date_relative": "2010-01-05",
         "excluded": false,
         "filename": ["'${MAIL_DIR}'/msg-014"],

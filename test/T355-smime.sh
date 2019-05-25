@@ -50,8 +50,8 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "signature verification (notmuch CLI)"
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [-1234567890]*|"created": 946728000|' \
-	  -e 's|"expires": [-1234567890]*|"expires": 424242424|' )
+    | sed -e 's|"created": [-1234567890]*|"created": 946728000|g' \
+	  -e 's|"expires": [-1234567890]*|"expires": 424242424|g' )
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -59,6 +59,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
+ "crypto": {"signed": {"status": [{"fingerprint": "'$FINGERPRINT'", "status": "good","userid": "CN=Notmuch Test Suite","expires": 424242424, "created": 946728000}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",

@@ -107,6 +107,7 @@ expected=$(notmuch_json_show_sanitize <<EOF
                         "id": 1
                     }
                 ],
+                "crypto": {},
                 "date_relative": "2001-01-05",
                 "excluded": false,
                 "filename": ["YYYYY"],
@@ -137,6 +138,7 @@ expected=$(notmuch_json_show_sanitize <<EOF
                         "id": 1
                     }
                 ],
+                "crypto": {},
                 "date_relative": "1970-01-01",
                 "excluded": false,
                 "filename": ["YYYYY"],

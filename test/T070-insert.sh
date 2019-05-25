@@ -48,6 +48,7 @@ test_begin_subtest "Insert message adds default tags"
 output=$(notmuch show --format=json "subject:insert-subject")
 expected='[[[{
  "id": "'"${gen_msg_id}"'",
+ "crypto": {},
  "match": true,
  "excluded": false,
  "filename": ["'"${cur_msg_filename}"'"],

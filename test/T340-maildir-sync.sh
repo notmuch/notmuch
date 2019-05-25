@@ -45,6 +45,7 @@ test_expect_equal "$output" "adding-replied-tag:2,RS"
 test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
 output=$(notmuch show --format=json id:${gen_msg_id} | notmuch_json_show_sanitize)
 test_expect_equal_json "$output" '[[[{"id": "XXXXX",
+"crypto": {},
 "match": true,
 "excluded": false,
 "filename": ["YYYYY"],

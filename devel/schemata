@@ -33,6 +33,8 @@ v3
 v4
 - replace signature error integer bitmask with a set of flags for
   individual errors.
+- (notmuch 0.29) added message.crypto to identify overall message
+  cryptographic state
 
 Common non-terminals
 --------------------
@@ -73,7 +75,23 @@ message = {
     tags:           [string*],
 
     headers:        headers,
+    crypto:         crypto,
     body?:          [part]    # omitted if --body=false
+}
+
+# when showing the message, was any or all of it decrypted?
+msgdecstatus: "full"|"partial"
+
+# The overall cryptographic state of the message as a whole:
+crypto = {
+    signed?:    {
+                  status:      sigstatus,
+                  # was the set of signatures described under encrypted cover?
+                  encrypted:   bool,
+                },
+    decrypted?: {
+                  status: msgdecstatus,
+                }
 }
 
 # A MIME part (format_part_sprinter)
