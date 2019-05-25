@@ -82,3 +82,96 @@ _notmuch_crypto_decrypt (bool *attempted,
 					     decrypt_result, err);
     return ret;
 }
+
+static int
+_notmuch_message_crypto_destructor (_notmuch_message_crypto_t *msg_crypto)
+{
+    if (!msg_crypto)
+	return 0;
+    if (msg_crypto->sig_list)
+	g_object_unref (msg_crypto->sig_list);
+    return 0;
+}
+
+_notmuch_message_crypto_t *
+_notmuch_message_crypto_new (void *ctx)
+{
+    _notmuch_message_crypto_t *ret = talloc_zero (ctx, _notmuch_message_crypto_t);
+    talloc_set_destructor (ret, _notmuch_message_crypto_destructor);
+    return ret;
+}
+
+notmuch_status_t
+_notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto, GMimeSignatureList *sigs)
+{
+    if (!msg_crypto)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    /* Signatures that arrive after a payload part during DFS are not
+     * part of the cryptographic envelope: */
+    if (msg_crypto->payload_encountered)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    if (msg_crypto->sig_list)
+	g_object_unref (msg_crypto->sig_list);
+
+    /* This signature list needs to persist as long as the _n_m_crypto
+     * object survives. Increasing its reference counter prevents
+     * garbage-collection until after _n_m_crypto_destroy is
+     * called. */
+    msg_crypto->sig_list = sigs;
+    if (sigs)
+	g_object_ref (sigs);
+
+    if (msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL)
+	msg_crypto->signature_encrypted = true;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+
+notmuch_status_t
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *payload, GMimeObject *parent, int childnum)
+{
+    if (!msg_crypto || !payload)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    /* only fire on the first payload part encountered */
+    if (msg_crypto->payload_encountered)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    /* the first child of multipart/encrypted that matches the
+     * encryption protocol should be "control information" metadata,
+     * not payload.  So we skip it. (see
+     * https://tools.ietf.org/html/rfc1847#page-8) */
+    if (parent && GMIME_IS_MULTIPART_ENCRYPTED (parent) && childnum == GMIME_MULTIPART_ENCRYPTED_VERSION) {
+	const char *enc_type = g_mime_object_get_content_type_parameter (parent, "protocol");
+	GMimeContentType *ct = g_mime_object_get_content_type (payload);
+	if (ct && enc_type) {
+	    const char *part_type = g_mime_content_type_get_mime_type (ct);
+	    if (part_type && strcmp (part_type, enc_type) == 0)
+		return NOTMUCH_STATUS_SUCCESS;
+	}
+    }
+
+    msg_crypto->payload_encountered = true;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+
+notmuch_status_t
+_notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_crypto)
+{
+    if (!msg_crypto)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    /* see the rationale for different values of
+     * _notmuch_message_decryption_status_t in util/crypto.h */
+    if (!msg_crypto->payload_encountered)
+	msg_crypto->decryption_status = NOTMUCH_MESSAGE_DECRYPTED_FULL;
+    else if (msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_NONE)
+	msg_crypto->decryption_status = NOTMUCH_MESSAGE_DECRYPTED_PARTIAL;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
