@@ -439,6 +439,9 @@ mime_node_child (mime_node_t *parent, int child);
 mime_node_t *
 mime_node_seek_dfs (mime_node_t *node, int n);
 
+const _notmuch_message_crypto_t*
+mime_node_get_message_crypto_status (mime_node_t *node);
+
 typedef enum dump_formats {
     DUMP_FORMAT_AUTO,
     DUMP_FORMAT_BATCH_TAG,

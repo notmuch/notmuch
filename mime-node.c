@@ -34,6 +34,7 @@ typedef struct mime_node_context {
     GMimeStream *stream;
     GMimeParser *parser;
     GMimeMessage *mime_message;
+    _notmuch_message_crypto_t *msg_crypto;
 
     /* Context provided by the caller. */
     _notmuch_crypto_t *crypto;
@@ -52,6 +53,12 @@ _mime_node_context_free (mime_node_context_t *res)
 	g_object_unref (res->stream);
 
     return 0;
+}
+
+const _notmuch_message_crypto_t*
+mime_node_get_message_crypto_status (mime_node_t *node)
+{
+    return node->ctx->msg_crypto;
 }
 
 notmuch_status_t
