@@ -135,6 +135,8 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	goto DONE;
     }
 
+    mctx->msg_crypto = _notmuch_message_crypto_new (mctx);
+
     mctx->crypto = crypto;
 
     /* Create the root node */
@@ -180,6 +182,7 @@ static void
 node_verify (mime_node_t *node, GMimeObject *part)
 {
     GError *err = NULL;
+    notmuch_status_t status;
 
     node->verify_attempted = true;
     node->sig_list = g_mime_multipart_signed_verify
@@ -193,6 +196,10 @@ node_verify (mime_node_t *node, GMimeObject *part)
 
     if (err)
 	g_error_free (err);
+
+    status = _notmuch_message_crypto_potential_sig_list (node->ctx->msg_crypto, node->sig_list);
+    if (status) /* this is a warning, not an error */
+	fprintf (stderr, "Warning: failed to note signature status: %s.\n", notmuch_status_to_string (status));
 }
 
 /* Decrypt and optionally verify an encrypted mime node */
@@ -201,6 +208,7 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 {
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
+    notmuch_status_t status;
     GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
     notmuch_message_t *message = NULL;
 
@@ -223,6 +231,9 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
     }
 
     node->decrypt_success = true;
+    status = _notmuch_message_crypto_successful_decryption (node->ctx->msg_crypto);
+    if (status) /* this is a warning, not an error */
+	fprintf (stderr, "Warning: failed to note decryption status: %s.\n", notmuch_status_to_string (status));
 
     if (decrypt_result) {
 	/* This may be NULL if the part is not signed. */
@@ -231,6 +242,9 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	    node->verify_attempted = true;
 	    g_object_ref (node->sig_list);
 	    set_signature_list_destructor (node);
+	    status = _notmuch_message_crypto_potential_sig_list (node->ctx->msg_crypto, node->sig_list);
+	    if (status) /* this is a warning, not an error */
+		fprintf (stderr, "Warning: failed to note signature status: %s.\n", notmuch_status_to_string (status));
 	}
 
 	if (node->ctx->crypto->decrypt == NOTMUCH_DECRYPT_TRUE && message) {
@@ -251,9 +265,10 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 }
 
 static mime_node_t *
-_mime_node_create (mime_node_t *parent, GMimeObject *part)
+_mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
+    notmuch_status_t status;
 
     /* Set basic node properties */
     node->part = part;
@@ -305,6 +320,10 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	} else {
 	    node_verify (node, part);
 	}
+    } else {
+	status = _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, parent ? parent->part : NULL, numchild);
+	if (status)
+	    fprintf (stderr, "Warning: failed to record potential crypto payload (%s).\n", notmuch_status_to_string (status));
     }
 
     return node;
@@ -332,7 +351,7 @@ mime_node_child (mime_node_t *parent, int child)
 	INTERNAL_ERROR ("Unexpected GMimeObject type: %s",
 			g_type_name (G_OBJECT_TYPE (parent->part)));
     }
-    node = _mime_node_create (parent, sub);
+    node = _mime_node_create (parent, sub, child);
 
     if (child == parent->next_child && parent->next_part_num != -1) {
 	/* We're traversing in depth-first order.  Record the child's
