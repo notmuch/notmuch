@@ -115,4 +115,13 @@ test_json_nodes <<<"$output" \
                    "encrypted": true, "headers": ["Subject"]},"decrypted": {"status": "full"}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="Rhinoceros dinner"'
 
+test_begin_subtest "reindex everything, ensure headers are as expected"
+notmuch reindex --decrypt=true from:test_suite@notmuchmail.org
+output=$(notmuch search --output=messages 'subject:"protected header" or subject:"Rhinoceros" or subject:"draft-melnikov-smime-header-signing" or subject:"valid"' | sort)
+test_expect_equal "$output" 'id:encrypted-signed-not-masked@crypto.notmuchmail.org
+id:encrypted-signed@crypto.notmuchmail.org
+id:nested-rfc822-message@crypto.notmuchmail.org
+id:protected-header@crypto.notmuchmail.org
+id:subjectless-protected-header@crypto.notmuchmail.org'
+
 test_done
