@@ -1,0 +1,35 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <misplaced-protected-header@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBBACwbgx3N72gYKIU63tNE6kf6UA5ed39VFXh3zdM6eDdA0bG
+DWt5yROckkCeCvMoFaRswK8MiX8aGG0GdH6VKhyn7HjT/Dm84QLwoB0ccZs3MnwU
+aJ9yTC9HbX3yfTVZYOu0w47NZho/LXX2Yd1pi8OUgrPg44fjgvx2kNRQ9EsNBdLA
+/AGMhwwcTPHjyWQ4XYZoL6WeVJfq2C0m3hQ3bxrKuAzW53HrSa4tPCXzX3G8KEz5
+sSk3ZOmajSvLde0LG8bxwexgAHC/Wd07e2HgHtZ/H+Cw9oYLgwcgVyXg7sGVrMrs
+IlwW0Njf93DJmJZuTD8P9XJc3h1VzKA+YhbtnofFZw4JexpHcC+R8Lcso16Mkp91
+7Ig0E8WTZ+K+judGS010b5ND2ETyc+TYY4/XJ2R90pbNrRLNTFG+P2HUob6PBCwE
+rXot6TeBSgm+k4bvl9aMKyrBSplKktQey4WsdblbJnJUxSl/rMpW6xwglkyIgrCU
+vbhffqgB8y1JLmK6Ow/A6Pzi3T6Zn95zu2GN8+yAOzDhGwlAfIV85TYnX6ybOkX/
+Amoh7qNS17pzc6ch/mif/RsSPYo+y2UQuVFhG+kOy9oGAQOOHeiCWZPa09o3R2Jn
+myMg1FPgoDgsjE6QpD0mx9ORdPGC2e8jwrifS/W9eHJ2QG+mNkcKlAr5b8WiUTkq
+hEZ+BaaVhbXN8EuHHTJT6YojusCIsXI0BMF1su1KupQw+dwQnys8wuy45Fr3H58x
+zqHoU9KzdQGLbeJTgA==
+=+EWE
+-----END PGP MESSAGE-----
+--=-=-=--

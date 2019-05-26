@@ -1,0 +1,38 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <double-wrapped-with-phony-protected-header@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBBACkvfKZEkuRUQ2ujdel8U2ufplGxE2oNOK+CI5S1O8cS9vE
+DIkVIXAtpZcCc31pYBTRl0TwCrLKFT/siYfshbxyWjMZjX/Jc38Yjg9pDFTIZ312
+LoM5uH22f1X8O8020HgH+CQk9T4s9bBuvxTvJ6GQvK/ssnoYsGr9TGcjjh3uMdLp
+AXkkF76a2iimkq2163ee/8X0vgI+2fx6EjJJvlcSIlDcUvhYHIt8kjnlADSBMpho
+gaMa90baGlE1RAK9nSBC+4ty0fIlfsgcecRtFEifFRj6foYPFIFzkgwhRkXovouG
+FyXi8QrDVS8cz61I03PMVsFHo4FtJw9cAfvTh45QFGl+inW2pSvZyRnyu6uHDe61
+NqUTJOVN4B+dFPbKafUKuJ4YGXLsDoQoE8VF0lwznA7AOATmqPQpp+Anq40C/4Su
+Zf1hGaBTuYjlChSTMxX+wV22+PQwJmK3tl1NQRFGlR1pQZWdNcu6/6RGooiVZSg+
+VsmtZjgpZa8aaEEnrsIEVPfvbIZ4OQhmgNi4CYNB306UOjIh3/8m+8JmlkxPiGXW
+gnzNUTuwKytlZnIgT1o9a7PAkz+ZiHhMLmk5nPN+dlwsVN7Ff1FHqLIMbKaZbeKK
+txvhw7/NdaCALnjamqtDJTc4kL50F44DC0im0U9hcoy8X/HBrYkTGfHgRttCp5V/
+XisGT6/rzyUzTi2usZpRtl3WhHrE0Uj0w2Bm/Qqe64vNd3F8xwuJ5qMZ3QLVxoX0
+MPTajY1pLgfMViqLaLV8fR8hLmattxaO92sbVuxHiaba8er3jzO2HfmRLqesio7u
+8FXZQnBgeqBkoRlrHhvScuZLJVU1I4UHd9s3mcR+IY5VvjxdPMcnxTNqcRB/He4H
+MrrH26P0uSFe6WJYQVXEDt4OO73ROyFZE0+rSw1z+VnjmHVIzUVvvFqwJZo6Y/0v
+1+3ab4TGMPJSkfQYHY8/O1RF67BNlA==
+=gizc
+-----END PGP MESSAGE-----
+--=-=-=--

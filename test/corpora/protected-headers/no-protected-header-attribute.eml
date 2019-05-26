@@ -1,0 +1,29 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <no-protected-header-attribute@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBA/9GY8NN4NDwpNttr/hTXpS701Z8TDr3hC89obZNnNpYxSct
+p+YkS+FsPMLimIDfU1meG8R+YgtQOJIhmKPHW8CLQ1heBsX0Dcv2oLxXodqNGD7M
+/szVRR6duVnALPgmV66vkcBHKbsiuv8EO86C7G1hAnXfs0H47WoeUz9dQ6RaHdKw
+AVbxw7KWVbiP+S4SO1rvNsAL1xiRPA0FFmDRMyoFRC/618dGS6HitkD0UR708oVt
+PooD4Rk22c8b549wvZ88flGk+WBCLhyXAuWYPHwag1DLzLjWH5r+XmK2O7JoQZeq
+k7JM/M8QM+xetFaPmsWs52IynhXyWpXBBanm9NEsNEiIB59480D7tJ0oivo8T24d
+izSAMGATP26ReatoXltCl9x8uUfUSAjWt8iJ1+n/3ds=
+=hGDA
+-----END PGP MESSAGE-----
+--=-=-=--

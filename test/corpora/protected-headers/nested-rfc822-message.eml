@@ -1,0 +1,32 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <nested-rfc822-message@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBBADCWqobSSS78XdrxhBh5W01OZbUMdnrwrYJsiG9fQoVfFHN
+eALvOfviTcSBD97/jO2IRL2W8hyF7k1BVAYMwSuxe4qLbLdsxK1i4KBRIFRkm990
+ipBddgFXV16WNO2cTK7boEJ7Xfjp/zjoS2z2YUXsdGx3OSJciyHBVJki2UfkL9LA
+egHa7dsw6BxoNbAkrD+ijVbsFrKHeeJIlWkNbSYOk/YLmqLAEy1CYvSvC8ZSBtQT
+fVYc37fc3RB0vQC+Vu5k5d/I5Z1/Yz+McBJDMNvcn4yoFiXemY8YVFvj7iC0sbuq
+lwitvgMYaljhb8RUQAa3Dy08Jju09DIBcCgRsx32U+3aqZ0MhU6CRgt8kc9oK1g4
+yBVppqpX6hCXjtt9LUArY3DIchRb+IWTXsb+eDR700GXDyNMk1G5WUl0eLuw75uz
+EqU5Tjh36fP0ceMESjaxuxyhhw1jjE3ON7vqFQRVcs7UtazbxznWQH3Z73mDmY3G
+q9JGMOOqVnnFdnEq8vDFF7m+Cp3N1ieyXUXjn3aLtvSRMmVV20Q5QXSFg8nP6juT
+Yn1xZjqOodSeig1ITZZF58Whv+LHGtzDHwV8
+=cNYF
+-----END PGP MESSAGE-----
+--=-=-=--
