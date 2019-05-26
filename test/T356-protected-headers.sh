@@ -99,6 +99,12 @@ output=$(notmuch search --format=json 'id:protected-header@crypto.notmuchmail.or
 test_json_nodes <<<"$output" \
                 'subject:[0]["subject"]="This is a protected header"'
 
+test_begin_subtest "verify correct protected header when submessage exists"
+output=$(notmuch show --decrypt=true --format=json id:encrypted-message-with-forwarded-attachment@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full", "header-mask": {"Subject": "Subject Unavailable"}}}' \
+                'subject:[0][0][0]["headers"]["Subject"]="This is the cryptographic envelope subject"'
+
 test_begin_subtest "verify protected header is both signed and encrypted"
 output=$(notmuch show --decrypt=true --format=json id:encrypted-signed@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
