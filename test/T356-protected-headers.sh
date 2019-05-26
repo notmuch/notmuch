@@ -76,4 +76,11 @@ output=$(notmuch show --verify --format=json id:signed-protected-header@crypto.n
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525350527, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "status": "good"}], "headers": ["Subject"]}}'
 
+test_begin_subtest "protected subject does not leak by default in replies"
+output=$(notmuch reply --decrypt=true --format=json id:protected-header@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'crypto:["original"]["crypto"]={"decrypted": {"status": "full", "header-mask": {"Subject": "Subject Unavailable"}}}' \
+                'subject:["original"]["headers"]["Subject"]="This is a protected header"' \
+                'reply-subject:["reply-headers"]["Subject"]="Re: Subject Unavailable"'
+
 test_done
