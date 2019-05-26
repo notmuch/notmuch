@@ -10,6 +10,8 @@ Command Line Interface
 Emacs
 -----
 
+The minimum supported major version of Emacs is now 24.
+
 Support for GNU Emacs older than 25.1 is deprecated with this release,
 and may be removed in a future release.
 
