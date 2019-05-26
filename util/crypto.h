@@ -59,6 +59,11 @@ typedef struct _notmuch_message_crypto {
      * is not part of the cryptographic envelope) */
     bool payload_encountered;
 
+    /* the value of any "Subject:" header in the cryptographic payload
+     * (the top level part within the crypto envelope), converted to
+     * UTF-8 */
+    char * payload_subject;
+
     /* if both signed and encrypted, was the signature encrypted? */
     bool signature_encrypted;
 } _notmuch_message_crypto_t;

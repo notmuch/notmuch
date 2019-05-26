@@ -90,6 +90,8 @@ _notmuch_message_crypto_destructor (_notmuch_message_crypto_t *msg_crypto)
 	return 0;
     if (msg_crypto->sig_list)
 	g_object_unref (msg_crypto->sig_list);
+    if (msg_crypto->payload_subject)
+	talloc_free (msg_crypto->payload_subject);
     return 0;
 }
 
@@ -133,6 +135,10 @@ _notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypt
 notmuch_status_t
 _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *payload, GMimeObject *parent, int childnum)
 {
+    const char *protected_headers = NULL;
+    const char *forwarded = NULL;
+    const char *subject = NULL;
+
     if (!msg_crypto || !payload)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
@@ -155,6 +161,37 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
     }
 
     msg_crypto->payload_encountered = true;
+
+    /* don't bother recording anything if there is no cryptographic
+     * envelope: */
+    if ((msg_crypto->decryption_status != NOTMUCH_MESSAGE_DECRYPTED_FULL) &&
+	(msg_crypto->sig_list == NULL))
+	return NOTMUCH_STATUS_SUCCESS;
+
+    /* Verify that this payload has headers that are intended to be
+     * exported to the larger message: */
+
+    /* Consider a payload that uses Alexei Melinkov's forwarded="no" for
+     * message/global or message/rfc822:
+     * https://tools.ietf.org/html/draft-melnikov-smime-header-signing-05#section-4 */
+    forwarded = g_mime_object_get_content_type_parameter (payload, "forwarded");
+    if (GMIME_IS_MESSAGE_PART (payload) && forwarded && strcmp (forwarded, "no") == 0) {
+	GMimeMessage *message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (payload));
+	subject = g_mime_message_get_subject (message);
+	/* FIXME: handle more than just Subject: at some point */
+    } else {
+	/* Consider "memoryhole"-style protected headers as practiced by Enigmail and K-9 */
+	protected_headers = g_mime_object_get_content_type_parameter (payload, "protected-headers");
+	if (protected_headers && strcasecmp("v1", protected_headers) == 0)
+	    subject = g_mime_object_get_header (payload, "Subject");
+	/* FIXME: handle more than just Subject: at some point */
+    }
+
+    if (subject) {
+	if (msg_crypto->payload_subject)
+	    talloc_free (msg_crypto->payload_subject);
+	msg_crypto->payload_subject = talloc_strdup (msg_crypto, subject);
+    }
 
     return NOTMUCH_STATUS_SUCCESS;
 }
