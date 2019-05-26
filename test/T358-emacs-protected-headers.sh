@@ -92,7 +92,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 # notmuch-emacs still leaks the subject line:
 test_begin_subtest "don't leak protected subject during reply, even if indexed"
-test_subtest_known_broken
 test_emacs "(let ((message-hidden-headers '()))
 	    (notmuch-show \"id:protected-header@crypto.notmuchmail.org\")
 	    (notmuch-show-reply)

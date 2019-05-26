@@ -591,7 +591,7 @@ create_reply_message(void *ctx,
 				 from_addr);
     g_mime_object_set_header (GMIME_OBJECT (reply), "From", from_addr, NULL);
 
-    subject = notmuch_message_get_header (message, "subject");
+    subject = g_mime_message_get_subject (mime_message);
     if (subject) {
 	if (strncasecmp (subject, "Re:", 3))
 	    subject = talloc_asprintf (ctx, "Re: %s", subject);
