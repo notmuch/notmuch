@@ -51,6 +51,29 @@ This is the sekrit message
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+# notmuch-emacs still leaks the subject line; as long as it leaks the
+# subject line, it should emit the external subject, not the protected
+# subject, even if it knows what the true subject is:
+test_begin_subtest "Reply within emacs to a message with protected headers, not leaking subject"
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-show \"id:protected-header@crypto.notmuchmail.org\")
+	    (notmuch-show-reply)
+	    (test-output))"
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
+Subject: Re: Subject Unavailable
+In-Reply-To: <protected-header@crypto.notmuchmail.org>
+Fcc: ${MAIL_DIR}/sent
+References: <protected-header@crypto.notmuchmail.org>
+--text follows this line--
+<#secure method=pgpmime mode=signencrypt>
+test_suite@notmuchmail.org writes:
+
+> This is the sekrit message
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 # protected headers should behave differently after re-indexing
 test_begin_subtest 'defaulting to indexing cleartext'
 test_expect_success 'notmuch config set index.decrypt true'
@@ -64,6 +87,28 @@ test_emacs '(notmuch-search "id:protected-header@crypto.notmuchmail.org")
 cat <<EOF >EXPECTED
   2000-01-01 [1/1]   test_suite@notmuchmail.org  This is a protected header (encrypted inbox)
 End of search results.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+# notmuch-emacs still leaks the subject line:
+test_begin_subtest "don't leak protected subject during reply, even if indexed"
+test_subtest_known_broken
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-show \"id:protected-header@crypto.notmuchmail.org\")
+	    (notmuch-show-reply)
+	    (test-output))"
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
+Subject: Re: Subject Unavailable
+In-Reply-To: <protected-header@crypto.notmuchmail.org>
+Fcc: ${MAIL_DIR}/sent
+References: <protected-header@crypto.notmuchmail.org>
+--text follows this line--
+<#secure method=pgpmime mode=signencrypt>
+test_suite@notmuchmail.org writes:
+
+> This is the sekrit message
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

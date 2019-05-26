@@ -99,6 +99,13 @@ output=$(notmuch search --format=json 'id:protected-header@crypto.notmuchmail.or
 test_json_nodes <<<"$output" \
                 'subject:[0]["subject"]="This is a protected header"'
 
+test_begin_subtest "indexed protected subject is not visible in reply header"
+test_subtest_known_broken
+output=$(notmuch reply --format=json 'id:protected-header@crypto.notmuchmail.org')
+test_json_nodes <<<"$output" \
+                'subject:["original"]["headers"]["Subject"]="This is a protected header"' \
+                'reply-subject:["reply-headers"]["Subject"]="Re: Subject Unavailable"'
+
 test_begin_subtest "verify correct protected header when submessage exists"
 output=$(notmuch show --decrypt=true --format=json id:encrypted-message-with-forwarded-attachment@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
