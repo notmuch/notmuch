@@ -25,6 +25,12 @@ test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full", "header-mask": {"Subject": "Subject Unavailable"}}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="This is a protected header"'
 
+test_begin_subtest "when no external header is present, show masked subject as null"
+output=$(notmuch show --decrypt=true --format=json id:subjectless-protected-header@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full", "header-mask": {"Subject": null}}}' \
+                'subject:[0][0][0]["headers"]["Subject"]="This is a protected header"'
+
 test_begin_subtest "misplaced protected headers should not be made visible during decryption"
 output=$(notmuch show --decrypt=true --format=json id:misplaced-protected-header@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
