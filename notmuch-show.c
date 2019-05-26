@@ -619,9 +619,6 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 	format_message_sprinter (sp, node->envelope_file);
 
-	sp->map_key (sp, "headers");
-	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
-
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
@@ -656,6 +653,9 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    }
 	    sp->end (sp);
 	}
+
+	sp->map_key (sp, "headers");
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
 
 	sp->end (sp);
 	return;
