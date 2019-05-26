@@ -21,7 +21,6 @@ test_json_nodes <<<"$output" \
 
 test_begin_subtest "verify protected header is visible with decryption"
 output=$(notmuch show --decrypt=true --format=json id:protected-header@crypto.notmuchmail.org)
-test_subtest_known_broken
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full"}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="This is a protected header"'
@@ -58,7 +57,6 @@ test_json_nodes <<<"$output" \
 
 test_begin_subtest "verify nested message/rfc822 protected header is visible"
 output=$(notmuch show --decrypt=true --format=json id:nested-rfc822-message@crypto.notmuchmail.org)
-test_subtest_known_broken
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full"}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="This is a message using draft-melnikov-smime-header-signing"'

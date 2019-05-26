@@ -663,7 +663,9 @@ static int do_reply(notmuch_config_t *config,
 
 	    /* The headers of the reply message we've created */
 	    sp->map_key (sp, "reply-headers");
-	    format_headers_sprinter (sp, reply, true);
+	    /* FIXME: send msg_crypto here to avoid killing the
+	     * subject line on reply to encrypted messages! */
+	    format_headers_sprinter (sp, reply, true, NULL);
 
 	    /* Start the original */
 	    sp->map_key (sp, "original");

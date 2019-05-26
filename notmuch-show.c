@@ -197,7 +197,7 @@ _is_from_line (const char *line)
 
 void
 format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
-			 bool reply)
+			 bool reply, const _notmuch_message_crypto_t *msg_crypto)
 {
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
@@ -209,7 +209,10 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     sp->begin_map (sp);
 
     sp->map_key (sp, "Subject");
-    sp->string (sp, g_mime_message_get_subject (message));
+    if (msg_crypto && msg_crypto->payload_subject) {
+	sp->string (sp, msg_crypto->payload_subject);
+    } else
+	sp->string (sp, g_mime_message_get_subject (message));
 
     sp->map_key (sp, "From");
     sp->string (sp, g_mime_message_get_from_string (message));
@@ -616,6 +619,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
      * reflected in the file devel/schemata. */
 
     if (node->envelope_file) {
+	const _notmuch_message_crypto_t *msg_crypto = NULL;
 	sp->begin_map (sp);
 	format_message_sprinter (sp, node->envelope_file);
 
@@ -626,8 +630,8 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    sp->end (sp);
 	}
 
+	msg_crypto = mime_node_get_message_crypto_status (node);
 	if (notmuch_format_version >= 4) {
-	    const _notmuch_message_crypto_t *msg_crypto = mime_node_get_message_crypto_status (node);
 	    sp->map_key (sp, "crypto");
 	    sp->begin_map (sp);
 	    if (msg_crypto->sig_list ||
@@ -655,7 +659,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	}
 
 	sp->map_key (sp, "headers");
-	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false, msg_crypto);
 
 	sp->end (sp);
 	return;
@@ -748,7 +752,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 
 	sp->map_key (sp, "headers");
-	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), false, NULL);
 
 	sp->map_key (sp, "body");
 	sp->begin_list (sp);

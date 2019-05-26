@@ -232,7 +232,7 @@ format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
 
 void
 format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,
-			 bool reply);
+			 bool reply, const _notmuch_message_crypto_t *msg_crypto);
 
 typedef enum {
     NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
