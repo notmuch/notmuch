@@ -2,7 +2,6 @@
 
 # TODO:
 #  * check S/MIME as well as PGP/MIME
-#  * process headers protected by signature
 
 test_description='Message decryption with protected headers'
 . $(dirname "$0")/test-lib.sh || exit 1
@@ -66,5 +65,15 @@ output=$(notmuch show --decrypt=true --format=json id:nested-rfc822-message@cryp
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={"decrypted": {"status": "full", "header-mask": {"Subject": "Subject Unavailable"}}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="This is a message using draft-melnikov-smime-header-signing"'
+
+test_begin_subtest "show cryptographic envelope on signed mail"
+output=$(notmuch show --verify --format=json id:simple-signed-mail@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525609971, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "status": "good"}]}}'
+
+test_begin_subtest "verify signed protected header"
+output=$(notmuch show --verify --format=json id:signed-protected-header@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525350527, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "status": "good"}], "headers": ["Subject"]}}'
 
 test_done
