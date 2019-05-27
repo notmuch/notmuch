@@ -28,6 +28,10 @@ Command Line Interface
 
 Fix several performance problems with `notmuch reindex`.
 
+`notmuch show` and `notmuch reply` now emit per-message cryptographic
+status in their json and sexp output formats.  See devel/schemata for
+more details about what is included there.
+
 Emacs
 -----
 
