@@ -645,6 +645,12 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 			sp->map_key (sp, "encrypted");
 			sp->boolean (sp, msg_crypto->signature_encrypted);
 		    }
+		    if (msg_crypto->payload_subject) {
+			sp->map_key (sp, "headers");
+			sp->begin_list (sp);
+			sp->string (sp, "Subject");
+			sp->end (sp);
+		    }
 		    sp->end (sp);
 		}
 		if (msg_crypto->decryption_status != NOTMUCH_MESSAGE_DECRYPTED_NONE) {
@@ -652,6 +658,21 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		    sp->begin_map (sp);
 		    sp->map_key (sp, "status");
 		    sp->string (sp, msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL ? "full" : "partial");
+
+		    if (msg_crypto->payload_subject) {
+			const char *subject = g_mime_message_get_subject GMIME_MESSAGE (node->part);
+			if (subject == NULL || strcmp (subject, msg_crypto->payload_subject)) {
+			    /* protected subject differs from the external header */
+			    sp->map_key (sp, "header-mask");
+			    sp->begin_map (sp);
+			    sp->map_key (sp, "Subject");
+			    if (subject == NULL)
+				sp->null (sp);
+			    else
+				sp->string (sp, subject);
+			    sp->end (sp);
+			}
+		    }
 		    sp->end (sp);
 		}
 	    }
