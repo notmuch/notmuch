@@ -367,13 +367,15 @@ _index_content_type (notmuch_message_t *message, GMimeObject *part)
 
 static void
 _index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *part);
+			    GMimeMultipartEncrypted *part,
+			    _notmuch_message_crypto_t *msg_crypto);
 
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
 		  notmuch_indexopts_t *indexopts,
-		  GMimeObject *part)
+		  GMimeObject *part,
+		  _notmuch_message_crypto_t *msg_crypto)
 {
     GMimeStream *stream, *filter;
     GMimeFilter *discard_non_term_filter;
@@ -403,6 +405,8 @@ _index_mime_part (notmuch_message_t *message,
 	  _notmuch_message_add_term (message, "tag", "encrypted");
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
+	    notmuch_status_t status;
+	    GMimeObject *child;
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
 		/* Don't index the signature, but index its content type. */
 		if (i == GMIME_MULTIPART_SIGNED_SIGNATURE) {
@@ -419,7 +423,8 @@ _index_mime_part (notmuch_message_t *message,
 				     g_mime_multipart_get_part (multipart, i));
 		if (i == GMIME_MULTIPART_ENCRYPTED_CONTENT) {
 		    _index_encrypted_mime_part(message, indexopts,
-					       GMIME_MULTIPART_ENCRYPTED (part));
+					       GMIME_MULTIPART_ENCRYPTED (part),
+					       msg_crypto);
 		} else {
 		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
 			_notmuch_database_log (notmuch_message_get_database (message),
@@ -428,8 +433,13 @@ _index_mime_part (notmuch_message_t *message,
 		}
 		continue;
 	    }
-	    _index_mime_part (message, indexopts,
-			      g_mime_multipart_get_part (multipart, i));
+	    child = g_mime_multipart_get_part (multipart, i);
+	    status = _notmuch_message_crypto_potential_payload (msg_crypto, child, part, i);
+	    if (status)
+		_notmuch_database_log (notmuch_message_get_database (message),
+				       "Warning: failed to mark the potential cryptographic payload (%s).\n",
+				       notmuch_status_to_string (status));
+	    _index_mime_part (message, indexopts, child, msg_crypto);
 	}
 	return;
     }
@@ -439,7 +449,7 @@ _index_mime_part (notmuch_message_t *message,
 
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
-	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message));
+	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
 
 	return;
     }
@@ -516,7 +526,8 @@ _index_mime_part (notmuch_message_t *message,
 static void
 _index_encrypted_mime_part (notmuch_message_t *message,
 			    notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *encrypted_data)
+			    GMimeMultipartEncrypted *encrypted_data,
+			    _notmuch_message_crypto_t *msg_crypto)
 {
     notmuch_status_t status;
     GError *err = NULL;
@@ -553,6 +564,10 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	return;
     }
     if (decrypt_result) {
+	status = _notmuch_message_crypto_successful_decryption (msg_crypto);
+	if (status)
+	    _notmuch_database_log_append (notmuch, "failed to mark the message as decrypted (%s)\n",
+					  notmuch_status_to_string (status));
 	if (get_sk) {
 	    status = notmuch_message_add_property (message, "session-key",
 						   g_mime_decrypt_result_get_session_key (decrypt_result));
@@ -562,7 +577,8 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
 	g_object_unref (decrypt_result);
     }
-    _index_mime_part (message, indexopts, clear);
+    status = _notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT);
+    _index_mime_part (message, indexopts, clear, msg_crypto);
     g_object_unref (clear);
 
     status = notmuch_message_add_property (message, "index.decryption", "success");
@@ -606,6 +622,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
     InternetAddressList *addresses;
     const char *subject;
     notmuch_status_t status;
+    _notmuch_message_crypto_t *msg_crypto;
 
     status = _notmuch_message_file_get_mime_message (message_file,
 						     &mime_message);
@@ -628,7 +645,14 @@ _notmuch_message_index_file (notmuch_message_t *message,
 
     status = _notmuch_message_index_user_headers (message, mime_message);
 
-    _index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message));
+    msg_crypto = _notmuch_message_crypto_new (NULL);
+    _index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
+    if (msg_crypto && msg_crypto->payload_subject) {
+	_notmuch_message_gen_terms (message, "subject", msg_crypto->payload_subject);
+	_notmuch_message_update_subject (message, msg_crypto->payload_subject);
+    }
+
+    talloc_free (msg_crypto);
 
     return NOTMUCH_STATUS_SUCCESS;
 }

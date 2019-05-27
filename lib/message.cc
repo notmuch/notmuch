@@ -1238,6 +1238,14 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
     message->modified = true;
 }
 
+void
+_notmuch_message_update_subject (notmuch_message_t *message,
+				 const char *subject)
+{
+    message->doc.add_value (NOTMUCH_VALUE_SUBJECT, subject);
+    message->modified = true;
+}
+
 /* Upgrade a message to support NOTMUCH_FEATURE_LAST_MOD.  The caller
  * must call _notmuch_message_sync. */
 void

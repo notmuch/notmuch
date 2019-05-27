@@ -83,4 +83,20 @@ test_json_nodes <<<"$output" \
                 'subject:["original"]["headers"]["Subject"]="This is a protected header"' \
                 'reply-subject:["reply-headers"]["Subject"]="Re: Subject Unavailable"'
 
+test_begin_subtest "protected subject is not indexed by default"
+output=$(notmuch search --output=messages 'subject:"This is a protected header"')
+test_expect_equal "$output" ''
+
+test_begin_subtest "reindex message with protected header"
+test_expect_success 'notmuch reindex --decrypt=true id:protected-header@crypto.notmuchmail.org'
+
+test_begin_subtest "protected subject is indexed when cleartext is indexed"
+output=$(notmuch search --output=messages 'subject:"This is a protected header"')
+test_expect_equal "$output" 'id:protected-header@crypto.notmuchmail.org'
+
+test_begin_subtest "indexed protected subject is visible in search"
+output=$(notmuch search --format=json 'id:protected-header@crypto.notmuchmail.org')
+test_json_nodes <<<"$output" \
+                'subject:[0]["subject"]="This is a protected header"'
+
 test_done

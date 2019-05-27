@@ -326,6 +326,10 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 				    const char *subject);
 
 void
+_notmuch_message_update_subject (notmuch_message_t *message,
+				 const char *subject);
+
+void
 _notmuch_message_upgrade_last_mod (notmuch_message_t *message);
 
 void
