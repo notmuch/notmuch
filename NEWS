@@ -58,6 +58,13 @@ Support for GMime 2.6 is removed. The minimum supported version of
 GMime is now 3.0.3.  GMime also needs to have been compiled with
 cryptography support.
 
+Test Suite
+----------
+
+If either GNU parallel or moreutils parallel is installed, the tests
+in the test suite will now be run in parallel (one per available
+core).  This can be disabled with NOTMUCH_TEST_SERIALIZE=1.
+
 Notmuch 0.28.4 (2019-05-05)
 ===========================
 
