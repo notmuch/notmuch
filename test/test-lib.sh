@@ -507,6 +507,30 @@ test_sort_json () {
         "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
 }
 
+# test for json objects:
+# read the source of test/json_check_nodes.py (or the output when
+# invoking it without arguments) for an explanation of the syntax.
+test_json_nodes () {
+        exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_json_eval without test_begin_subtest"
+	fi
+	inside_subtest=
+	test "$#" > 0 ||
+	    error "bug in the test script: test_json_nodes needs at least 1 parameter"
+
+	if ! test_skip "$test_subtest_name"
+	then
+	    output=$(PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON "$TEST_DIRECTORY"/json_check_nodes.py "$@")
+		if [ "$?" = 0 ]
+		then
+			test_ok_
+		else
+			test_failure_ "$output"
+		fi
+	fi
+}
+
 test_emacs_expect_t () {
 	test "$#" = 1 ||
 	error "bug in the test script: not 1 parameter to test_emacs_expect_t"
