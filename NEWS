@@ -1,11 +1,32 @@
 Notmuch 0.29 (UNRELEASED)
 =========================
 
+General
+-------
+
+Add "body:" field to allow searching for terms that occur only in the
+message body. Users will need to reindex their mail to take advantage
+of this feature.
+
+Add support for indexing user specified headers (e.g. List-Id). See
+notmuch-config(1) for details. This requires reindexing after changing
+the set of headers to be indexed.
+
+Fix bug for searching in some headers for Xapian keywords in quoted
+strings.
+
+Add support for gzip compressed mail messages (/not/ multi-message
+mboxes); e.g. `gzip -9 $MAIL/archive/giant-message && notmuch new`
+should work. Note that maildir flag syncing for gzipped messages is
+currently untested.
+
 Command Line Interface
 ----------------------
 
 `notmuch show` now supports --body=false and --include-html with
 --format=text
+
+Fix several performance problems with `notmuch reindex`.
 
 Emacs
 -----
@@ -14,6 +35,24 @@ The minimum supported major version of Emacs is now 24.
 
 Support for GNU Emacs older than 25.1 is deprecated with this release,
 and may be removed in a future release.
+
+Notmuch-emacs documentation is somewhat expanded. More contributions
+are very welcome.
+
+Build System
+------------
+
+Notmuch release tarballs are now compressed with `xz`.
+
+We now provide conventional detached signatures of the release
+tarballs in addition to the signed `sha256sum` files.
+
+Dependencies
+------------
+
+Support for GMime 2.6 is removed. The minimum supported version of
+GMime is now 3.0.3.  GMime also needs to have been compiled with
+cryptography support.
 
 Notmuch 0.28.4 (2019-05-05)
 ===========================
