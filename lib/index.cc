@@ -387,11 +387,20 @@ _index_mime_part (notmuch_message_t *message,
     GMimeContentType *content_type;
     char *body;
     const char *charset;
+    GMimeObject *repaired_part = NULL;
 
     if (! part) {
 	_notmuch_database_log (notmuch_message_get_database (message),
 			       "Warning: Not indexing empty mime part.\n");
-	return;
+	goto DONE;
+    }
+
+    repaired_part = _notmuch_repair_mixed_up_mangled (part);
+    if (repaired_part) {
+	/* This was likely "Mixed Up" in transit!  We will instead use
+	 * the more likely-to-be-correct variant. */
+	notmuch_message_add_property (message, "index.repaired", "mixedup");
+	part = repaired_part;
     }
 
     _index_content_type (message, part);
@@ -444,7 +453,7 @@ _index_mime_part (notmuch_message_t *message,
 	    }
 	    _index_mime_part (message, indexopts, toindex, msg_crypto);
 	}
-	return;
+	goto DONE;
     }
 
     if (GMIME_IS_MESSAGE_PART (part)) {
@@ -454,14 +463,14 @@ _index_mime_part (notmuch_message_t *message,
 
 	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
 
-	return;
+	goto DONE;
     }
 
     if (! (GMIME_IS_PART (part))) {
 	_notmuch_database_log (notmuch_message_get_database (message),
 			       "Warning: Not indexing unknown mime part: %s.\n",
 			       g_type_name (G_OBJECT_TYPE (part)));
-	return;
+	goto DONE;
     }
 
     disposition = g_mime_object_get_content_disposition (part);
@@ -475,7 +484,7 @@ _index_mime_part (notmuch_message_t *message,
 
 	/* XXX: Would be nice to call out to something here to parse
 	 * the attachment into text and then index that. */
-	return;
+	goto DONE;
     }
 
     byte_array = g_byte_array_new ();
@@ -521,6 +530,9 @@ _index_mime_part (notmuch_message_t *message,
 
 	free (body);
     }
+  DONE:
+    if (repaired_part)
+	g_object_unref (repaired_part);
 }
 
 /* descend (if desired) into the cleartext part of an encrypted MIME

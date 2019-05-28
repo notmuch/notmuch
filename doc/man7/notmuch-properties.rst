@@ -127,6 +127,12 @@ of its normal activity.
     found in that message, since it was able to index the built-in
     protected headers directly.
 
+    ``index.repaired=mixedup`` indicates the repair of a "Mixed Up"
+    encrypted PGP/MIME message, a mangling typically produced by
+    Microsoft's Exchange MTA.  See
+    https://tools.ietf.org/html/draft-dkg-openpgp-pgpmime-message-mangling
+    for more information.
+
 SEE ALSO
 ========
 

@@ -21,7 +21,6 @@ test_json_nodes <<<"$output" \
                 'body:["original"]'"$bodytext"
 
 test_begin_subtest "repaired 'Mixed-up' messages can be found with index.repaired=mixedup"
-test_subtest_known_broken
 output=$(notmuch search --output=messages property:index.repaired=mixedup)
 test_expect_equal "$output" id:mixed-up@mangling.notmuchmail.org
 
@@ -29,7 +28,6 @@ test_begin_subtest "index cleartext of 'Mixed-Up' mangled PGP/MIME message"
 test_expect_success 'notmuch reindex --decrypt=true id:mixed-up@mangling.notmuchmail.org'
 
 test_begin_subtest "search cleartext of 'Mixed-Up' mangled PGP/MIME message"
-test_subtest_known_broken
 output=$(notmuch search --output=messages body:password)
 test_expect_equal "$output" id:mixed-up@mangling.notmuchmail.org
 
