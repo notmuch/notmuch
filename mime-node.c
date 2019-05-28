@@ -36,6 +36,9 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
     _notmuch_message_crypto_t *msg_crypto;
 
+    /* repaired/unmangled parts that will need to be cleaned up */
+    GSList *repaired_parts;
+
     /* Context provided by the caller. */
     _notmuch_crypto_t *crypto;
 } mime_node_context_t;
@@ -52,7 +55,19 @@ _mime_node_context_free (mime_node_context_t *res)
     if (res->stream)
 	g_object_unref (res->stream);
 
+    if (res->repaired_parts)
+	g_slist_free_full (res->repaired_parts, g_object_unref);
+
     return 0;
+}
+
+/* keep track of objects that need to be destroyed when the mime node
+ * context goes away. */
+static void
+_mime_node_context_track_repaired_part (mime_node_context_t *ctx, GMimeObject *part)
+{
+    if (part)
+	ctx->repaired_parts = g_slist_prepend (ctx->repaired_parts, part);
 }
 
 const _notmuch_message_crypto_t *
@@ -298,6 +313,13 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	node->part = part;
 	node->nchildren = 0;
     } else if (GMIME_IS_MULTIPART (part)) {
+	GMimeObject *repaired_part = _notmuch_repair_mixed_up_mangled (part);
+	if (repaired_part) {
+	    /* This was likely "Mixed Up" in transit!  We replace it
+	     * with the more likely-to-be-correct variant. */
+	    _mime_node_context_track_repaired_part (node->ctx, repaired_part);
+	    part = repaired_part;
+	}
 	node->part = part;
 	node->nchildren = g_mime_multipart_get_count (GMIME_MULTIPART (part));
     } else if (GMIME_IS_MESSAGE_PART (part)) {

@@ -9,13 +9,11 @@ add_email_corpus mangling
 bodytext='["body"][0]["content"][1]["content"]="The password is \"abcd1234!\", please do not tell anyone.\n"'
 
 test_begin_subtest "show 'Mixed-Up' mangled PGP/MIME message correctly"
-test_subtest_known_broken
 output=$(notmuch show --format=json --decrypt=true id:mixed-up@mangling.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'body:[0][0][0]'"$bodytext"
 
 test_begin_subtest "reply to 'Mixed-Up' mangled PGP/MIME message correctly"
-test_subtest_known_broken
 output=$(notmuch reply --format=json --decrypt=true id:mixed-up@mangling.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'body:["original"]'"$bodytext"
