@@ -25,8 +25,18 @@ extern "C" {
  * returned object will only be released when the original part is
  * disposed of.
  */
+
 GMimeObject *
 _notmuch_repair_crypto_payload_skip_legacy_display (GMimeObject *payload);
+
+/* Detecting and repairing "Mixed-Up MIME mangling". see
+ * https://tools.ietf.org/html/draft-dkg-openpgp-pgpmime-message-mangling-00#section-4.1
+ * If this returns NULL, the message was probably not "Mixed up".  If
+ * it returns non-NULL, then there is a newly-allocated MIME part that
+ * represents the repaired version.  The caller is responsible for
+ * ensuring that any returned object is freed with g_object_unref. */
+GMimeObject *
+_notmuch_repair_mixed_up_mangled (GMimeObject *part);
 
 #ifdef __cplusplus
 }
