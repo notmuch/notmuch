@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-test_description="emacs interface"
+test_description="protected headers in emacs interface"
 . $(dirname "$0")/test-lib.sh || exit 1
 
 # testing protected headers with emacs
