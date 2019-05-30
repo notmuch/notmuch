@@ -226,6 +226,7 @@ output=$(notmuch dump | LC_ALL=C sort)
 expected='#= simple-encrypted@crypto.notmuchmail.org index.decryption=failure
 #notmuch-dump batch-tag:3 config,properties,tags
 +encrypted +inbox +unread -- id:basic-encrypted@crypto.notmuchmail.org
++encrypted +inbox +unread -- id:encrypted-signed@crypto.notmuchmail.org
 +encrypted +inbox +unread -- id:simple-encrypted@crypto.notmuchmail.org'
 test_expect_equal \
     "$output" \
@@ -288,6 +289,24 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+goodsig='good_sig:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"'
+nosig='no_sig:[0][0][0]["crypto"]!"signed"'
+
+test_begin_subtest "verify signature without a session key stashed when --decrypt=true"
+output=$(notmuch show --format=json --decrypt=true id:encrypted-signed@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" "$goodsig"
+
+test_begin_subtest "do not verify sig without a session key stashed if --decrypt=auto"
+output=$(notmuch show --format=json id:encrypted-signed@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" "$nosig"
+
+test_begin_subtest "verify signature when --decrypt=stash"
+output=$(notmuch show --format=json --decrypt=stash id:encrypted-signed@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" "$goodsig"
+
+test_begin_subtest "verify signature with stashed session key"
+output=$(notmuch show --format=json id:encrypted-signed@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" "$goodsig"
 
 # TODO: test removal of a message from the message store between
 # indexing and reindexing.
