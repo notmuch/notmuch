@@ -121,7 +121,7 @@ parse_tag_list (void *ctx, char *response)
 
 int
 notmuch_setup_command (notmuch_config_t *config,
-		       unused (int argc), unused (char *argv[]))
+		       int argc, char *argv[])
 {
     char *response = NULL;
     size_t response_size = 0;

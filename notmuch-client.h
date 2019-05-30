@@ -53,7 +53,7 @@
 #include "talloc-extra.h"
 #include "crypto.h"
 
-#define unused(x) x __attribute__ ((unused))
+#define unused(x) x ## _unused __attribute__ ((unused))
 
 #define STRINGIFY(s) STRINGIFY_(s)
 #define STRINGIFY_(s) #s

@@ -358,7 +358,7 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
  */
 static int
 notmuch_command (notmuch_config_t *config,
-		 unused(int argc), unused(char *argv[]))
+		 unused(int argc), unused(char **argv))
 {
     char *db_path;
     struct stat st;
