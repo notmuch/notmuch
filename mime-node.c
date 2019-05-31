@@ -339,7 +339,7 @@ mime_node_child (mime_node_t *parent, int child)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {
-	if (child == 1 && parent->decrypted_child)
+	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->decrypted_child)
 	    sub = parent->decrypted_child;
 	else
 	    sub = g_mime_multipart_get_part
