@@ -1,3 +1,10 @@
+notmuch (0.29~rc1-1) experimental; urgency=medium
+
+  * New upstream release candidate, with fix for parallel sphinx-build
+    invocation
+
+ -- David Bremner <bremner@debian.org>  Mon, 03 Jun 2019 08:09:38 -0300
+
 notmuch (0.29~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate.
