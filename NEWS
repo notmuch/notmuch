@@ -40,6 +40,20 @@ information about cryptographic protections for the Subject header.
 Emacs
 -----
 
+Optionally check for missing attachements in outgoing messages (see
+function `notmuch-mua-attachment-check`).
+
+Bind `B` to browse URLs in current message.
+
+Bind `g` to refresh the current notmuch buffer.
+
+Editing a message as new now includes an FCC header.
+
+Forwarded messages are now tagged as +forwarded (customizable).
+
+Add references header to link forwarded message to thread of original
+message.
+
 The minimum supported major version of Emacs is now 24.
 
 Support for GNU Emacs older than 25.1 is deprecated with this release,
