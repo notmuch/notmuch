@@ -6,8 +6,10 @@ notmuch (0.29-1) experimental; urgency=medium
     Tim Retout (Closes: #918928).
   * Bug fix: "Can't deal with compressed maildir files", thanks to
     Joerg Jaspert (Closes: #688609).
+  * Bug fix: "Please ship notmuch-emacs-mua.desktop", thanks to Tim Retout
+    (Closes: #918975).
 
- -- David Bremner <bremner@debian.org>  Thu, 06 Jun 2019 21:23:13 -0300
+ -- David Bremner <bremner@debian.org>  Thu, 06 Jun 2019 21:35:12 -0300
 
 notmuch (0.29~rc1-1) experimental; urgency=medium
 
