@@ -1,4 +1,4 @@
-notmuch (0.29-1) experimental; urgency=medium
+notmuch (0.29-2) experimental; urgency=medium
 
   * New upstream feature release. See /usr/share/doc/notmuch/NEWS.gz for
     details.
