@@ -1,3 +1,14 @@
+notmuch (0.29-1) experimental; urgency=medium
+
+  * New upstream feature release. See /usr/share/doc/notmuch/NEWS.gz for
+    details.
+  * Bug fix: "notmuch-hello screen should show notmuch logo", thanks to
+    Tim Retout (Closes: #918928).
+  * Bug fix: "Can't deal with compressed maildir files", thanks to
+    Joerg Jaspert (Closes: #688609).
+
+ -- David Bremner <bremner@debian.org>  Thu, 06 Jun 2019 21:23:13 -0300
+
 notmuch (0.29~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate, with fix for parallel sphinx-build
