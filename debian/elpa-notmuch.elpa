@@ -1,2 +1,3 @@
 emacs/*.el
+emacs/notmuch-logo.png
 debian/tmp/usr/share/info/*
