@@ -77,6 +77,8 @@ Package: python-notmuch
 Architecture: all
 Section: python
 Depends: ${misc:Depends}, ${python:Depends}, libnotmuch5 (>= ${source:Version})
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
 Description: Python interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -152,7 +154,8 @@ Depends:
  notmuch (>= 0.4),
  libmail-box-perl, libmailtools-perl,
  libstring-shellquote-perl, libterm-readline-gnu-perl,
- ${misc:Depends}
+ ${misc:Depends},
+ ${perl:Depends},
 Recommends: mutt
 Enhances: notmuch, mutt
 Description: thread-based email index, search and tagging (Mutt interface)
