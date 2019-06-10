@@ -2,6 +2,8 @@
 
 python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
 %:
 	dh $@ --with python2,python3,elpa
 
