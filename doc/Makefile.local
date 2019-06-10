@@ -28,7 +28,11 @@ MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 MAN1_TEXI := $(patsubst $(srcdir)/doc/man1/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN1_RST))
 MAN5_TEXI := $(patsubst $(srcdir)/doc/man5/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN5_RST))
 MAN7_TEXI := $(patsubst $(srcdir)/doc/man7/%.rst,$(DOCBUILDDIR)/texinfo/%.texi,$(MAN7_RST))
-INFO_TEXI_FILES := $(MAN1_TEXI) $(MAN5_TEXI) $(MAN7_TEXI) $(DOCBUILDDIR)/texinfo/notmuch-emacs.texi
+INFO_TEXI_FILES := $(MAN1_TEXI) $(MAN5_TEXI) $(MAN7_TEXI)
+ifeq ($(HAVE_EMACS)$(WITH_EMACS),11)
+	INFO_TEXI_FILES := $(INFO_TEXI_FILES) $(DOCBUILDDIR)/texinfo/notmuch-emacs.texi
+endif
+
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
