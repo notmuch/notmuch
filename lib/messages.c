@@ -117,7 +117,7 @@ _notmuch_messages_has_next (notmuch_messages_t *messages)
 	return false;
 
     if (! messages->is_of_list_type)
-	INTERNAL_ERROR("_notmuch_messages_has_next not implimented for msets");
+	INTERNAL_ERROR("_notmuch_messages_has_next not implemented for msets");
 
     return (messages->iterator->next != NULL);
 }
