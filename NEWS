@@ -1,3 +1,11 @@
+Notmuch 0.29.1 (2019-06-11)
+===========================
+
+Build
+-----
+
+Fix for installation failure with `configure --without-emacs`.
+
 Notmuch 0.29 (2019-06-07)
 =========================
 
