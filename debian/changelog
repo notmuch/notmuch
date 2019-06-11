@@ -1,3 +1,11 @@
+notmuch (0.29.1-1) experimental; urgency=medium
+
+  * New upstream bug fix release
+    - fix for building and installing without emacs, does not occur
+      in Debian builds.
+
+ -- David Bremner <bremner@debian.org>  Tue, 11 Jun 2019 20:16:03 -0300
+
 notmuch (0.29-2) experimental; urgency=medium
 
   * New upstream feature release. See /usr/share/doc/notmuch/NEWS.gz for
