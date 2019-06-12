@@ -47,7 +47,7 @@ emacs_images := \
 emacs_bytecode = $(emacs_sources:.el=.elc)
 emacs_docstrings = $(emacs_sources:.el=.rsti)
 
-ifneq ($(HAVE_SPHINX)$(HAVE_EMACS),11)
+ifneq ($(HAVE_SPHINX)$(WITH_EMACS),11)
 docstring.stamp:
 	@echo "Missing prerequisites, not collecting docstrings"
 else
@@ -60,7 +60,7 @@ endif
 # the byte compiler may load an old .elc file when processing a
 # "require" or we may fail to rebuild a .elc that depended on a macro
 # from an updated file.
-ifeq ($(HAVE_EMACS),1)
+ifeq ($(WITH_EMACS),1)
 $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 	$(call quiet,EMACS) --directory emacs -batch -l make-deps.el \
 		-f batch-make-deps $(emacs_sources) > $@.tmp && \
@@ -82,7 +82,7 @@ $(dir)/notmuch-lib.elc: $(dir)/notmuch-version.elc
 endif
 CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 
-ifeq ($(HAVE_EMACS),1)
+ifeq ($(WITH_EMACS),1)
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 %.rsti: %.el
@@ -103,10 +103,8 @@ endif
 	rm -r .elpa-build
 
 ifeq ($(WITH_EMACS),1)
-ifeq ($(HAVE_EMACS),1)
 all: $(emacs_bytecode) $(emacs_docstrings)
 install-emacs: $(emacs_bytecode)
-endif
 
 install: install-emacs
 endif
@@ -115,7 +113,7 @@ endif
 install-emacs: $(emacs_sources) $(emacs_images)
 	mkdir -p "$(DESTDIR)$(emacslispdir)"
 	install -m0644 $(emacs_sources) "$(DESTDIR)$(emacslispdir)"
-ifeq ($(HAVE_EMACS),1)
+ifeq ($(WITH_EMACS),1)
 	install -m0644 $(emacs_bytecode) "$(DESTDIR)$(emacslispdir)"
 endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"

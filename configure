@@ -677,13 +677,14 @@ if [ -z "${EMACSETCDIR-}" ]; then
     EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
-printf "Checking if emacs (>= 24) is available... "
-if emacs --quick --batch --eval '(if (< emacs-major-version 24) (kill-emacs 1))' > /dev/null 2>&1; then
-    printf "Yes.\n"
-    have_emacs=1
-else
-    printf "No (so will not byte-compile emacs code)\n"
-    have_emacs=0
+if [ $WITH_EMACS = "1" ]; then
+    printf "Checking if emacs (>= 24) is available... "
+    if emacs --quick --batch --eval '(if (< emacs-major-version 24) (kill-emacs 1))' > /dev/null 2>&1; then
+        printf "Yes.\n"
+    else
+        printf "No (disabling emacs related parts of build)\n"
+        WITH_EMACS=0
+    fi
 fi
 
 have_doxygen=0
@@ -1164,9 +1165,6 @@ BASH_ABSOLUTE = ${bash_absolute}
 # Whether perl exists, and if so where
 HAVE_PERL = ${have_perl}
 PERL_ABSOLUTE = ${perl_absolute}
-
-# Whether there's an emacs binary available for byte-compiling
-HAVE_EMACS = ${have_emacs}
 
 # Whether there's a sphinx-build binary available for building documentation
 HAVE_SPHINX=${have_sphinx}
