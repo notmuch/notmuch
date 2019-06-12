@@ -185,8 +185,8 @@ node_verify (mime_node_t *node, GMimeObject *part)
     notmuch_status_t status;
 
     node->verify_attempted = true;
-    node->sig_list = g_mime_multipart_signed_verify
-	(GMIME_MULTIPART_SIGNED (part), GMIME_ENCRYPT_NONE, &err);
+    node->sig_list = g_mime_multipart_signed_verify (
+	GMIME_MULTIPART_SIGNED (part), GMIME_ENCRYPT_NONE, &err);
 
     if (node->sig_list)
 	set_signature_list_destructor (node);
@@ -342,8 +342,8 @@ mime_node_child (mime_node_t *parent, int child)
 	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->decrypted_child)
 	    sub = parent->decrypted_child;
 	else
-	    sub = g_mime_multipart_get_part
-		(GMIME_MULTIPART (parent->part), child);
+	    sub = g_mime_multipart_get_part (
+		GMIME_MULTIPART (parent->part), child);
     } else if (GMIME_IS_MESSAGE (parent->part)) {
 	sub = g_mime_message_get_mime_part (GMIME_MESSAGE (parent->part));
     } else {

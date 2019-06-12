@@ -752,8 +752,8 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 	size_t search_exclude_tags_length;
 	notmuch_status_t status;
 
-	search_exclude_tags = notmuch_config_get_search_exclude_tags
-	    (config, &search_exclude_tags_length);
+	search_exclude_tags = notmuch_config_get_search_exclude_tags (
+	    config, &search_exclude_tags_length);
 
 	for (i = 0; i < search_exclude_tags_length; i++) {
 	    status = notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);

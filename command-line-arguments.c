@@ -78,7 +78,7 @@ _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next,
 	return OPT_FAILED;
     }
 
-    *arg_desc->opt_bool = negate ? !value : value;
+    *arg_desc->opt_bool = negate ? (! value) : value;
 
     return OPT_OK;
 }
@@ -120,13 +120,13 @@ _process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *
 static int _opt_set_count (const notmuch_opt_desc_t *opt_desc)
 {
     return
-	!!opt_desc->opt_inherit +
-	!!opt_desc->opt_bool +
-	!!opt_desc->opt_int +
-	!!opt_desc->opt_keyword +
-	!!opt_desc->opt_flags +
-	!!opt_desc->opt_string +
-	!!opt_desc->opt_position;
+	(bool) opt_desc->opt_inherit +
+	(bool) opt_desc->opt_bool +
+	(bool) opt_desc->opt_int +
+	(bool) opt_desc->opt_keyword +
+	(bool) opt_desc->opt_flags +
+	(bool) opt_desc->opt_string +
+	(bool) opt_desc->opt_position;
 }
 
 /* Return true if opt_desc is valid. */
