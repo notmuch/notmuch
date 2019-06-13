@@ -47,50 +47,51 @@ static void
 welcome_message_pre_setup (void)
 {
     printf (
-"Welcome to notmuch!\n\n"
+	"Welcome to notmuch!\n\n"
 
-"The goal of notmuch is to help you manage and search your collection of\n"
-"email, and to efficiently keep up with the flow of email as it comes in.\n\n"
+	"The goal of notmuch is to help you manage and search your collection of\n"
+	"email, and to efficiently keep up with the flow of email as it comes in.\n\n"
 
-"Notmuch needs to know a few things about you such as your name and email\n"
-"address, as well as the directory that contains your email. This is where\n"
-"you already have mail stored and where messages will be delivered in the\n"
-"future. This directory can contain any number of sub-directories. Regular\n"
-"files in these directories should be individual email messages. If there\n"
-"are other, non-email files (such as indexes maintained by other email\n"
-"programs) then notmuch will do its best to detect those and ignore them.\n\n"
+	"Notmuch needs to know a few things about you such as your name and email\n"
+	"address, as well as the directory that contains your email. This is where\n"
+	"you already have mail stored and where messages will be delivered in the\n"
+	"future. This directory can contain any number of sub-directories. Regular\n"
+	"files in these directories should be individual email messages. If there\n"
+	"are other, non-email files (such as indexes maintained by other email\n"
+	"programs) then notmuch will do its best to detect those and ignore them.\n\n"
 
-"If you already have your email being delivered to directories in either\n"
-"maildir or mh format, then that's perfect. Mail storage that uses mbox\n"
-"format, (where one mbox file contains many messages), will not work with\n"
-"notmuch. If that's how your mail is currently stored, we recommend you\n"
-"first convert it to maildir format with a utility such as mb2md. You can\n"
-"continue configuring notmuch now, but be sure to complete the conversion\n"
-"before you run \"notmuch new\" for the first time.\n\n");
+	"If you already have your email being delivered to directories in either\n"
+	"maildir or mh format, then that's perfect. Mail storage that uses mbox\n"
+	"format, (where one mbox file contains many messages), will not work with\n"
+	"notmuch. If that's how your mail is currently stored, we recommend you\n"
+	"first convert it to maildir format with a utility such as mb2md. You can\n"
+	"continue configuring notmuch now, but be sure to complete the conversion\n"
+	"before you run \"notmuch new\" for the first time.\n\n");
 }
 
 static void
 welcome_message_post_setup (void)
 {
     printf ("\n"
-"Notmuch is now configured, and the configuration settings are saved in\n"
-"a file in your home directory named .notmuch-config . If you'd like to\n"
-"change the configuration in the future, you can either edit that file\n"
-"directly or run \"notmuch setup\".  To choose an alternate configuration\n"
-"location, set ${NOTMUCH_CONFIG}.\n\n"
+	    "Notmuch is now configured, and the configuration settings are saved in\n"
+	    "a file in your home directory named .notmuch-config . If you'd like to\n"
+	    "change the configuration in the future, you can either edit that file\n"
+	    "directly or run \"notmuch setup\".  To choose an alternate configuration\n"
+	    "location, set ${NOTMUCH_CONFIG}.\n\n"
 
-"The next step is to run \"notmuch new\" which will create a database\n"
-"that indexes all of your mail. Depending on the amount of mail you have\n"
-"the initial indexing process can take a long time, so expect that.\n"
-"Also, the resulting database will require roughly the same amount of\n"
-"storage space as your current collection of email. So please ensure you\n"
-"have sufficient storage space available now.\n\n");
+	    "The next step is to run \"notmuch new\" which will create a database\n"
+	    "that indexes all of your mail. Depending on the amount of mail you have\n"
+	    "the initial indexing process can take a long time, so expect that.\n"
+	    "Also, the resulting database will require roughly the same amount of\n"
+	    "storage space as your current collection of email. So please ensure you\n"
+	    "have sufficient storage space available now.\n\n");
 }
 
 static void
 print_tag_list (const char **tags, size_t tags_len)
 {
     unsigned int i;
+
     for (i = 0; i < tags_len; i++) {
 	if (i != 0)
 	    printf (" ");
@@ -134,15 +135,15 @@ notmuch_setup_command (notmuch_config_t *config,
     const char **search_exclude_tags;
     size_t search_exclude_tags_len;
 
-#define prompt(format, ...)					\
-    do {							\
-	printf (format, ##__VA_ARGS__);				\
-	fflush (stdout);					\
-	if (getline (&response, &response_size, stdin) < 0) {	\
-	    printf ("Exiting.\n");				\
-	    exit (EXIT_FAILURE);				\
-	}							\
-	chomp_newline (response);				\
+#define prompt(format, ...)                                     \
+    do {                                                        \
+	printf (format, ##__VA_ARGS__);                         \
+	fflush (stdout);                                        \
+	if (getline (&response, &response_size, stdin) < 0) {   \
+	    printf ("Exiting.\n");                              \
+	    exit (EXIT_FAILURE);                                \
+	}                                                       \
+	chomp_newline (response);                               \
     } while (0)
 
     if (notmuch_minimal_options ("setup", argc, argv) < 0)
@@ -167,14 +168,14 @@ notmuch_setup_command (notmuch_config_t *config,
     other_emails = g_ptr_array_new ();
 
     old_other_emails = notmuch_config_get_user_other_email (config,
-					     &old_other_emails_len);
+							    &old_other_emails_len);
     for (i = 0; i < old_other_emails_len; i++) {
 	prompt ("Additional email address [%s]: ", old_other_emails[i]);
 	if (strlen (response))
 	    g_ptr_array_add (other_emails, talloc_strdup (config, response));
 	else
 	    g_ptr_array_add (other_emails, talloc_strdup (config,
-							 old_other_emails[i]));
+							  old_other_emails[i]));
     }
 
     do {

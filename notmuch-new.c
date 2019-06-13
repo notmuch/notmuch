@@ -87,7 +87,7 @@ handle_sigint (unused (int sig))
      * result.  It is not required for correctness, and if it does
      * fail or produce a short write, we want to get out of the signal
      * handler as quickly as possible, not retry it. */
-    IGNORE_RESULT (write (2, msg, sizeof(msg)-1));
+    IGNORE_RESULT (write (2, msg, sizeof (msg) - 1));
     interrupted = 1;
 }
 
@@ -184,23 +184,23 @@ dirent_type (const char *path, const struct dirent *entry)
     /* Mapping from d_type to stat mode_t.  We omit DT_LNK so that
      * we'll fall through to stat and get the real file type. */
     static const mode_t modes[] = {
-	[DT_BLK]  = S_IFBLK,
-	[DT_CHR]  = S_IFCHR,
-	[DT_DIR]  = S_IFDIR,
+	[DT_BLK] = S_IFBLK,
+	[DT_CHR] = S_IFCHR,
+	[DT_DIR] = S_IFDIR,
 	[DT_FIFO] = S_IFIFO,
-	[DT_REG]  = S_IFREG,
+	[DT_REG] = S_IFREG,
 	[DT_SOCK] = S_IFSOCK
     };
-    if (entry->d_type < ARRAY_SIZE(modes) && modes[entry->d_type])
+    if (entry->d_type < ARRAY_SIZE (modes) && modes[entry->d_type])
 	return modes[entry->d_type];
 #endif
 
     abspath = talloc_asprintf (NULL, "%s/%s", path, entry->d_name);
-    if (!abspath) {
+    if (! abspath) {
 	errno = ENOMEM;
 	return -1;
     }
-    err = stat(abspath, &statbuf);
+    err = stat (abspath, &statbuf);
     saved_errno = errno;
     talloc_free (abspath);
     if (err < 0) {
@@ -226,10 +226,9 @@ _entries_resemble_maildir (const char *path, struct dirent **entries, int count)
 	if (dirent_type (path, entries[i]) != S_IFDIR)
 	    continue;
 
-	if (strcmp(entries[i]->d_name, "new") == 0 ||
-	    strcmp(entries[i]->d_name, "cur") == 0 ||
-	    strcmp(entries[i]->d_name, "tmp") == 0)
-	{
+	if (strcmp (entries[i]->d_name, "new") == 0 ||
+	    strcmp (entries[i]->d_name, "cur") == 0 ||
+	    strcmp (entries[i]->d_name, "tmp") == 0) {
 	    found++;
 	    if (found == 3)
 		return 1;
@@ -389,8 +388,8 @@ add_file (notmuch_database_t *notmuch, const char *filename,
 	    notmuch_message_maildir_flags_to_tags (message);
 
 	for (tag = state->new_tags; *tag != NULL; tag++) {
-	    if (strcmp ("unread", *tag) !=0 ||
-		!notmuch_message_has_maildir_flag (message, 'S')) {
+	    if (strcmp ("unread", *tag) != 0 ||
+		! notmuch_message_has_maildir_flag (message, 'S')) {
 		notmuch_message_add_tag (message, *tag);
 	    }
 	}
@@ -415,7 +414,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     case NOTMUCH_STATUS_READ_ONLY_DATABASE:
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
-	(void) print_status_database("add_file", notmuch, status);
+	(void) print_status_database ("add_file", notmuch, status);
 	goto DONE;
     default:
 	INTERNAL_ERROR ("add_message returned unexpected value: %d", status);
@@ -534,7 +533,7 @@ add_files (notmuch_database_t *notmuch,
 	 * file system link count.  So, only bail early if the
 	 * database agrees that there are no sub-directories. */
 	db_subdirs = notmuch_directory_get_child_directories (directory);
-	if (!notmuch_filenames_valid (db_subdirs))
+	if (! notmuch_filenames_valid (db_subdirs))
 	    goto DONE;
 	notmuch_filenames_destroy (db_subdirs);
 	db_subdirs = NULL;
@@ -631,7 +630,7 @@ add_files (notmuch_database_t *notmuch,
 
     /* Pass 2: Scan for new files, removed files, and removed directories. */
     for (i = 0; i < num_fs_entries && ! interrupted; i++) {
-        entry = fs_entries[i];
+	entry = fs_entries[i];
 
 	/* Ignore special directories early. */
 	if (_special_directory (entry->d_name))
@@ -648,8 +647,7 @@ add_files (notmuch_database_t *notmuch,
 	/* Check if we've walked past any names in db_files or
 	 * db_subdirs. If so, these have been deleted. */
 	while (notmuch_filenames_valid (db_files) &&
-	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0)
-	{
+	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0) {
 	    char *absolute = talloc_asprintf (state->removed_files,
 					      "%s/%s", path,
 					      notmuch_filenames_get (db_files));
@@ -664,17 +662,15 @@ add_files (notmuch_database_t *notmuch,
 	}
 
 	while (notmuch_filenames_valid (db_subdirs) &&
-	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0)
-	{
+	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0) {
 	    const char *filename = notmuch_filenames_get (db_subdirs);
 
-	    if (strcmp (filename, entry->d_name) < 0)
-	    {
+	    if (strcmp (filename, entry->d_name) < 0) {
 		char *absolute = talloc_asprintf (state->removed_directories,
 						  "%s/%s", path, filename);
 		if (state->debug)
 		    printf ("(D) add_files, pass 2: queuing passed directory %s for deletion from database\n",
-			absolute);
+			    absolute);
 
 		_filename_list_add (state->removed_directories, absolute);
 	    }
@@ -694,8 +690,7 @@ add_files (notmuch_database_t *notmuch,
 
 	/* Don't add a file that we've added before. */
 	if (notmuch_filenames_valid (db_files) &&
-	    strcmp (notmuch_filenames_get (db_files), entry->d_name) == 0)
-	{
+	    strcmp (notmuch_filenames_get (db_files), entry->d_name) == 0) {
 	    notmuch_filenames_move_to_next (db_files);
 	    continue;
 	}
@@ -708,12 +703,12 @@ add_files (notmuch_database_t *notmuch,
 
 	if (state->verbosity >= VERBOSITY_VERBOSE) {
 	    if (state->output_is_a_tty)
-		printf("\r\033[K");
+		printf ("\r\033[K");
 
 	    printf ("%i/%i: %s", state->processed_files, state->total_files,
 		    next);
 
-	    putchar((state->output_is_a_tty) ? '\r' : '\n');
+	    putchar ((state->output_is_a_tty) ? '\r' : '\n');
 	    fflush (stdout);
 	}
 
@@ -738,8 +733,7 @@ add_files (notmuch_database_t *notmuch,
 
     /* Now that we've walked the whole filesystem list, anything left
      * over in the database lists has been deleted. */
-    while (notmuch_filenames_valid (db_files))
-    {
+    while (notmuch_filenames_valid (db_files)) {
 	char *absolute = talloc_asprintf (state->removed_files,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_files));
@@ -752,8 +746,7 @@ add_files (notmuch_database_t *notmuch,
 	notmuch_filenames_move_to_next (db_files);
     }
 
-    while (notmuch_filenames_valid (db_subdirs))
-    {
+    while (notmuch_filenames_valid (db_subdirs)) {
 	char *absolute = talloc_asprintf (state->removed_directories,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_subdirs));
@@ -856,7 +849,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
     }
 
     for (i = 0; i < num_fs_entries && ! interrupted; i++) {
-        entry = fs_entries[i];
+	entry = fs_entries[i];
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
@@ -901,7 +894,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	for (i = 0; i < num_fs_entries; i++)
 	    free (fs_entries[i]);
 
-        free (fs_entries);
+	free (fs_entries);
     }
 }
 
@@ -939,6 +932,7 @@ remove_filename (notmuch_database_t *notmuch,
 {
     notmuch_status_t status;
     notmuch_message_t *message;
+
     status = notmuch_database_begin_atomic (notmuch);
     if (status)
 	return status;
@@ -976,13 +970,12 @@ _remove_directory (void *ctx,
     char *absolute;
 
     status = notmuch_database_get_directory (notmuch, path, &directory);
-    if (status || !directory)
+    if (status || ! directory)
 	return status;
 
     for (files = notmuch_directory_get_child_files (directory);
 	 notmuch_filenames_valid (files);
-	 notmuch_filenames_move_to_next (files))
-    {
+	 notmuch_filenames_move_to_next (files)) {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
 	status = remove_filename (notmuch, absolute, add_files_state);
@@ -993,8 +986,7 @@ _remove_directory (void *ctx,
 
     for (subdirs = notmuch_directory_get_child_directories (directory);
 	 notmuch_filenames_valid (subdirs);
-	 notmuch_filenames_move_to_next (subdirs))
-    {
+	 notmuch_filenames_move_to_next (subdirs)) {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
 	status = _remove_directory (ctx, notmuch, absolute, add_files_state);
@@ -1234,32 +1226,32 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	goto DONE;
 
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
+    for (f = add_files_state.removed_files->head; f && ! interrupted; f = f->next) {
 	ret = remove_filename (notmuch, f->filename, &add_files_state);
 	if (ret)
 	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
-		tv_start, add_files_state.removed_messages + add_files_state.renamed_messages,
-		add_files_state.removed_files->count);
+				    tv_start, add_files_state.removed_messages + add_files_state.renamed_messages,
+				    add_files_state.removed_files->count);
 	}
     }
 
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
+    for (f = add_files_state.removed_directories->head, i = 0; f && ! interrupted; f = f->next, i++) {
 	ret = _remove_directory (config, notmuch, f->filename, &add_files_state);
 	if (ret)
 	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "directories",
-		tv_start, i,
-		add_files_state.removed_directories->count);
+				    tv_start, i,
+				    add_files_state.removed_directories->count);
 	}
     }
 
-    for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
+    for (f = add_files_state.directory_mtimes->head; f && ! interrupted; f = f->next) {
 	notmuch_directory_t *directory;
 	status = notmuch_database_get_directory (notmuch, f->filename, &directory);
 	if (status == NOTMUCH_STATUS_SUCCESS && directory) {
@@ -1285,7 +1277,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_database_destroy (notmuch);
 
-    if (hooks && !ret && !interrupted)
+    if (hooks && ! ret && ! interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
 
     if (ret || interrupted)

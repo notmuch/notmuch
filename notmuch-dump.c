@@ -56,7 +56,7 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 
     ret = EXIT_SUCCESS;
 
- DONE:
+  DONE:
     if (list)
 	notmuch_config_list_destroy (list);
 
@@ -220,7 +220,7 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
     if (include & DUMP_INCLUDE_CONFIG) {
 	if (print_status_database ("notmuch dump", notmuch,
-				   database_dump_config(notmuch,output)))
+				   database_dump_config (notmuch, output)))
 	    return EXIT_FAILURE;
     }
 
@@ -307,7 +307,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		 name_for_error, strerror (errno));
 	if (close (outfd))
 	    fprintf (stderr, "Error closing %s during shutdown: %s\n",
-		 name_for_error, strerror (errno));
+		     name_for_error, strerror (errno));
 	goto DONE;
     }
 
@@ -346,7 +346,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 	}
 
     }
- DONE:
+  DONE:
     if (ret != EXIT_SUCCESS && output)
 	(void) gzclose_w (output);
 
@@ -378,13 +378,13 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &output_format, .name = "format", .keywords =
-	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
-				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
+				      { "batch-tag", DUMP_FORMAT_BATCH_TAG },
+				      { 0, 0 } } },
 	{ .opt_flags = &include, .name = "include", .keywords =
-	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
-				  { "properties", DUMP_INCLUDE_PROPERTIES },
-				  { "tags", DUMP_INCLUDE_TAGS} } },
+	      (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				      { "properties", DUMP_INCLUDE_PROPERTIES },
+				      { "tags", DUMP_INCLUDE_TAGS } } },
 	{ .opt_string = &output_file_name, .name = "output" },
 	{ .opt_bool = &gzip_output, .name = "gzip" },
 	{ .opt_inherit = notmuch_shared_options },

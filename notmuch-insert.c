@@ -99,7 +99,7 @@ is_valid_folder_name (const char *folder)
 	if ((p[0] == '.') && (p[1] == '.') && (p[2] == '\0' || p[2] == '/'))
 	    return false;
 	p = strchr (p, '/');
-	if (!p)
+	if (! p)
 	    return true;
 	p++;
     }
@@ -120,7 +120,7 @@ mkdir_recursive (const void *ctx, const char *path, int mode)
     /* First check the common case: directory already exists. */
     r = stat (path, &st);
     if (r == 0) {
-        if (! S_ISDIR (st.st_mode)) {
+	if (! S_ISDIR (st.st_mode)) {
 	    fprintf (stderr, "Error: '%s' is not a directory: %s\n",
 		     path, strerror (EEXIST));
 	    return false;
@@ -282,7 +282,7 @@ copy_fd (int fdout, int fdin)
 	} while (remain > 0);
     }
 
-    return (!interrupted && !empty);
+    return (! interrupted && ! empty);
 }
 
 /*
@@ -311,7 +311,7 @@ maildir_write_tmp (const void *ctx, int fdin, const char *maildir, bool world_re
 
     return path;
 
-FAIL:
+  FAIL:
     close (fdout);
     unlink (path);
 
@@ -360,7 +360,7 @@ maildir_write_new (const void *ctx, int fdin, const char *maildir, bool world_re
 
     return newpath;
 
-FAIL:
+  FAIL:
     unlink (cleanpath);
 
     return NULL;

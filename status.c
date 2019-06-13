@@ -42,8 +42,8 @@ print_status_message (const char *loc,
 
 notmuch_status_t
 print_status_database (const char *loc,
-		    const notmuch_database_t *notmuch,
-		    notmuch_status_t status)
+		       const notmuch_database_t *notmuch,
+		       notmuch_status_t status)
 {
     if (status) {
 	const char *msg;

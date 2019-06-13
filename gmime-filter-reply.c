@@ -47,143 +47,143 @@ static GMimeFilterClass *parent_class = NULL;
 GType
 g_mime_filter_reply_get_type (void)
 {
-	static GType type = 0;
+    static GType type = 0;
 
-	if (!type) {
-		static const GTypeInfo info = {
-			.class_size = sizeof (GMimeFilterReplyClass),
-			.base_init = NULL,
-			.base_finalize = NULL,
-			.class_init = (GClassInitFunc) g_mime_filter_reply_class_init,
-			.class_finalize = NULL,
-			.class_data = NULL,
-			.instance_size = sizeof (GMimeFilterReply),
-			.n_preallocs = 0,
-			.instance_init = (GInstanceInitFunc) g_mime_filter_reply_init,
-			.value_table = NULL,
-		};
+    if (! type) {
+	static const GTypeInfo info = {
+	    .class_size = sizeof (GMimeFilterReplyClass),
+	    .base_init = NULL,
+	    .base_finalize = NULL,
+	    .class_init = (GClassInitFunc) g_mime_filter_reply_class_init,
+	    .class_finalize = NULL,
+	    .class_data = NULL,
+	    .instance_size = sizeof (GMimeFilterReply),
+	    .n_preallocs = 0,
+	    .instance_init = (GInstanceInitFunc) g_mime_filter_reply_init,
+	    .value_table = NULL,
+	};
 
-		type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterReply", &info, (GTypeFlags) 0);
-	}
+	type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterReply", &info, (GTypeFlags) 0);
+    }
 
-	return type;
+    return type;
 }
 
 
 static void
 g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass, unused (void *class_data))
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
+    GObjectClass *object_class = G_OBJECT_CLASS (klass);
+    GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
 
-	parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
+    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
 
-	object_class->finalize = g_mime_filter_reply_finalize;
+    object_class->finalize = g_mime_filter_reply_finalize;
 
-	filter_class->copy = filter_copy;
-	filter_class->filter = filter_filter;
-	filter_class->complete = filter_complete;
-	filter_class->reset = filter_reset;
+    filter_class->copy = filter_copy;
+    filter_class->filter = filter_filter;
+    filter_class->complete = filter_complete;
+    filter_class->reset = filter_reset;
 }
 
 static void
 g_mime_filter_reply_init (GMimeFilterReply *filter, GMimeFilterReplyClass *klass)
 {
-	(void) klass;
-	filter->saw_nl = true;
-	filter->saw_angle = false;
+    (void) klass;
+    filter->saw_nl = true;
+    filter->saw_angle = false;
 }
 
 static void
 g_mime_filter_reply_finalize (GObject *object)
 {
-	G_OBJECT_CLASS (parent_class)->finalize (object);
+    G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
 static GMimeFilter *
 filter_copy (GMimeFilter *filter)
 {
-	GMimeFilterReply *reply = (GMimeFilterReply *) filter;
+    GMimeFilterReply *reply = (GMimeFilterReply *) filter;
 
-	return g_mime_filter_reply_new (reply->encode);
+    return g_mime_filter_reply_new (reply->encode);
 }
 
 static void
 filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 	       char **outbuf, size_t *outlen, size_t *outprespace)
 {
-	GMimeFilterReply *reply = (GMimeFilterReply *) filter;
-	const char *inptr = inbuf;
-	const char *inend = inbuf + inlen;
-	char *outptr;
+    GMimeFilterReply *reply = (GMimeFilterReply *) filter;
+    const char *inptr = inbuf;
+    const char *inend = inbuf + inlen;
+    char *outptr;
 
-	(void) prespace;
-	if (reply->encode) {
-		g_mime_filter_set_size (filter, 3 * inlen, false);
+    (void) prespace;
+    if (reply->encode) {
+	g_mime_filter_set_size (filter, 3 * inlen, false);
 
-		outptr = filter->outbuf;
-		while (inptr < inend) {
-			if (reply->saw_nl) {
-				*outptr++ = '>';
-				*outptr++ = ' ';
-				reply->saw_nl = false;
-			}
-			if (*inptr == '\n')
-				reply->saw_nl = true;
-			else
-				reply->saw_nl = false;
-			if (*inptr != '\r')
-				*outptr++ = *inptr;
-			inptr++;
-		}
-	} else {
-		g_mime_filter_set_size (filter, inlen + 1, false);
-
-		outptr = filter->outbuf;
-		while (inptr < inend) {
-			if (reply->saw_nl) {
-				if (*inptr == '>')
-					reply->saw_angle = true;
-				else
-					*outptr++ = *inptr;
-				reply->saw_nl = false;
-			} else if (reply->saw_angle) {
-				if (*inptr == ' ')
-					;
-				else
-					*outptr++ = *inptr;
-				reply->saw_angle = false;
-			} else if (*inptr != '\r') {
-				if (*inptr == '\n')
-					reply->saw_nl = true;
-				*outptr++ = *inptr;
-			}
-
-			inptr++;
-		}
+	outptr = filter->outbuf;
+	while (inptr < inend) {
+	    if (reply->saw_nl) {
+		*outptr++ = '>';
+		*outptr++ = ' ';
+		reply->saw_nl = false;
+	    }
+	    if (*inptr == '\n')
+		reply->saw_nl = true;
+	    else
+		reply->saw_nl = false;
+	    if (*inptr != '\r')
+		*outptr++ = *inptr;
+	    inptr++;
 	}
+    } else {
+	g_mime_filter_set_size (filter, inlen + 1, false);
 
-	*outlen = outptr - filter->outbuf;
-	*outprespace = filter->outpre;
-	*outbuf = filter->outbuf;
+	outptr = filter->outbuf;
+	while (inptr < inend) {
+	    if (reply->saw_nl) {
+		if (*inptr == '>')
+		    reply->saw_angle = true;
+		else
+		    *outptr++ = *inptr;
+		reply->saw_nl = false;
+	    } else if (reply->saw_angle) {
+		if (*inptr == ' ')
+		    ;
+		else
+		    *outptr++ = *inptr;
+		reply->saw_angle = false;
+	    } else if (*inptr != '\r') {
+		if (*inptr == '\n')
+		    reply->saw_nl = true;
+		*outptr++ = *inptr;
+	    }
+
+	    inptr++;
+	}
+    }
+
+    *outlen = outptr - filter->outbuf;
+    *outprespace = filter->outpre;
+    *outbuf = filter->outbuf;
 }
 
 static void
 filter_complete (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 		 char **outbuf, size_t *outlen, size_t *outprespace)
 {
-	if (inbuf && inlen)
-		filter_filter (filter, inbuf, inlen, prespace, outbuf, outlen, outprespace);
+    if (inbuf && inlen)
+	filter_filter (filter, inbuf, inlen, prespace, outbuf, outlen, outprespace);
 }
 
 static void
 filter_reset (GMimeFilter *filter)
 {
-	GMimeFilterReply *reply = (GMimeFilterReply *) filter;
+    GMimeFilterReply *reply = (GMimeFilterReply *) filter;
 
-	reply->saw_nl = true;
-	reply->saw_angle = false;
+    reply->saw_nl = true;
+    reply->saw_angle = false;
 }
 
 
@@ -202,11 +202,11 @@ filter_reset (GMimeFilter *filter)
 GMimeFilter *
 g_mime_filter_reply_new (gboolean encode)
 {
-	GMimeFilterReply *new_reply;
+    GMimeFilterReply *new_reply;
 
-	new_reply = (GMimeFilterReply *) g_object_new (GMIME_TYPE_FILTER_REPLY, NULL);
-	new_reply->encode = encode;
+    new_reply = (GMimeFilterReply *) g_object_new (GMIME_TYPE_FILTER_REPLY, NULL);
+    new_reply->encode = encode;
 
-	return (GMimeFilter *) new_reply;
+    return (GMimeFilter *) new_reply;
 }
 

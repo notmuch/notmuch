@@ -25,18 +25,18 @@
 #include "zlib-extra.h"
 
 static int
-process_config_line (notmuch_database_t *notmuch, const char* line)
+process_config_line (notmuch_database_t *notmuch, const char *line)
 {
     const char *key_p, *val_p;
     char *key, *val;
-    size_t key_len,val_len;
+    size_t key_len, val_len;
     const char *delim = " \t\n";
     int ret = EXIT_FAILURE;
 
-    void *local = talloc_new(NULL);
+    void *local = talloc_new (NULL);
 
     key_p = strtok_len_c (line, delim, &key_len);
-    val_p = strtok_len_c (key_p+key_len, delim, &val_len);
+    val_p = strtok_len_c (key_p + key_len, delim, &val_len);
 
     key = talloc_strndup (local, key_p, key_len);
     val = talloc_strndup (local, val_p, val_len);
@@ -52,14 +52,13 @@ process_config_line (notmuch_database_t *notmuch, const char* line)
 
     ret = EXIT_SUCCESS;
 
- DONE:
+  DONE:
     talloc_free (local);
     return ret;
 }
 
 static int
-process_properties_line (notmuch_database_t *notmuch, const char* line)
-
+process_properties_line (notmuch_database_t *notmuch, const char *line)
 {
     const char *id_p, *tok;
     size_t id_len = 0, tok_len = 0;
@@ -248,14 +247,14 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &input_format, .name = "format", .keywords =
-	  (notmuch_keyword_t []){ { "auto", DUMP_FORMAT_AUTO },
-				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
-				  { "sup", DUMP_FORMAT_SUP },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "auto", DUMP_FORMAT_AUTO },
+				      { "batch-tag", DUMP_FORMAT_BATCH_TAG },
+				      { "sup", DUMP_FORMAT_SUP },
+				      { 0, 0 } } },
 	{ .opt_flags = &include, .name = "include", .keywords =
-	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
-				  { "properties", DUMP_INCLUDE_PROPERTIES },
-				  { "tags", DUMP_INCLUDE_TAGS} } },
+	      (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				      { "properties", DUMP_INCLUDE_PROPERTIES },
+				      { "tags", DUMP_INCLUDE_TAGS } } },
 
 	{ .opt_string = &input_file_name, .name = "input" },
 	{ .opt_bool = &accumulate, .name = "accumulate" },
@@ -330,13 +329,13 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
 	if (status) {
 	    fprintf (stderr, "Error reading (gzipped) input: %s\n",
-		     gz_error_string(status, input));
+		     gz_error_string (status, input));
 	    ret = EXIT_FAILURE;
 	    goto DONE;
 	}
 
 	if ((include & DUMP_INCLUDE_CONFIG) && line_len >= 2 && line[0] == '#' && line[1] == '@') {
-	    ret = process_config_line(notmuch, line+2);
+	    ret = process_config_line (notmuch, line + 2);
 	    if (ret)
 		goto DONE;
 	}
@@ -348,8 +347,8 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
     } while ((line_len == 0) ||
 	     (line[0] == '#') ||
-	     /* the cast is safe because we checked about for line_len < 0 */
-	     (strspn (line, " \t\n") == (unsigned)line_len));
+             /* the cast is safe because we checked about for line_len < 0 */
+	     (strspn (line, " \t\n") == (unsigned) line_len));
 
     if (! ((include & DUMP_INCLUDE_TAGS) || (include & DUMP_INCLUDE_PROPERTIES))) {
 	ret = EXIT_SUCCESS;
@@ -435,14 +434,14 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = EXIT_FAILURE;
     }
 
-    /* currently this should not be after DONE: since we don't 
+    /* currently this should not be after DONE: since we don't
      * know if the xregcomp was reached
      */
 
     if (input_format == DUMP_FORMAT_SUP)
 	regfree (&regex);
 
- DONE:
+  DONE:
     if (line_ctx != NULL)
 	talloc_free (line_ctx);
 

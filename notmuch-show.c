@@ -37,8 +37,7 @@ _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
+	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 
 	result = talloc_asprintf_append (result, "%s%s",
@@ -69,12 +68,13 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 			    from, relative_date, tags);
 }
 
-static const char *_get_disposition(GMimeObject *meta)
+static const char *
+_get_disposition (GMimeObject *meta)
 {
     GMimeContentDisposition *disposition;
 
     disposition = g_mime_object_get_content_disposition (meta);
-    if (!disposition)
+    if (! disposition)
 	return NULL;
 
     return g_mime_content_disposition_get_disposition (disposition);
@@ -170,7 +170,7 @@ _extract_email_address (const void *ctx, const char *from)
 	g_object_unref (addresses);
 
     return email;
-   }
+}
 
 /* Return 1 if 'line' is an mbox From_ line---that is, a line
  * beginning with zero or more '>' characters followed by the
@@ -290,7 +290,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
     charset = g_mime_object_get_content_type_parameter (part, "charset");
     charset = charset ? g_mime_charset_canon_name (charset) : NULL;
     wrapper = g_mime_part_get_content (GMIME_PART (part));
-    if (wrapper && charset && !g_ascii_strncasecmp (charset, "iso-8859-", 9)) {
+    if (wrapper && charset && ! g_ascii_strncasecmp (charset, "iso-8859-", 9)) {
 	GMimeStream *null_stream = NULL;
 	GMimeStream *null_stream_filter = NULL;
 
@@ -298,10 +298,10 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	null_stream = g_mime_stream_null_new ();
 	null_stream_filter = g_mime_stream_filter_new (null_stream);
 	windows_filter = g_mime_filter_windows_new (charset);
-	g_mime_stream_filter_add(GMIME_STREAM_FILTER (null_stream_filter),
-				 windows_filter);
+	g_mime_stream_filter_add (GMIME_STREAM_FILTER (null_stream_filter),
+				  windows_filter);
 	g_mime_data_wrapper_write_to_stream (wrapper, null_stream_filter);
-	charset = g_mime_filter_windows_real_charset(
+	charset = g_mime_filter_windows_real_charset (
 	    (GMimeFilterWindows *) windows_filter);
 
 	if (null_stream_filter)
@@ -314,8 +314,8 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 
     stream_filter = g_mime_stream_filter_new (stream_out);
     crlf_filter = g_mime_filter_dos2unix_new (false);
-    g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
-			     crlf_filter);
+    g_mime_stream_filter_add (GMIME_STREAM_FILTER (stream_filter),
+			      crlf_filter);
     g_object_unref (crlf_filter);
 
     if (charset) {
@@ -345,12 +345,12 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
     if (wrapper && stream_filter)
 	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
     if (stream_filter)
-	g_object_unref(stream_filter);
+	g_object_unref (stream_filter);
     if (windows_filter)
 	g_object_unref (windows_filter);
 }
 
-static const char*
+static const char *
 signature_status_to_string (GMimeSignatureStatus status)
 {
     if (g_mime_signature_status_bad (status))
@@ -368,12 +368,13 @@ signature_status_to_string (GMimeSignatureStatus status)
 /* Print signature flags */
 struct key_map_struct {
     GMimeSignatureStatus bit;
-    const char * string;
+    const char *string;
 };
 
 static void
 do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
-			    unsigned int array_map_len, GMimeSignatureStatus errors) {
+			    unsigned int array_map_len, GMimeSignatureStatus errors)
+{
     sp->map_key (sp, "errors");
     sp->begin_map (sp);
 
@@ -392,22 +393,22 @@ format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 {
     GMimeSignatureStatus errors = g_mime_signature_get_status (signature);
 
-    if (!(errors & GMIME_SIGNATURE_STATUS_ERROR_MASK))
+    if (! (errors & GMIME_SIGNATURE_STATUS_ERROR_MASK))
 	return;
 
     struct key_map_struct key_map[] = {
-	{ GMIME_SIGNATURE_STATUS_KEY_REVOKED, "key-revoked"},
-	{ GMIME_SIGNATURE_STATUS_KEY_EXPIRED, "key-expired"},
+	{ GMIME_SIGNATURE_STATUS_KEY_REVOKED, "key-revoked" },
+	{ GMIME_SIGNATURE_STATUS_KEY_EXPIRED, "key-expired" },
 	{ GMIME_SIGNATURE_STATUS_SIG_EXPIRED, "sig-expired" },
-	{ GMIME_SIGNATURE_STATUS_KEY_MISSING, "key-missing"},
-	{ GMIME_SIGNATURE_STATUS_CRL_MISSING, "crl-missing"},
-	{ GMIME_SIGNATURE_STATUS_CRL_TOO_OLD, "crl-too-old"},
-	{ GMIME_SIGNATURE_STATUS_BAD_POLICY, "bad-policy"},
-	{ GMIME_SIGNATURE_STATUS_SYS_ERROR, "sys-error"},
-	{ GMIME_SIGNATURE_STATUS_TOFU_CONFLICT, "tofu-conflict"},
+	{ GMIME_SIGNATURE_STATUS_KEY_MISSING, "key-missing" },
+	{ GMIME_SIGNATURE_STATUS_CRL_MISSING, "crl-missing" },
+	{ GMIME_SIGNATURE_STATUS_CRL_TOO_OLD, "crl-too-old" },
+	{ GMIME_SIGNATURE_STATUS_BAD_POLICY, "bad-policy" },
+	{ GMIME_SIGNATURE_STATUS_SYS_ERROR, "sys-error" },
+	{ GMIME_SIGNATURE_STATUS_TOFU_CONFLICT, "tofu-conflict" },
     };
 
-    do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
+    do_format_signature_errors (sp, key_map, ARRAY_SIZE (key_map), errors);
 }
 
 /* Signature status sprinter */
@@ -419,7 +420,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 
     sp->begin_list (sp);
 
-    if (!siglist) {
+    if (! siglist) {
 	sp->end (sp);
 	return;
     }
@@ -479,7 +480,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 	}
 
 	sp->end (sp);
-     }
+    }
 
     sp->end (sp);
 }
@@ -555,8 +556,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	g_mime_stream_printf (stream, "Date: %s\n", date_string);
 	g_mime_stream_printf (stream, "\fheader}\n");
 
-	if (!params->output_body)
-	{
+	if (! params->output_body) {
 	    g_mime_stream_printf (stream, "\f%s}\n", part_type);
 	    return NOTMUCH_STATUS_SUCCESS;
 	}
@@ -566,8 +566,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
     if (leaf) {
 	if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	    (params->include_html ||
-	     ! g_mime_content_type_is_type (content_type, "text", "html")))
-	{
+	     ! g_mime_content_type_is_type (content_type, "text", "html"))) {
 	    show_text_part_content (node->part, stream, 0);
 	} else {
 	    char *content_string = g_mime_content_type_get_mime_type (content_type);
@@ -751,8 +750,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	 */
 	if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	    (include_html ||
-	     ! g_mime_content_type_is_type (content_type, "text", "html")))
-	{
+	     ! g_mime_content_type_is_type (content_type, "text", "html"))) {
 	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
 	    GByteArray *part_content;
 	    show_text_part_content (node->part, stream_memory, 0);
@@ -824,7 +822,7 @@ format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
     ssize_t line_size;
     ssize_t line_len;
 
-    if (!message)
+    if (! message)
 	INTERNAL_ERROR ("format_part_mbox requires a root part");
 
     filename = notmuch_message_get_filename (message);
@@ -883,7 +881,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	}
 
 	while (! g_mime_stream_eos (stream)) {
-	    ssize = g_mime_stream_read (stream, buf, sizeof(buf));
+	    ssize = g_mime_stream_read (stream, buf, sizeof (buf));
 	    if (ssize < 0) {
 		fprintf (stderr, "Error: Read failed from %s\n", filename);
 		goto DONE;
@@ -898,7 +896,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	ret = NOTMUCH_STATUS_SUCCESS;
 
 	/* XXX This DONE is just for the special case of a node in a single file */
-    DONE:
+      DONE:
 	if (stream)
 	    g_object_unref (stream);
 
@@ -967,7 +965,7 @@ show_message (void *ctx,
 	    }
 	}
     }
-  DONE:
+    DONE :
     talloc_free (local);
     return status;
 }
@@ -990,8 +988,7 @@ show_messages (void *ctx,
 
     for (;
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	sp->begin_list (sp);
 
 	message = notmuch_messages_get (messages);
@@ -1001,9 +998,9 @@ show_messages (void *ctx,
 
 	next_indent = indent;
 
-	if ((match && (!excluded || !params->omit_excluded)) || params->entire_thread) {
+	if ((match && (! excluded || ! params->omit_excluded)) || params->entire_thread) {
 	    status = show_message (ctx, format, sp, message, indent, params);
-	    if (status && !res)
+	    if (status && ! res)
 		res = status;
 	    next_indent = indent + 1;
 	} else {
@@ -1015,7 +1012,7 @@ show_messages (void *ctx,
 				notmuch_message_get_replies (message),
 				next_indent,
 				params);
-	if (status && !res)
+	if (status && ! res)
 	    res = status;
 
 	notmuch_message_destroy (message);
@@ -1064,7 +1061,7 @@ do_show_single (void *ctx,
     notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, 1);
 
     return show_message (ctx, format, sp, message, 0, params)
-	!= NOTMUCH_STATUS_SUCCESS;
+	   != NOTMUCH_STATUS_SUCCESS;
 }
 
 /* Formatted output of threads */
@@ -1080,16 +1077,15 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    status= notmuch_query_search_threads (query, &threads);
+    status = notmuch_query_search_threads (query, &threads);
     if (print_status_query ("notmuch show", query, status))
 	return 1;
 
     sp->begin_list (sp);
 
-    for ( ;
+    for (;
 	 notmuch_threads_valid (threads);
-	 notmuch_threads_move_to_next (threads))
-    {
+	 notmuch_threads_move_to_next (threads)) {
 	thread = notmuch_threads_get (threads);
 
 	messages = notmuch_thread_get_toplevel_messages (thread);
@@ -1099,7 +1095,7 @@ do_show (void *ctx,
 			    notmuch_thread_get_thread_id (thread));
 
 	status = show_messages (ctx, format, sp, messages, 0, params);
-	if (status && !res)
+	if (status && ! res)
 	    res = status;
 
 	notmuch_thread_destroy (thread);
@@ -1175,24 +1171,24 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
-	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
-				  { "text", NOTMUCH_FORMAT_TEXT },
-				  { "sexp", NOTMUCH_FORMAT_SEXP },
-				  { "mbox", NOTMUCH_FORMAT_MBOX },
-				  { "raw", NOTMUCH_FORMAT_RAW },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+				      { "text", NOTMUCH_FORMAT_TEXT },
+				      { "sexp", NOTMUCH_FORMAT_SEXP },
+				      { "mbox", NOTMUCH_FORMAT_MBOX },
+				      { "raw", NOTMUCH_FORMAT_RAW },
+				      { 0, 0 } } },
 	{ .opt_int = &notmuch_format_version, .name = "format-version" },
 	{ .opt_bool = &exclude, .name = "exclude" },
 	{ .opt_bool = &params.entire_thread, .name = "entire-thread",
 	  .present = &entire_thread_set },
 	{ .opt_int = &params.part, .name = "part" },
-	{ .opt_keyword = (int*)(&params.crypto.decrypt), .name = "decrypt",
+	{ .opt_keyword = (int *) (&params.crypto.decrypt), .name = "decrypt",
 	  .keyword_no_arg_value = "true", .keywords =
-	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
-				  { "auto", NOTMUCH_DECRYPT_AUTO },
-				  { "true", NOTMUCH_DECRYPT_NOSTASH },
-				  { "stash", NOTMUCH_DECRYPT_TRUE },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
+				      { "auto", NOTMUCH_DECRYPT_AUTO },
+				      { "true", NOTMUCH_DECRYPT_NOSTASH },
+				      { "stash", NOTMUCH_DECRYPT_TRUE },
+				      { 0, 0 } } },
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
@@ -1240,7 +1236,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	(format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP))
 	params.entire_thread = true;
 
-    if (!params.output_body) {
+    if (! params.output_body) {
 	if (params.part > 0) {
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
 	    params.output_body = true;
@@ -1254,13 +1250,13 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     if (params.include_html &&
-        (format != NOTMUCH_FORMAT_TEXT &&
+	(format != NOTMUCH_FORMAT_TEXT &&
 	 format != NOTMUCH_FORMAT_JSON &&
 	 format != NOTMUCH_FORMAT_SEXP)) {
 	fprintf (stderr, "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
     }
 
-    query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
+    query_string = query_string_from_args (config, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
@@ -1288,7 +1284,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     /* Create structure printer. */
     formatter = formatters[format];
-    sprinter = formatter->new_sprinter(config, stdout);
+    sprinter = formatter->new_sprinter (config, stdout);
 
     params.out_stream = g_mime_stream_stdout_new ();
 
@@ -1305,7 +1301,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	notmuch_status_t status;
 
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
-	    (config, &search_exclude_tags_length);
+				  (config, &search_exclude_tags_length);
 
 	for (i = 0; i < search_exclude_tags_length; i++) {
 	    status = notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
@@ -1324,7 +1320,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = do_show (config, query, formatter, sprinter, &params);
     }
 
- DONE:
+    DONE :
     g_mime_stream_flush (params.out_stream);
     g_object_unref (params.out_stream);
 

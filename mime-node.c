@@ -55,7 +55,7 @@ _mime_node_context_free (mime_node_context_t *res)
     return 0;
 }
 
-const _notmuch_message_crypto_t*
+const _notmuch_message_crypto_t *
 mime_node_get_message_crypto_status (mime_node_t *node)
 {
     return node->ctx->msg_crypto;
@@ -97,8 +97,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	notmuch_filenames_t *filenames;
 	for (filenames = notmuch_message_get_filenames (message);
 	     notmuch_filenames_valid (filenames);
-	     notmuch_filenames_move_to_next (filenames))
-	{
+	     notmuch_filenames_move_to_next (filenames)) {
 	    filename = notmuch_filenames_get (filenames);
 	    fd = open (filename, O_RDONLY);
 	    if (fd != -1)
@@ -109,27 +108,27 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	if (fd == -1) {
 	    /* Give up */
 	    fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
+    }
 
     mctx->stream = g_mime_stream_gzfile_new (fd);
-    if (!mctx->stream) {
+    if (! mctx->stream) {
 	fprintf (stderr, "Out of memory.\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
     mctx->parser = g_mime_parser_new_with_stream (mctx->stream);
-    if (!mctx->parser) {
+    if (! mctx->parser) {
 	fprintf (stderr, "Out of memory.\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
     mctx->mime_message = g_mime_parser_construct_message (mctx->parser, NULL);
-    if (!mctx->mime_message) {
+    if (! mctx->mime_message) {
 	fprintf (stderr, "Failed to parse %s\n", filename);
 	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
@@ -153,7 +152,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     *root_out = root;
     return NOTMUCH_STATUS_SUCCESS;
 
-DONE:
+  DONE:
     talloc_free (root);
     return status;
 }
@@ -171,6 +170,7 @@ static void
 set_signature_list_destructor (mime_node_t *node)
 {
     GMimeSignatureList **proxy = talloc (node, GMimeSignatureList *);
+
     if (proxy) {
 	*proxy = node->sig_list;
 	talloc_set_destructor (proxy, _signature_list_free);
@@ -259,7 +259,7 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	g_object_unref (decrypt_result);
     }
 
- DONE:
+  DONE:
     if (err)
 	g_error_free (err);
 }
@@ -273,7 +273,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
     /* Set basic node properties */
     node->part = part;
     node->ctx = parent->ctx;
-    if (!talloc_reference (node, node->ctx)) {
+    if (! talloc_reference (node, node->ctx)) {
 	fprintf (stderr, "Out of memory.\n");
 	talloc_free (node);
 	return NULL;
@@ -335,7 +335,7 @@ mime_node_child (mime_node_t *parent, int child)
     GMimeObject *sub;
     mime_node_t *node;
 
-    if (!parent || !parent->part || child < 0 || child >= parent->nchildren)
+    if (! parent || ! parent->part || child < 0 || child >= parent->nchildren)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {

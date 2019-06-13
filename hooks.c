@@ -53,7 +53,7 @@ notmuch_run_hook (const char *db_path, const char *hook)
     /* Flush any buffered output before forking. */
     fflush (stdout);
 
-    pid = fork();
+    pid = fork ();
     if (pid == -1) {
 	fprintf (stderr, "Error: %s hook fork failed: %s\n", hook,
 		 strerror (errno));
@@ -78,7 +78,7 @@ notmuch_run_hook (const char *db_path, const char *hook)
 	goto DONE;
     }
 
-    if (!WIFEXITED (status) || WEXITSTATUS (status)) {
+    if (! WIFEXITED (status) || WEXITSTATUS (status)) {
 	if (WIFEXITED (status)) {
 	    fprintf (stderr, "Error: %s hook failed with status %d\n",
 		     hook, WEXITSTATUS (status));
