@@ -42,7 +42,7 @@ strtok_len_c (const char *s, const char *delim, size_t *len)
 {
     /* strtok_len is already const-safe, but we can't express both
      * versions in the C type system. */
-    return strtok_len ((char*)s, delim, len);
+    return strtok_len ((char *) s, delim, len);
 }
 
 char *
@@ -60,7 +60,7 @@ sanitize_string (const void *ctx, const char *str)
     for (loop = out; *loop; loop++) {
 	if (*loop == '\t' || *loop == '\n')
 	    *loop = ' ';
-	else if ((unsigned char)(*loop) < 32)
+	else if ((unsigned char) (*loop) < 32)
 	    *loop = '?';
     }
 
@@ -87,9 +87,9 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
      * beginning, and anything containing non-ASCII text. */
     if (! term[0])
 	need_quoting = 1;
-    for (in = term; *in && !need_quoting; in++)
+    for (in = term; *in && ! need_quoting; in++)
 	if (is_unquoted_terminator (*in) || *in == '"' || *in == '('
-	    || (unsigned char)*in > 127)
+	    || (unsigned char) *in > 127)
 	    need_quoting = 1;
 
     if (need_quoting)
@@ -141,7 +141,7 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
     return 0;
 }
 
-const char*
+const char *
 skip_space (const char *str)
 {
     while (*str && isspace ((unsigned char) *str))
@@ -154,6 +154,7 @@ parse_boolean_term (void *ctx, const char *str,
 		    char **prefix_out, char **term_out)
 {
     int err = EINVAL;
+
     *prefix_out = *term_out = NULL;
 
     /* Parse prefix */
@@ -193,7 +194,7 @@ parse_boolean_term (void *ctx, const char *str,
 	}
 	/* Did the term terminate without a closing quote or is there
 	 * trailing text after the closing quote? */
-	if (!closed || *pos)
+	if (! closed || *pos)
 	    goto FAIL;
 	*out = '\0';
     } else {
@@ -215,7 +216,7 @@ parse_boolean_term (void *ctx, const char *str,
     }
     return 0;
 
- FAIL:
+  FAIL:
     talloc_free (*prefix_out);
     talloc_free (*term_out);
     errno = err;
@@ -230,9 +231,9 @@ strcmp_null (const char *s1, const char *s2)
     else if (! s1 && ! s2)
 	return 0;
     else if (s1)
-	return 1;	/* s1 (non-NULL) is greater than s2 (NULL) */
+	return 1;       /* s1 (non-NULL) is greater than s2 (NULL) */
     else
-	return -1;	/* s1 (NULL) is less than s2 (non-NULL) */
+	return -1;      /* s1 (NULL) is less than s2 (non-NULL) */
 }
 
 int
@@ -248,6 +249,7 @@ strcase_hash (const void *ptr)
 
     /* This is the djb2 hash. */
     unsigned int hash = 5381;
+
     while (s && *s) {
 	hash = ((hash << 5) + hash) + tolower (*s);
 	s++;

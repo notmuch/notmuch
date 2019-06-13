@@ -50,7 +50,7 @@ typedef struct _notmuch_message_crypto {
     /* signature status of the whole message (either the whole message
      * is signed, or it is not) -- this means that partially-signed
      * messages will get no signature status. */
-    GMimeSignatureList * sig_list;
+    GMimeSignatureList *sig_list;
     /* if part of the message was signed, and the MUA is clever, it
      * can determine on its own exactly which part and try to make
      * more sense of it. */
@@ -62,7 +62,7 @@ typedef struct _notmuch_message_crypto {
     /* the value of any "Subject:" header in the cryptographic payload
      * (the top level part within the crypto envelope), converted to
      * UTF-8 */
-    char * payload_subject;
+    char *payload_subject;
 
     /* if both signed and encrypted, was the signature encrypted? */
     bool signature_encrypted;

@@ -70,13 +70,14 @@ gz_getline (void *talloc_ctx, char **bufptr, ssize_t *bytes_read, gzFile stream)
 	if (buf == NULL)
 	    return UTIL_OUT_OF_MEMORY;
     }
- SUCCESS:
+  SUCCESS:
     *bufptr = buf;
     *bytes_read = offset;
     return UTIL_SUCCESS;
 }
 
-const char *gz_error_string (util_status_t status, gzFile file)
+const char *
+gz_error_string (util_status_t status, gzFile file)
 {
     if (status == UTIL_GZERROR)
 	return gzerror (file, NULL);

@@ -24,7 +24,8 @@
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
-void _notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
+void
+_notmuch_crypto_cleanup (unused(_notmuch_crypto_t *crypto))
 {
 }
 
@@ -37,6 +38,7 @@ _notmuch_crypto_decrypt (bool *attempted,
 			 GError **err)
 {
     GMimeObject *ret = NULL;
+
     if (decrypt == NOTMUCH_DECRYPT_FALSE)
 	return NULL;
 
@@ -78,15 +80,15 @@ _notmuch_crypto_decrypt (bool *attempted,
     GMimeDecryptFlags flags = GMIME_DECRYPT_NONE;
     if (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result)
 	flags |= GMIME_DECRYPT_EXPORT_SESSION_KEY;
-    ret = g_mime_multipart_encrypted_decrypt(part, flags, NULL,
-					     decrypt_result, err);
+    ret = g_mime_multipart_encrypted_decrypt (part, flags, NULL,
+					      decrypt_result, err);
     return ret;
 }
 
 static int
 _notmuch_message_crypto_destructor (_notmuch_message_crypto_t *msg_crypto)
 {
-    if (!msg_crypto)
+    if (! msg_crypto)
 	return 0;
     if (msg_crypto->sig_list)
 	g_object_unref (msg_crypto->sig_list);
@@ -99,6 +101,7 @@ _notmuch_message_crypto_t *
 _notmuch_message_crypto_new (void *ctx)
 {
     _notmuch_message_crypto_t *ret = talloc_zero (ctx, _notmuch_message_crypto_t);
+
     talloc_set_destructor (ret, _notmuch_message_crypto_destructor);
     return ret;
 }
@@ -106,7 +109,7 @@ _notmuch_message_crypto_new (void *ctx)
 notmuch_status_t
 _notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto, GMimeSignatureList *sigs)
 {
-    if (!msg_crypto)
+    if (! msg_crypto)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     /* Signatures that arrive after a payload part during DFS are not
@@ -139,7 +142,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
     const char *forwarded = NULL;
     const char *subject = NULL;
 
-    if (!msg_crypto || !payload)
+    if (! msg_crypto || ! payload)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     /* only fire on the first payload part encountered */
@@ -182,7 +185,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
     } else {
 	/* Consider "memoryhole"-style protected headers as practiced by Enigmail and K-9 */
 	protected_headers = g_mime_object_get_content_type_parameter (payload, "protected-headers");
-	if (protected_headers && strcasecmp("v1", protected_headers) == 0)
+	if (protected_headers && strcasecmp ("v1", protected_headers) == 0)
 	    subject = g_mime_object_get_header (payload, "Subject");
 	/* FIXME: handle more than just Subject: at some point */
     }
@@ -200,12 +203,12 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
 notmuch_status_t
 _notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_crypto)
 {
-    if (!msg_crypto)
+    if (! msg_crypto)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     /* see the rationale for different values of
      * _notmuch_message_decryption_status_t in util/crypto.h */
-    if (!msg_crypto->payload_encountered)
+    if (! msg_crypto->payload_encountered)
 	msg_crypto->decryption_status = NOTMUCH_MESSAGE_DECRYPTED_FULL;
     else if (msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_NONE)
 	msg_crypto->decryption_status = NOTMUCH_MESSAGE_DECRYPTED_PARTIAL;
