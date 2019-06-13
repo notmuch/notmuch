@@ -35,9 +35,9 @@
  * provides support for testing for function attributes.
  */
 #ifndef NORETURN_ATTRIBUTE
-#if (__GNUC__ >= 3 ||				\
-     (__GNUC__ == 2 && __GNUC_MINOR__ >= 5) ||	\
-     __has_attribute (noreturn))
+#if (__GNUC__ >= 3 ||                           \
+     (__GNUC__ == 2 && __GNUC_MINOR__ >= 5) ||  \
+    __has_attribute (noreturn))
 #define NORETURN_ATTRIBUTE __attribute__ ((noreturn))
 #else
 #define NORETURN_ATTRIBUTE

@@ -1,6 +1,7 @@
 #include <time.h>
 
-int main()
+int
+main ()
 {
-    return (int) timegm((struct tm *)0);
+    return (int) timegm ((struct tm *) 0);
 }
