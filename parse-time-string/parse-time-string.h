@@ -30,23 +30,23 @@ extern "C" {
 /* return values for parse_time_string() */
 enum {
     PARSE_TIME_OK = 0,
-    PARSE_TIME_ERR,		/* unspecified error */
-    PARSE_TIME_ERR_LIB,		/* library call failed */
-    PARSE_TIME_ERR_ALREADYSET,	/* attempt to set unit twice */
-    PARSE_TIME_ERR_FORMAT,	/* generic date/time format error */
-    PARSE_TIME_ERR_DATEFORMAT,	/* date format error */
-    PARSE_TIME_ERR_TIMEFORMAT,	/* time format error */
-    PARSE_TIME_ERR_INVALIDDATE,	/* date value error */
-    PARSE_TIME_ERR_INVALIDTIME,	/* time value error */
-    PARSE_TIME_ERR_KEYWORD,	/* unknown keyword */
+    PARSE_TIME_ERR,             /* unspecified error */
+    PARSE_TIME_ERR_LIB,         /* library call failed */
+    PARSE_TIME_ERR_ALREADYSET,  /* attempt to set unit twice */
+    PARSE_TIME_ERR_FORMAT,      /* generic date/time format error */
+    PARSE_TIME_ERR_DATEFORMAT,  /* date format error */
+    PARSE_TIME_ERR_TIMEFORMAT,  /* time format error */
+    PARSE_TIME_ERR_INVALIDDATE, /* date value error */
+    PARSE_TIME_ERR_INVALIDTIME, /* time value error */
+    PARSE_TIME_ERR_KEYWORD,     /* unknown keyword */
 };
 
 /* round values for parse_time_string() */
 enum {
-    PARSE_TIME_ROUND_DOWN = -1,
-    PARSE_TIME_NO_ROUND = 0,
-    PARSE_TIME_ROUND_UP = 1,
-    PARSE_TIME_ROUND_UP_INCLUSIVE = 2,
+    PARSE_TIME_ROUND_DOWN		= -1,
+    PARSE_TIME_NO_ROUND			= 0,
+    PARSE_TIME_ROUND_UP			= 1,
+    PARSE_TIME_ROUND_UP_INCLUSIVE	= 2,
 };
 
 /**
