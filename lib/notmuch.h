@@ -57,18 +57,18 @@ NOTMUCH_BEGIN_DECLS
  * The library version number.  This must agree with the soname
  * version in Makefile.local.
  */
-#define LIBNOTMUCH_MAJOR_VERSION	5
-#define LIBNOTMUCH_MINOR_VERSION	2
-#define LIBNOTMUCH_MICRO_VERSION	0
+#define LIBNOTMUCH_MAJOR_VERSION        5
+#define LIBNOTMUCH_MINOR_VERSION        2
+#define LIBNOTMUCH_MICRO_VERSION        0
 
 
 #if defined (__clang_major__) && __clang_major__ >= 3 \
     || defined (__GNUC__) && __GNUC__ >= 5 \
     || defined (__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ >= 5
-#define NOTMUCH_DEPRECATED(major,minor) \
+#define NOTMUCH_DEPRECATED(major, minor) \
     __attribute__ ((deprecated ("function deprecated as of libnotmuch " #major "." #minor)))
 #else
-#define NOTMUCH_DEPRECATED(major,minor) __attribute__ ((deprecated))
+#define NOTMUCH_DEPRECATED(major, minor) __attribute__ ((deprecated))
 #endif
 
 
@@ -95,8 +95,8 @@ NOTMUCH_BEGIN_DECLS
  * #endif
  * @endcode
  */
-#define LIBNOTMUCH_CHECK_VERSION(major, minor, micro)			\
-    (LIBNOTMUCH_MAJOR_VERSION > (major) ||					\
+#define LIBNOTMUCH_CHECK_VERSION(major, minor, micro)                   \
+    (LIBNOTMUCH_MAJOR_VERSION > (major) ||                                      \
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION > (minor)) || \
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION == (minor) && \
       LIBNOTMUCH_MICRO_VERSION >= (micro)))
@@ -405,8 +405,8 @@ typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
  * 'closure' is passed verbatim to any callback invoked.
  */
 notmuch_status_t
-notmuch_database_compact (const char* path,
-			  const char* backup_path,
+notmuch_database_compact (const char *path,
+			  const char *backup_path,
 			  notmuch_compact_status_cb_t status_cb,
 			  void *closure);
 
@@ -467,8 +467,8 @@ notmuch_database_needs_upgrade (notmuch_database_t *database);
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *database,
-			  void (*progress_notify) (void *closure,
-						   double progress),
+			  void (*progress_notify)(void *closure,
+						  double progress),
 			  void *closure);
 
 /**
@@ -525,7 +525,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  */
 unsigned long
 notmuch_database_get_revision (notmuch_database_t *notmuch,
-				const char **uuid);
+			       const char **uuid);
 
 /**
  * Retrieve a directory object from the database for 'path'.
@@ -551,7 +551,7 @@ notmuch_database_get_revision (notmuch_database_t *notmuch,
  *	directory not retrieved.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *database,
@@ -614,7 +614,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *	mode so no message can be added.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
  */
@@ -632,7 +632,7 @@ notmuch_database_index_file (notmuch_database_t *database,
  * use notmuch_database_index_file instead.
  *
  */
-NOTMUCH_DEPRECATED(5,1)
+NOTMUCH_DEPRECATED (5, 1)
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
@@ -664,7 +664,7 @@ notmuch_database_add_message (notmuch_database_t *database,
  *	mode so no message can be removed.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *database,
@@ -722,7 +722,7 @@ notmuch_database_find_message (notmuch_database_t *database,
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
@@ -930,7 +930,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
  * use notmuch_query_search_threads instead.
  *
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out);
 
@@ -986,7 +986,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
  *
  */
 
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out);
@@ -1082,7 +1082,7 @@ notmuch_query_count_messages (notmuch_query_t *query, unsigned int *count);
  * @deprecated Deprecated since libnotmuch 5.0 (notmuch 0.25). Please
  * use notmuch_query_count_messages instead.
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
 
@@ -1100,7 +1100,7 @@ notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
  *
  * NOTMUCH_STATUS_OUT_OF_MEMORY: Memory allocation failed. The value
  *      of *count is not defined
-
+ *
  * NOTMUCH_STATUS_SUCCESS: query completed successfully.
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occurred. The
@@ -1117,7 +1117,7 @@ notmuch_query_count_threads (notmuch_query_t *query, unsigned *count);
  * @deprecated Deprecated as of libnotmuch 5.0 (notmuch 0.25). Please
  * use notmuch_query_count_threads_st instead.
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
 
@@ -1499,7 +1499,7 @@ notmuch_message_set_flag (notmuch_message_t *message,
  * "date".
  */
 time_t
-notmuch_message_get_date  (notmuch_message_t *message);
+notmuch_message_get_date (notmuch_message_t *message);
 
 /**
  * Get the value of the specified header from 'message' as a UTF-8 string.

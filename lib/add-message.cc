@@ -34,7 +34,7 @@ parse_references (void *ctx,
      * reference to the database.  We should avoid making a message
      * its own parent, thus the above check.
      */
-    return talloc_strdup(ctx, last_ref);
+    return talloc_strdup (ctx, last_ref);
 }
 
 static const char *
@@ -165,12 +165,12 @@ _resolve_message_id_to_thread_id_old (notmuch_database_t *notmuch,
     metadata_key = _get_metadata_thread_id_key (ctx, message_id);
     thread_id_string = notmuch->xapian_db->get_metadata (metadata_key);
 
-    if (thread_id_string.empty()) {
+    if (thread_id_string.empty ()) {
 	*thread_id_ret = talloc_strdup (ctx,
 					_notmuch_database_generate_thread_id (notmuch));
 	db->set_metadata (metadata_key, *thread_id_ret);
     } else {
-	*thread_id_ret = talloc_strdup (ctx, thread_id_string.c_str());
+	*thread_id_ret = talloc_strdup (ctx, thread_id_string.c_str ());
     }
 
     talloc_free (metadata_key);
@@ -190,7 +190,7 @@ _merge_threads (notmuch_database_t *notmuch,
 
     _notmuch_database_find_doc_ids (notmuch, "thread", loser_thread_id, &loser, &loser_end);
 
-    for ( ; loser != loser_end; loser++) {
+    for (; loser != loser_end; loser++) {
 	message = _notmuch_message_create (notmuch, notmuch,
 					   *loser, &private_status);
 	if (message == NULL) {
@@ -264,7 +264,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 				   last_ref_message_id);
     } else if (in_reply_to_message_id) {
 	_notmuch_message_add_term (message, "replyto",
-			     in_reply_to_message_id);
+				   in_reply_to_message_id);
     }
 
     keys = g_hash_table_get_keys (parents);
@@ -317,7 +317,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
 
     _notmuch_database_find_doc_ids (notmuch, "reference", message_id, &child, &children_end);
 
-    for ( ; child != children_end; child++) {
+    for (; child != children_end; child++) {
 
 	child_message = _notmuch_message_create (message, notmuch,
 						 *child, &private_status);
@@ -461,7 +461,7 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 	_notmuch_message_add_term (message, "thread", thread_id);
     }
 
- DONE:
+  DONE:
     talloc_free (local);
 
     return status;
@@ -544,14 +544,14 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	}
 
 	ret = _notmuch_database_link_message (notmuch, message,
-						  message_file, is_ghost);
+					      message_file, is_ghost);
 	if (ret)
 	    goto DONE;
 
 	if (is_new || is_ghost)
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
-	if (!indexopts) {
+	if (! indexopts) {
 	    def_indexopts = notmuch_database_get_default_indexopts (notmuch);
 	    indexopts = def_indexopts;
 	}
@@ -560,13 +560,13 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	if (ret)
 	    goto DONE;
 
-	if (! is_new && !is_ghost)
+	if (! is_new && ! is_ghost)
 	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred adding message: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;

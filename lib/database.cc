@@ -32,10 +32,10 @@
 #include <signal.h>
 #include <ftw.h>
 
-#include <glib.h> /* g_free, GPtrArray, GHashTable */
-#include <glib-object.h> /* g_type_init */
+#include <glib.h>               /* g_free, GPtrArray, GHashTable */
+#include <glib-object.h>        /* g_type_init */
 
-#include <gmime/gmime.h> /* g_mime_init */
+#include <gmime/gmime.h>        /* g_mime_init */
 
 using namespace std;
 
@@ -49,7 +49,7 @@ typedef struct {
 
 #define NOTMUCH_DATABASE_VERSION 3
 
-#define STRINGIFY(s) _SUB_STRINGIFY(s)
+#define STRINGIFY(s) _SUB_STRINGIFY (s)
 #define _SUB_STRINGIFY(s) #s
 
 #if HAVE_XAPIAN_DB_RETRY_LOCK
@@ -263,59 +263,59 @@ typedef struct {
 static const
 prefix_t prefix_table[] = {
     /* name			term prefix	flags */
-    { "type",			"T",		NOTMUCH_FIELD_NO_FLAGS },
-    { "reference",		"XREFERENCE",	NOTMUCH_FIELD_NO_FLAGS },
-    { "replyto",		"XREPLYTO",	NOTMUCH_FIELD_NO_FLAGS },
-    { "directory",		"XDIRECTORY",	NOTMUCH_FIELD_NO_FLAGS },
-    { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
-    { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
-    { "body",			"",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC},
-    { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
-    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
-    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL |
-					        NOTMUCH_FIELD_PROCESSOR },
-    { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
-    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
-    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL|
-						NOTMUCH_FIELD_PROCESSOR },
-    { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
+    { "type",                   "T",            NOTMUCH_FIELD_NO_FLAGS },
+    { "reference",              "XREFERENCE",   NOTMUCH_FIELD_NO_FLAGS },
+    { "replyto",                "XREPLYTO",     NOTMUCH_FIELD_NO_FLAGS },
+    { "directory",              "XDIRECTORY",   NOTMUCH_FIELD_NO_FLAGS },
+    { "file-direntry",          "XFDIRENTRY",   NOTMUCH_FIELD_NO_FLAGS },
+    { "directory-direntry",     "XDDIRENTRY",   NOTMUCH_FIELD_NO_FLAGS },
+    { "body",                   "",             NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC },
+    { "thread",                 "G",            NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "tag",                    "K",            NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "is",                     "K",            NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "id",                     "Q",            NOTMUCH_FIELD_EXTERNAL },
+    { "mid",                    "Q",            NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "path",                   "P",            NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "property",               "XPROPERTY",    NOTMUCH_FIELD_EXTERNAL },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
      * overlapping prefixes and/or terms that start with capital
      * letters. See Xapian document termprefixes.html for related
      * discussion.
      */
-    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
+    { "folder",                 "XFOLDER:",     NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
 #if HAVE_XAPIAN_FIELD_PROCESSOR
-    { "date",			NULL,		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
-    { "query",			NULL,		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROCESSOR },
+    { "date",                   NULL,           NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "query",                  NULL,           NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
 #endif
-    { "from",			"XFROM",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC |
-						NOTMUCH_FIELD_PROCESSOR },
-    { "to",			"XTO",		NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC },
-    { "attachment",		"XATTACHMENT",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC },
-    { "mimetype",		"XMIMETYPE",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC },
-    { "subject",		"XSUBJECT",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC |
-						NOTMUCH_FIELD_PROCESSOR},
+    { "from",                   "XFROM",        NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "to",                     "XTO",          NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC },
+    { "attachment",             "XATTACHMENT",  NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC },
+    { "mimetype",               "XMIMETYPE",    NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC },
+    { "subject",                "XSUBJECT",     NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROBABILISTIC |
+      NOTMUCH_FIELD_PROCESSOR },
 };
 
 static void
 _setup_query_field_default (const prefix_t *prefix, notmuch_database_t *notmuch)
 {
     if (prefix->prefix)
-	notmuch->query_parser->add_prefix ("",prefix->prefix);
+	notmuch->query_parser->add_prefix ("", prefix->prefix);
     if (prefix->flags & NOTMUCH_FIELD_PROBABILISTIC)
 	notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
     else
@@ -329,9 +329,9 @@ _notmuch_database_user_headers (notmuch_database_t *notmuch)
 }
 
 const char *
-_user_prefix (void *ctx, const char* name)
+_user_prefix (void *ctx, const char *name)
 {
-    return talloc_asprintf(ctx, "XU%s:", name);
+    return talloc_asprintf (ctx, "XU%s:", name);
 }
 
 static notmuch_status_t
@@ -357,7 +357,7 @@ _setup_user_query_fields (notmuch_database_t *notmuch)
 	prefix_t query_field;
 
 	const char *key = notmuch_config_list_key (list)
-	    + sizeof (CONFIG_HEADER_PREFIX) - 1;
+			  + sizeof (CONFIG_HEADER_PREFIX) - 1;
 
 	_notmuch_string_map_append (notmuch->user_prefix,
 				    key,
@@ -370,7 +370,7 @@ _setup_user_query_fields (notmuch_database_t *notmuch)
 	query_field.name = talloc_strdup (notmuch, key);
 	query_field.prefix = _user_prefix (notmuch, key);
 	query_field.flags = NOTMUCH_FIELD_PROBABILISTIC
-	    | NOTMUCH_FIELD_EXTERNAL;
+			    | NOTMUCH_FIELD_EXTERNAL;
 
 	_setup_query_field_default (&query_field, notmuch);
     }
@@ -388,10 +388,10 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	Xapian::FieldProcessor *fp;
 
 	if (STRNCMP_LITERAL (prefix->name, "date") == 0)
-	    fp = (new DateFieldProcessor())->release ();
-	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
+	    fp = (new DateFieldProcessor ())->release ();
+	else if (STRNCMP_LITERAL (prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
-	else if (STRNCMP_LITERAL(prefix->name, "thread") == 0)
+	else if (STRNCMP_LITERAL (prefix->name, "thread") == 0)
 	    fp = (new ThreadFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else
 	    fp = (new RegexpFieldProcessor (prefix->name, prefix->flags,
@@ -399,7 +399,7 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 
 	/* we treat all field-processor fields as boolean in order to get the raw input */
 	if (prefix->prefix)
-	    notmuch->query_parser->add_prefix ("",prefix->prefix);
+	    notmuch->query_parser->add_prefix ("", prefix->prefix);
 	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);
     } else {
 	_setup_query_field_default (prefix, notmuch);
@@ -469,18 +469,18 @@ static const struct {
     { NOTMUCH_FEATURE_BOOL_FOLDER,
       "exact folder:/path: search", "rw" },
     { NOTMUCH_FEATURE_GHOSTS,
-      "mail documents for missing messages", "w"},
+      "mail documents for missing messages", "w" },
     /* Knowledge of the index mime-types are not required for reading
      * a database because a reader will just be unable to query
      * them. */
     { NOTMUCH_FEATURE_INDEXED_MIMETYPES,
-      "indexed MIME types", "w"},
+      "indexed MIME types", "w" },
     { NOTMUCH_FEATURE_LAST_MOD,
-      "modification tracking", "w"},
+      "modification tracking", "w" },
     /* Existing databases will work fine for all queries not involving
      * 'body:' */
     { NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY,
-      "index body and headers separately", "w"},
+      "index body and headers separately", "w" },
 };
 
 const char *
@@ -529,8 +529,8 @@ notmuch_status_to_string (notmuch_status_t status)
 
 void
 _notmuch_database_log (notmuch_database_t *notmuch,
-		      const char *format,
-		      ...)
+		       const char *format,
+		       ...)
 {
     va_list va_args;
 
@@ -545,8 +545,8 @@ _notmuch_database_log (notmuch_database_t *notmuch,
 
 void
 _notmuch_database_log_append (notmuch_database_t *notmuch,
-		      const char *format,
-		      ...)
+			      const char *format,
+			      ...)
 {
     va_list va_args;
 
@@ -669,7 +669,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred finding message: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	*message_ret = NULL;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -720,7 +720,7 @@ notmuch_database_create_verbose (const char *path,
     err = stat (path, &st);
     if (err) {
 	IGNORE_RESULT (asprintf (&message, "Error: Cannot create database at %s: %s.\n",
-				path, strerror (errno)));
+				 path, strerror (errno)));
 	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -758,7 +758,7 @@ notmuch_database_create_verbose (const char *path,
 
     status = notmuch_database_upgrade (notmuch, NULL, NULL);
     if (status) {
-	notmuch_database_close(notmuch);
+	notmuch_database_close (notmuch);
 	notmuch = NULL;
     }
 
@@ -893,7 +893,7 @@ notmuch_database_open (const char *path,
     notmuch_status_t status;
 
     status = notmuch_database_open_verbose (path, mode, database,
-					   &status_string);
+					    &status_string);
 
     if (status_string) {
 	fputs (status_string, stderr);
@@ -952,7 +952,7 @@ notmuch_database_open_verbose (const char *path,
     }
 
     /* Initialize the GLib type system and threads */
-#if !GLIB_CHECK_VERSION(2, 35, 1)
+#if ! GLIB_CHECK_VERSION (2, 35, 1)
     g_type_init ();
 #endif
 
@@ -967,7 +967,7 @@ notmuch_database_open_verbose (const char *path,
     notmuch->status_string = NULL;
     notmuch->path = talloc_strdup (notmuch, path);
 
-    strip_trailing(notmuch->path, '/');
+    strip_trailing (notmuch->path, '/');
 
     notmuch->mode = mode;
     notmuch->atomic_nesting = 0;
@@ -989,9 +989,9 @@ notmuch_database_open_verbose (const char *path,
 	version = notmuch_database_get_version (notmuch);
 	if (version > NOTMUCH_DATABASE_VERSION) {
 	    IGNORE_RESULT (asprintf (&message,
-		      "Error: Notmuch database at %s\n"
-		      "       has a newer database format version (%u) than supported by this\n"
-		      "       version of notmuch (%u).\n",
+				     "Error: Notmuch database at %s\n"
+				     "       has a newer database format version (%u) than supported by this\n"
+				     "       version of notmuch (%u).\n",
 				     notmuch_path, version, NOTMUCH_DATABASE_VERSION));
 	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 	    notmuch_database_destroy (notmuch);
@@ -1008,9 +1008,9 @@ notmuch_database_open_verbose (const char *path,
 	    &incompat_features);
 	if (incompat_features) {
 	    IGNORE_RESULT (asprintf (&message,
-		"Error: Notmuch database at %s\n"
-		"       requires features (%s)\n"
-		"       not supported by this version of notmuch.\n",
+				     "Error: Notmuch database at %s\n"
+				     "       requires features (%s)\n"
+				     "       not supported by this version of notmuch.\n",
 				     notmuch_path, incompat_features));
 	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 	    notmuch_database_destroy (notmuch);
@@ -1067,7 +1067,7 @@ notmuch_database_open_verbose (const char *path,
 	status = _setup_user_query_fields (notmuch);
     } catch (const Xapian::Error &error) {
 	IGNORE_RESULT (asprintf (&message, "A Xapian exception occurred opening database: %s\n",
-				 error.get_msg().c_str()));
+				 error.get_msg ().c_str ()));
 	notmuch_database_destroy (notmuch);
 	notmuch = NULL;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -1108,16 +1108,16 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
 		notmuch->atomic_nesting)
 		(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))
-		    ->cancel_transaction ();
+		->cancel_transaction ();
 
 	    /* Close the database.  This implicitly flushes
 	     * outstanding changes. */
-	    notmuch->xapian_db->close();
+	    notmuch->xapian_db->close ();
 	} catch (const Xapian::Error &error) {
 	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	    if (! notmuch->exception_reported) {
 		_notmuch_database_log (notmuch, "Error: A Xapian exception occurred closing database: %s\n",
-			 error.get_msg().c_str());
+				       error.get_msg ().c_str ());
 	    }
 	}
     }
@@ -1182,7 +1182,9 @@ class NotmuchCompactor : public Xapian::Compactor
 
 public:
     NotmuchCompactor(notmuch_compact_status_cb_t cb, void *closure) :
-	status_cb (cb), status_closure (closure) { }
+	status_cb (cb), status_closure (closure)
+    {
+    }
 
     virtual void
     set_status (const std::string &table, const std::string &status)
@@ -1193,9 +1195,9 @@ public:
 	    return;
 
 	if (status.length () == 0)
-	    msg = talloc_asprintf (NULL, "compacting table %s", table.c_str());
+	    msg = talloc_asprintf (NULL, "compacting table %s", table.c_str ());
 	else
-	    msg = talloc_asprintf (NULL, "     %s", status.c_str());
+	    msg = talloc_asprintf (NULL, "     %s", status.c_str ());
 
 	if (msg == NULL) {
 	    return;
@@ -1265,8 +1267,7 @@ notmuch_database_compact (const char *path,
 	    goto DONE;
 	}
 	keep_backup = false;
-    }
-    else {
+    } else {
 	keep_backup = true;
     }
 
@@ -1277,7 +1278,7 @@ notmuch_database_compact (const char *path,
     }
     if (errno != ENOENT) {
 	_notmuch_database_log (notmuch, "Unknown error while stat()ing path: %s\n",
-		 strerror (errno));
+			       strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -1296,21 +1297,21 @@ notmuch_database_compact (const char *path,
 	compactor.set_destdir (compact_xapian_path);
 	compactor.compact ();
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg().c_str());
+	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg ().c_str ());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }
 
     if (rename (xapian_path, backup_path)) {
 	_notmuch_database_log (notmuch, "Error moving %s to %s: %s\n",
-		 xapian_path, backup_path, strerror (errno));
+			       xapian_path, backup_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (rename (compact_xapian_path, xapian_path)) {
 	_notmuch_database_log (notmuch, "Error moving %s to %s: %s\n",
-		 compact_xapian_path, xapian_path, strerror (errno));
+			       compact_xapian_path, xapian_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -1318,7 +1319,7 @@ notmuch_database_compact (const char *path,
     if (! keep_backup) {
 	if (rmtree (backup_path)) {
 	    _notmuch_database_log (notmuch, "Error removing old database %s: %s\n",
-		     backup_path, strerror (errno));
+				   backup_path, strerror (errno));
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
@@ -1388,8 +1389,8 @@ notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
 {
     return notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
-	((NOTMUCH_FEATURES_CURRENT & ~notmuch->features) ||
-	 (notmuch_database_get_version (notmuch) < NOTMUCH_DATABASE_VERSION));
+	   ((NOTMUCH_FEATURES_CURRENT & ~notmuch->features) ||
+	    (notmuch_database_get_version (notmuch) < NOTMUCH_DATABASE_VERSION));
 }
 
 static volatile sig_atomic_t do_progress_notify = 0;
@@ -1414,8 +1415,8 @@ handle_sigalrm (unused (int signal))
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *notmuch,
-			  void (*progress_notify) (void *closure,
-						   double progress),
+			  void (*progress_notify)(void *closure,
+						  double progress),
 			  void *closure)
 {
     void *local = talloc_new (NULL);
@@ -1510,8 +1511,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    goto DONE;
 	for (;
 	     notmuch_messages_valid (messages);
-	     notmuch_messages_move_to_next (messages))
-	{
+	     notmuch_messages_move_to_next (messages)) {
 	    if (do_progress_notify) {
 		progress_notify (closure, (double) count / total);
 		do_progress_notify = 0;
@@ -1568,8 +1568,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
 	     t != t_end;
-	     t++)
-	{
+	     t++) {
 	    Xapian::PostingIterator p, p_end;
 	    std::string term = *t;
 
@@ -1577,8 +1576,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	    for (p = notmuch->xapian_db->postlist_begin (term);
 		 p != p_end;
-		 p++)
-	    {
+		 p++) {
 		Xapian::Document document;
 		time_t mtime;
 		notmuch_directory_t *directory;
@@ -1592,7 +1590,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		mtime = Xapian::sortable_unserialise (
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
 
-		directory = _notmuch_directory_create (notmuch, term.c_str() + 10,
+		directory = _notmuch_directory_create (notmuch, term.c_str () + 10,
 						       NOTMUCH_FIND_CREATE, &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
@@ -1641,7 +1639,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	    if (private_status) {
 		_notmuch_database_log (notmuch,
-			 "Upgrade failed while creating ghost messages.\n");
+				       "Upgrade failed while creating ghost messages.\n");
 		status = COERCE_STATUS (private_status, "Unexpected status from _notmuch_message_initialize_ghost");
 		goto DONE;
 	    }
@@ -1657,7 +1655,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     db->set_metadata ("features", _print_features (local, notmuch->features));
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
 
- DONE:
+  DONE:
     if (status == NOTMUCH_STATUS_SUCCESS)
 	db->commit_transaction ();
     else
@@ -1697,12 +1695,12 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred beginning transaction: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
-DONE:
+  DONE:
     notmuch->atomic_nesting++;
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -1731,7 +1729,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	    db->commit ();
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -1741,14 +1739,14 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	notmuch->atomic_dirty = false;
     }
 
-DONE:
+  DONE:
     notmuch->atomic_nesting--;
     return NOTMUCH_STATUS_SUCCESS;
 }
 
 unsigned long
 notmuch_database_get_revision (notmuch_database_t *notmuch,
-				const char **uuid)
+			       const char **uuid)
 {
     if (uuid)
 	*uuid = notmuch->uuid;
@@ -1866,7 +1864,7 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
     }
 
     directory = _notmuch_directory_create (notmuch, path, flags, &status);
-    if (status || !directory) {
+    if (status || ! directory) {
 	*directory_id = -1;
 	return status;
     }
@@ -1920,7 +1918,7 @@ _notmuch_database_filename_to_direntry (void *ctx,
 
     status = _notmuch_database_find_directory_id (notmuch, directory, flags,
 						  &directory_id);
-    if (status || directory_id == (unsigned int)-1) {
+    if (status || directory_id == (unsigned int) -1) {
 	*direntry = NULL;
 	return status;
     }
@@ -1950,11 +1948,10 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
     relative = path;
 
     if (*relative == '/') {
-	while (*relative == '/' && *(relative+1) == '/')
+	while (*relative == '/' && *(relative + 1) == '/')
 	    relative++;
 
-	if (strncmp (relative, db_path, db_path_len) == 0)
-	{
+	if (strncmp (relative, db_path, db_path_len) == 0) {
 	    relative += db_path_len;
 	    while (*relative == '/')
 		relative++;
@@ -1980,7 +1977,7 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 						NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting directory: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -2023,13 +2020,13 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 							&message);
 
     if (status == NOTMUCH_STATUS_SUCCESS && message) {
-	    status = _notmuch_message_remove_filename (message, filename);
-	    if (status == NOTMUCH_STATUS_SUCCESS)
-		_notmuch_message_delete (message);
-	    else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-		_notmuch_message_sync (message);
+	status = _notmuch_message_remove_filename (message, filename);
+	if (status == NOTMUCH_STATUS_SUCCESS)
+	    _notmuch_message_delete (message);
+	else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	    _notmuch_message_sync (message);
 
-	    notmuch_message_destroy (message);
+	notmuch_message_destroy (message);
     }
 
     return status;
@@ -2060,7 +2057,7 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     try {
 	status = _notmuch_database_filename_to_direntry (
 	    local, notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
-	if (status || !direntry)
+	if (status || ! direntry)
 	    goto DONE;
 
 	term = talloc_asprintf (local, "%s%s", prefix, direntry);
@@ -2077,7 +2074,7 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 	}
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred finding message by filename: %s\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -2122,15 +2119,15 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
     notmuch_string_list_t *tags;
 
     try {
-	i = db->xapian_db->allterms_begin();
-	end = db->xapian_db->allterms_end();
+	i = db->xapian_db->allterms_begin ();
+	end = db->xapian_db->allterms_end ();
 	tags = _notmuch_database_get_terms_with_prefix (db, i, end,
 							_find_prefix ("tag"));
 	_notmuch_string_list_sort (tags);
 	return _notmuch_tags_create (db, tags);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (db, "A Xapian exception occurred getting tags: %s.\n",
-		 error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	db->exception_reported = true;
 	return NULL;
     }

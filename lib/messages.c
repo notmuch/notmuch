@@ -117,7 +117,7 @@ _notmuch_messages_has_next (notmuch_messages_t *messages)
 	return false;
 
     if (! messages->is_of_list_type)
-	INTERNAL_ERROR("_notmuch_messages_has_next not implemented for msets");
+	INTERNAL_ERROR ("_notmuch_messages_has_next not implemented for msets");
 
     return (messages->iterator->next != NULL);
 }
@@ -183,7 +183,7 @@ notmuch_messages_collect_tags (notmuch_messages_t *messages)
 
     keys = g_hash_table_get_keys (htable);
     for (l = keys; l; l = l->next) {
-	_notmuch_string_list_append (tags, (char *)l->data);
+	_notmuch_string_list_append (tags, (char *) l->data);
     }
 
     g_list_free (keys);

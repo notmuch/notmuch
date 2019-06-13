@@ -62,7 +62,7 @@ enum _notmuch_features {
      * unset, file names are stored in document data.
      *
      * Introduced: version 1. */
-    NOTMUCH_FEATURE_FILE_TERMS = 1 << 0,
+    NOTMUCH_FEATURE_FILE_TERMS			= 1 << 0,
 
     /* If set, directory timestamps are stored in documents with
      * XDIRECTORY terms and relative paths.  If unset, directory
@@ -70,7 +70,7 @@ enum _notmuch_features {
      * absolute paths.
      *
      * Introduced: version 1. */
-    NOTMUCH_FEATURE_DIRECTORY_DOCS = 1 << 1,
+    NOTMUCH_FEATURE_DIRECTORY_DOCS		= 1 << 1,
 
     /* If set, the from, subject, and message-id headers are stored in
      * message document values.  If unset, message documents *may*
@@ -79,21 +79,21 @@ enum _notmuch_features {
      *
      * Introduced: optional in version 1, required as of version 3.
      */
-    NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES = 1 << 2,
+    NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES	= 1 << 2,
 
     /* If set, folder terms are boolean and path terms exist.  If
      * unset, folder terms are probabilistic and stemmed and path
      * terms do not exist.
      *
      * Introduced: version 2. */
-    NOTMUCH_FEATURE_BOOL_FOLDER = 1 << 3,
+    NOTMUCH_FEATURE_BOOL_FOLDER			= 1 << 3,
 
     /* If set, missing messages are stored in ghost mail documents.
      * If unset, thread IDs of ghost messages are stored as database
      * metadata instead of in ghost documents.
      *
      * Introduced: version 3. */
-    NOTMUCH_FEATURE_GHOSTS = 1 << 4,
+    NOTMUCH_FEATURE_GHOSTS			= 1 << 4,
 
 
     /* If set, then the database was created after the introduction of
@@ -101,52 +101,52 @@ enum _notmuch_features {
      * mixture of messages with indexed and non-indexed mime types.
      *
      * Introduced: version 3. */
-    NOTMUCH_FEATURE_INDEXED_MIMETYPES = 1 << 5,
+    NOTMUCH_FEATURE_INDEXED_MIMETYPES		= 1 << 5,
 
     /* If set, messages store the revision number of the last
      * modification in NOTMUCH_VALUE_LAST_MOD.
      *
      * Introduced: version 3. */
-    NOTMUCH_FEATURE_LAST_MOD = 1 << 6,
+    NOTMUCH_FEATURE_LAST_MOD			= 1 << 6,
 
     /* If set, unprefixed terms are stored only for the message body,
      * not for headers.
      *
      * Introduced: version 3. */
-    NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY = 1 << 7,
+    NOTMUCH_FEATURE_UNPREFIX_BODY_ONLY		= 1 << 7,
 };
 
 /* In C++, a named enum is its own type, so define bitwise operators
  * on _notmuch_features. */
 inline _notmuch_features
-operator|(_notmuch_features a, _notmuch_features b)
+operator| (_notmuch_features a, _notmuch_features b)
 {
     return static_cast<_notmuch_features>(
 	static_cast<unsigned>(a) | static_cast<unsigned>(b));
 }
 
 inline _notmuch_features
-operator&(_notmuch_features a, _notmuch_features b)
+operator& (_notmuch_features a, _notmuch_features b)
 {
     return static_cast<_notmuch_features>(
 	static_cast<unsigned>(a) & static_cast<unsigned>(b));
 }
 
 inline _notmuch_features
-operator~(_notmuch_features a)
+operator~ (_notmuch_features a)
 {
     return static_cast<_notmuch_features>(~static_cast<unsigned>(a));
 }
 
 inline _notmuch_features&
-operator|=(_notmuch_features &a, _notmuch_features b)
+operator|= (_notmuch_features &a, _notmuch_features b)
 {
     a = a | b;
     return a;
 }
 
 inline _notmuch_features&
-operator&=(_notmuch_features &a, _notmuch_features b)
+operator&= (_notmuch_features &a, _notmuch_features b)
 {
     a = a & b;
     return a;
@@ -155,23 +155,23 @@ operator&=(_notmuch_features &a, _notmuch_features b)
 /*
  * Configuration options for xapian database fields */
 typedef enum notmuch_field_flags {
-    NOTMUCH_FIELD_NO_FLAGS = 0,
-    NOTMUCH_FIELD_EXTERNAL = 1 << 0,
+    NOTMUCH_FIELD_NO_FLAGS	= 0,
+    NOTMUCH_FIELD_EXTERNAL	= 1 << 0,
     NOTMUCH_FIELD_PROBABILISTIC = 1 << 1,
-    NOTMUCH_FIELD_PROCESSOR = 1 << 2,
+    NOTMUCH_FIELD_PROCESSOR	= 1 << 2,
 } notmuch_field_flag_t;
 
 /*
  * define bitwise operators to hide casts */
 inline notmuch_field_flag_t
-operator|(notmuch_field_flag_t a, notmuch_field_flag_t b)
+operator| (notmuch_field_flag_t a, notmuch_field_flag_t b)
 {
     return static_cast<notmuch_field_flag_t>(
 	static_cast<unsigned>(a) | static_cast<unsigned>(b));
 }
 
 inline notmuch_field_flag_t
-operator&(notmuch_field_flag_t a, notmuch_field_flag_t b)
+operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 {
     return static_cast<notmuch_field_flag_t>(
 	static_cast<unsigned>(a) & static_cast<unsigned>(b));
@@ -230,7 +230,7 @@ struct _notmuch_database {
 
 /* Prior to database version 3, features were implied by the database
  * version number, so hard-code them for earlier versions. */
-#define NOTMUCH_FEATURES_V0 ((enum _notmuch_features)0)
+#define NOTMUCH_FEATURES_V0 ((enum _notmuch_features) 0)
 #define NOTMUCH_FEATURES_V1 (NOTMUCH_FEATURES_V0 | NOTMUCH_FEATURE_FILE_TERMS | \
 			     NOTMUCH_FEATURE_DIRECTORY_DOCS)
 #define NOTMUCH_FEATURES_V2 (NOTMUCH_FEATURES_V1 | NOTMUCH_FEATURE_BOOL_FOLDER)

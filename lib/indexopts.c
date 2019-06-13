@@ -24,25 +24,26 @@ notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db)
 {
     notmuch_indexopts_t *ret = talloc_zero (db, notmuch_indexopts_t);
-    if (!ret)
+
+    if (! ret)
 	return ret;
     ret->crypto.decrypt = NOTMUCH_DECRYPT_AUTO;
 
-    char * decrypt_policy;
+    char *decrypt_policy;
     notmuch_status_t err = notmuch_database_get_config (db, "index.decrypt", &decrypt_policy);
     if (err)
 	return ret;
 
     if (decrypt_policy) {
-	if ((!(strcasecmp(decrypt_policy, "true"))) ||
-	    (!(strcasecmp(decrypt_policy, "yes"))) ||
-	    (!(strcasecmp(decrypt_policy, "1"))))
+	if ((! (strcasecmp (decrypt_policy, "true"))) ||
+	    (! (strcasecmp (decrypt_policy, "yes"))) ||
+	    (! (strcasecmp (decrypt_policy, "1"))))
 	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_TRUE);
-	else if ((!(strcasecmp(decrypt_policy, "false"))) ||
-		 (!(strcasecmp(decrypt_policy, "no"))) ||
-		 (!(strcasecmp(decrypt_policy, "0"))))
+	else if ((! (strcasecmp (decrypt_policy, "false"))) ||
+		 (! (strcasecmp (decrypt_policy, "no"))) ||
+		 (! (strcasecmp (decrypt_policy, "0"))))
 	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_FALSE);
-	else if (!strcasecmp(decrypt_policy, "nostash"))
+	else if (! strcasecmp (decrypt_policy, "nostash"))
 	    notmuch_indexopts_set_decrypt_policy (ret, NOTMUCH_DECRYPT_NOSTASH);
     }
 
@@ -54,7 +55,7 @@ notmuch_status_t
 notmuch_indexopts_set_decrypt_policy (notmuch_indexopts_t *indexopts,
 				      notmuch_decryption_policy_t decrypt_policy)
 {
-    if (!indexopts)
+    if (! indexopts)
 	return NOTMUCH_STATUS_NULL_POINTER;
     indexopts->crypto.decrypt = decrypt_policy;
     return NOTMUCH_STATUS_SUCCESS;
@@ -63,7 +64,7 @@ notmuch_indexopts_set_decrypt_policy (notmuch_indexopts_t *indexopts,
 notmuch_decryption_policy_t
 notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts)
 {
-    if (!indexopts)
+    if (! indexopts)
 	return false;
     return indexopts->crypto.decrypt;
 }

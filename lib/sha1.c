@@ -55,6 +55,7 @@ char *
 _notmuch_sha1_of_file (const char *filename)
 {
     FILE *file;
+
 #define BLOCK_SIZE 4096
     unsigned char block[BLOCK_SIZE];
     size_t bytes_read;

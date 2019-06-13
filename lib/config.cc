@@ -58,7 +58,7 @@ notmuch_database_set_config (notmuch_database_t *notmuch,
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	notmuch->exception_reported = true;
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred setting metadata: %s\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
     }
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -76,7 +76,7 @@ _metadata_value (notmuch_database_t *notmuch,
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	notmuch->exception_reported = true;
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred getting metadata: %s\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
     }
     return status;
 }
@@ -123,11 +123,11 @@ notmuch_database_get_config_list (notmuch_database_t *notmuch,
     try {
 
 	new(&(list->iterator)) Xapian::TermIterator (notmuch->xapian_db->metadata_keys_begin
-						     (CONFIG_PREFIX + (prefix ? prefix : "")));
+							 (CONFIG_PREFIX + (prefix ? prefix : "")));
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting metadata iterator: %s.\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }

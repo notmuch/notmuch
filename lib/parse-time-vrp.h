@@ -32,14 +32,16 @@ protected:
 
 public:
     ParseTimeValueRangeProcessor (Xapian::valueno slot_)
-	: valno(slot_) { }
+	: valno (slot_)
+    {
+    }
 
     Xapian::valueno operator() (std::string &begin, std::string &end);
 };
 
 #if HAVE_XAPIAN_FIELD_PROCESSOR
 class DateFieldProcessor : public Xapian::FieldProcessor {
-    Xapian::Query operator()(const std::string & str);
+    Xapian::Query operator() (const std::string & str);
 };
 #endif
 #endif /* NOTMUCH_PARSE_TIME_VRP_H */
