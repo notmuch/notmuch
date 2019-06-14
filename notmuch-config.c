@@ -305,15 +305,15 @@ out:
  *	returned and *is_new_ret will be set to 1 on return so that
  *	the caller can recognize this case.
  *
- * 	These default configuration settings are determined as
- * 	follows:
+ *	These default configuration settings are determined as
+ *	follows:
  *
  *		database_path:		$MAILDIR, otherwise $HOME/mail
  *
  *		user_name:		$NAME variable if set, otherwise
  *					read from /etc/passwd
  *
- *		user_primary_mail: 	$EMAIL variable if set, otherwise
+ *		user_primary_mail:	$EMAIL variable if set, otherwise
  *					constructed from the username and
  *					hostname of the current machine.
  *
