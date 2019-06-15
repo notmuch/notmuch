@@ -7,6 +7,7 @@ success=0
 failed=0
 broken=0
 total=0
+all_skipped=0
 
 for file
 do
@@ -22,7 +23,10 @@ do
 		broken)
 			broken=$((broken + value)) ;;
 		total)
-			total=$((total + value)) ;;
+			total=$((total + value))
+			if [ "$value" -eq 0 ]; then
+				all_skipped=$((all_skipped + 1))
+			fi
 		esac
 	done <"$file"
 done
@@ -60,6 +64,10 @@ skipped=$((total - fixed - success - failed - broken))
 if [ "$skipped" -ne 0 ]; then
 	pluralize_s "$skipped"
 	echo "$skipped test$s skipped."
+fi
+if [ "$all_skipped" -ne 0 ]; then
+	pluralize_s "$all_skipped"
+	echo "All tests in $all_skipped file$s skipped."
 fi
 
 # Note that we currently do not consider skipped tests as failing the
