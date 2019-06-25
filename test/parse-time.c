@@ -30,16 +30,16 @@
 #define ARRAY_SIZE(a) (sizeof (a) / sizeof (a[0]))
 
 static const char *parse_time_error_strings[] = {
-    [PARSE_TIME_OK]			= "OK",
-    [PARSE_TIME_ERR]			= "ERR",
-    [PARSE_TIME_ERR_LIB]		= "LIB",
-    [PARSE_TIME_ERR_ALREADYSET]		= "ALREADYSET",
-    [PARSE_TIME_ERR_FORMAT]		= "FORMAT",
-    [PARSE_TIME_ERR_DATEFORMAT]		= "DATEFORMAT",
-    [PARSE_TIME_ERR_TIMEFORMAT]		= "TIMEFORMAT",
-    [PARSE_TIME_ERR_INVALIDDATE]	= "INVALIDDATE",
-    [PARSE_TIME_ERR_INVALIDTIME]	= "INVALIDTIME",
-    [PARSE_TIME_ERR_KEYWORD]		= "KEYWORD",
+    [PARSE_TIME_OK] = "OK",
+    [PARSE_TIME_ERR] = "ERR",
+    [PARSE_TIME_ERR_LIB] = "LIB",
+    [PARSE_TIME_ERR_ALREADYSET] = "ALREADYSET",
+    [PARSE_TIME_ERR_FORMAT] = "FORMAT",
+    [PARSE_TIME_ERR_DATEFORMAT] = "DATEFORMAT",
+    [PARSE_TIME_ERR_TIMEFORMAT] = "TIMEFORMAT",
+    [PARSE_TIME_ERR_INVALIDDATE] = "INVALIDDATE",
+    [PARSE_TIME_ERR_INVALIDTIME] = "INVALIDTIME",
+    [PARSE_TIME_ERR_KEYWORD] = "KEYWORD",
 };
 
 static const char *
@@ -66,7 +66,7 @@ concat_args (int start, int end, char *argv[])
 	len += strlen (argv[i]) + 1;
 
     p = malloc (len);
-    if (!p)
+    if (! p)
 	return NULL;
 
     *p = 0;
@@ -111,10 +111,10 @@ struct {
     const char *operator;
     int round;
 } operators[] = {
-    { "==>",	PARSE_TIME_NO_ROUND },
-    { "==_>",	PARSE_TIME_ROUND_DOWN },
-    { "==^>",	PARSE_TIME_ROUND_UP_INCLUSIVE },
-    { "==^^>",	PARSE_TIME_ROUND_UP },
+    { "==>",    PARSE_TIME_NO_ROUND },
+    { "==_>",   PARSE_TIME_ROUND_DOWN },
+    { "==^>",   PARSE_TIME_ROUND_UP_INCLUSIVE },
+    { "==^^>",  PARSE_TIME_ROUND_UP },
 };
 
 static const char *
@@ -145,7 +145,7 @@ get_operator (int round)
     const char *oper = NULL;
     unsigned int i;
 
-    for (i = 0; i < ARRAY_SIZE(operators); i++) {
+    for (i = 0; i < ARRAY_SIZE (operators); i++) {
 	if (round == operators[i].round) {
 	    oper = operators[i].operator;
 	    break;
@@ -172,10 +172,10 @@ parse_stdin (FILE *infile, time_t *ref, int round, const char *format)
 
 	/* trail is trailing whitespace and (optional) comment */
 	trail = strchr (input, '#');
-	if (!trail)
+	if (! trail)
 	    trail = input + len;
 
-	while (trail > input && isspace ((unsigned char) *(trail-1)))
+	while (trail > input && isspace ((unsigned char) *(trail - 1)))
 	    trail--;
 
 	if (trail == input) {
@@ -184,7 +184,7 @@ parse_stdin (FILE *infile, time_t *ref, int round, const char *format)
 	}
 
 	tmp = strdup (trail);
-	if (!tmp) {
+	if (! tmp) {
 	    fprintf (stderr, "strdup() failed\n");
 	    continue;
 	}
@@ -201,8 +201,8 @@ parse_stdin (FILE *infile, time_t *ref, int round, const char *format)
 	}
 
 	r = parse_time_string (input, &t, ref, round);
-	if (!r) {
-	    if (!localtime_r (&t, &tm)) {
+	if (! r) {
+	    if (! localtime_r (&t, &tm)) {
 		fprintf (stderr, "localtime_r() failed\n");
 		free (trail);
 		continue;
@@ -239,12 +239,12 @@ main (int argc, char *argv[])
     char buf[1024];
     const char *format = DEFAULT_FORMAT;
     struct option options[] = {
-	{ "help",	no_argument,		NULL,	'h' },
-	{ "^",		no_argument,		NULL,	'u' },
-	{ "^^",		no_argument,		NULL,	'U' },
-	{ "_",		no_argument,		NULL,	'd' },
-	{ "format",	required_argument,	NULL,	'f' },
-	{ "ref",	required_argument,	NULL,	'r' },
+	{ "help",       no_argument,            NULL,   'h' },
+	{ "^",          no_argument,            NULL,   'u' },
+	{ "^^",         no_argument,            NULL,   'U' },
+	{ "_",          no_argument,            NULL,   'd' },
+	{ "format",     required_argument,      NULL,   'f' },
+	{ "ref",        required_argument,      NULL,   'r' },
 	{ NULL, 0, NULL, 0 },
     };
 
@@ -287,7 +287,7 @@ main (int argc, char *argv[])
 	return parse_stdin (stdin, nowp, round, format);
 
     argstr = concat_args (optind, argc, argv);
-    if (!argstr)
+    if (! argstr)
 	return 1;
 
     r = parse_time_string (argstr, &result, nowp, round);
@@ -304,7 +304,7 @@ main (int argc, char *argv[])
 	return r;
     }
 
-    if (!localtime_r (&result, &tm))
+    if (! localtime_r (&result, &tm))
 	return 1;
 
     strftime (buf, sizeof (buf), format, &tm);

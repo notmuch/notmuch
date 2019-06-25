@@ -116,7 +116,7 @@ random_utf8_string (void *ctx, size_t char_count)
 
 /* stubs since we cannot link with notmuch.o */
 const notmuch_opt_desc_t notmuch_shared_options[] = {
-	{ }
+    { }
 };
 
 const char *notmuch_requested_db_uuid = NULL;

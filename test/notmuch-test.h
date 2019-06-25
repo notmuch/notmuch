@@ -4,13 +4,13 @@
 #include <notmuch.h>
 
 inline static void
-expect0(int line, notmuch_status_t ret)
+expect0 (int line, notmuch_status_t ret)
 {
-   if (ret) {
+    if (ret) {
 	fprintf (stderr, "line %d: %d\n", line, ret);
 	exit (1);
-   }
+    }
 }
 
-#define EXPECT0(v)  expect0(__LINE__, v);
+#define EXPECT0(v)  expect0 (__LINE__, v);
 #endif

@@ -275,7 +275,7 @@ main (int argc, char *argv[])
 
     do_smtp_to_file (peer_file, output);
 
- DONE:
+  DONE:
     if (output)
 	fclose (output);
     if (peer_file)

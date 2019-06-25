@@ -3,7 +3,8 @@
 #include <xapian.h>
 #include <notmuch.h>
 
-int main (int argc, char** argv)
+int
+main (int argc, char **argv)
 {
     notmuch_database_t *notmuch;
     char *message = NULL;
@@ -22,7 +23,7 @@ int main (int argc, char** argv)
     try {
 	(void) new Xapian::WritableDatabase (argv[2], Xapian::DB_OPEN);
     } catch (const Xapian::Error &error) {
-	printf("caught %s\n", error.get_msg().c_str());
+	printf ("caught %s\n", error.get_msg ().c_str ());
 	return 0;
     }
 

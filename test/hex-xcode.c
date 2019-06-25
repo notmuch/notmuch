@@ -26,13 +26,13 @@ xcode (void *ctx, enum direction dir, char *in, char **buf_p, size_t *size_p)
     if (dir == ENCODE)
 	status = hex_encode (ctx, in, buf_p, size_p);
     else
-	if (inplace) {
-	    status = hex_decode_inplace (in);
-	    *buf_p = in;
-	    *size_p = strlen(in);
-	} else {
-	    status = hex_decode (ctx, in, buf_p, size_p);
-	}
+    if (inplace) {
+	status = hex_decode_inplace (in);
+	*buf_p = in;
+	*size_p = strlen (in);
+    } else {
+	status = hex_decode (ctx, in, buf_p, size_p);
+    }
 
     if (status == HEX_SUCCESS)
 	fputs (*buf_p, stdout);
@@ -49,9 +49,9 @@ main (int argc, char **argv)
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &dir, .name = "direction", .keywords =
-	  (notmuch_keyword_t []){ { "encode", ENCODE },
-				  { "decode", DECODE },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "encode", ENCODE },
+				      { "decode", DECODE },
+				      { 0, 0 } } },
 	{ .opt_bool = &omit_newline, .name = "omit-newline" },
 	{ .opt_bool = &inplace, .name = "in-place" },
 	{ }
