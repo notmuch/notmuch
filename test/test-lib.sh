@@ -95,6 +95,8 @@ TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
 TEST_GDB=${TEST_GDB:-gdb}
 TEST_CC=${TEST_CC:-cc}
 TEST_CFLAGS=${TEST_CFLAGS:-"-g -O0"}
+TEST_SHIM_CFLAGS=${TEST_SHIM_CFLAGS:-"-fpic -shared"}
+TEST_SHIM_LDFLAGS=${TEST_SHIM_LDFLAGS:-"-ldl"}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -1056,6 +1058,20 @@ test_C () {
     notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr > OUTPUT
 }
 
+make_shim () {
+    base_name="$1"
+    test_file="${base_name}.c"
+    shim_file="${base_name}.so"
+    cat > ${test_file}
+    ${TEST_CC} ${TEST_CFLAGS} ${TEST_SHIM_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -o ${shim_file} ${test_file} ${TEST_SHIM_LDFLAGS}
+}
+
+notmuch_with_shim () {
+    base_name="$1"
+    shift
+    shim_file="${base_name}.so"
+    LD_PRELOAD=./${shim_file}${LD_PRELOAD:+:$LD_PRELOAD} notmuch-shared "$@"
+}
 
 # Creates a script that counts how much time it is executed and calls
 # notmuch.  $notmuch_counter_command is set to the path to the
