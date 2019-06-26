@@ -2,8 +2,6 @@
 test_description='"notmuch insert"'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-test_require_external_prereq gdb
-
 # subtests about file permissions assume that we're working with umask
 # 022 by default.
 umask 022
@@ -246,19 +244,19 @@ test_expect_code 1 "notmuch insert $gen_msg_filename 2>&1"
 notmuch config set new.tags $OLDCONFIG
 
 # DUPLICATE_MESSAGE_ID is not tested here, because it should actually pass.
-
-for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
-    READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
-cat <<EOF > index-file-$code.gdb
-set breakpoint pending on
-set logging file index-file-$code.log
-set logging on
-break notmuch_database_index_file
-commands
-return NOTMUCH_STATUS_$code
-continue
-end
-run
+# pregenerate all of the test shims
+for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR OUT_OF_MEMORY XAPIAN_EXCEPTION; do
+    make_shim shim-$code <<EOF
+#include <notmuch.h>
+#include <stdio.h>
+notmuch_status_t
+notmuch_database_index_file (notmuch_database_t *notmuch,
+                             const char *filename,
+                             notmuch_indexopts_t *indexopts,
+                             notmuch_message_t **message_ret)
+{
+  return NOTMUCH_STATUS_$code;
+}
 EOF
 done
 
@@ -266,30 +264,18 @@ gen_insert_msg
 
 for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
     test_begin_subtest "EXIT_FAILURE when index_file returns $code"
-    test_expect_code 1 \
-         "${TEST_GDB} --batch-silent --return-child-result \
-	     -ex 'set args insert < $gen_msg_filename' \
-	     -x index-file-$code.gdb notmuch"
+    test_expect_code 1 "notmuch_with_shim shim-$code insert < \"$gen_msg_filename\""
 
     test_begin_subtest "success exit with --keep when index_file returns $code"
-    test_expect_code 0 \
-         "${TEST_GDB} --batch-silent --return-child-result \
-	     -ex 'set args insert --keep < $gen_msg_filename' \
-	     -x index-file-$code.gdb notmuch"
+    test_expect_code 0 "notmuch_with_shim shim-$code insert --keep < \"$gen_msg_filename\""
 done
 
 for code in OUT_OF_MEMORY XAPIAN_EXCEPTION ; do
     test_begin_subtest "EX_TEMPFAIL when index_file returns $code"
-    test_expect_code 75 \
-         "${TEST_GDB} --batch-silent --return-child-result \
-	     -ex 'set args insert < $gen_msg_filename' \
-	     -x index-file-$code.gdb notmuch"
+    test_expect_code 75 "notmuch_with_shim shim-$code insert < \"$gen_msg_filename\""
 
     test_begin_subtest "success exit with --keep when index_file returns $code"
-    test_expect_code 0 \
-         "${TEST_GDB} --batch-silent --return-child-result \
-	     -ex 'set args insert --keep < $gen_msg_filename' \
-	     -x index-file-$code.gdb notmuch"
+    test_expect_code 0 "notmuch_with_shim shim-$code insert --keep < \"$gen_msg_filename\""
 done
 
 test_done
