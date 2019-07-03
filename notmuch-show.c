@@ -492,7 +492,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
     /* The disposition and content-type metadata are associated with
      * the envelope for message parts */
     GMimeObject *meta = node->envelope_part ? (
-	GMIME_OBJECT (node->envelope_part) ) : node->part ;
+	GMIME_OBJECT (node->envelope_part) ) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
     const bool leaf = GMIME_IS_PART (node->part);
     GMimeStream *stream = params->out_stream;
@@ -515,7 +515,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	const char *disposition = _get_disposition (meta);
 	const char *cid = g_mime_object_get_content_id (meta);
 	const char *filename = leaf ? (
-	    g_mime_part_get_filename (GMIME_PART (node->part)) ) : NULL ;
+	    g_mime_part_get_filename (GMIME_PART (node->part)) ) : NULL;
 
 	if (disposition &&
 	    strcasecmp (disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
@@ -688,7 +688,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     /* The disposition and content-type metadata are associated with
      * the envelope for message parts */
     GMimeObject *meta = node->envelope_part ? (
-	GMIME_OBJECT (node->envelope_part) ): node->part;
+	GMIME_OBJECT (node->envelope_part) ) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
     char *content_string;
     const char *disposition = _get_disposition (meta);
@@ -965,7 +965,7 @@ show_message (void *ctx,
 	    }
 	}
     }
-    DONE :
+  DONE:
     talloc_free (local);
     return status;
 }
@@ -1320,7 +1320,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = do_show (config, query, formatter, sprinter, &params);
     }
 
-    DONE :
+  DONE:
     g_mime_stream_flush (params.out_stream);
     g_object_unref (params.out_stream);
 
