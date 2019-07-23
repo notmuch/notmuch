@@ -329,13 +329,15 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 	}
     }
 
-    if (gzclose_w (output) != Z_OK) {
+    ret = gzclose_w (output);
+    if (ret) {
 	fprintf (stderr, "Error closing %s: %s\n", name_for_error,
 		 gzerror (output, NULL));
 	ret = EXIT_FAILURE;
 	output = NULL;
 	goto DONE;
-    }
+    } else
+        output = NULL;
 
     if (output_file_name) {
 	ret = rename (tempname, output_file_name);
