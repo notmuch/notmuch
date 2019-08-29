@@ -92,7 +92,7 @@ _notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_cr
  * when encountering a message part that is not part of the envelope.
  */
 notmuch_status_t
-_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *payload, GMimeObject *parent, int childnum);
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum);
 
 
 #ifdef __cplusplus

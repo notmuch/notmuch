@@ -136,13 +136,13 @@ _notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypt
 
 
 notmuch_status_t
-_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *payload, GMimeObject *parent, int childnum)
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum)
 {
     const char *protected_headers = NULL;
     const char *forwarded = NULL;
     const char *subject = NULL;
 
-    if (! msg_crypto || ! payload)
+    if (! msg_crypto || ! part)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     /* only fire on the first payload part encountered */
@@ -155,7 +155,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
      * https://tools.ietf.org/html/rfc1847#page-8) */
     if (parent && GMIME_IS_MULTIPART_ENCRYPTED (parent) && childnum == GMIME_MULTIPART_ENCRYPTED_VERSION) {
 	const char *enc_type = g_mime_object_get_content_type_parameter (parent, "protocol");
-	GMimeContentType *ct = g_mime_object_get_content_type (payload);
+	GMimeContentType *ct = g_mime_object_get_content_type (part);
 	if (ct && enc_type) {
 	    const char *part_type = g_mime_content_type_get_mime_type (ct);
 	    if (part_type && strcmp (part_type, enc_type) == 0)
@@ -177,16 +177,16 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
     /* Consider a payload that uses Alexei Melinkov's forwarded="no" for
      * message/global or message/rfc822:
      * https://tools.ietf.org/html/draft-melnikov-smime-header-signing-05#section-4 */
-    forwarded = g_mime_object_get_content_type_parameter (payload, "forwarded");
-    if (GMIME_IS_MESSAGE_PART (payload) && forwarded && strcmp (forwarded, "no") == 0) {
-	GMimeMessage *message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (payload));
+    forwarded = g_mime_object_get_content_type_parameter (part, "forwarded");
+    if (GMIME_IS_MESSAGE_PART (part) && forwarded && strcmp (forwarded, "no") == 0) {
+	GMimeMessage *message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 	subject = g_mime_message_get_subject (message);
 	/* FIXME: handle more than just Subject: at some point */
     } else {
 	/* Consider "memoryhole"-style protected headers as practiced by Enigmail and K-9 */
-	protected_headers = g_mime_object_get_content_type_parameter (payload, "protected-headers");
+	protected_headers = g_mime_object_get_content_type_parameter (part, "protected-headers");
 	if (protected_headers && strcasecmp ("v1", protected_headers) == 0)
-	    subject = g_mime_object_get_header (payload, "Subject");
+	    subject = g_mime_object_get_header (part, "Subject");
 	/* FIXME: handle more than just Subject: at some point */
     }
 
