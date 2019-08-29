@@ -136,4 +136,37 @@ id:nested-rfc822-message@crypto.notmuchmail.org
 id:protected-header@crypto.notmuchmail.org
 id:subjectless-protected-header@crypto.notmuchmail.org'
 
+test_begin_subtest "when rendering protected headers, avoid rendering legacy-display part"
+test_subtest_known_broken
+output=$(notmuch show --format=json id:protected-with-legacy-display@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'subject:[0][0][0]["headers"]["Subject"]="Interrupting Cow"' \
+                'no_legacy_display:[0][0][0]["body"][0]["content"][1]["content-type"]="text/plain"'
+
+test_begin_subtest "when replying, avoid rendering legacy-display part"
+test_subtest_known_broken
+output=$(notmuch reply --format=json id:protected-with-legacy-display@crypto.notmuchmail.org)
+test_json_nodes <<<"$output" \
+                'no_legacy_display:["original"]["body"][0]["content"][1]["content-type"]="text/plain"'
+
+test_begin_subtest "do not treat legacy-display part as body when indexing"
+test_subtest_known_broken
+output=$(notmuch search --output=messages body:interrupting)
+test_expect_equal "$output" ''
+
+test_begin_subtest "identify message that had a legacy display part skipped during indexing"
+test_subtest_known_broken
+output=$(notmuch search --output=messages property:index.repaired=skip-protected-headers-legacy-display)
+test_expect_equal "$output" id:protected-with-legacy-display@crypto.notmuchmail.org
+
+# TODO: test that a part that looks like a legacy-display in
+# multipart/signed, but not encrypted, is indexed and not stripped.
+
+# TODO: test that a legacy-display in a decrypted subpart (not in the
+# cryptographic payload) is indexed and not stripped.
+
+# TODO: test that a legacy-display inside multiple MIME layers that
+# include an encryption layer (e.g. multipart/encrypted around
+# multipart/signed) is stripped and not indexed.
+
 test_done
