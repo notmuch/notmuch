@@ -52,6 +52,7 @@
 
 #include "talloc-extra.h"
 #include "crypto.h"
+#include "repair.h"
 
 #define unused(x) x ## _unused __attribute__ ((unused))
 

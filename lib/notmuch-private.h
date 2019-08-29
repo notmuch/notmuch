@@ -53,6 +53,7 @@ NOTMUCH_BEGIN_DECLS
 #include "error_util.h"
 #include "string-util.h"
 #include "crypto.h"
+#include "repair.h"
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
