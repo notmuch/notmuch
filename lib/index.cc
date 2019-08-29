@@ -435,8 +435,14 @@ _index_mime_part (notmuch_message_t *message,
 		continue;
 	    }
 	    child = g_mime_multipart_get_part (multipart, i);
-	    (void) _notmuch_message_crypto_potential_payload (msg_crypto, child, part, i);
-	    _index_mime_part (message, indexopts, child, msg_crypto);
+	    GMimeObject *toindex = child;
+	    if (_notmuch_message_crypto_potential_payload (msg_crypto, child, part, i) &&
+		msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+		toindex = _notmuch_repair_crypto_payload_skip_legacy_display (child);
+		if (toindex != child)
+		    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+	    }
+	    _index_mime_part (message, indexopts, toindex, msg_crypto);
 	}
 	return;
     }
@@ -573,8 +579,14 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
 	g_object_unref (decrypt_result);
     }
-    _notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT);
-    _index_mime_part (message, indexopts, clear, msg_crypto);
+    GMimeObject *toindex = clear;
+    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
+	msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	toindex = _notmuch_repair_crypto_payload_skip_legacy_display (clear);
+	if (toindex != clear)
+	    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+    }
+    _index_mime_part (message, indexopts, toindex, msg_crypto);
     g_object_unref (clear);
 
     status = notmuch_message_add_property (message, "index.decryption", "success");

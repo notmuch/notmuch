@@ -148,12 +148,10 @@ test_json_nodes <<<"$output" \
                 'no_legacy_display:["original"]["body"][0]["content"][1]["content-type"]="text/plain"'
 
 test_begin_subtest "do not treat legacy-display part as body when indexing"
-test_subtest_known_broken
 output=$(notmuch search --output=messages body:interrupting)
 test_expect_equal "$output" ''
 
 test_begin_subtest "identify message that had a legacy display part skipped during indexing"
-test_subtest_known_broken
 output=$(notmuch search --output=messages property:index.repaired=skip-protected-headers-legacy-display)
 test_expect_equal "$output" id:protected-with-legacy-display@crypto.notmuchmail.org
 

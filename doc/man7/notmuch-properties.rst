@@ -121,6 +121,12 @@ of its normal activity.
     ``index.repaired`` property to note the type of repair(s) it
     performed.
 
+    ``index.repaired=skip-protected-headers-legacy-display`` indicates
+    that when indexing the cleartext of an encrypted message, notmuch
+    skipped over a "legacy-display" text/rfc822-headers part that it
+    found in that message, since it was able to index the built-in
+    protected headers directly.
+
 SEE ALSO
 ========
 
