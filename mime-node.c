@@ -264,14 +264,15 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	g_error_free (err);
 }
 
+static bool
+_mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild);
+
 static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
-    notmuch_status_t status;
 
     /* Set basic node properties */
-    node->part = part;
     node->ctx = parent->ctx;
     if (! talloc_reference (node, node->ctx)) {
 	fprintf (stderr, "Out of memory.\n");
@@ -282,10 +283,24 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
     node->part_num = node->next_part_num = -1;
     node->next_child = 0;
 
+    if (_mime_node_set_up_part (node, part, numchild))
+	return node;
+    talloc_free (node);
+    return NULL;
+}
+
+/* associate a MIME part with a node. */
+static bool
+_mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
+{
+    notmuch_status_t status;
+
     /* Deal with the different types of parts */
     if (GMIME_IS_PART (part)) {
+	node->part = part;
 	node->nchildren = 0;
     } else if (GMIME_IS_MULTIPART (part)) {
+	node->part = part;
 	node->nchildren = g_mime_multipart_get_count (GMIME_MULTIPART (part));
     } else if (GMIME_IS_MESSAGE_PART (part)) {
 	/* Promote part to an envelope and open it */
@@ -297,11 +312,10 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
     } else {
 	fprintf (stderr, "Warning: Unknown mime part type: %s.\n",
 		 g_type_name (G_OBJECT_TYPE (part)));
-	talloc_free (node);
-	return NULL;
+	return false;
     }
 
-    /* Handle PGP/MIME parts */
+    /* Handle PGP/MIME parts (by definition not cryptographic payload parts) */
     if (GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
@@ -321,12 +335,12 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 	    node_verify (node, part);
 	}
     } else {
-	status = _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, parent ? parent->part : NULL, numchild);
+	status = _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild);
 	if (status)
 	    fprintf (stderr, "Warning: failed to record potential crypto payload (%s).\n", notmuch_status_to_string (status));
     }
 
-    return node;
+    return true;
 }
 
 mime_node_t *
@@ -347,7 +361,7 @@ mime_node_child (mime_node_t *parent, int child)
     } else if (GMIME_IS_MESSAGE (parent->part)) {
 	sub = g_mime_message_get_mime_part (GMIME_MESSAGE (parent->part));
     } else {
-	/* This should have been caught by message_part_create */
+	/* This should have been caught by _mime_node_set_up_part */
 	INTERNAL_ERROR ("Unexpected GMimeObject type: %s",
 			g_type_name (G_OBJECT_TYPE (parent->part)));
     }
