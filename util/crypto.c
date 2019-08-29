@@ -20,6 +20,7 @@
 
 #include "crypto.h"
 #include <strings.h>
+#include "error_util.h"
 #define unused(x) x __attribute__ ((unused))
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -135,19 +136,20 @@ _notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypt
 }
 
 
-notmuch_status_t
+bool
 _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum)
 {
     const char *protected_headers = NULL;
     const char *forwarded = NULL;
     const char *subject = NULL;
 
-    if (! msg_crypto || ! part)
-	return NOTMUCH_STATUS_NULL_POINTER;
+    if ((! msg_crypto) || (! part))
+	INTERNAL_ERROR ("_notmuch_message_crypto_potential_payload() got NULL for %s\n",
+			msg_crypto? "part" : "msg_crypto");
 
     /* only fire on the first payload part encountered */
     if (msg_crypto->payload_encountered)
-	return NOTMUCH_STATUS_SUCCESS;
+	return false;
 
     /* the first child of multipart/encrypted that matches the
      * encryption protocol should be "control information" metadata,
@@ -159,7 +161,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
 	if (ct && enc_type) {
 	    const char *part_type = g_mime_content_type_get_mime_type (ct);
 	    if (part_type && strcmp (part_type, enc_type) == 0)
-		return NOTMUCH_STATUS_SUCCESS;
+		return false;
 	}
     }
 
@@ -169,7 +171,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
      * envelope: */
     if ((msg_crypto->decryption_status != NOTMUCH_MESSAGE_DECRYPTED_FULL) &&
 	(msg_crypto->sig_list == NULL))
-	return NOTMUCH_STATUS_SUCCESS;
+	return false;
 
     /* Verify that this payload has headers that are intended to be
      * exported to the larger message: */
@@ -196,7 +198,7 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
 	msg_crypto->payload_subject = talloc_strdup (msg_crypto, subject);
     }
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return true;
 }
 
 

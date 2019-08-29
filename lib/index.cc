@@ -407,7 +407,6 @@ _index_mime_part (notmuch_message_t *message,
 	    _notmuch_message_add_term (message, "tag", "encrypted");
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
-	    notmuch_status_t status;
 	    GMimeObject *child;
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
 		/* Don't index the signature, but index its content type. */
@@ -436,11 +435,7 @@ _index_mime_part (notmuch_message_t *message,
 		continue;
 	    }
 	    child = g_mime_multipart_get_part (multipart, i);
-	    status = _notmuch_message_crypto_potential_payload (msg_crypto, child, part, i);
-	    if (status)
-		_notmuch_database_log (notmuch_message_get_database (message),
-				       "Warning: failed to mark the potential cryptographic payload (%s).\n",
-				       notmuch_status_to_string (status));
+	    (void) _notmuch_message_crypto_potential_payload (msg_crypto, child, part, i);
 	    _index_mime_part (message, indexopts, child, msg_crypto);
 	}
 	return;
@@ -578,7 +573,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
 	g_object_unref (decrypt_result);
     }
-    status = _notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT);
+    _notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT);
     _index_mime_part (message, indexopts, clear, msg_crypto);
     g_object_unref (clear);
 

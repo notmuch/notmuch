@@ -90,8 +90,11 @@ _notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_cr
 
 /* call potential_payload during a depth-first-search on a message
  * when encountering a message part that is not part of the envelope.
+ *
+ * Returns true if part is the root of the cryptographic payload of
+ * this message.
  */
-notmuch_status_t
+bool
 _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum);
 
 

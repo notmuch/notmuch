@@ -293,8 +293,6 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 static bool
 _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 {
-    notmuch_status_t status;
-
     /* Deal with the different types of parts */
     if (GMIME_IS_PART (part)) {
 	node->part = part;
@@ -335,9 +333,7 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	    node_verify (node, part);
 	}
     } else {
-	status = _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild);
-	if (status)
-	    fprintf (stderr, "Warning: failed to record potential crypto payload (%s).\n", notmuch_status_to_string (status));
+	(void) _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild);
     }
 
     return true;
