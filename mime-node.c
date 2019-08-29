@@ -333,7 +333,16 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	    node_verify (node, part);
 	}
     } else {
-	(void) _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild);
+	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild) &&
+	    node->ctx->msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	    GMimeObject *clean_payload = _notmuch_repair_crypto_payload_skip_legacy_display (part);
+	    if (clean_payload != part) {
+		/* only one layer of recursion is possible here
+		 * because there can be only a single cryptographic
+		 * payload: */
+		return _mime_node_set_up_part (node, clean_payload, numchild);
+	    }
+	}
     }
 
     return true;

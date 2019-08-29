@@ -137,14 +137,12 @@ id:protected-header@crypto.notmuchmail.org
 id:subjectless-protected-header@crypto.notmuchmail.org'
 
 test_begin_subtest "when rendering protected headers, avoid rendering legacy-display part"
-test_subtest_known_broken
 output=$(notmuch show --format=json id:protected-with-legacy-display@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'subject:[0][0][0]["headers"]["Subject"]="Interrupting Cow"' \
                 'no_legacy_display:[0][0][0]["body"][0]["content"][1]["content-type"]="text/plain"'
 
 test_begin_subtest "when replying, avoid rendering legacy-display part"
-test_subtest_known_broken
 output=$(notmuch reply --format=json id:protected-with-legacy-display@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'no_legacy_display:["original"]["body"][0]["content"][1]["content-type"]="text/plain"'
