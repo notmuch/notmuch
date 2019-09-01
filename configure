@@ -31,6 +31,22 @@ case $NOTMUCH_SRCDIR in ( *\'* | *['\"`$']* )
 	exit 1
 esac
 
+case $PWD in ( *\'* | *['\"`$']* )
+	echo "Definitely unsafe characters in current directory '$PWD'".
+	exit 1
+esac
+
+# In case of whitespace, builds may work, tests definitely will not.
+case $NOTMUCH_SRCDIR in ( *["$IFS"]* )
+	echo "Whitespace in source path '$NOTMUCH_SRCDIR' not supported".
+	exit 1
+esac
+
+case $PWD in ( *["$IFS"]* )
+	echo "Whitespace in current directory '$PWD' not supported".
+	exit 1
+esac
+
 subdirs="util compat lib parse-time-string completion doc emacs"
 subdirs="${subdirs} performance-test test test/test-databases"
 subdirs="${subdirs} bindings"
