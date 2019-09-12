@@ -48,6 +48,11 @@ mode."
   :type 'boolean
   :group 'notmuch-crypto)
 
+(defcustom notmuch-crypto-gpg-program epg-gpg-program
+  "The gpg executable."
+  :type 'string
+  :group 'notmuch-crypto)
+
 (defface notmuch-crypto-part-header
   '((((class color)
       (background dark))
@@ -151,7 +156,7 @@ by user FROM."
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
-	(call-process epg-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
+	(call-process notmuch-crypto-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
@@ -208,7 +213,7 @@ corresponding key when the status button is pressed."
 	   button (format "Retrieving key %s asynchronously..." keyid))
 	  (let ((p (make-process :name "notmuch GPG key retrieval"
 				 :buffer buffer
-				 :command (list epg-gpg-program "--recv-keys" keyid)
+				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
 				 :connection-type 'pipe
 				 :sentinel #'notmuch-crypto--async-key-sentinel
 				 ;; Create the process stopped so that
@@ -220,13 +225,14 @@ corresponding key when the status button is pressed."
 	    (process-put p :notmuch-show-point (point))
 	    (message "Getting the GPG key %s asynchronously..." keyid)
 	    (continue-process p)))
+
       (let ((window (display-buffer buffer)))
 	(with-selected-window window
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
-	    (call-process epg-gpg-program nil t t "--recv-keys" keyid)
+	    (call-process notmuch-crypto-gpg-program nil t t "--recv-keys" keyid)
 	    (insert "\n")
-	    (call-process epg-gpg-program nil t t "--list-keys" keyid))
+	    (call-process notmuch-crypto-gpg-program nil t t "--list-keys" keyid))
 	  (recenter -1))
 	(notmuch-show-refresh-view)))))
 
