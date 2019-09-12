@@ -43,6 +43,11 @@ mode."
   :package-version '(notmuch . "0.25")
   :group 'notmuch-crypto)
 
+(defcustom notmuch-crypto-get-keys-asynchronously t
+  "Retrieve gpg keys asynchronously."
+  :type 'boolean
+  :group 'notmuch-crypto)
+
 (defface notmuch-crypto-part-header
   '((((class color)
       (background dark))
@@ -114,7 +119,7 @@ mode."
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
 	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
-	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver and redisplay."))))
+	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver."))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
@@ -148,19 +153,77 @@ mode."
 	(call-process epg-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
+(defun notmuch-crypto--async-key-sentinel (process event)
+  "When the user asks for a GPG key to be retrieved
+asynchronously, handle completion of that task.
+
+If the retrieval is successful, the thread where the retrieval
+was initiated is still displayed and the cursor has not moved,
+redisplay the thread."
+  (let ((status (process-status process))
+	(exit-status (process-exit-status process))
+	(keyid (process-get process :gpg-key-id)))
+    (when (memq status '(exit signal))
+      (message "Getting the GPG key %s asynchronously...%s."
+	       keyid
+	       (if (= exit-status 0)
+		   "completed"
+		 "failed"))
+      ;; If the original buffer is still alive and point didn't move
+      ;; (i.e. the user didn't move on or away), refresh the buffer to
+      ;; show the updated signature status.
+      (let ((show-buffer (process-get process :notmuch-show-buffer))
+	    (show-point (process-get process :notmuch-show-point)))
+	(when (and (bufferp show-buffer)
+		   (buffer-live-p show-buffer)
+		   (= show-point
+		      (with-current-buffer show-buffer
+			(point))))
+	  (with-current-buffer show-buffer
+	    (notmuch-show-refresh-view)))))))
+
+(defun notmuch-crypto--set-button-label (button label)
+  "Set the text displayed in BUTTON to LABEL."
+  (save-excursion
+    (let ((inhibit-read-only t))
+      ;; This knows rather too much about how we typically format
+      ;; buttons.
+      (goto-char (button-start button))
+      (forward-char 2)
+      (delete-region (point) (- (button-end button) 2))
+      (insert label))))
+
 (defun notmuch-crypto-sigstatus-error-callback (button)
   (let* ((sigstatus (button-get button :notmuch-sigstatus))
 	 (keyid (concat "0x" (plist-get sigstatus :keyid)))
-	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*"))
-	 (window (display-buffer buffer t nil)))
-    (with-selected-window window
-      (with-current-buffer buffer
-	(goto-char (point-max))
-	(call-process epg-gpg-program nil t t "--batch" "--no-tty" "--recv-keys" keyid)
-	(insert "\n")
-	(call-process epg-gpg-program nil t t "--batch" "--no-tty" "--list-keys" keyid))
-      (recenter -1))
-    (notmuch-show-refresh-view)))
+	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*")))
+    (if notmuch-crypto-get-keys-asynchronously
+	(progn
+	  (notmuch-crypto--set-button-label
+	   button (format "Retrieving key %s asynchronously..." keyid))
+	  (let ((p (make-process :name "notmuch GPG key retrieval"
+				 :buffer buffer
+				 :command (list epg-gpg-program "--recv-keys" keyid)
+				 :connection-type 'pipe
+				 :sentinel #'notmuch-crypto--async-key-sentinel
+				 ;; Create the process stopped so that
+				 ;; we have time to store the key id,
+				 ;; etc. on it.
+				 :stop t)))
+	    (process-put p :gpg-key-id keyid)
+	    (process-put p :notmuch-show-buffer (current-buffer))
+	    (process-put p :notmuch-show-point (point))
+	    (message "Getting the GPG key %s asynchronously..." keyid)
+	    (continue-process p)))
+      (let ((window (display-buffer buffer t nil)))
+	(with-selected-window window
+	  (with-current-buffer buffer
+	    (goto-char (point-max))
+	    (call-process epg-gpg-program nil t t "--recv-keys" keyid)
+	    (insert "\n")
+	    (call-process epg-gpg-program nil t t "--list-keys" keyid))
+	  (recenter -1))
+	(notmuch-show-refresh-view)))))
 
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
   (let* ((status (plist-get encstatus :status))
