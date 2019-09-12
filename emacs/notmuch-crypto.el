@@ -96,34 +96,37 @@ mode."
   :supertype 'notmuch-button-type)
 
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
+  "Insert a button describing the signature status SIGSTATUS sent
+by user FROM."
   (let* ((status (plist-get sigstatus :status))
-	 (help-msg nil)
 	 (show-button t)
-	 (label nil)
 	 (face 'notmuch-crypto-signature-unknown)
-	 (button-action (lambda (button) (message (button-get button 'help-echo)))))
+	 (button-action (lambda (button) (message (button-get button 'help-echo))))
+	 (keyid (concat "0x" (plist-get sigstatus :keyid)))
+	 label help-msg)
     (cond
      ((string= status "good")
-      (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint))))
-	;; if userid present, userid has full or greater validity
-	(if (plist-member sigstatus :userid)
-	    (let ((userid (plist-get sigstatus :userid)))
-	      (setq label (concat "Good signature by: " userid))
-	      (setq face 'notmuch-crypto-signature-good))
-	  (progn
-	    (setq label (concat "Good signature by key: " fingerprint))
-	    (setq face 'notmuch-crypto-signature-good-key)))
-	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
-	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
+      (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
+	    (userid (plist-get sigstatus :userid)))
+	;; If userid is present it has full or greater validity.
+	(if userid
+	    (setq label (concat "Good signature by: " userid)
+		  face 'notmuch-crypto-signature-good)
+	  (setq label (concat "Good signature by key: " fingerprint)
+		face 'notmuch-crypto-signature-good-key))
+	(setq button-action 'notmuch-crypto-sigstatus-good-callback
+	      help-msg (concat "Click to list key ID 0x" fingerprint "."))))
+
      ((string= status "error")
-      (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
-	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
-	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
-	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver."))))
+      (setq label (concat "Unknown key ID " keyid " or unsupported algorithm")
+	    button-action 'notmuch-crypto-sigstatus-error-callback
+	    help-msg (concat "Click to retrieve key ID " keyid
+			     " from keyserver.")))
+
      ((string= status "bad")
-      (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
-	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
-	(setq face 'notmuch-crypto-signature-bad)))
+      (setq label (concat "Bad signature (claimed key ID " keyid ")")
+	    face 'notmuch-crypto-signature-bad))
+
      (status
       (setq label (concat "Unknown signature status: " status)))
      (t
@@ -140,18 +143,18 @@ mode."
        :notmuch-from from)
       (insert "\n"))))
 
-(declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
-
 (defun notmuch-crypto-sigstatus-good-callback (button)
   (let* ((sigstatus (button-get button :notmuch-sigstatus))
 	 (fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
 	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*"))
-	 (window (display-buffer buffer t nil)))
+	 (window (display-buffer buffer)))
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
 	(call-process epg-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
+
+(declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
 
 (defun notmuch-crypto--async-key-sentinel (process event)
   "When the user asks for a GPG key to be retrieved
@@ -194,6 +197,8 @@ redisplay the thread."
       (insert label))))
 
 (defun notmuch-crypto-sigstatus-error-callback (button)
+  "When signature validation has failed, try to retrieve the
+corresponding key when the status button is pressed."
   (let* ((sigstatus (button-get button :notmuch-sigstatus))
 	 (keyid (concat "0x" (plist-get sigstatus :keyid)))
 	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*")))
@@ -215,7 +220,7 @@ redisplay the thread."
 	    (process-put p :notmuch-show-point (point))
 	    (message "Getting the GPG key %s asynchronously..." keyid)
 	    (continue-process p)))
-      (let ((window (display-buffer buffer t nil)))
+      (let ((window (display-buffer buffer)))
 	(with-selected-window window
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
@@ -226,25 +231,23 @@ redisplay the thread."
 	(notmuch-show-refresh-view)))))
 
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
-  (let* ((status (plist-get encstatus :status))
-	 (help-msg nil)
-	 (label "Decryption not attempted")
-	 (face 'notmuch-crypto-decryption))
-    (cond
-     ((string= status "good")
-      (setq label "Decryption successful"))
-     ((string= status "bad")
-      (setq label "Decryption error"))
-     (t
-      (setq label (concat "Unknown encryption status"
-			  (if status (concat ": " status))))))
-    (insert-button
-     (concat "[ " label " ]")
-     :type 'notmuch-crypto-status-button-type
-     'help-echo help-msg
-     'face face
-     'mouse-face face)
-    (insert "\n")))
+  "Insert a button describing the encryption status ENCSTATUS."
+  (insert-button
+   (concat "[ "
+	   (let ((status (plist-get encstatus :status)))
+	     (cond
+	      ((string= status "good")
+	       "Decryption successful")
+	      ((string= status "bad")
+	       "Decryption error")
+	      (t
+	       (concat "Unknown encryption status"
+		       (if status (concat ": " status))))))
+	   " ]")
+   :type 'notmuch-crypto-status-button-type
+   'face 'notmuch-crypto-decryption
+   'mouse-face 'notmuch-crypto-decryption)
+  (insert "\n"))
 
 ;;
 
