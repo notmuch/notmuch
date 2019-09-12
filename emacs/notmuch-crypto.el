@@ -149,13 +149,16 @@ by user FROM."
       (insert "\n"))))
 
 (defun notmuch-crypto-sigstatus-good-callback (button)
-  (let* ((sigstatus (button-get button :notmuch-sigstatus))
+  (let* ((id (notmuch-show-get-message-id))
+	 (sigstatus (button-get button :notmuch-sigstatus))
 	 (fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
 	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*"))
 	 (window (display-buffer buffer)))
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
+	(insert (format "-- Key %s in message %s:\n"
+			fingerprint id))
 	(call-process notmuch-crypto-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
@@ -211,10 +214,14 @@ corresponding key when the status button is pressed."
 	(progn
 	  (notmuch-crypto--set-button-label
 	   button (format "Retrieving key %s asynchronously..." keyid))
+	  (with-current-buffer buffer
+	    (goto-char (point-max))
+	    (insert (format "--- Retrieving key %s:\n" keyid)))
 	  (let ((p (make-process :name "notmuch GPG key retrieval"
-				 :buffer buffer
-				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
 				 :connection-type 'pipe
+				 :buffer buffer
+				 :stderr buffer
+				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
 				 :sentinel #'notmuch-crypto--async-key-sentinel
 				 ;; Create the process stopped so that
 				 ;; we have time to store the key id,
@@ -230,6 +237,7 @@ corresponding key when the status button is pressed."
 	(with-selected-window window
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
+	    (insert (format "--- Retrieving key %s:\n" keyid))
 	    (call-process notmuch-crypto-gpg-program nil t t "--recv-keys" keyid)
 	    (insert "\n")
 	    (call-process notmuch-crypto-gpg-program nil t t "--list-keys" keyid))
