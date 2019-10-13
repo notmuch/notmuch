@@ -29,6 +29,8 @@ _gzfile_maybe_filter (GMimeStream *file_stream)
 
 	/* ignore filter id */
 	(void) g_mime_stream_filter_add ((GMimeStreamFilter *) gzstream, gzfilter);
+	g_object_unref (gzfilter);
+	g_object_unref (file_stream);
 	return gzstream;
     } else {
 	return file_stream;
