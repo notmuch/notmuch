@@ -1206,7 +1206,7 @@ desktop_dir = \$(prefix)/share/applications
 bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
 
 # The directory to which zsh completions files should be installed
-zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
+zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/site-functions}
 
 # Whether the canonicalize_file_name function is available (if not, then notmuch will
 # build its own version)
