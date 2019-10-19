@@ -1,3 +1,10 @@
+notmuch (0.29.2-1) unstable; urgency=medium
+
+  * New upstream bug fix release: fix file descriptor leak with gzipped
+    files. Thanks to James Troup for reporting and the fix.
+
+ -- David Bremner <bremner@debian.org>  Sat, 19 Oct 2019 07:23:21 -0300
+
 notmuch (0.29.1-2) unstable; urgency=medium
 
   * Re-upload to unstable
