@@ -1,3 +1,12 @@
+Notmuch 0.29.2 (2019-10-19)
+===========================
+
+General
+-------
+
+Fix for file descriptor leak when opening gzipped mail files. Thanks
+to James Troup for the bug report and the fix.
+
 Notmuch 0.29.1 (2019-06-11)
 ===========================
 
