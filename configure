@@ -671,13 +671,38 @@ if [ $have_python -eq 0 ]; then
     errors=$((errors + 1))
 fi
 
-printf "Checking for python3 cffi... "
-if "$python" -c 'import sys,cffi; assert sys.version_info >= (3,0)' >/dev/null 2>&1; then
-    printf "Yes.\n"
-    have_python3_cffi=1
-else
-    printf "No.\n"
-    have_python3_cffi=0
+have_python3=0
+if [ $have_python -eq 1 ]; then
+    printf "Checking for python3..."
+    if "$python" -c 'import sys; assert sys.version_info >= (3,0)' > /dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3=1
+    else
+        printf "No.\n"
+    fi
+fi
+
+have_python3_cffi=0
+have_python3_pytest=0
+if [ $have_python3 -eq 1 ]; then
+    printf "Checking for python3 cffi... "
+    if "$python" -c 'import cffi' >/dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3_cffi=1
+    else
+        printf "No.\n"
+    fi
+
+    printf "Checking for python3 pytest (>= 3.0)... "
+    conf=$(mktemp)
+    printf "[pytest]\nminversion=3.0\n" > $conf
+    if pytest-3 -c $conf --version >/dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3_pytest=1
+    else
+        printf "No.\n"
+    fi
+    rm -f $conf
 fi
 
 printf "Checking for valgrind development files... "
