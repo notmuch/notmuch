@@ -13,6 +13,13 @@ ifeq ($(HAVE_RUBY_DEV),1)
 	$(MAKE) -C $(dir)/ruby
 endif
 
+python-cffi-bindings: lib/$(LINKER_NAME)
+ifeq ($(HAVE_PYTHON3_CFFI),1)
+	cd $(dir)/python-cffi && \
+		${PYTHON} setup.py build --build-lib build/stage && \
+		mkdir -p build/stage/tests && cp tests/*.py build/stage/tests
+endif
+
 CLEAN += $(patsubst %,$(dir)/ruby/%, \
 	.RUBYARCHDIR.time \
 	Makefile database.o directory.o filenames.o\
@@ -20,3 +27,5 @@ CLEAN += $(patsubst %,$(dir)/ruby/%, \
 	status.o tags.o thread.o threads.o)
 
 CLEAN += bindings/ruby/.vendorarchdir.time
+
+CLEAN += bindings/python-cffi/build

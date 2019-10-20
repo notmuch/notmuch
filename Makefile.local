@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man build-info ruby-bindings
+all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
