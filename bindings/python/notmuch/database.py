@@ -51,7 +51,7 @@ class Database(object):
     read-only or read-write mode. A :class:`Query` can be derived from
     or be applied to a specific database to find messages. Also adding
     and removing messages to the database happens via this
-    object. Modifications to the database are not atmic by default (see
+    object. Modifications to the database are not atomic by default (see
     :meth:`begin_atomic`) and once a database has been modified, all
     other database objects pointing to the same data-base will throw an
     :exc:`XapianError` as the underlying database has been
