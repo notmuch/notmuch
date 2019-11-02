@@ -1,3 +1,11 @@
+notmuch (0.29.2-2) experimental; urgency=medium
+
+  * Drop python-notmuch binary package.
+  * Drop python2 build-dependency (Closes: #937161).
+  * Convert to pybuild for python bindings
+
+ -- David Bremner <bremner@debian.org>  Sat, 02 Nov 2019 18:21:06 -0300
+
 notmuch (0.29.2-1) unstable; urgency=medium
 
   * New upstream bug fix release: fix file descriptor leak with gzipped

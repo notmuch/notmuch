@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 
-python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
+export PYBUILD_NAME=notmuch
 
 %:
-	dh $@ --with python2,python3,elpa
+	dh $@ --with python3,elpa
 
 override_dh_auto_configure:
 	BASHCMD=/bin/bash ./configure --prefix=/usr \
@@ -17,20 +17,17 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
-	dh_auto_build --sourcedirectory bindings/python
-	cd bindings/python && $(python3_all) setup.py build
+	dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
 	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
-	dh_auto_clean --sourcedirectory bindings/python
-	cd bindings/python && $(python3_all) setup.py clean -a
+	dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
 	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install
-	dh_auto_install --sourcedirectory bindings/python
-	cd bindings/python && $(python3_all) setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp
+	dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python
 	$(MAKE) -C contrib/notmuch-mutt DESTDIR=$(CURDIR)/debian/tmp install
 	dh_auto_install --sourcedirectory bindings/ruby
