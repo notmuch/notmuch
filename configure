@@ -671,6 +671,15 @@ if [ $have_python -eq 0 ]; then
     errors=$((errors + 1))
 fi
 
+printf "Checking for python3 cffi... "
+if "$python" -c 'import sys,cffi; assert sys.version_info >= (3,0)' >/dev/null 2>&1; then
+    printf "Yes.\n"
+    have_python3_cffi=1
+else
+    printf "No.\n"
+    have_python3_cffi=0
+fi
+
 printf "Checking for valgrind development files... "
 if pkg-config --exists valgrind; then
     printf "Yes.\n"
@@ -1223,6 +1232,12 @@ HAVE_GETLINE = ${have_getline}
 # building/testing ruby bindings.
 HAVE_RUBY_DEV = ${have_ruby_dev}
 
+# Is the python cffi package available?
+HAVE_PYTHON3_CFFI = ${have_python3_cffi}
+
+# Is the python pytest package available?
+HAVE_PYTHON3_PYTEST = ${have_python3_pytest}
+
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
@@ -1375,6 +1390,12 @@ NOTMUCH_RUBY=${RUBY}
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
+
+# Is the python cffi package available?
+NOTMUCH_HAVE_PYTHON3_CFFI=${have_python3_cffi}
+
+# Is the python pytest package available?
+NOTMUCH_HAVE_PYTHON3_PYTEST=${have_python3_pytest}
 
 # Platform we are run on
 PLATFORM=${platform}
