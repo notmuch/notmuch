@@ -13,6 +13,10 @@ addons:
     - libgmime-3.0-dev
     - libtalloc-dev
     - python3-sphinx
+    - python3-cffi
+    - python3-pytest
+    - python3-setuptools
+    - libpython3-all-dev
     - gpgsm
 
 script:
