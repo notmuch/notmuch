@@ -5,6 +5,7 @@ import socket
 import subprocess
 import textwrap
 import time
+import os
 
 import pytest
 
@@ -32,10 +33,11 @@ def notmuch(maildir):
         """
         cfg_fname = maildir.path / 'notmuch-config'
         cmd = ['notmuch'] + list(args)
-        print('Invoking: {}'.format(' '.join(cmd)))
+        env = os.environ.copy()
+        env['NOTMUCH_CONFIG'] = str(cfg_fname)
         proc = subprocess.run(cmd,
                               timeout=5,
-                              env={'NOTMUCH_CONFIG': str(cfg_fname)})
+                              env=env)
         proc.check_returncode()
     return run
 
