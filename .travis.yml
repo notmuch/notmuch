@@ -1,12 +1,11 @@
 language: c
 
-dist: xenial
+dist: bionic
 
 addons:
   apt:
     sources:
     - sourceline: 'ppa:xapian-backports/ppa'
-    - sourceline: 'ppa:notmuch/notmuch'
     packages:
     - dtach
     - libxapian-dev
