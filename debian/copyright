@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: notmuch
-Source: git://notmuchmail.org/git/notmuch
+Source: https://git.notmuchmail.org/git/notmuch
 Upstream-Contact: Notmuch Mailing List <notmuch@notmuchmail.org>
 
 Files: *
