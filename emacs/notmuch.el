@@ -188,6 +188,7 @@ there will be called at other points of notmuch execution."
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
+    (define-key map (kbd "M-RET") 'notmuch-tree-from-search-thread)
     (define-key map "Z" 'notmuch-tree-from-search-current-query)
     map)
   "Keymap for \"notmuch search\" buffers.")
