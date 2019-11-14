@@ -168,7 +168,7 @@ Fine tuning of some installation directories is available:
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
 	--bashcompletiondir=DIR Bash completions files [PREFIX/share/bash-completion/completions]
-	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
+	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/site-functions]
 
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
@@ -1240,7 +1240,7 @@ desktop_dir = \$(prefix)/share/applications
 bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
 
 # The directory to which zsh completions files should be installed
-zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
+zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/site-functions}
 
 # Whether the canonicalize_file_name function is available (if not, then notmuch will
 # build its own version)
