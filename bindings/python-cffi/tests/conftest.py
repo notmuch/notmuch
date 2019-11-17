@@ -10,6 +10,13 @@ import os
 import pytest
 
 
+def pytest_report_header():
+    vers = subprocess.run(['notmuch', '--version'], stdout=subprocess.PIPE)
+    which = subprocess.run(['which', 'notmuch'], stdout=subprocess.PIPE)
+    return ['{} ({})'.format(vers.stdout.decode(errors='replace').strip(),
+                             which.stdout.decode(errors='replace').strip())]
+
+
 @pytest.fixture(scope='function')
 def tmppath(tmpdir):
     """The tmpdir fixture wrapped in pathlib.Path."""
