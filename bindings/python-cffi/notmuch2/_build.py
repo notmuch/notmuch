@@ -3,14 +3,14 @@ import cffi
 
 ffibuilder = cffi.FFI()
 ffibuilder.set_source(
-    'notdb._capi',
+    'notmuch2._capi',
     r"""
     #include <stdlib.h>
     #include <time.h>
     #include <notmuch.h>
 
     #if LIBNOTMUCH_MAJOR_VERSION < 5
-        #error libnotmuch version not supported by notdb
+        #error libnotmuch version not supported by notmuch2 python bindings
     #endif
     """,
     include_dirs=['../../lib'],

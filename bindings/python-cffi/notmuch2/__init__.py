@@ -42,13 +42,13 @@ usually more and essentially O(n) rather than O(1) as you might
 usually expect from Python containers.
 """
 
-from notdb import _capi
-from notdb._base import *
-from notdb._database import *
-from notdb._errors import *
-from notdb._message import *
-from notdb._tags import *
-from notdb._thread import *
+from notmuch2 import _capi
+from notmuch2._base import *
+from notmuch2._database import *
+from notmuch2._errors import *
+from notmuch2._message import *
+from notmuch2._tags import *
+from notmuch2._thread import *
 
 
 NOTMUCH_TAG_MAX = _capi.lib.NOTMUCH_TAG_MAX

@@ -1,4 +1,4 @@
-from notdb import _capi as capi
+from notmuch2 import _capi as capi
 
 
 class NotmuchError(Exception):

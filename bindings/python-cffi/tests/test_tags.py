@@ -9,8 +9,8 @@ import textwrap
 
 import pytest
 
-from notdb import _database as database
-from notdb import _tags as tags
+from notmuch2 import _database as database
+from notmuch2 import _tags as tags
 
 
 class TestImmutable:

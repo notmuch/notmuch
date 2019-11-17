@@ -1,11 +1,11 @@
 import collections.abc
 import weakref
 
-from notdb import _base as base
-from notdb import _capi as capi
-from notdb import _errors as errors
-from notdb import _message as message
-from notdb import _tags as tags
+from notmuch2 import _base as base
+from notmuch2 import _capi as capi
+from notmuch2 import _errors as errors
+from notmuch2 import _message as message
+from notmuch2 import _tags as tags
 
 
 __all__ = ['Thread']

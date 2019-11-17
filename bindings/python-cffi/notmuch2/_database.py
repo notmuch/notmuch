@@ -6,12 +6,12 @@ import os
 import pathlib
 import weakref
 
-import notdb._base as base
-import notdb._capi as capi
-import notdb._errors as errors
-import notdb._message as message
-import notdb._query as querymod
-import notdb._tags as tags
+import notmuch2._base as base
+import notmuch2._capi as capi
+import notmuch2._errors as errors
+import notmuch2._message as message
+import notmuch2._query as querymod
+import notmuch2._tags as tags
 
 
 __all__ = ['Database', 'AtomicContext', 'DbRevision']

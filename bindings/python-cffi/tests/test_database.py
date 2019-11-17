@@ -5,10 +5,10 @@ import pathlib
 
 import pytest
 
-import notdb
-import notdb._errors as errors
-import notdb._database as dbmod
-import notdb._message as message
+import notmuch2
+import notmuch2._errors as errors
+import notmuch2._database as dbmod
+import notmuch2._message as message
 
 
 @pytest.fixture
@@ -279,7 +279,7 @@ class TestQuery:
 
     @pytest.fixture
     def db(self, maildir, notmuch):
-        """Return a read-only notdb.Database.
+        """Return a read-only notmuch2.Database.
 
         The database will have 3 messages, 2 threads.
         """
@@ -306,7 +306,7 @@ class TestQuery:
     def test_message_match(self, db):
         msgs = db.messages('*')
         msg = next(msgs)
-        assert isinstance(msg, notdb.Message)
+        assert isinstance(msg, notmuch2.Message)
 
     def test_count_threads(self, db):
         assert db.count_threads('*') == 2
@@ -323,4 +323,4 @@ class TestQuery:
     def test_threads_match(self, db):
         threads = db.threads('*')
         thread = next(threads)
-        assert isinstance(thread, notdb.Thread)
+        assert isinstance(thread, notmuch2.Thread)

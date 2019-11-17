@@ -2,7 +2,7 @@ import setuptools
 
 
 setuptools.setup(
-    name='notdb',
+    name='notmuch2',
     version='0.1',
     description='Pythonic bindings for the notmuch mail database using CFFI',
     author='Floris Bruynooghe',
@@ -10,7 +10,7 @@ setuptools.setup(
     setup_requires=['cffi>=1.0.0'],
     install_requires=['cffi>=1.0.0'],
     packages=setuptools.find_packages(exclude=['tests']),
-    cffi_modules=['notdb/_build.py:ffibuilder'],
+    cffi_modules=['notmuch2/_build.py:ffibuilder'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

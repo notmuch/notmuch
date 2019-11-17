@@ -1,8 +1,8 @@
 import abc
 import collections.abc
 
-from notdb import _capi as capi
-from notdb import _errors as errors
+from notmuch2 import _capi as capi
+from notmuch2 import _errors as errors
 
 
 __all__ = ['NotmuchObject', 'BinString']

@@ -1,7 +1,7 @@
 import pytest
 
-from notdb import _base as base
-from notdb import _errors as errors
+from notmuch2 import _base as base
+from notmuch2 import _errors as errors
 
 
 class TestNotmuchObject:

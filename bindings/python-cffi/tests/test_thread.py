@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-import notdb
+import notmuch2
 
 
 @pytest.fixture
@@ -13,17 +13,17 @@ def thread(maildir, notmuch):
     maildir.deliver(body='bar',
                     headers=[('In-Reply-To', '<{}>'.format(msgid))])
     notmuch('new')
-    with notdb.Database(maildir.path) as db:
+    with notmuch2.Database(maildir.path) as db:
         yield next(db.threads('foo'))
 
 
 def test_type(thread):
-    assert isinstance(thread, notdb.Thread)
+    assert isinstance(thread, notmuch2.Thread)
     assert isinstance(thread, collections.abc.Iterable)
 
 
 def test_threadid(thread):
-    assert isinstance(thread.threadid, notdb.BinString)
+    assert isinstance(thread.threadid, notmuch2.BinString)
     assert thread.threadid
 
 
@@ -37,21 +37,21 @@ def test_toplevel_type(thread):
 
 def test_toplevel(thread):
     msgs = thread.toplevel()
-    assert isinstance(next(msgs), notdb.Message)
+    assert isinstance(next(msgs), notmuch2.Message)
     with pytest.raises(StopIteration):
         next(msgs)
 
 
 def test_toplevel_reply(thread):
     msg = next(thread.toplevel())
-    assert isinstance(next(msg.replies()), notdb.Message)
+    assert isinstance(next(msg.replies()), notmuch2.Message)
 
 
 def test_iter(thread):
     msgs = list(iter(thread))
     assert len(msgs) == len(thread)
     for msg in msgs:
-        assert isinstance(msg, notdb.Message)
+        assert isinstance(msg, notmuch2.Message)
 
 
 def test_matched(thread):
@@ -59,7 +59,7 @@ def test_matched(thread):
 
 
 def test_authors_type(thread):
-    assert isinstance(thread.authors, notdb.BinString)
+    assert isinstance(thread.authors, notmuch2.BinString)
 
 
 def test_authors(thread):
@@ -91,7 +91,7 @@ def test_first_last(thread):
 
 
 def test_tags_type(thread):
-    assert isinstance(thread.tags, notdb.ImmutableTagSet)
+    assert isinstance(thread.tags, notmuch2.ImmutableTagSet)
 
 
 def test_tags_cache(thread):

@@ -1,8 +1,8 @@
 import collections.abc
 
-import notdb._base as base
-import notdb._capi as capi
-import notdb._errors as errors
+import notmuch2._base as base
+import notmuch2._capi as capi
+import notmuch2._errors as errors
 
 
 __all__ = ['ImmutableTagSet', 'MutableTagSet', 'TagsIter']

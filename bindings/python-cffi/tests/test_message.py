@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-import notdb
+import notmuch2
 
 
 class TestMessage:
@@ -17,7 +17,7 @@ class TestMessage:
 
     @pytest.fixture
     def db(self, maildir):
-        with notdb.Database.create(maildir.path) as db:
+        with notmuch2.Database.create(maildir.path) as db:
             yield db
 
     @pytest.fixture
@@ -26,8 +26,8 @@ class TestMessage:
         yield msg
 
     def test_type(self, msg):
-        assert isinstance(msg, notdb.NotmuchObject)
-        assert isinstance(msg, notdb.Message)
+        assert isinstance(msg, notmuch2.NotmuchObject)
+        assert isinstance(msg, notmuch2.Message)
 
     def test_alive(self, msg):
         assert msg.alive
@@ -41,7 +41,7 @@ class TestMessage:
 
     def test_messageid_type(self, msg):
         assert isinstance(msg.messageid, str)
-        assert isinstance(msg.messageid, notdb.BinString)
+        assert isinstance(msg.messageid, notmuch2.BinString)
         assert isinstance(bytes(msg.messageid), bytes)
 
     def test_messageid(self, msg, maildir_msg):
@@ -53,7 +53,7 @@ class TestMessage:
 
     def test_threadid_type(self, msg):
         assert isinstance(msg.threadid, str)
-        assert isinstance(msg.threadid, notdb.BinString)
+        assert isinstance(msg.threadid, notmuch2.BinString)
         assert isinstance(bytes(msg.threadid), bytes)
 
     def test_path_type(self, msg):
@@ -142,7 +142,7 @@ class TestProperties:
     @pytest.fixture
     def props(self, maildir):
         msgid, path = maildir.deliver()
-        with notdb.Database.create(maildir.path) as db:
+        with notmuch2.Database.create(maildir.path) as db:
             msg, dup = db.add(path, sync_flags=False)
             yield msg.properties
 
