@@ -45,6 +45,13 @@ class QueryExclude(enum.Enum):
     ALL = capi.lib.NOTMUCH_EXCLUDE_ALL
 
 
+class DecryptionPolicy(enum.Enum):
+    FALSE = capi.lib.NOTMUCH_DECRYPT_FALSE
+    TRUE = capi.lib.NOTMUCH_DECRYPT_TRUE
+    AUTO = capi.lib.NOTMUCH_DECRYPT_AUTO
+    NOSTASH = capi.lib.NOTMUCH_DECRYPT_NOSTASH
+
+
 class Database(base.NotmuchObject):
     """Toplevel access to notmuch.
 
@@ -332,7 +339,17 @@ class Database(base.NotmuchObject):
     def get_directory(self, path):
         raise NotImplementedError
 
-    def add(self, filename, *, sync_flags=False):
+    def default_indexopts(self):
+        """Returns default index options for the database.
+
+        :raises ObjectDestoryedError: if used after destroyed.
+
+        :returns: :class:`IndexOptions`.
+        """
+        opts = capi.lib.notmuch_database_get_default_indexopts(self._db_p)
+        return IndexOptions(self, opts)
+
+    def add(self, filename, *, sync_flags=False, indexopts=None):
         """Add a message to the database.
 
         Add a new message to the notmuch database.  The message is
@@ -346,6 +363,11 @@ class Database(base.NotmuchObject):
         :param sync_flags: Whether to sync the known maildir flags to
            notmuch tags.  See :meth:`Message.flags_to_tags` for
            details.
+        :type sync_flags: bool
+        :param indexopts: The indexing options, see
+           :meth:`default_indexopts`.  Leave as `None` to use the
+           default options configured in the database.
+        :type indexopts: :class:`IndexOptions` or `None`
 
         :returns: A tuple where the first item is the newly inserted
            messages as a :class:`Message` instance, and the second
@@ -370,9 +392,9 @@ class Database(base.NotmuchObject):
         if not hasattr(os, 'PathLike') and isinstance(filename, pathlib.Path):
             filename = bytes(filename)
         msg_pp = capi.ffi.new('notmuch_message_t **')
-        ret = capi.lib.notmuch_database_add_message(self._db_p,
-                                                    os.fsencode(filename),
-                                                    msg_pp)
+        opts_p = indexopts._opts_p if indexopts else capi.ffi.NULL
+        ret = capi.lib.notmuch_database_index_file(
+            self._db_p, os.fsencode(filename), opts_p, msg_pp)
         ok = [capi.lib.NOTMUCH_STATUS_SUCCESS,
               capi.lib.NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID]
         if ret not in ok:
@@ -703,3 +725,61 @@ class DbRevision:
 
     def __repr__(self):
         return 'DbRevision(rev={self.rev}, uuid={self.uuid})'.format(self=self)
+
+
+class IndexOptions(base.NotmuchObject):
+    """Indexing options.
+
+    This represents the indexing options which can be used to index a
+    message.  See :meth:`Database.default_indexopts` to create an
+    instance of this.  It can be used e.g. when indexing a new message
+    using :meth:`Database.add`.
+    """
+    _opts_p = base.MemoryPointer()
+
+    def __init__(self, parent, opts_p):
+        self._parent = parent
+        self._opts_p = opts_p
+
+    @property
+    def alive(self):
+        if not self._parent.alive:
+            return False
+        try:
+            self._opts_p
+        except errors.ObjectDestroyedError:
+            return False
+        else:
+            return True
+
+    def _destroy(self):
+        if self.alive:
+            capi.lib.notmuch_indexopts_destroy(self._opts_p)
+        self._opts_p = None
+
+    @property
+    def decrypt_policy(self):
+        """The decryption policy.
+
+        This is an enum from the :class:`DecryptionPolicy`.  See the
+        `index.decrypt` section in :man:`notmuch-config` for details
+        on the options.  **Do not set this to
+        :attr:`DecryptionPolicy.TRUE`** without considering the
+        security of your index.
+
+        You can change this policy by assigning a new
+        :class:`DecryptionPolicy` to this property.
+
+        :raises ObjectDestoryedError: if used after destroyed.
+
+        :returns: A :class:`DecryptionPolicy` enum instance.
+        """
+        raw = capi.lib.notmuch_indexopts_get_decrypt_policy(self._opts_p)
+        return DecryptionPolicy(raw)
+
+    @decrypt_policy.setter
+    def decrypt_policy(self, val):
+        ret = capi.lib.notmuch_indexopts_set_decrypt_policy(
+            self._opts_p, val.value)
+        if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
+            raise errors.NotmuchError(ret, msg)

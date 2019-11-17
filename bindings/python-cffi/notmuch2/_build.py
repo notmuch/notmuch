@@ -12,6 +12,9 @@ ffibuilder.set_source(
     #if LIBNOTMUCH_MAJOR_VERSION < 5
         #error libnotmuch version not supported by notmuch2 python bindings
     #endif
+    #if LIBNOTMUCH_MINOR_VERSION < 1
+        #ERROR libnotmuch  version < 5.1 not supported
+    #endif
     """,
     include_dirs=['../../lib'],
     library_dirs=['../../lib'],
@@ -68,6 +71,12 @@ ffibuilder.cdef(
         NOTMUCH_EXCLUDE_FALSE,
         NOTMUCH_EXCLUDE_ALL
     } notmuch_exclude_t;
+    typedef enum {
+        NOTMUCH_DECRYPT_FALSE,
+        NOTMUCH_DECRYPT_TRUE,
+        NOTMUCH_DECRYPT_AUTO,
+        NOTMUCH_DECRYPT_NOSTASH,
+    } notmuch_decryption_policy_t;
 
     // These are fully opaque types for us, we only ever use pointers.
     typedef struct _notmuch_database notmuch_database_t;
@@ -81,6 +90,7 @@ ffibuilder.cdef(
     typedef struct _notmuch_directory notmuch_directory_t;
     typedef struct _notmuch_filenames notmuch_filenames_t;
     typedef struct _notmuch_config_list notmuch_config_list_t;
+    typedef struct _notmuch_indexopts notmuch_indexopts_t;
 
     const char *
     notmuch_status_to_string (notmuch_status_t status);
@@ -118,9 +128,10 @@ ffibuilder.cdef(
     notmuch_database_get_revision (notmuch_database_t *notmuch,
                                    const char **uuid);
     notmuch_status_t
-    notmuch_database_add_message (notmuch_database_t *database,
-                                  const char *filename,
-                                  notmuch_message_t **message);
+    notmuch_database_index_file (notmuch_database_t *database,
+                                 const char *filename,
+                                 notmuch_indexopts_t *indexopts,
+                                 notmuch_message_t **message);
     notmuch_status_t
     notmuch_database_remove_message (notmuch_database_t *database,
                                      const char *filename);
@@ -294,6 +305,15 @@ ffibuilder.cdef(
     notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
     void
     notmuch_filenames_destroy (notmuch_filenames_t *filenames);
+    notmuch_indexopts_t *
+    notmuch_database_get_default_indexopts (notmuch_database_t *db);
+    notmuch_status_t
+    notmuch_indexopts_set_decrypt_policy (notmuch_indexopts_t *indexopts,
+                                          notmuch_decryption_policy_t decrypt_policy);
+    notmuch_decryption_policy_t
+    notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts);
+    void
+    notmuch_indexopts_destroy (notmuch_indexopts_t *options);
     """
 )
 
