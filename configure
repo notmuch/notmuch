@@ -604,7 +604,7 @@ fi
 if ! pkg-config --exists zlib; then
   ${CC} -o compat/gen_zlib_pc "$srcdir"/compat/gen_zlib_pc.c >/dev/null 2>&1 &&
   compat/gen_zlib_pc > compat/zlib.pc &&
-  PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
+  PKG_CONFIG_PATH=${PKG_CONFIG_PATH:+$PKG_CONFIG_PATH:}compat &&
   export PKG_CONFIG_PATH
   rm -f compat/gen_zlib_pc
 fi
