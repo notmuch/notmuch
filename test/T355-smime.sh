@@ -94,4 +94,13 @@ Verification successful
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Decryption (notmuch CLI)"
+test_subtest_known_broken
+notmuch show --decrypt=true subject:"test encrypted message 001" |\
+    grep "^This is a" > OUTPUT
+cat <<EOF > EXPECTED
+This is a test encrypted message.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
