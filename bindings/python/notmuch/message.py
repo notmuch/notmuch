@@ -46,7 +46,7 @@ import sys
 
 
 class Message(Python3StringMixIn):
-    """Represents a single Email message
+    r"""Represents a single Email message
 
     Technically, this wraps the underlying *notmuch_message_t*
     structure. A user will usually not create these objects themselves

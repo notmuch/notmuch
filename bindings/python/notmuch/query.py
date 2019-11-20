@@ -140,7 +140,7 @@ class Query(object):
     _search_threads.restype = c_uint
 
     def search_threads(self):
-        """Execute a query for threads
+        r"""Execute a query for threads
 
         Execute a query for threads, returning a :class:`Threads` iterator.
         The returned threads are owned by the query and as such, will only be
