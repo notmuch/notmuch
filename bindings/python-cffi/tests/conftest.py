@@ -1,6 +1,7 @@
 import email.message
 import mailbox
 import pathlib
+import shutil
 import socket
 import subprocess
 import textwrap
@@ -11,10 +12,9 @@ import pytest
 
 
 def pytest_report_header():
+    which = shutil.which('notmuch')
     vers = subprocess.run(['notmuch', '--version'], stdout=subprocess.PIPE)
-    which = subprocess.run(['which', 'notmuch'], stdout=subprocess.PIPE)
-    return ['{} ({})'.format(vers.stdout.decode(errors='replace').strip(),
-                             which.stdout.decode(errors='replace').strip())]
+    return ['{} ({})'.format(vers.stdout.decode(errors='replace').strip(),which)]
 
 
 @pytest.fixture(scope='function')
