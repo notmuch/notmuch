@@ -1,3 +1,11 @@
+notmuch (0.29.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+    - fix use-after-free bug in libnotmuch
+    - fix double close of file in "notmuch dump"
+
+ -- David Bremner <bremner@debian.org>  Wed, 27 Nov 2019 08:19:57 -0400
+
 notmuch (0.29.2-2) experimental; urgency=medium
 
   * Drop python-notmuch binary package.

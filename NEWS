@@ -1,3 +1,18 @@
+Notmuch 0.29.3 (2019-11-27)
+===========================
+
+General
+-------
+
+Fix for use-after-free in notmuch_config_list_{key,val}.
+
+Fix for double close of file in notmuch-dump.
+
+Debian
+------
+
+Drop python2 support from shipped debian packaging.
+
 Notmuch 0.29.2 (2019-10-19)
 ===========================
 
