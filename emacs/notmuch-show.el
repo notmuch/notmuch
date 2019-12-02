@@ -2540,12 +2540,16 @@ message."
        (push (match-string-no-properties 0) urls))
      (reverse urls))))
 
-(defun notmuch-show-browse-urls ()
-  "Offer to browse any URLs in the current message."
-  (interactive)
-  (let ((urls (notmuch-show--gather-urls)))
+(defun notmuch-show-browse-urls (&optional kill)
+  "Offer to browse any URLs in the current message.
+With a prefix argument, copy the URL to the kill ring rather than
+browsing."
+  (interactive "P")
+  (let ((urls (notmuch-show--gather-urls))
+	(prompt (if kill "Copy URL to kill ring: " "Browse URL: "))
+	(fn (if kill #'kill-new #'browse-url)))
     (if urls
-	(browse-url (completing-read "Browse URL: " (cdr urls) nil nil (car urls)))
+	(funcall fn (completing-read prompt (cdr urls) nil nil (car urls)))
       (message "No URLs found."))))
 
 (provide 'notmuch-show)
