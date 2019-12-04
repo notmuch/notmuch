@@ -10,6 +10,7 @@ usr/share/man/man1/notmuch-reindex.1.gz
 usr/share/man/man1/notmuch-reply.1.gz
 usr/share/man/man1/notmuch-restore.1.gz
 usr/share/man/man1/notmuch-search.1.gz
+usr/share/man/man1/notmuch-setup.1.gz
 usr/share/man/man1/notmuch-show.1.gz
 usr/share/man/man1/notmuch-tag.1.gz
 usr/share/man/man1/notmuch.1.gz
