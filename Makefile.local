@@ -97,14 +97,16 @@ pre-release:
 .PHONY: debian-snapshot
 debian-snapshot:
 	make VERSION=$(VERSION) clean
-	TMPFILE=$$(mktemp /tmp/notmuch.XXXXXX);		\
-	  cp debian/changelog $${TMPFILE};		\
-	  EDITOR=/bin/true dch -b -v $(VERSION)+1	\
-	    -D UNRELEASED 'test build, not for upload';	\
-	  echo '3.0 (native)' > debian/source/format; 	\
-	  debuild -us -uc;				\
-	  mv -f $${TMPFILE} debian/changelog;		\
-	  echo '3.0 (quilt)' > debian/source/format
+	RETVAL=0 &&						\
+	  TMPFILE=$$(mktemp /tmp/notmuch.XXXXXX) &&		\
+	  cp debian/changelog $${TMPFILE} &&			\
+	  (EDITOR=/bin/true dch -b -v $(VERSION)+1		\
+	    -D UNRELEASED 'test build, not for upload' &&	\
+	  echo '3.0 (native)' > debian/source/format &&		\
+	  debuild -us -uc); RETVAL=$$?				\
+	  mv -f $${TMPFILE} debian/changelog;			\
+	  echo '3.0 (quilt)' > debian/source/format;		\
+	  exit $$RETVAL
 
 .PHONY: release-message
 release-message:
