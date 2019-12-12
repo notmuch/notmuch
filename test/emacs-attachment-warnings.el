@@ -36,6 +36,12 @@ Return `t' if the message would be sent, otherwise `nil'"
 	   ;; fontification properties. For fontification to happen we need to
 	   ;; allow some time for redisplay.
 	   (sit-for 0.01)))
+    (t . (lambda ()
+	   ;; "attach" is only mentioned in a forwarded message.
+	   (insert "Hello\n")
+	   (insert "<#mml type=message/rfc822 disposition=inline>\n")
+	   (insert "X-Has-Attach:\n")
+	   (insert "<#/mml>\n")))
 
     ;; These should not be okay:
     (nil . (lambda () (insert "Here is an attachment:\n")))
@@ -49,6 +55,12 @@ Return `t' if the message would be sent, otherwise `nil'"
 	     ;; looking at fontification properties. For fontification
 	     ;; to happen we need to allow some time for redisplay.
 	     (sit-for 0.01)))
+    (nil . (lambda ()
+	   ;; "attachment" is mentioned before a forwarded message.
+	   (insert "I also attach something.\n")
+	   (insert "<#mml type=message/rfc822 disposition=inline>\n")
+	   (insert "X-Has-Attach:\n")
+	   (insert "<#/mml>\n")))
     ))
 
 (defun notmuch-test-attachment-warning-1 ()
