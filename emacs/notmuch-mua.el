@@ -137,17 +137,20 @@ Typically this is added to `notmuch-mua-send-hook'."
 	 ;; When the message mentions attachment...
 	 (save-excursion
 	   (message-goto-body)
-	   (loop while (re-search-forward notmuch-mua-attachment-regexp (point-max) t)
-		 ;; For every instance of the "attachment" string
-		 ;; found, examine the text properties. If the text
-		 ;; has either a `face' or `syntax-table' property
-		 ;; then it is quoted text and should *not* cause the
-		 ;; user to be asked about a missing attachment.
-		 if (let ((props (text-properties-at (match-beginning 0))))
-		      (not (or (memq 'syntax-table props)
-			       (memq 'face props))))
-		 return t
-		 finally return nil))
+	   ;; Limit search from reaching other possible parts of the message
+	   (let ((search-limit (search-forward "\n<#" nil t)))
+	     (message-goto-body)
+	     (loop while (re-search-forward notmuch-mua-attachment-regexp search-limit t)
+		   ;; For every instance of the "attachment" string
+		   ;; found, examine the text properties. If the text
+		   ;; has either a `face' or `syntax-table' property
+		   ;; then it is quoted text and should *not* cause the
+		   ;; user to be asked about a missing attachment.
+		   if (let ((props (text-properties-at (match-beginning 0))))
+			(not (or (memq 'syntax-table props)
+				 (memq 'face props))))
+		   return t
+		   finally return nil)))
 	 ;; ...but doesn't have a part with a filename...
 	 (save-excursion
 	   (message-goto-body)
