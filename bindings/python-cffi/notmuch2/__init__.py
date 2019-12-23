@@ -13,7 +13,7 @@ Errors
 All errors occuring due to errors from the underlying notmuch database
 are subclasses of the :exc:`NotmuchError`.  Due to memory management
 it is possible to try and use an object after it has been freed.  In
-this case a :exc:`ObjectDestoryedError` will be raised.
+this case a :exc:`ObjectDestroyedError` will be raised.
 
 Memory Management
 =================

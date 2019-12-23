@@ -342,7 +342,7 @@ class Database(base.NotmuchObject):
     def default_indexopts(self):
         """Returns default index options for the database.
 
-        :raises ObjectDestoryedError: if used after destroyed.
+        :raises ObjectDestroyedError: if used after destroyed.
 
         :returns: :class:`IndexOptions`.
         """
@@ -770,7 +770,7 @@ class IndexOptions(base.NotmuchObject):
         You can change this policy by assigning a new
         :class:`DecryptionPolicy` to this property.
 
-        :raises ObjectDestoryedError: if used after destroyed.
+        :raises ObjectDestroyedError: if used after destroyed.
 
         :returns: A :class:`DecryptionPolicy` enum instance.
         """

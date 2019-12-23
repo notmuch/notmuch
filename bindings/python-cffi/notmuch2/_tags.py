@@ -277,7 +277,7 @@ class TagsIter(base.NotmuchObject, collections.abc.Iterator):
     :param errors: If using a codec, this is the error handler.
        See :func:`str.decode` to which this is passed on.
 
-    :raises ObjectDestoryedError: if used after destroyed.
+    :raises ObjectDestroyedError: if used after destroyed.
     """
     _tags_p = base.MemoryPointer()
 
