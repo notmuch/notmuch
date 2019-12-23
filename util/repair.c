@@ -27,13 +27,7 @@ _notmuch_crypto_payload_has_legacy_display (GMimeObject *payload)
 {
     GMimeMultipart *mpayload;
     const char *protected_header_parameter;
-    GMimeTextPart *legacy_display;
-    char *legacy_display_header_text = NULL;
-    GMimeStream *stream = NULL;
-    GMimeParser *parser = NULL;
-    GMimeObject *legacy_header_object = NULL, *first;
-    GMimeHeaderList *legacy_display_headers = NULL, *protected_headers = NULL;
-    bool ret = false;
+    GMimeObject *first;
 
     if (! g_mime_content_type_is_type (g_mime_object_get_content_type (payload),
 				       "multipart", "mixed"))
@@ -64,57 +58,7 @@ _notmuch_crypto_payload_has_legacy_display (GMimeObject *payload)
     if (! GMIME_IS_TEXT_PART (first))
 	return false;
 
-    /* ensure that the headers in the first part all match the values
-     * found in the payload's own protected headers!  if they don't,
-     * we should not treat this as a valid "legacy-display" part.
-     *
-     * Crafting a GMimeHeaderList object from the content of the
-     * text/rfc822-headers part is pretty clumsy; we should probably
-     * push something into GMime that makes this a one-shot
-     * operation. */
-    if ((protected_headers = g_mime_object_get_header_list (payload), protected_headers) &&
-	(legacy_display = GMIME_TEXT_PART (first), legacy_display) &&
-	(legacy_display_header_text = g_mime_text_part_get_text (legacy_display), legacy_display_header_text) &&
-	(stream = g_mime_stream_mem_new_with_buffer (legacy_display_header_text, strlen (legacy_display_header_text)), stream) &&
-	(g_mime_stream_write (stream, "\r\n\r\n", 4) == 4) &&
-	(g_mime_stream_seek (stream, 0, GMIME_STREAM_SEEK_SET) == 0) &&
-	(parser = g_mime_parser_new_with_stream (stream), parser) &&
-	(legacy_header_object = g_mime_parser_construct_part (parser, NULL), legacy_header_object) &&
-	(legacy_display_headers = g_mime_object_get_header_list (legacy_header_object), legacy_display_headers)) {
-	/* walk through legacy_display_headers, comparing them against
-	 * their values in the protected_headers: */
-	ret = true;
-	for (int i = 0; i < g_mime_header_list_get_count (legacy_display_headers); i++) {
-	    GMimeHeader *dh = g_mime_header_list_get_header_at (legacy_display_headers, i);
-	    if (dh == NULL) {
-		ret = false;
-		goto DONE;
-	    }
-	    GMimeHeader *ph = g_mime_header_list_get_header (protected_headers, g_mime_header_get_name (dh));
-	    if (ph == NULL) {
-		ret = false;
-		goto DONE;
-	    }
-	    const char *dhv = g_mime_header_get_value (dh);
-	    const char *phv = g_mime_header_get_value (ph);
-	    if (dhv == NULL || phv == NULL || strcmp (dhv, phv)) {
-		ret = false;
-		goto DONE;
-	    }
-	}
-    }
-
- DONE:
-    if (legacy_display_header_text)
-	g_free (legacy_display_header_text);
-    if (stream)
-	g_object_unref (stream);
-    if (parser)
-	g_object_unref (parser);
-    if (legacy_header_object)
-	g_object_unref (legacy_header_object);
-
-    return ret;
+    return true;
 }
 
 GMimeObject *
