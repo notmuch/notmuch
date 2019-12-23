@@ -42,7 +42,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
     def threadid(self):
         """The thread ID as a :class:`BinString`.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_thread_get_thread_id(self._thread_p)
         return base.BinString.from_cffi(ret)
@@ -50,7 +50,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
     def __len__(self):
         """Return the number of messages in the thread.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         return capi.lib.notmuch_thread_get_total_messages(self._thread_p)
 
@@ -59,7 +59,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
 
         :returns: An iterator yielding :class:`Message` instances.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         msgs_p = capi.lib.notmuch_thread_get_toplevel_messages(self._thread_p)
         return message.MessageIter(self, msgs_p, db=self._db)
@@ -69,7 +69,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
 
         :returns: An iterator yielding :class:`Message` instances.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         msgs_p = capi.lib.notmuch_thread_get_messages(self._thread_p)
         return message.MessageIter(self, msgs_p, db=self._db)
@@ -82,7 +82,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         which did directly match the search query which this thread
         originates from.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         return capi.lib.notmuch_thread_get_matched_messages(self._thread_p)
 
@@ -100,7 +100,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         :returns: The stringified list of authors.
         :rtype: BinString
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_thread_get_authors(self._thread_p)
         return base.BinString.from_cffi(ret)
@@ -115,7 +115,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         :returns: The thread's subject.
         :rtype: BinString
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_thread_get_subject(self._thread_p)
         return base.BinString.from_cffi(ret)
@@ -127,7 +127,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         The time the first message was sent as an integer number of
         seconds since the *epoch*, 1 Jan 1970.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         return capi.lib.notmuch_thread_get_oldest_date(self._thread_p)
 
@@ -138,7 +138,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         The time the last message was sent as an integer number of
         seconds since the *epoch*, 1 Jan 1970.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         return capi.lib.notmuch_thread_get_newest_date(self._thread_p)
 
@@ -160,7 +160,7 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
 
         :rtype: ImmutableTagSet
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         try:
             ref = self._cached_tagset

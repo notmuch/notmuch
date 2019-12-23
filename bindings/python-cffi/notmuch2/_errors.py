@@ -97,7 +97,7 @@ class IllegalArgumentError(NotmuchError): pass
 
 
 class ObjectDestroyedError(NotmuchError):
-    """The object has already been destoryed and it's memory freed.
+    """The object has already been destroyed and it's memory freed.
 
     This occurs when :meth:`destroy` has been called on the object but
     you still happen to have access to the object.  This should not

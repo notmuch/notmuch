@@ -262,7 +262,7 @@ class Database(base.NotmuchObject):
 
         This is returned as a :class:`pathlib.Path` instance.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         try:
             return self._cache_path
@@ -277,7 +277,7 @@ class Database(base.NotmuchObject):
 
         This is a positive integer.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         try:
             return self._cache_version
@@ -296,7 +296,7 @@ class Database(base.NotmuchObject):
 
         A read-only database will never be upgradable.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_database_needs_upgrade(self._db_p)
         return bool(ret)
@@ -320,7 +320,7 @@ class Database(base.NotmuchObject):
            not imply durability, it only ensures the changes are
            performed atomically.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ctx = AtomicContext(self, '_db_p')
         return ctx
@@ -330,7 +330,7 @@ class Database(base.NotmuchObject):
 
         Returned as a ``(revision, uuid)`` namedtuple.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         raw_uuid = capi.ffi.new('char**')
         rev = capi.lib.notmuch_database_get_revision(self._db_p, raw_uuid)
@@ -387,7 +387,7 @@ class Database(base.NotmuchObject):
            READ_ONLY mode.
         :raises UpgradeRequiredError: The database must be upgraded
            first.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         if not hasattr(os, 'PathLike') and isinstance(filename, pathlib.Path):
             filename = bytes(filename)
@@ -426,7 +426,7 @@ class Database(base.NotmuchObject):
            READ_ONLY mode.
         :raises UpgradeRequiredError: The database must be upgraded
            first.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         if not hasattr(os, 'PathLike') and isinstance(filename, pathlib.Path):
             filename = bytes(filename)
@@ -458,7 +458,7 @@ class Database(base.NotmuchObject):
         :raises OutOfMemoryError: When there is no memory to allocate
            the message instance.
         :raises XapianError: A Xapian exception ocurred.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         msg_pp = capi.ffi.new('notmuch_message_t **')
         ret = capi.lib.notmuch_database_find_message(self._db_p,
@@ -489,7 +489,7 @@ class Database(base.NotmuchObject):
         :raises OutOfMemoryError: When there is no memory to allocate
            the message instance.
         :raises XapianError: A Xapian exception ocurred.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         if not hasattr(os, 'PathLike') and isinstance(filename, pathlib.Path):
             filename = bytes(filename)
@@ -522,7 +522,7 @@ class Database(base.NotmuchObject):
 
         :rtype: ImmutableTagSet
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         try:
             ref = self._cached_tagset
@@ -570,7 +570,7 @@ class Database(base.NotmuchObject):
 
         :raises OutOfMemoryError: if no memory is available to
            allocate the query.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         query = self._create_query(query,
                                    omit_excluded=omit_excluded,
@@ -587,7 +587,7 @@ class Database(base.NotmuchObject):
         :returns: An iterator over the messages found.
         :rtype: MessageIter
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         query = self._create_query(query,
                                    omit_excluded=omit_excluded,
@@ -635,7 +635,7 @@ class AtomicContext:
        section is not active.  When it is raised at exit time the
        atomic section is still active and you may need to try using
        :meth:`force_end`.
-    :raises ObjectDestroyedError: if used after destoryed.
+    :raises ObjectDestroyedError: if used after destroyed.
     """
 
     def __init__(self, db, ptr_name):
@@ -675,7 +675,7 @@ class AtomicContext:
            not ended.
         :raises UnbalancedAtomicError: If the database was currently
            not in an atomic section.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_database_end_atomic(self._ptr())
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:

@@ -98,7 +98,7 @@ class Message(base.NotmuchObject):
            bytes() on it will return the original bytes used to create
            it.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_message_id(self._msg_p)
         return base.BinString(capi.ffi.string(ret))
@@ -116,7 +116,7 @@ class Message(base.NotmuchObject):
            bytes() on it will return the original bytes used to create
            it.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_thread_id(self._msg_p)
         return base.BinString(capi.ffi.string(ret))
@@ -128,7 +128,7 @@ class Message(base.NotmuchObject):
         If multiple files in the database contain the same message ID
         this will be just one of the files, chosen at random.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_filename(self._msg_p)
         return pathlib.Path(os.fsdecode(capi.ffi.string(ret)))
@@ -140,7 +140,7 @@ class Message(base.NotmuchObject):
         See :attr:`path` for details, this is the same but does return
         the path as a bytes object which is faster but less convenient.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_filename(self._msg_p)
         return capi.ffi.string(ret)
@@ -155,7 +155,7 @@ class Message(base.NotmuchObject):
         :returns: Iterator yielding :class:`pathlib.Path` instances.
         :rtype: iter
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         fnames_p = capi.lib.notmuch_message_get_filenames(self._msg_p)
         return PathIter(self, fnames_p)
@@ -169,7 +169,7 @@ class Message(base.NotmuchObject):
         :returns: Iterator yielding :class:`bytes` instances.
         :rtype: iter
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         fnames_p = capi.lib.notmuch_message_get_filenames(self._msg_p)
         return FilenamesIter(self, fnames_p)
@@ -184,7 +184,7 @@ class Message(base.NotmuchObject):
         :attr:`messageid` and :attr:`threadid` attributes are valid
         for it.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_flag(
             self._msg_p, capi.lib.NOTMUCH_MESSAGE_FLAG_GHOST)
@@ -201,7 +201,7 @@ class Message(base.NotmuchObject):
         these messages to be flagged, which results in this property
         being set to *True*.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_get_flag(
             self._msg_p, capi.lib.NOTMUCH_MESSAGE_FLAG_EXCLUDED)
@@ -216,7 +216,7 @@ class Message(base.NotmuchObject):
         message's header, you can get the original header value with
         :meth:`header`.
 
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         return capi.lib.notmuch_message_get_date(self._msg_p)
 
@@ -240,7 +240,7 @@ class Message(base.NotmuchObject):
 
         :raises LookupError: if the header is not present.
         :raises NullPointerError: For unexpected notmuch errors.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         # The returned is supposedly guaranteed to be UTF-8.  Header
         # names must be ASCII as per RFC x822.
@@ -263,7 +263,7 @@ class Message(base.NotmuchObject):
 
         :raises ReadOnlyDatabaseError: When manipulating tags on a
            database opened in read-only mode.
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         try:
             ref = self._cached_tagset
@@ -297,7 +297,7 @@ class Message(base.NotmuchObject):
         :raises UnbalancedFreezeThawError: if you somehow managed to
            call __exit__ of this context manager more than once.  Why
            did you do that?
-        :raises ObjectDestroyedError: if used after destoryed.
+        :raises ObjectDestroyedError: if used after destroyed.
         """
         ret = capi.lib.notmuch_message_freeze(self._msg_p)
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
