@@ -98,6 +98,25 @@ Depends:
  libnotmuch5 (>= ${source:Version}),
  ${misc:Depends},
  ${python3:Depends},
+Description: Python 3 legacy interface to the notmuch mail search and index library
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.
+ .
+ This package provides a legacy Python 3 interface to the notmuch
+ functionality, directly interfacing with a shared notmuch library.
+ .
+ New projects are encouraged to use python3-notmuch2 instead.
+
+Package: python3-notmuch2
+Architecture: any
+Section: python
+Depends:
+ libnotmuch5 (>= ${source:Version}),
+ ${misc:Depends},
+ ${python3:Depends},
+ ${shlibs:Depends},
 Description: Python 3 interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -105,7 +124,10 @@ Description: Python 3 interface to the notmuch mail search and index library
  convenient search syntax.
  .
  This package provides a Python 3 interface to the notmuch
- functionality, directly interfacing with a shared notmuch library.
+ functionality using CFFI bindings, which interface with a shared
+ notmuch library.
+ .
+ This is the preferred way to use notmuch via Python.
 
 Package: ruby-notmuch
 Architecture: any
