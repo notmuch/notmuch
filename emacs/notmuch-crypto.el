@@ -222,16 +222,11 @@ corresponding key when the status button is pressed."
 				 :buffer buffer
 				 :stderr buffer
 				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
-				 :sentinel #'notmuch-crypto--async-key-sentinel
-				 ;; Create the process stopped so that
-				 ;; we have time to store the key id,
-				 ;; etc. on it.
-				 :stop t)))
+				 :sentinel #'notmuch-crypto--async-key-sentinel)))
 	    (process-put p :gpg-key-id keyid)
 	    (process-put p :notmuch-show-buffer (current-buffer))
 	    (process-put p :notmuch-show-point (point))
-	    (message "Getting the GPG key %s asynchronously..." keyid)
-	    (continue-process p)))
+	    (message "Getting the GPG key %s asynchronously..." keyid)))
 
       (let ((window (display-buffer buffer)))
 	(with-selected-window window
