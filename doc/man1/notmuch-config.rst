@@ -38,7 +38,7 @@ programmatically as described in the SYNOPSIS above.
     Every configuration item is printed to stdout, each on a separate
     line of the form::
 
-        *section*.\ *item*\ =\ *value*
+        section.item=value
 
     No additional whitespace surrounds the dot or equals sign
     characters. In a multiple-value item (a list), the values are
