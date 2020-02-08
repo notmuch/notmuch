@@ -65,7 +65,6 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"unread\"]}]"
 
 test_begin_subtest "Search message: json, 64-bit timestamp"
-test_subtest_known_broken
 add_message "[subject]=\"json-search-64bit-timestamp-subject\"" "[date]=\"Tue, 01 Jan 2999 12:00:00 -0000\"" "[body]=\"json-search-64bit-timestamp-message\""
 output=$(notmuch search --format=json "json-search-64bit-timestamp-message" | notmuch_search_sanitize)
 test_expect_equal_json "$output" "[{\"thread\": \"XXX\",

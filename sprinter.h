@@ -33,7 +33,7 @@ typedef struct sprinter {
      */
     void (*string)(struct sprinter *, const char *);
     void (*string_len)(struct sprinter *, const char *, size_t);
-    void (*integer)(struct sprinter *, int);
+    void (*integer)(struct sprinter *, int64_t);
     void (*boolean)(struct sprinter *, bool);
     void (*null)(struct sprinter *);
 
