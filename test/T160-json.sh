@@ -64,6 +64,21 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 
+test_begin_subtest "Search message: json, 64-bit timestamp"
+test_subtest_known_broken
+add_message "[subject]=\"json-search-64bit-timestamp-subject\"" "[date]=\"Tue, 01 Jan 2999 12:00:00 -0000\"" "[body]=\"json-search-64bit-timestamp-message\""
+output=$(notmuch search --format=json "json-search-64bit-timestamp-message" | notmuch_search_sanitize)
+test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
+ \"timestamp\": 32472187200,
+ \"date_relative\": \"the future\",
+ \"matched\": 1,
+ \"total\": 1,
+ \"authors\": \"Notmuch Test Suite\",
+ \"subject\": \"json-search-64bit-timestamp-subject\",
+ \"query\": [\"id:$gen_msg_id\", null],
+ \"tags\": [\"inbox\",
+ \"unread\"]}]"
+
 test_begin_subtest "Format version: too low"
 test_expect_code 20 "notmuch search --format-version=0 \\*"
 
