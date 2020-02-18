@@ -119,7 +119,6 @@ struct _notmuch_config {
     bool is_new;
 
     char *database_path;
-    char *crypto_gpg_path;
     char *user_name;
     char *user_primary_email;
     const char **user_other_email;

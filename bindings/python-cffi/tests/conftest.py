@@ -78,8 +78,6 @@ def maildir(tmppath):
             exclude_tags=deleted;spam;
             [maildir]
             synchronize_flags=true
-            [crypto]
-            gpg_path=gpg
             """.format(tmppath=tmppath)))
     return MailDir(tmppath)
 

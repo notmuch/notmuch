@@ -134,14 +134,6 @@ The available configuration items are described below.
 
     Default: ``true``.
 
-**crypto.gpg_path**
-    Name (or full path) of gpg binary to use in verification and
-    decryption of PGP/MIME messages.  NOTE: This configuration item is
-    deprecated, and will be ignored if notmuch is built against GMime
-    3.0 or later.
-
-    Default: ``gpg``.
-
 **index.decrypt** **[STORED IN DATABASE]**
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
