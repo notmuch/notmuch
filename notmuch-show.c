@@ -1066,11 +1066,11 @@ do_show_single (void *ctx,
 
 /* Formatted output of threads */
 static int
-do_show (void *ctx,
-	 notmuch_query_t *query,
-	 const notmuch_show_format_t *format,
-	 sprinter_t *sp,
-	 notmuch_show_params_t *params)
+do_show_threaded (void *ctx,
+		  notmuch_query_t *query,
+		  const notmuch_show_format_t *format,
+		  sprinter_t *sp,
+		  notmuch_show_params_t *params)
 {
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
@@ -1105,6 +1105,50 @@ do_show (void *ctx,
     sp->end (sp);
 
     return res != NOTMUCH_STATUS_SUCCESS;
+}
+
+static int
+do_show_unthreaded (void *ctx,
+		    notmuch_query_t *query,
+		    const notmuch_show_format_t *format,
+		    sprinter_t *sp,
+		    notmuch_show_params_t *params)
+{
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
+    notmuch_bool_t excluded;
+
+    status = notmuch_query_search_messages (query, &messages);
+    if (print_status_query ("notmuch show", query, status))
+	return 1;
+
+    sp->begin_list (sp);
+
+    for (;
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages)) {
+	sp->begin_list (sp);
+	sp->begin_list (sp);
+
+	message = notmuch_messages_get (messages);
+
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, TRUE);
+	excluded = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
+
+	if (!excluded || !params->omit_excluded) {
+	    status = show_message (ctx, format, sp, message, 0, params);
+	    if (status && !res)
+		res = status;
+	} else {
+	    sp->null (sp);
+	}
+	notmuch_message_destroy (message);
+	sp->end (sp);
+	sp->end (sp);
+    }
+    sp->end (sp);
+    return res;
 }
 
 enum {
@@ -1168,6 +1212,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     bool exclude = true;
     bool entire_thread_set = false;
     bool single_message;
+    bool unthreaded = FALSE;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1181,6 +1226,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ .opt_bool = &exclude, .name = "exclude" },
 	{ .opt_bool = &params.entire_thread, .name = "entire-thread",
 	  .present = &entire_thread_set },
+	{ .opt_bool = &unthreaded, .name = "unthreaded" },
 	{ .opt_int = &params.part, .name = "part" },
 	{ .opt_keyword = (int *) (&params.crypto.decrypt), .name = "decrypt",
 	  .keyword_no_arg_value = "true", .keywords =
@@ -1317,7 +1363,10 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    params.omit_excluded = false;
 	}
 
-	ret = do_show (config, query, formatter, sprinter, &params);
+	if (unthreaded)
+	    ret = do_show_unthreaded (config, query, formatter, sprinter, &params);
+	else
+	    ret = do_show_threaded (config, query, formatter, sprinter, &params);
     }
 
   DONE:
