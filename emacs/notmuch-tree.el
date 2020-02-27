@@ -76,6 +76,31 @@ Note the author string should not contain
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-tree)
 
+(defcustom notmuch-unthreaded-result-format
+  `(("date" . "%12s  ")
+    ("authors" . "%-20s")
+    ((("subject" . "%s")) ." %-54s ")
+    ("tags" . "(%s)"))
+  "Result formatting for unthreaded Tree view. Supported fields are: date,
+        authors, subject, tree, tags.  Tree means the thread tree
+        box graphics. The field may also be a list in which case
+        the formatting rules are applied recursively and then the
+        output of all the fields in the list is inserted
+        according to format-string.
+
+Note the author string should not contain
+        whitespace (put it in the neighbouring fields instead).
+        For example:
+        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
+                                             \(\"subject\" . \"%s\"\)\)\)"
+  :type '(alist :key-type (string) :value-type (string))
+  :group 'notmuch-tree)
+
+(defun notmuch-tree-result-format ()
+  (if notmuch-tree-unthreaded
+      notmuch-unthreaded-result-format
+    notmuch-tree-result-format))
+
 ;; Faces for messages that match the query.
 (defface notmuch-tree-match-face
   '((t :inherit default))
@@ -759,7 +784,7 @@ unchanged ADDRESS if parsing fails."
   ;; We need to save the previous subject as it will get overwritten
   ;; by the insert-field calls.
   (let ((previous-subject notmuch-tree-previous-subject))
-    (insert (notmuch-tree-format-field-list notmuch-tree-result-format msg))
+    (insert (notmuch-tree-format-field-list (notmuch-tree-result-format) msg))
     (notmuch-tree-set-message-properties msg)
     (notmuch-tree-set-prop :previous-subject previous-subject)
     (insert "\n")))
