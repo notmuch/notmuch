@@ -56,6 +56,16 @@
   :type 'boolean
   :group 'notmuch-tree)
 
+(defcustom notmuch-unthreaded-show-out t
+  "View selected messages in new window rather than split-pane."
+  :type 'boolean
+  :group 'notmuch-tree)
+
+(defun notmuch-tree-show-out ()
+  (if notmuch-tree-unthreaded
+      notmuch-unthreaded-show-out
+    notmuch-tree-show-out))
+
 (defcustom notmuch-tree-result-format
   `(("date" . "%12s  ")
     ("authors" . "%-20s")
@@ -531,8 +541,8 @@ NOT change the database."
 Shows in split pane or whole window according to value of
 `notmuch-tree-show-out'. A prefix argument reverses the choice."
   (interactive "P")
-  (if (or (and notmuch-tree-show-out  (not arg))
-	  (and (not notmuch-tree-show-out) arg))
+  (if (or (and (notmuch-tree-show-out) (not arg))
+	  (and (not (notmuch-tree-show-out)) arg))
       (notmuch-tree-show-message-out)
     (notmuch-tree-show-message-in)))
 
