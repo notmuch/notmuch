@@ -294,6 +294,8 @@ FUNC."
     (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
+    (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
+    (define-key map "Z" 'notmuch-tree-from-unthreaded-current-query)
 
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
@@ -474,6 +476,18 @@ NOT change the database."
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
 
+(defun notmuch-unthreaded-from-tree-current-query ()
+  "Switch from tree view to unthreaded view"
+  (interactive)
+  (unless notmuch-tree-unthreaded
+    (notmuch-tree-refresh-view 'unthreaded)))
+
+(defun notmuch-tree-from-unthreaded-current-query ()
+  "Switch from unthreaded view to tree view"
+  (interactive)
+  (when notmuch-tree-unthreaded
+    (notmuch-tree-refresh-view 'tree)))
+
 (defun notmuch-search-from-tree-current-query ()
   "Call notmuch search with the current query"
   (interactive)
@@ -635,19 +649,24 @@ message will be \"unarchived\", i.e. the tag changes in
   (when (window-live-p notmuch-tree-message-window)
     (notmuch-tree-show-message-in)))
 
-(defun notmuch-tree-refresh-view ()
+(defun notmuch-tree-refresh-view (&optional view)
   "Refresh view."
   (interactive)
   (when (get-buffer-process (current-buffer))
     (error "notmuch tree process already running for current buffer"))
   (let ((inhibit-read-only t)
 	(basic-query notmuch-tree-basic-query)
+	(unthreaded (cond ((eq view 'unthreaded) t)
+			  ((eq view 'tree) nil)
+			  (t notmuch-tree-unthreaded)))
 	(query-context notmuch-tree-query-context)
 	(target (notmuch-tree-get-message-id)))
     (erase-buffer)
     (notmuch-tree-worker basic-query
 			 query-context
-			 target)))
+			 target
+			 nil
+			 unthreaded)))
 
 (defun notmuch-tree-thread-top ()
   (when (notmuch-tree-get-message-properties)

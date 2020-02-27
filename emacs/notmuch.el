@@ -190,6 +190,7 @@ there will be called at other points of notmuch execution."
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
     (define-key map (kbd "M-RET") 'notmuch-tree-from-search-thread)
     (define-key map "Z" 'notmuch-tree-from-search-current-query)
+    (define-key map "U" 'notmuch-unthreaded-from-search-current-query)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -522,6 +523,11 @@ thread."
   "Call notmuch tree with the current query"
   (interactive)
   (notmuch-tree notmuch-search-query-string))
+
+(defun notmuch-unthreaded-from-search-current-query ()
+  "Call notmuch tree with the current query"
+  (interactive)
+  (notmuch-unthreaded notmuch-search-query-string))
 
 (defun notmuch-tree-from-search-thread ()
   "Show the selected thread with notmuch-tree"

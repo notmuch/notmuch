@@ -50,6 +50,8 @@
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name open-target unthreaded))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
+(declare-function notmuch-unthreaded
+		  (&optional query query-context target buffer-name open-target))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))
 
@@ -1471,6 +1473,7 @@ reset based on the original query."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
     (define-key map "Z" 'notmuch-tree-from-show-current-query)
+    (define-key map "U" 'notmuch-unthreaded-from-show-current-query)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
     (define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
@@ -1558,6 +1561,13 @@ All currently available key bindings:
   (notmuch-tree notmuch-show-thread-id
 		notmuch-show-query-context
 		(notmuch-show-get-message-id)))
+
+(defun notmuch-unthreaded-from-show-current-query ()
+  "Call notmuch unthreaded with the current query"
+  (interactive)
+  (notmuch-unthreaded notmuch-show-thread-id
+		      notmuch-show-query-context
+		      (notmuch-show-get-message-id)))
 
 (defun notmuch-show-move-to-message-top ()
   (goto-char (notmuch-show-message-top)))
