@@ -48,7 +48,7 @@
 (declare-function notmuch-count-attachments "notmuch" (mm-handle))
 (declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
 (declare-function notmuch-tree "notmuch-tree"
-		  (&optional query query-context target buffer-name open-target))
+		  (&optional query query-context target buffer-name open-target unthreaded))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))

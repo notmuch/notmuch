@@ -31,7 +31,7 @@
 (declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 (declare-function notmuch-tree "notmuch-tree"
-                  (&optional query query-context target buffer-name open-target))
+		  (&optional query query-context target buffer-name open-target unthreaded))
 
 (defun notmuch-saved-search-get (saved-search field)
   "Get FIELD from SAVED-SEARCH.

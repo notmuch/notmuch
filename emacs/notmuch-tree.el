@@ -42,6 +42,11 @@
 ;; the following variable is defined in notmuch.el
 (defvar notmuch-search-query-string)
 
+;; this variable distinguishes the unthreaded display from the normal tree display
+(defvar notmuch-tree-unthreaded nil
+  "A buffer local copy of argument unthreaded to the function notmuch-tree")
+(make-variable-buffer-local 'notmuch-tree-unthreaded)
+
 (defgroup notmuch-tree nil
   "Showing message and thread structure."
   :group 'notmuch)
@@ -890,7 +895,7 @@ Complete list of currently available key bindings:
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
 					 results-buf)))))
 
-(defun notmuch-tree-worker (basic-query &optional query-context target open-target)
+(defun notmuch-tree-worker (basic-query &optional query-context target open-target unthreaded)
   "Insert the tree view of the search in the current buffer.
 
 This is is a helper function for notmuch-tree. The arguments are
@@ -898,6 +903,7 @@ the same as for the function notmuch-tree."
   (interactive)
   (notmuch-tree-mode)
   (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
+  (setq notmuch-tree-unthreaded unthreaded)
   (setq notmuch-tree-basic-query basic-query)
   (setq notmuch-tree-query-context (if (or (string= query-context "")
 					   (string= query-context "*"))
@@ -915,7 +921,7 @@ the same as for the function notmuch-tree."
   (let* ((search-args (concat basic-query
 		       (if query-context (concat " and (" query-context ")"))
 		       ))
-	 (message-arg "--entire-thread"))
+	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
     (notmuch-tag-clear-cache)
@@ -940,7 +946,7 @@ the same as for the function notmuch-tree."
 	      ")")
     notmuch-tree-basic-query))
 
-(defun notmuch-tree (&optional query query-context target buffer-name open-target)
+(defun notmuch-tree (&optional query query-context target buffer-name open-target unthreaded)
   "Display threads matching QUERY in Tree View.
 
 The arguments are:
@@ -953,23 +959,31 @@ The arguments are:
       current if it appears in the tree view results.
   BUFFER-NAME: the name of the buffer to display the tree view. If
       it is nil \"*notmuch-tree\" followed by QUERY is used.
-  OPEN-TARGET: If TRUE open the target message in the message pane."
+  OPEN-TARGET: If TRUE open the target message in the message pane.
+  UNTHREADED: If TRUE only show matching messages in an unthreaded view."
   (interactive)
   (if (null query)
-      (setq query (notmuch-read-query "Notmuch tree view search: ")))
+      (setq query (notmuch-read-query (concat "Notmuch "
+					      (if unthreaded "unthreaded " "tree ")
+					      "view search: "))))
   (let ((buffer (get-buffer-create (generate-new-buffer-name
 				    (or buffer-name
-					(concat "*notmuch-tree-" query "*")))))
+					(concat "*notmuch-"
+						(if unthreaded "unthreaded-" "tree-")
+						query "*")))))
 	(inhibit-read-only t))
 
     (switch-to-buffer buffer))
   ;; Don't track undo information for this buffer
   (set 'buffer-undo-list t)
 
-  (notmuch-tree-worker query query-context target open-target)
+  (notmuch-tree-worker query query-context target open-target unthreaded)
 
   (setq truncate-lines t))
 
+(defun notmuch-unthreaded (&optional query query-context target buffer-name open-target)
+  (interactive)
+  (notmuch-tree query query-context target buffer-name open-target t))
 
 ;;
 
