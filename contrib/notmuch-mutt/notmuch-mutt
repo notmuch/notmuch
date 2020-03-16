@@ -50,7 +50,7 @@ sub search($$$) {
     empty_maildir($maildir);
     system("notmuch search --output=files $dup_option $query"
 	   . " | sed -e 's: :\\\\ :g'"
-	   . " | xargs -r -I searchoutput ln -s searchoutput $maildir/cur/");
+	   . " | while IFS= read -r searchoutput; do ln -s \$searchoutput $maildir/cur/; done");
 }
 
 sub prompt($$) {
