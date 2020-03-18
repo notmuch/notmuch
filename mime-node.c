@@ -201,7 +201,7 @@ node_verify (mime_node_t *node, GMimeObject *part)
 
     node->verify_attempted = true;
     node->sig_list = g_mime_multipart_signed_verify (
-	GMIME_MULTIPART_SIGNED (part), GMIME_ENCRYPT_NONE, &err);
+	GMIME_MULTIPART_SIGNED (part), GMIME_VERIFY_NONE, &err);
 
     if (node->sig_list)
 	set_signature_list_destructor (node);
