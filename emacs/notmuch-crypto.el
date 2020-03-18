@@ -163,6 +163,7 @@ by user FROM."
       (recenter -1))))
 
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
+(declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
 (defun notmuch-crypto--async-key-sentinel (process event)
   "When the user asks for a GPG key to be retrieved
