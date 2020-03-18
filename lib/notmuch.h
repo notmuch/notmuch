@@ -2312,7 +2312,7 @@ notmuch_indexopts_destroy (notmuch_indexopts_t *options);
  */
 notmuch_bool_t
 notmuch_built_with (const char *name);
-/* @} */
+/**@}*/
 
 #pragma GCC visibility pop
 
