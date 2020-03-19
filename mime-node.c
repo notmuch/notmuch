@@ -227,19 +227,19 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
     GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
     notmuch_message_t *message = NULL;
 
-    if (! node->decrypted_child) {
+    if (! node->unwrapped_child) {
 	for (mime_node_t *parent = node; parent; parent = parent->parent)
 	    if (parent->envelope_file) {
 		message = parent->envelope_file;
 		break;
 	    }
 
-	node->decrypted_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
+	node->unwrapped_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
 							 node->ctx->crypto->decrypt,
 							 message,
 							 encrypteddata, &decrypt_result, &err);
     }
-    if (! node->decrypted_child) {
+    if (! node->unwrapped_child) {
 	fprintf (stderr, "Failed to decrypt part: %s\n",
 		 err ? err->message : "no error explanation given");
 	goto DONE;
@@ -380,8 +380,8 @@ mime_node_child (mime_node_t *parent, int child)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {
-	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->decrypted_child)
-	    sub = parent->decrypted_child;
+	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->unwrapped_child)
+	    sub = parent->unwrapped_child;
 	else
 	    sub = g_mime_multipart_get_part (
 		GMIME_MULTIPART (parent->part), child);

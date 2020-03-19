@@ -395,8 +395,10 @@ struct mime_node {
     struct mime_node_context *ctx;
 
     /* Internal: For successfully decrypted multipart parts, the
-     * decrypted part to substitute for the second child. */
-    GMimeObject *decrypted_child;
+     * decrypted part to substitute for the second child; or, for
+     * PKCS#7 parts, the part returned after removing/processing the
+     * PKCS#7 transformation */
+    GMimeObject *unwrapped_child;
 
     /* Internal: The next child for depth-first traversal and the part
      * number to assign it (or -1 if unknown). */
