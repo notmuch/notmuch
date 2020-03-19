@@ -157,7 +157,7 @@ test_expect_equal "$output" id:protected-with-legacy-display@crypto.notmuchmail.
 
 for variant in multipart-signed onepart-signed; do
     test_begin_subtest "verify signed PKCS#7 subject ($variant)"
-    test_subtest_known_broken
+    [ "$variant" = multipart-signed ] || test_subtest_known_broken
     output=$(notmuch show --verify --format=json "id:smime-${variant}@protected-headers.example")
     test_json_nodes <<<"$output" \
                     'signed_subject:[0][0][0]["crypto"]["signed"]["headers"]=["Subject"]' \
