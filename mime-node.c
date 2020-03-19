@@ -192,6 +192,26 @@ set_signature_list_destructor (mime_node_t *node)
     }
 }
 
+/* Unwrapped MIME part destructor */
+static int
+_unwrapped_child_free (GMimeObject **proxy)
+{
+    g_object_unref (*proxy);
+    return 0;
+}
+
+/* Set up unwrapped MIME part destructor */
+static void
+set_unwrapped_child_destructor (mime_node_t *node)
+{
+    GMimeObject **proxy = talloc (node, GMimeObject *);
+
+    if (proxy) {
+	*proxy = node->unwrapped_child;
+	talloc_set_destructor (proxy, _unwrapped_child_free);
+    }
+}
+
 /* Verify a signed mime node */
 static void
 node_verify (mime_node_t *node, GMimeObject *part)
@@ -238,6 +258,8 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 							 node->ctx->crypto->decrypt,
 							 message,
 							 encrypteddata, &decrypt_result, &err);
+	if (node->unwrapped_child)
+	    set_unwrapped_child_destructor (node);
     }
     if (! node->unwrapped_child) {
 	fprintf (stderr, "Failed to decrypt part: %s\n",
