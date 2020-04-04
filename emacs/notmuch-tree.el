@@ -617,6 +617,15 @@ message will be \"unarchived\", i.e. the tag changes in
   (notmuch-tree-archive-message unarchive)
   (notmuch-tree-next-matching-message))
 
+(defun notmuch-tree-archive-message-then-next-or-exit ()
+  "Archive current message, then show next open message in current thread.
+
+If at the last open message in the current thread, then exit back
+to search results."
+  (interactive)
+  (notmuch-tree-archive-message)
+  (notmuch-tree-next-matching-message t))
+
 (defun notmuch-tree-next-message ()
   "Move to next message."
   (interactive)
@@ -643,23 +652,24 @@ nil otherwise."
       (forward-line dir))
     (not (funcall eobfn))))
 
-(defun notmuch-tree-matching-message (&optional prev)
+(defun notmuch-tree-matching-message (&optional prev pop-at-end)
   "Move to the next or previous matching message"
   (interactive "P")
   (forward-line (if prev -1 nil))
-  (notmuch-tree-goto-matching-message prev)
-  (when (window-live-p notmuch-tree-message-window)
-    (notmuch-tree-show-message-in)))
+  (if (and (not (notmuch-tree-goto-matching-message prev)) pop-at-end)
+      (notmuch-tree-quit pop-at-end)
+    (when (window-live-p notmuch-tree-message-window)
+      (notmuch-tree-show-message-in))))
 
-(defun notmuch-tree-prev-matching-message ()
+(defun notmuch-tree-prev-matching-message (&optional pop-at-end)
   "Move to previous matching message."
-  (interactive)
-  (notmuch-tree-matching-message t))
+  (interactive "P")
+  (notmuch-tree-matching-message t pop-at-end))
 
-(defun notmuch-tree-next-matching-message ()
+(defun notmuch-tree-next-matching-message (&optional pop-at-end)
   "Move to next matching message."
-  (interactive)
-  (notmuch-tree-matching-message))
+  (interactive "P")
+  (notmuch-tree-matching-message nil pop-at-end))
 
 (defun notmuch-tree-refresh-view (&optional view)
   "Refresh view."
