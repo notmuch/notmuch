@@ -617,6 +617,12 @@ message will be \"unarchived\", i.e. the tag changes in
   (notmuch-tree-archive-message unarchive)
   (notmuch-tree-next-matching-message))
 
+(defun notmuch-tree-archive-thread-then-exit ()
+  "Archive all messages in the current buffer, then exit notmuch-tree."
+  (interactive)
+  (notmuch-tree-archive-thread)
+  (notmuch-tree-quit t))
+
 (defun notmuch-tree-archive-message-then-next-or-exit ()
   "Archive current message, then show next open message in current thread.
 
