@@ -679,10 +679,13 @@ message will be \"unarchived\", i.e. the tag changes in
   (notmuch-tree-thread-top))
 
 (defun notmuch-tree-next-thread ()
+  "Get the next thread in the current tree. Returns t if a thread was
+found or nil if not."
   (interactive)
   (forward-line 1)
   (while (not (or (notmuch-tree-get-prop :first) (eobp)))
-    (forward-line 1)))
+    (forward-line 1))
+  (not (eobp)))
 
 (defun notmuch-tree-thread-mapcar (function)
   "Iterate through all messages in the current thread
