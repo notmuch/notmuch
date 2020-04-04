@@ -584,10 +584,10 @@ Shows in split pane or whole window according to value of
   (when (notmuch-tree-scroll-message-window)
     (notmuch-tree-next-matching-message)))
 
-(defun notmuch-tree-quit ()
+(defun notmuch-tree-quit (&optional kill-both)
   "Close the split view or exit tree."
-  (interactive)
-  (unless (notmuch-tree-close-message-window)
+  (interactive "P")
+  (when (or (not (notmuch-tree-close-message-window)) kill-both)
     (kill-buffer (current-buffer))))
 
 (defun notmuch-tree-close-message-window ()
