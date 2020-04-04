@@ -631,12 +631,23 @@ message will be \"unarchived\", i.e. the tag changes in
   (when (window-live-p notmuch-tree-message-window)
     (notmuch-tree-show-message-in)))
 
+(defun notmuch-tree-goto-matching-message (&optional prev)
+  "Move to the next or previous matching message.
+
+Returns t if there was a next matching message in the thread to show,
+nil otherwise."
+  (let ((dir (if prev -1 nil))
+	(eobfn (if prev #'bobp #'eobp)))
+    (while (and (not (funcall eobfn))
+		(not (notmuch-tree-get-match)))
+      (forward-line dir))
+    (not (funcall eobfn))))
+
 (defun notmuch-tree-prev-matching-message ()
   "Move to previous matching message."
   (interactive)
   (forward-line -1)
-  (while (and (not (bobp)) (not (notmuch-tree-get-match)))
-    (forward-line -1))
+  (notmuch-tree-goto-matching-message t)
   (when (window-live-p notmuch-tree-message-window)
     (notmuch-tree-show-message-in)))
 
@@ -644,8 +655,7 @@ message will be \"unarchived\", i.e. the tag changes in
   "Move to next matching message."
   (interactive)
   (forward-line)
-  (while (and (not (eobp)) (not (notmuch-tree-get-match)))
-    (forward-line))
+  (notmuch-tree-goto-matching-message)
   (when (window-live-p notmuch-tree-message-window)
     (notmuch-tree-show-message-in)))
 
