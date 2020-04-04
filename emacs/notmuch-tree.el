@@ -319,7 +319,8 @@ FUNC."
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
     (define-key map [mouse-1] 'notmuch-tree-show-message)
-    (define-key map "x" 'notmuch-tree-quit)
+    (define-key map "x" 'notmuch-tree-archive-message-then-next-or-exit)
+    (define-key map "X" 'notmuch-tree-archive-thread-then-exit)
     (define-key map "A" 'notmuch-tree-archive-thread)
     (define-key map "a" 'notmuch-tree-archive-message-then-next)
     (define-key map "z" 'notmuch-tree-to-tree)
