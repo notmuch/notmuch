@@ -21,7 +21,7 @@
 #include "notmuch-client.h"
 #include "hex-escape.h"
 #include "string-util.h"
-#include <zlib.h>
+#include "zlib-extra.h"
 
 static int
 database_dump_config (notmuch_database_t *notmuch, gzFile output)
@@ -316,7 +316,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 
     ret = gzflush (output, Z_FINISH);
     if (ret) {
-	fprintf (stderr, "Error flushing output: %s\n", gzerror (output, NULL));
+	fprintf (stderr, "Error flushing output: %s\n", gzerror_str (output));
 	goto DONE;
     }
 
@@ -332,7 +332,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
     ret = gzclose_w (output);
     if (ret) {
 	fprintf (stderr, "Error closing %s: %s\n", name_for_error,
-		 gzerror (output, NULL));
+		 gzerror_str (output));
 	ret = EXIT_FAILURE;
 	output = NULL;
 	goto DONE;

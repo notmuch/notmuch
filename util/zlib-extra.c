@@ -80,7 +80,7 @@ const char *
 gz_error_string (util_status_t status, gzFile file)
 {
     if (status == UTIL_GZERROR)
-	return gzerror (file, NULL);
+	return gzerror_str (file);
     else
 	return util_error_string (status);
 }

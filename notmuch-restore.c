@@ -450,7 +450,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (input && gzclose_r (input)) {
 	fprintf (stderr, "Error closing %s: %s\n",
-		 name_for_error, gzerror (input, NULL));
+		 name_for_error, gzerror_str (input));
 	ret = EXIT_FAILURE;
     }
 
