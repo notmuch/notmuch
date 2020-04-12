@@ -49,6 +49,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <ctype.h>
+#include <zlib.h>
 
 #include "talloc-extra.h"
 #include "crypto.h"
@@ -469,7 +470,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       dump_include_t include,
 		       bool gzip_output);
 
-/* If status is non-zero (i.e. error) print appropriate
+/* If status indicates error print appropriate
  * messages to stderr.
  */
 
@@ -490,6 +491,11 @@ print_status_database (const char *loc,
 
 int
 status_to_exit (notmuch_status_t status);
+
+notmuch_status_t
+print_status_gzbytes (const char *loc,
+		      gzFile file,
+		      int bytes);
 
 #include "command-line-arguments.h"
 
