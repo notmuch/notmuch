@@ -497,6 +497,10 @@ print_status_gzbytes (const char *loc,
 		      gzFile file,
 		      int bytes);
 
+/* the __location__ macro is defined in talloc.h */
+#define ASSERT_GZBYTES(file, bytes) ((print_status_gzbytes (__location__, file, bytes)) ? exit (1) : 0)
+#define GZPRINTF(file, fmt, ...) ASSERT_GZBYTES (file, gzprintf (file, fmt, ##__VA_ARGS__));
+
 #include "command-line-arguments.h"
 
 extern const char *notmuch_requested_db_uuid;

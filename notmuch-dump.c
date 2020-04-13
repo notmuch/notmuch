@@ -42,7 +42,7 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 		     notmuch_config_list_key (list));
 	    goto DONE;
 	}
-	gzprintf (output, "#@ %s", buffer);
+	GZPRINTF (output, "#@ %s", buffer);
 
 	if (hex_encode (notmuch, notmuch_config_list_value (list),
 			&buffer, &buffer_size) != HEX_SUCCESS) {
@@ -51,7 +51,7 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 	    goto DONE;
 	}
 
-	gzprintf (output, " %s\n", buffer);
+	GZPRINTF (output, " %s\n", buffer);
     }
 
     ret = EXIT_SUCCESS;
@@ -71,7 +71,7 @@ print_dump_header (gzFile output, int output_format, int include)
 {
     const char *sep = "";
 
-    gzprintf (output, "#notmuch-dump %s:%d ",
+    GZPRINTF (output, "#notmuch-dump %s:%d ",
 	      (output_format == DUMP_FORMAT_SUP) ? "sup" : "batch-tag",
 	      NOTMUCH_DUMP_VERSION);
 
@@ -80,11 +80,11 @@ print_dump_header (gzFile output, int output_format, int include)
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_PROPERTIES) {
-	gzprintf (output, "%sproperties", sep);
+	GZPRINTF (output, "%sproperties", sep);
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_TAGS) {
-	gzprintf (output, "%stags", sep);
+	GZPRINTF (output, "%stags", sep);
     }
     gzputs (output, "\n");
 }
@@ -115,7 +115,7 @@ dump_properties_message (void *ctx,
 		fprintf (stderr, "Error: failed to hex-encode message-id %s\n", message_id);
 		return 1;
 	    }
-	    gzprintf (output, "#= %s", *buffer_p);
+	    GZPRINTF (output, "#= %s", *buffer_p);
 	    first = false;
 	}
 
@@ -126,18 +126,18 @@ dump_properties_message (void *ctx,
 	    fprintf (stderr, "Error: failed to hex-encode key %s\n", key);
 	    return 1;
 	}
-	gzprintf (output, " %s", *buffer_p);
+	GZPRINTF (output, " %s", *buffer_p);
 
 	if (hex_encode (ctx, val, buffer_p, size_p) != HEX_SUCCESS) {
 	    fprintf (stderr, "Error: failed to hex-encode value %s\n", val);
 	    return 1;
 	}
-	gzprintf (output, "=%s", *buffer_p);
+	GZPRINTF (output, "=%s", *buffer_p);
     }
     notmuch_message_properties_destroy (list);
 
     if (! first)
-	gzprintf (output, "\n", *buffer_p);
+	GZPRINTF (output, "\n", *buffer_p);
 
     return 0;
 }
@@ -165,7 +165,7 @@ dump_tags_message (void *ctx,
     }
 
     if (output_format == DUMP_FORMAT_SUP) {
-	gzprintf (output, "%s (", message_id);
+	GZPRINTF (output, "%s (", message_id);
     }
 
     for (notmuch_tags_t *tags = notmuch_message_get_tags (message);
@@ -187,7 +187,7 @@ dump_tags_message (void *ctx,
 			 tag_str);
 		return EXIT_FAILURE;
 	    }
-	    gzprintf (output, "+%s", *buffer_p);
+	    GZPRINTF (output, "+%s", *buffer_p);
 	}
     }
 
@@ -200,7 +200,7 @@ dump_tags_message (void *ctx,
 		     message_id, strerror (errno));
 	    return EXIT_FAILURE;
 	}
-	gzprintf (output, " -- %s\n", *buffer_p);
+	GZPRINTF (output, " -- %s\n", *buffer_p);
     }
     return EXIT_SUCCESS;
 }
