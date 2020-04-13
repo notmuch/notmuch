@@ -76,7 +76,7 @@ print_dump_header (gzFile output, int output_format, int include)
 	      NOTMUCH_DUMP_VERSION);
 
     if (include & DUMP_INCLUDE_CONFIG) {
-	gzputs (output, "config");
+	GZPUTS (output, "config");
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_PROPERTIES) {
@@ -86,7 +86,7 @@ print_dump_header (gzFile output, int output_format, int include)
     if (include & DUMP_INCLUDE_TAGS) {
 	GZPRINTF (output, "%stags", sep);
     }
-    gzputs (output, "\n");
+    GZPUTS (output, "\n");
 }
 
 static int
@@ -174,12 +174,12 @@ dump_tags_message (void *ctx,
 	const char *tag_str = notmuch_tags_get (tags);
 
 	if (! first)
-	    gzputs (output, " ");
+	    GZPUTS (output, " ");
 
 	first = 0;
 
 	if (output_format == DUMP_FORMAT_SUP) {
-	    gzputs (output, tag_str);
+	    GZPUTS (output, tag_str);
 	} else {
 	    if (hex_encode (ctx, tag_str,
 			    buffer_p, size_p) != HEX_SUCCESS) {
@@ -192,7 +192,7 @@ dump_tags_message (void *ctx,
     }
 
     if (output_format == DUMP_FORMAT_SUP) {
-	gzputs (output, ")\n");
+	GZPUTS (output, ")\n");
     } else {
 	if (make_boolean_term (ctx, "id", message_id,
 			       buffer_p, size_p)) {

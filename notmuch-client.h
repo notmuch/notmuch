@@ -500,6 +500,7 @@ print_status_gzbytes (const char *loc,
 /* the __location__ macro is defined in talloc.h */
 #define ASSERT_GZBYTES(file, bytes) ((print_status_gzbytes (__location__, file, bytes)) ? exit (1) : 0)
 #define GZPRINTF(file, fmt, ...) ASSERT_GZBYTES (file, gzprintf (file, fmt, ##__VA_ARGS__));
+#define GZPUTS(file, str) ASSERT_GZBYTES(file, gzputs (file, str));
 
 #include "command-line-arguments.h"
 
