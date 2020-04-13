@@ -37,7 +37,6 @@ EOF
 test_expect_equal_file QUERIES.BEFORE OUTPUT
 
 test_begin_subtest 'dumping large queries'
-test_subtest_known_broken
 # This value is just large enough to trigger a limitation of gzprintf
 # to 8191 bytes in total (by default).
 repeat=1329

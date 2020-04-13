@@ -51,7 +51,9 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 	    goto DONE;
 	}
 
-	GZPRINTF (output, " %s\n", buffer);
+	GZPUTS (output, " ");
+	GZPUTS (output, buffer);
+	GZPUTS (output, "\n");
     }
 
     ret = EXIT_SUCCESS;
