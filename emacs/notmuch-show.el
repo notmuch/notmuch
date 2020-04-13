@@ -2559,7 +2559,7 @@ browsing."
 	(prompt (if kill "Copy URL to kill ring: " "Browse URL: "))
 	(fn (if kill #'kill-new #'browse-url)))
     (if urls
-	(funcall fn (completing-read prompt (cdr urls) nil nil (car urls)))
+	(funcall fn (completing-read prompt urls nil nil nil nil (car urls)))
       (message "No URLs found."))))
 
 (provide 'notmuch-show)
