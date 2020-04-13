@@ -1077,6 +1077,12 @@ current search results AND that are tagged with the given tag."
    (list (notmuch-select-tag-with-completion "Filter by tag: " notmuch-search-query-string)))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
+(defun notmuch-search-by-tag (tag)
+  "Display threads matching TAG in a notmuch-search buffer."
+  (interactive
+   (list (notmuch-select-tag-with-completion "Notmuch search tag: ")))
+  (notmuch-search (concat "tag:" tag)))
+
 ;;;###autoload
 (defun notmuch ()
   "Run notmuch and display saved searches, known tags, etc."

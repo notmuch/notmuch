@@ -153,6 +153,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'notmuch-bury-or-kill-this-buffer)
     (define-key map "s" 'notmuch-search)
+    (define-key map "t" 'notmuch-search-by-tag)
     (define-key map "z" 'notmuch-tree)
     (define-key map "u" 'notmuch-unthreaded)
     (define-key map "m" 'notmuch-mua-new-mail)

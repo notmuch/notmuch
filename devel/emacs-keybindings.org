@@ -20,7 +20,7 @@
 | q         | notmuch-bury-or-kill-this-buffer       | notmuch-bury-or-kill-this-buffer                      | notmuch-bury-or-kill-this-buffer        |
 | r         | notmuch-search-reply-to-thread-sender  | notmuch-show-reply-sender                             | notmuch-show-reply-sender               |
 | s         | notmuch-search                         | notmuch-search                                        | notmuch-search                          |
-| t         | notmuch-search-filter-by-tag           | toggle-truncate-lines                                 |                                         |
+| t         | notmuch-search-filter-by-tag           | toggle-truncate-lines                                 | notmuch-search-by-tag                   |
 | u         |                                        |                                                       |                                         |
 | v         |                                        |                                                       | notmuch-show-view-all-mime-parts        |
 | w         |                                        | notmuch-show-save-attachments                         | notmuch-show-save-attachments           |
