@@ -47,6 +47,7 @@ gz_getline (void *talloc_ctx, char **bufptr, ssize_t *bytes_read, gzFile stream)
 	    int zlib_status = 0;
 	    (void) gzerror (stream, &zlib_status);
 	    switch (zlib_status) {
+	    case Z_STREAM_END:
 	    case Z_OK:
 		/* no data read before EOF */
 		if (offset == 0)
