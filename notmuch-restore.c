@@ -237,6 +237,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     int include = 0;
     int input_format = DUMP_FORMAT_AUTO;
+    int errnum;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
@@ -448,10 +449,13 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch)
 	notmuch_database_destroy (notmuch);
 
-    if (input && gzclose_r (input)) {
-	fprintf (stderr, "Error closing %s: %s\n",
-		 name_for_error, gzerror_str (input));
-	ret = EXIT_FAILURE;
+    if (input) {
+	errnum = gzclose_r (input);
+	if (errnum) {
+	    fprintf (stderr, "Error closing %s: %d\n",
+		     name_for_error, errnum);
+	    ret = EXIT_FAILURE;
+	}
     }
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
