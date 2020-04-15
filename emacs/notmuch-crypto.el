@@ -24,6 +24,8 @@
 (require 'epg)
 (require 'notmuch-lib)
 
+(declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
+
 (defcustom notmuch-crypto-process-mime t
   "Should cryptographic MIME parts be processed?
 
