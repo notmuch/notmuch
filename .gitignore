@@ -16,3 +16,4 @@ tags
 /releases
 /.stamps
 *.stamp
+/bindings/python-cffi/build/
