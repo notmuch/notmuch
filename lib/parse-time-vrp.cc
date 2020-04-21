@@ -65,7 +65,6 @@ ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
     return valno;
 }
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 /* XXX TODO: is throwing an exception the right thing to do here? */
 Xapian::Query
 DateFieldProcessor::operator() (const std::string & str)
@@ -86,4 +85,3 @@ DateFieldProcessor::operator() (const std::string & str)
 			  Xapian::Query (Xapian::Query::OP_VALUE_GE, 0, Xapian::sortable_serialise ((double) from)),
 			  Xapian::Query (Xapian::Query::OP_VALUE_LE, 0, Xapian::sortable_serialise ((double) to)));
 }
-#endif

@@ -291,12 +291,10 @@ prefix_t prefix_table[] = {
      */
     { "folder",                 "XFOLDER:",     NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
-#if HAVE_XAPIAN_FIELD_PROCESSOR
     { "date",                   NULL,           NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
     { "query",                  NULL,           NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
-#endif
     { "from",                   "XFROM",        NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROBABILISTIC |
       NOTMUCH_FIELD_PROCESSOR },
@@ -380,7 +378,6 @@ _setup_user_query_fields (notmuch_database_t *notmuch)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 static void
 _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 {
@@ -405,13 +402,6 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	_setup_query_field_default (prefix, notmuch);
     }
 }
-#else
-static inline void
-_setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
-{
-    _setup_query_field_default (prefix, notmuch);
-}
-#endif
 
 const char *
 _find_prefix (const char *name)

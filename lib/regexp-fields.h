@@ -24,7 +24,7 @@
 
 #ifndef NOTMUCH_REGEXP_FIELDS_H
 #define NOTMUCH_REGEXP_FIELDS_H
-#if HAVE_XAPIAN_FIELD_PROCESSOR
+
 #include <sys/types.h>
 #include <regex.h>
 #include "database-private.h"
@@ -79,5 +79,5 @@ public:
 
     Xapian::Query operator() (const std::string & str);
 };
-#endif
+
 #endif /* NOTMUCH_REGEXP_FIELDS_H */

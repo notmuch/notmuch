@@ -26,7 +26,6 @@
 #include <xapian.h>
 #include "notmuch.h"
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 class QueryFieldProcessor : public Xapian::FieldProcessor {
 protected:
     Xapian::QueryParser &parser;
@@ -40,5 +39,5 @@ public:
 
     Xapian::Query operator() (const std::string & str);
 };
-#endif
+
 #endif /* NOTMUCH_QUERY_FP_H */

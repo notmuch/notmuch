@@ -24,8 +24,6 @@
 #include "query-fp.h"
 #include <iostream>
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
-
 Xapian::Query
 QueryFieldProcessor::operator() (const std::string & name)
 {
@@ -40,4 +38,3 @@ QueryFieldProcessor::operator() (const std::string & name)
 
     return parser.parse_query (expansion, NOTMUCH_QUERY_PARSER_FLAGS);
 }
-#endif

@@ -26,7 +26,6 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 static void
 compile_regex (regex_t &regexp, const char *str)
 {
@@ -208,4 +207,3 @@ RegexpFieldProcessor::operator() (const std::string & str)
 	}
     }
 }
-#endif

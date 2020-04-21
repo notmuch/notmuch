@@ -68,17 +68,11 @@ test_expect_equal_file QUERIES.BEFORE OUTPUT
 test_begin_subtest "search named query"
 notmuch search query:test > OUTPUT
 notmuch search $QUERYSTR > EXPECTED
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -ne 1 ]; then
-    test_subtest_known_broken
-fi
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search named query with other terms"
 notmuch search query:test and subject:Maildir > OUTPUT
 notmuch search $QUERYSTR and subject:Maildir > EXPECTED
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -ne 1 ]; then
-    test_subtest_known_broken
-fi
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search nested named query"

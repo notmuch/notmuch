@@ -24,8 +24,6 @@
 #include "thread-fp.h"
 #include <iostream>
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
-
 Xapian::Query
 ThreadFieldProcessor::operator() (const std::string & str)
 {
@@ -64,4 +62,3 @@ ThreadFieldProcessor::operator() (const std::string & str)
     }
 
 }
-#endif

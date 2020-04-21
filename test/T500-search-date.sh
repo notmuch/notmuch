@@ -14,9 +14,6 @@ test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai
 
 test_begin_subtest "Absolute date field"
 output=$(notmuch search date:2010-12-16 | notmuch_search_sanitize)
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -ne 1 ]; then
-    test_subtest_known_broken
-fi
 test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)"
 
 test_begin_subtest "Absolute time range with TZ"
