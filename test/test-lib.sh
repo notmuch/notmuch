@@ -556,7 +556,7 @@ test_json_nodes () {
 
 	if ! test_skip "$test_subtest_name"
 	then
-	    output=$(PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON "$TEST_DIRECTORY"/json_check_nodes.py "$@")
+	    output=$(PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -B "$NOTMUCH_SRCDIR"/test/json_check_nodes.py "$@")
 		if [ "$?" = 0 ]
 		then
 			test_ok_
@@ -1021,7 +1021,7 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 # --load		Force loading of notmuch.el and test-lib.el
 
 exec ${TEST_EMACS} --quick \
-	--directory "$NOTMUCH_SRCDIR/emacs" --load notmuch.el \
+	--directory "$NOTMUCH_BUILDDIR/emacs" --load notmuch.el \
 	--directory "$NOTMUCH_SRCDIR/test" --load test-lib.el \
 	"\$@"
 EOF
