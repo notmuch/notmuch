@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
+
 (require 'message)
 (require 'mm-view)
 (require 'format-spec)
@@ -29,8 +31,6 @@
 (require 'notmuch-address)
 (require 'notmuch-draft)
 (require 'notmuch-message)
-
-(eval-when-compile (require 'cl))
 
 (declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
@@ -140,17 +140,18 @@ Typically this is added to `notmuch-mua-send-hook'."
 	   ;; Limit search from reaching other possible parts of the message
 	   (let ((search-limit (search-forward "\n<#" nil t)))
 	     (message-goto-body)
-	     (loop while (re-search-forward notmuch-mua-attachment-regexp search-limit t)
-		   ;; For every instance of the "attachment" string
-		   ;; found, examine the text properties. If the text
-		   ;; has either a `face' or `syntax-table' property
-		   ;; then it is quoted text and should *not* cause the
-		   ;; user to be asked about a missing attachment.
-		   if (let ((props (text-properties-at (match-beginning 0))))
-			(not (or (memq 'syntax-table props)
-				 (memq 'face props))))
-		   return t
-		   finally return nil)))
+	     (cl-loop while (re-search-forward notmuch-mua-attachment-regexp
+					       search-limit t)
+		      ;; For every instance of the "attachment" string
+		      ;; found, examine the text properties. If the text
+		      ;; has either a `face' or `syntax-table' property
+		      ;; then it is quoted text and should *not* cause the
+		      ;; user to be asked about a missing attachment.
+		      if (let ((props (text-properties-at (match-beginning 0))))
+			   (not (or (memq 'syntax-table props)
+				    (memq 'face props))))
+		      return t
+		      finally return nil)))
 	 ;; ...but doesn't have a part with a filename...
 	 (save-excursion
 	   (message-goto-body)
@@ -203,11 +204,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defun notmuch-mua-reply-crypto (parts)
   "Add mml sign-encrypt flag if any part of original message is encrypted."
-  (loop for part in parts
-	if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
-	  do (mml-secure-message-sign-encrypt)
-	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
-	  do (notmuch-mua-reply-crypto (plist-get part :content))))
+  (cl-loop for part in parts
+	   if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
+	     do (mml-secure-message-sign-encrypt)
+	   else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
+	     do (notmuch-mua-reply-crypto (plist-get part :content))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -252,14 +253,14 @@ Typically this is added to `notmuch-mua-send-hook'."
 	;; We modify message-header-format-alist to get around a bug in message.el.
 	;; See the comment above on notmuch-mua-insert-references.
 	(let ((message-header-format-alist
-	       (loop for pair in message-header-format-alist
-		     if (eq (car pair) 'References)
-		     collect (cons 'References
-				   (apply-partially
-				    'notmuch-mua-insert-references
-				    (cdr pair)))
-		     else
-		     collect pair)))
+	       (cl-loop for pair in message-header-format-alist
+			if (eq (car pair) 'References)
+			collect (cons 'References
+				      (apply-partially
+				       'notmuch-mua-insert-references
+				       (cdr pair)))
+			else
+			collect pair)))
 	  (notmuch-mua-mail (plist-get reply-headers :To)
 			    (notmuch-sanitize (plist-get reply-headers :Subject))
 			    (notmuch-headers-plist-to-alist reply-headers)
@@ -309,10 +310,10 @@ Typically this is added to `notmuch-mua-send-hook'."
 		       ;; Don't indent multipart sub-parts.
 		       (notmuch-show-indent-multipart nil))
 		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
-		    (letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
-			   ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
-			  (notmuch-show-insert-body original (plist-get original :body) 0)
-			  (buffer-substring-no-properties (point-min) (point-max))))))
+		    (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+			      ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+		      (notmuch-show-insert-body original (plist-get original :body) 0)
+		      (buffer-substring-no-properties (point-min) (point-max))))))
 
 	(set-mark (point))
 	(goto-char start)
@@ -526,10 +527,9 @@ the From: address."
       ;; Create a buffer-local queue for tag changes triggered when sending the message
       (when notmuch-message-forwarded-tags
 	(setq-local notmuch-message-queued-tag-changes
-		    (loop for id in forward-queries
-			  collect
-			  (cons id
-				notmuch-message-forwarded-tags))))
+		    (cl-loop for id in forward-queries
+			     collect
+			     (cons id notmuch-message-forwarded-tags))))
 
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.
@@ -609,10 +609,10 @@ unencrypted.  Really send? "))))
   (run-hooks 'notmuch-mua-send-hook)
   (when (and (notmuch-mua-check-no-misplaced-secure-tag)
 	     (notmuch-mua-check-secure-tag-has-newline))
-    (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	  (if exit
-	      (message-send-and-exit arg)
-	    (message-send arg)))))
+    (cl-letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+      (if exit
+	  (message-send-and-exit arg)
+	(message-send arg)))))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")

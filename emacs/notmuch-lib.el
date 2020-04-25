@@ -23,10 +23,12 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (require 'mm-util)
 (require 'mm-view)
 (require 'mm-decode)
-(require 'cl)
+
 (require 'notmuch-compat)
 
 (unless (require 'notmuch-version nil t)
@@ -574,7 +576,7 @@ for this message, if present."
 (defun notmuch-parts-filter-by-type (parts type)
   "Given a list of message parts, return a list containing the ones matching
 the given type."
-  (remove-if-not
+  (cl-remove-if-not
    (lambda (part) (notmuch-match-content-type (plist-get part :content-type) type))
    parts))
 
@@ -685,8 +687,8 @@ current buffer, if possible."
 ;; have symbols of the form :Header as keys, and the resulting alist will have
 ;; symbols of the form 'Header as keys.
 (defun notmuch-headers-plist-to-alist (plist)
-  (loop for (key value . rest) on plist by #'cddr
-	collect (cons (intern (substring (symbol-name key) 1)) value)))
+  (cl-loop for (key value . rest) on plist by #'cddr
+	   collect (cons (intern (substring (symbol-name key) 1)) value)))
 
 (defun notmuch-face-ensure-list-form (face)
   "Return FACE in face list form.
@@ -780,7 +782,7 @@ arguments passed to the sentinel.  COMMAND and ERR, if provided,
 are passed to `notmuch-check-exit-status'.  If COMMAND is not
 provided, it is taken from `process-command'."
   (let ((exit-status
-	 (case (process-status proc)
+	 (cl-case (process-status proc)
 	   ((exit) (process-exit-status proc))
 	   ((signal) msg))))
     (when exit-status
@@ -848,7 +850,7 @@ for `call-process'.  ARGS is as described for
 
   (let (stdin-string)
     (while (keywordp (car args))
-      (case (car args)
+      (cl-case (car args)
 	(:stdin-string (setq stdin-string (cadr args)
 			     args (cddr args)))
 	(otherwise
@@ -1025,9 +1027,5 @@ region if the region is active, or both `point' otherwise."
   "notmuch 0.29")
 
 (provide 'notmuch-lib)
-
-;; Local Variables:
-;; byte-compile-warnings: (not cl-functions)
-;; End:
 
 ;;; notmuch-lib.el ends here

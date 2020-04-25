@@ -23,7 +23,10 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'pcase))
+
 (require 'mm-view)
 (require 'message)
 (require 'mm-decode)
@@ -429,17 +432,16 @@ parsing fails."
 	(setq p-name (replace-regexp-in-string "\\\\" "" p-name))
 
 	;; Outer single and double quotes, which might be nested.
-	(loop
-	 with start-of-loop
-	 do (setq start-of-loop p-name)
+	(cl-loop with start-of-loop
+		 do (setq start-of-loop p-name)
 
-	 when (string-match "^\"\\(.*\\)\"$" p-name)
-	 do (setq p-name (match-string 1 p-name))
+		 when (string-match "^\"\\(.*\\)\"$" p-name)
+		 do (setq p-name (match-string 1 p-name))
 
-	 when (string-match "^'\\(.*\\)'$" p-name)
-	 do (setq p-name (match-string 1 p-name))
+		 when (string-match "^'\\(.*\\)'$" p-name)
+		 do (setq p-name (match-string 1 p-name))
 
-	 until (string= start-of-loop p-name)))
+		 until (string= start-of-loop p-name)))
 
       ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
       ;; 'foo@bar.com'.
@@ -573,13 +575,13 @@ message at DEPTH in the current thread."
   ;; Recurse on sub-parts
   (let ((ctype (notmuch-split-content-type
 		(downcase (plist-get part :content-type)))))
-    (cond ((equal (first ctype) "multipart")
+    (cond ((equal (car ctype) "multipart")
 	   (mapc (apply-partially #'notmuch-show--register-cids msg)
 		 (plist-get part :content)))
 	  ((equal ctype '("message" "rfc822"))
 	   (notmuch-show--register-cids
 	    msg
-	    (first (plist-get (first (plist-get part :content)) :body)))))))
+	    (car (plist-get (car (plist-get part :content)) :body)))))))
 
 (defun notmuch-show--get-cid-content (cid)
   "Return a list (CID-content content-type) or nil.
@@ -590,8 +592,8 @@ enclosing angle brackets, a cid: prefix, or URL encoding.  This
 will return nil if the CID is unknown or cannot be retrieved."
   (let ((descriptor (cdr (assoc cid notmuch-show--cids))))
     (when descriptor
-      (let* ((msg (first descriptor))
-	     (part (second descriptor))
+      (let* ((msg (car descriptor))
+	     (part (cadr descriptor))
 	     ;; Request caching for this content, as some messages
 	     ;; reference the same cid: part many times (hundreds!).
 	     (content (notmuch-get-bodypart-binary
@@ -616,8 +618,8 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  (with-current-buffer w3m-current-buffer
 	    (notmuch-show--get-cid-content cid))))
     (when content-and-type
-      (insert (first content-and-type))
-      (second content-and-type))))
+      (insert (car content-and-type))
+      (cadr content-and-type))))
 
 ;; MIME part renderers
 
@@ -785,7 +787,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       ;; is defined before it will be shadowed by the letf below. Otherwise the version
       ;; in enriched.el may be loaded a bit later and used instead (for the first time).
       (require 'enriched)
-      (letf (((symbol-function 'enriched-decode-display-prop)
+      (cl-letf (((symbol-function 'enriched-decode-display-prop)
 		 (lambda (start end &optional param) (list start end))))
 	(notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
@@ -843,7 +845,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	   ;; shr strips the "cid:" part of URL, but doesn't
 	   ;; URL-decode it (see RFC 2392).
 	   (let ((cid (url-unhex-string url)))
-	     (first (notmuch-show--get-cid-content cid))))))
+	     (car (notmuch-show--get-cid-content cid))))))
     (shr-insert-document dom)
     t))
 
@@ -873,15 +875,16 @@ will return nil if the CID is unknown or cannot be retrieved."
 
 (defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth button)
   ;; Run the handlers until one of them succeeds.
-  (loop for handler in (notmuch-show-handlers-for content-type)
-	until (condition-case err
-		  (funcall handler msg part content-type nth depth button)
-		;; Specifying `debug' here lets the debugger run if
-		;; `debug-on-error' is non-nil.
-		((debug error)
-		 (insert "!!! Bodypart handler `" (prin1-to-string handler) "' threw an error:\n"
-			 "!!! " (error-message-string err) "\n")
-		 nil))))
+  (cl-loop for handler in (notmuch-show-handlers-for content-type)
+	   until (condition-case err
+		     (funcall handler msg part content-type nth depth button)
+		   ;; Specifying `debug' here lets the debugger run if
+		   ;; `debug-on-error' is non-nil.
+		   ((debug error)
+		    (insert "!!! Bodypart handler `" (prin1-to-string handler)
+			    "' threw an error:\n"
+			    "!!! " (error-message-string err) "\n")
+		    nil))))
 
 (defun notmuch-show-create-part-overlays (button beg end)
   "Add an overlay to the part between BEG and END"
@@ -907,13 +910,15 @@ will return nil if the CID is unknown or cannot be retrieved."
   ;; watch out for sticky specs of t, which means all properties are
   ;; front-sticky/rear-nonsticky.
   (notmuch-map-text-property beg end 'front-sticky
-			     (lambda (v) (if (listp v)
-					     (pushnew :notmuch-part v)
-					   v)))
+			     (lambda (v)
+			       (if (listp v)
+				   (cl-pushnew :notmuch-part v)
+				 v)))
   (notmuch-map-text-property beg end 'rear-nonsticky
-			     (lambda (v) (if (listp v)
-					     (pushnew :notmuch-part v)
-					   v))))
+			     (lambda (v)
+			       (if (listp v)
+				   (cl-pushnew :notmuch-part v)
+				 v))))
 
 (defun notmuch-show-lazy-part (part-args button)
   ;; Insert the lazy part after the button for the part. We would just
@@ -941,7 +946,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	(indent-rigidly part-beg part-end (* notmuch-show-indent-messages-width depth)))
       (goto-char part-end)
       (delete-char 1)
-      (notmuch-show-record-part-information (second part-args)
+      (notmuch-show-record-part-information (cadr part-args)
 					    (button-start button)
 					    part-end)
       ;; Create the overlay. If the lazy-part turned out to be empty/not
@@ -1037,7 +1042,7 @@ is t, hide the part initially and show the button."
   ;; Register all content IDs for this message.  According to RFC
   ;; 2392, content IDs are *global*, but it's okay if an MUA treats
   ;; them as only global within a message.
-  (notmuch-show--register-cids msg (first body))
+  (notmuch-show--register-cids msg (car body))
 
   (mapc (lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
 
@@ -1220,13 +1225,13 @@ buttons for a corresponding notmuch search."
 		      (url-unhex-string (match-string 0 mid-cid)))))
 	  (push (list (match-beginning 0) (match-end 0)
 		      (notmuch-id-to-query mid)) links)))
-      (dolist (link links)
+      (pcase-dolist (`(,beg ,end ,link) links)
 	;; Remove the overlay created by goto-address-mode
-	(remove-overlays (first link) (second link) 'goto-address t)
-	(make-text-button (first link) (second link)
+	(remove-overlays beg end 'goto-address t)
+	(make-text-button beg end
 			  :type 'notmuch-button-type
 			  'action `(lambda (arg)
-				     (notmuch-show ,(third link) current-prefix-arg))
+				     (notmuch-show ,link current-prefix-arg))
 			  'follow-link t
 			  'help-echo "Mouse-1, RET: search for this message"
 			  'face goto-address-mail-face)))))
@@ -1387,9 +1392,9 @@ This includes:
 (defun notmuch-show-goto-message (msg-id)
   "Go to message with msg-id."
   (goto-char (point-min))
-  (unless (loop if (string= msg-id (notmuch-show-get-message-id))
-		return t
-		until (not (notmuch-show-goto-message-next)))
+  (unless (cl-loop if (string= msg-id (notmuch-show-get-message-id))
+		   return t
+		   until (not (notmuch-show-goto-message-next)))
     (goto-char (point-min))
     (message "Message-id not found."))
   (notmuch-show-message-adjust))
@@ -1406,9 +1411,9 @@ This includes:
 
     ;; Open those that were open.
     (goto-char (point-min))
-    (loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
-					   (member (notmuch-show-get-message-id) open))
-	  until (not (notmuch-show-goto-message-next)))
+    (cl-loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
+					      (member (notmuch-show-get-message-id) open))
+	     until (not (notmuch-show-goto-message-next)))
 
     (dolist (win-msg-pair win-msg-alist)
       (with-selected-window (car win-msg-pair)
@@ -1620,8 +1625,8 @@ of the current message."
 effects."
   (save-excursion
     (goto-char (point-min))
-    (loop do (funcall function)
-	  while (notmuch-show-goto-message-next))))
+    (cl-loop do (funcall function)
+	     while (notmuch-show-goto-message-next))))
 
 ;; Functions relating to the visibility of messages and their
 ;; components.
@@ -2177,9 +2182,9 @@ argument, hide all of the messages."
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
-					   (not current-prefix-arg))
-	  until (not (notmuch-show-goto-message-next))))
+    (cl-loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
+					      (not current-prefix-arg))
+	     until (not (notmuch-show-goto-message-next))))
   (force-window-update))
 
 (defun notmuch-show-next-button ()

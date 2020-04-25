@@ -152,7 +152,7 @@ Used when a new version is saved, or the message is sent."
   "Checks if we should save a message that should be encrypted.
 
 `notmuch-draft-save-plaintext' controls the behaviour."
-  (case notmuch-draft-save-plaintext
+  (cl-case notmuch-draft-save-plaintext
 	((ask)
 	 (unless (yes-or-no-p "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
 This message contains mml tags that suggest it is intended to be encrypted.

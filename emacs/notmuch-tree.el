@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
+
 (require 'mail-parse)
 
 (require 'notmuch-lib)
@@ -32,7 +34,6 @@
 (require 'notmuch-tag)
 (require 'notmuch-parser)
 
-(eval-when-compile (require 'cl))
 (declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line))
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-read-query "notmuch" (prompt))
@@ -721,10 +722,10 @@ found or nil if not."
  and call FUNCTION for side effects."
   (save-excursion
     (notmuch-tree-thread-top)
-    (loop collect (funcall function)
-	  do (forward-line)
-	  while (and (notmuch-tree-get-message-properties)
-		     (not (notmuch-tree-get-prop :first))))))
+    (cl-loop collect (funcall function)
+	     do (forward-line)
+	     while (and (notmuch-tree-get-message-properties)
+			(not (notmuch-tree-get-prop :first))))))
 
 (defun notmuch-tree-get-messages-ids-thread-search ()
   "Return a search string for all message ids of messages in the current thread."
@@ -905,10 +906,11 @@ message together with all its descendents."
 (defun notmuch-tree-insert-thread (thread depth tree-status)
   "Insert the collection of sibling sub-threads THREAD at depth DEPTH in the current forest."
   (let ((n (length thread)))
-    (loop for tree in thread
-	  for count from 1 to n
-
-	  do (notmuch-tree-insert-tree tree depth tree-status (eq count 1) (eq count n)))))
+    (cl-loop for tree in thread
+	     for count from 1 to n
+	     do (notmuch-tree-insert-tree tree depth tree-status
+					  (eq count 1)
+					  (eq count n)))))
 
 (defun notmuch-tree-insert-forest-thread (forest-thread)
   "Insert a single complete thread."

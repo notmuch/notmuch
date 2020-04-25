@@ -22,7 +22,9 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'pcase))
 
 (require 'notmuch-lib)
 (require 'notmuch-hello)
@@ -51,7 +53,7 @@ fast way to jump to a saved search from anywhere in Notmuch."
 	  (let ((name (plist-get saved-search :name))
 		(query (plist-get saved-search :query))
 		(oldest-first
-		 (case (plist-get saved-search :sort-order)
+		 (cl-case (plist-get saved-search :sort-order)
 		   (newest-first nil)
 		   (oldest-first t)
 		   (otherwise (default-value 'notmuch-search-oldest-first)))))
@@ -127,18 +129,16 @@ buffer."
 
   ;; Compute the maximum key description width
   (let ((key-width 1))
-    (dolist (entry action-map)
+    (pcase-dolist (`(,key ,desc) action-map)
       (setq key-width
 	    (max key-width
-		 (string-width (format-kbd-macro (first entry))))))
+		 (string-width (format-kbd-macro key)))))
     ;; Format each action
-    (mapcar (lambda (entry)
-	      (let ((key (format-kbd-macro (first entry)))
-		    (desc (second entry)))
-		(concat
-		 (propertize key 'face 'minibuffer-prompt)
-		 (make-string (- key-width (length key)) ? )
-		 " " desc)))
+    (mapcar (pcase-lambda (`(,key ,desc))
+	      (setq key (format-kbd-macro key))
+	      (concat (propertize key 'face 'minibuffer-prompt)
+		      (make-string (- key-width (length key)) ? )
+		      " " desc))
 	    action-map)))
 
 (defun notmuch-jump--insert-items (width items)
@@ -173,28 +173,25 @@ buffer."
   "Translate ACTION-MAP into a minibuffer keymap."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-jump-minibuffer-map)
-    (dolist (action action-map)
-      (if (= (length (first action)) 1)
-	  (define-key map (first action)
+    (pcase-dolist (`(,key ,name ,fn) action-map)
+      (if (= (length key) 1)
+	  (define-key map key
 	    `(lambda () (interactive)
-	       (setq notmuch-jump--action ',(third action))
+	       (setq notmuch-jump--action ',fn)
 	       (exit-minibuffer)))))
     ;; By doing this in two passes (and checking if we already have a
     ;; binding) we avoid problems if the user specifies a binding which
     ;; is a prefix of another binding.
-    (dolist (action action-map)
-      (if (> (length (first action)) 1)
-	  (let* ((key (elt (first action) 0))
+    (pcase-dolist (`(,key ,name ,fn) action-map)
+      (if (> (length key) 1)
+	  (let* ((key (elt key 0))
 		 (keystr (string key))
 		 (new-prompt (concat prompt (format-kbd-macro keystr) " "))
 		 (action-submap nil))
 	    (unless (lookup-key map keystr)
-	      (dolist (act action-map)
-		(when (= key (elt (first act) 0))
-		  (push (list (substring (first act) 1)
-			      (second act)
-			      (third act))
-			action-submap)))
+	      (pcase-dolist (`(,k ,n ,f) action-map)
+		(when (= key (elt k 0))
+		  (push (list (substring k 1) n f) action-submap)))
 	      ;; We deal with backspace specially
 	      (push (list (kbd "DEL")
 			  "Backup"

@@ -27,7 +27,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
+
 (require 'notmuch-lib)
 
 (defvar notmuch-company-last-prefix nil)
@@ -65,7 +66,7 @@
   (require 'company)
   (let ((case-fold-search t)
 	(completion-ignore-case t))
-    (case command
+    (cl-case command
       (interactive (company-begin-backend 'notmuch-company))
       (prefix (and (derived-mode-p 'message-mode)
 		   (looking-back (concat notmuch-address-completion-headers-regexp ".*")

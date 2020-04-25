@@ -65,7 +65,8 @@
 ;;
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
+
 (require 'mm-view)
 (require 'message)
 
@@ -132,7 +133,7 @@ there will be called at other points of notmuch execution."
               (or (equal (car disposition) "attachment")
                   (and (equal (car disposition) "inline")
                        (assq 'filename disposition)))
-              (incf count))))
+              (cl-incf count))))
      mm-handle)
     count))
 
@@ -429,14 +430,13 @@ character position of the beginning of each result that overlaps
 the region between points BEG and END.  As a special case, if (=
 BEG END), FN will be applied to the result containing point
 BEG."
-
-  (lexical-let ((pos (notmuch-search-result-beginning beg))
-		;; End must be a marker in case fn changes the
-		;; text.
-		(end (copy-marker end))
-		;; Make sure we examine at least one result, even if
-		;; (= beg end).
-		(first t))
+  (let ((pos (notmuch-search-result-beginning beg))
+	;; End must be a marker in case fn changes the
+	;; text.
+	(end (copy-marker end))
+	;; Make sure we examine at least one result, even if
+	;; (= beg end).
+	(first t))
     ;; We have to be careful if the region extends beyond the results.
     ;; In this case, pos could be null or there could be no result at
     ;; pos.
@@ -478,10 +478,10 @@ is nil, include both matched and unmatched messages. If there are
 no messages in the region then return nil."
   (let ((query-list nil) (all (not only-matched)))
     (dolist (queries (notmuch-search-properties-in-region :query beg end))
-      (when (first queries)
-	(push (first queries) query-list))
-      (when (and all (second queries))
-	(push (second queries) query-list)))
+      (when (car queries)
+	(push (car queries) query-list))
+      (when (and all (cadr queries))
+	(push (cadr queries) query-list)))
     (when query-list
       (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
@@ -568,12 +568,11 @@ thread."
   "Prompt for tag changes for the current thread or region.
 
 Returns (TAG-CHANGES REGION-BEGIN REGION-END)."
-  (let* ((region (notmuch-interactive-region))
-	 (beg (first region)) (end (second region))
-	 (prompt (if (= beg end) "Tag thread" "Tag region")))
-    (cons (notmuch-read-tag-changes
-	   (notmuch-search-get-tags-region beg end) prompt initial-input)
-	  region)))
+  (pcase-let ((`(,beg ,end) (notmuch-interactive-region)))
+    (list (notmuch-read-tag-changes (notmuch-search-get-tags-region beg end)
+				    (if (= beg end) "Tag thread" "Tag region")
+				    initial-input)
+	  beg end)))
 
 (defun notmuch-search-tag (tag-changes &optional beg end only-matched)
   "Change tags for the currently selected thread or region.
@@ -891,12 +890,13 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (let* ((saved-search
 	  (let (longest
 		(longest-length 0))
-	    (loop for tuple in notmuch-saved-searches
-		  if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
-		       (and (string-match (concat "^" quoted-query) query)
-			    (> (length (match-string 0 query))
-			       longest-length)))
-		  do (setq longest tuple))
+	    (cl-loop for tuple in notmuch-saved-searches
+		     if (let ((quoted-query
+			       (regexp-quote (notmuch-saved-search-get tuple :query))))
+			  (and (string-match (concat "^" quoted-query) query)
+			       (> (length (match-string 0 query))
+				  longest-length)))
+		     do (setq longest tuple))
 	    longest))
 	 (saved-search-name (notmuch-saved-search-get saved-search :name))
 	 (saved-search-query (notmuch-saved-search-get saved-search :query)))
@@ -917,7 +917,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   "Read a notmuch-query from the minibuffer with completion.
 
 PROMPT is the string to prompt with."
-  (lexical-let*
+  (let*
       ((all-tags
         (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
                 (process-lines notmuch-command "search" "--output=tags" "*")))
@@ -928,7 +928,7 @@ PROMPT is the string to prompt with."
 		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
 		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype)) (mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
-	  (current-query (case major-mode
+	  (current-query (cl-case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
 			   (notmuch-show-mode (notmuch-show-get-query))
 			   (notmuch-tree-mode (notmuch-tree-get-query))))
@@ -1114,9 +1114,9 @@ notmuch buffers exist, run `notmuch'."
       (bury-buffer))
 
     ;; Find the first notmuch buffer.
-    (setq first (loop for buffer in (buffer-list)
-		      if (notmuch-interesting-buffer buffer)
-		      return buffer))
+    (setq first (cl-loop for buffer in (buffer-list)
+			 if (notmuch-interesting-buffer buffer)
+			 return buffer))
 
     (if first
 	;; If the first one we found is any other than the starting

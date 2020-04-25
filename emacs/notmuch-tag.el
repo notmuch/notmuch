@@ -24,8 +24,12 @@
 ;;; Code:
 ;;
 
-(require 'cl)
+(require 'cl-lib)
+(eval-when-compile
+  (require 'pcase))
+
 (require 'crm)
+
 (require 'notmuch-lib)
 
 (declare-function notmuch-search-tag "notmuch" tag-changes)
@@ -277,10 +281,10 @@ This can be used with `notmuch-tag-format-image-data'."
   (save-match-data
     ;; Don't use assoc-default since there's no way to distinguish a
     ;; missing key from a present key with a null cdr.
-    (assoc* tag format-alist
-	    :test (lambda (tag key)
-		    (and (eq (string-match key tag) 0)
-			 (= (match-end 0) (length tag)))))))
+    (cl-assoc tag format-alist
+	      :test (lambda (tag key)
+		      (and (eq (string-match key tag) 0)
+			   (= (match-end 0) (length tag)))))))
 
 (defun notmuch-tag--do-format (tag formatted-tag formats)
   "Apply a tag-formats entry to TAG."
@@ -315,7 +319,7 @@ changed (the normal case) are shown using formats from
 	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
     (when (eq formatted-tag 'missing)
       (let ((base (notmuch-tag--get-formats tag notmuch-tag-formats))
-	    (over (case tag-state
+	    (over (cl-case tag-state
 		    (deleted (notmuch-tag--get-formats
 			      tag notmuch-tag-deleted-formats))
 		    (added (notmuch-tag--get-formats
@@ -436,7 +440,7 @@ from TAGS if present."
     (dolist (tag-change tag-changes)
       (let ((op (string-to-char tag-change))
 	    (tag (unless (string= tag-change "") (substring tag-change 1))))
-	(case op
+	(cl-case op
 	  (?+ (unless (member tag result-tags)
 		(push tag result-tags)))
 	  (?- (setq result-tags (delete tag result-tags)))
@@ -511,22 +515,21 @@ and vice versa."
   ;; REVERSE is specified.
   (interactive "P")
   (let (action-map)
-    (dolist (binding notmuch-tagging-keys)
-      (let* ((tag-function (case major-mode
+    (pcase-dolist (`(,key ,tag ,name) notmuch-tagging-keys)
+      (let* ((tag-function (cl-case major-mode
 			     (notmuch-search-mode #'notmuch-search-tag)
 			     (notmuch-show-mode #'notmuch-show-tag)
 			     (notmuch-tree-mode #'notmuch-tree-tag)))
-	     (key (first binding))
-	     (forward-tag-change (if (symbolp (second binding))
-				     (symbol-value (second binding))
-				   (second binding)))
+	     (tag (if (symbolp tag)
+		      (symbol-value tag)
+		    tag))
 	     (tag-change (if reverse
-			     (notmuch-tag-change-list forward-tag-change 't)
-			   forward-tag-change))
-	     (name (or (and (not (string= (third binding) ""))
-			    (third binding))
-		       (and (symbolp (second binding))
-			    (symbol-name (second binding)))))
+			     (notmuch-tag-change-list tag 't)
+			   tag))
+	     (name (or (and (not (string= name ""))
+			    name)
+		       (and (symbolp name)
+			    (symbol-name name))))
 	     (name-string (if name
 			      (if reverse (concat "Reverse " name)
 				name)
@@ -546,7 +549,3 @@ and vice versa."
 ;;
 
 (provide 'notmuch-tag)
-
-;; Local Variables:
-;; byte-compile-warnings: (not cl-functions)
-;; End:

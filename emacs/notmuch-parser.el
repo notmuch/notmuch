@@ -21,7 +21,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile (require 'cl-lib))
 
 (defun notmuch-sexp-create-parser ()
   "Return a new streaming S-expression parser.
@@ -70,7 +70,7 @@ returns the value."
 	     ;; error to be consistent with all other code paths.
 	     (read (current-buffer))
 	   ;; Go up a level and return an end token
-	   (decf (notmuch-sexp--depth sp))
+	   (cl-decf (notmuch-sexp--depth sp))
 	   (forward-char)
 	   'end))
 	((= (char-after) ?\()
@@ -94,8 +94,8 @@ returns the value."
 				  (notmuch-sexp--partial-state sp)))
 		      ;; A complete value is available if we've
 		      ;; reached depth 0.
-		      (depth (first new-state)))
-		 (assert (>= depth 0))
+		      (depth (car new-state)))
+		 (cl-assert (>= depth 0))
 		 (if (= depth 0)
 		     ;; Reset partial parse state
 		     (setf (notmuch-sexp--partial-state sp) nil
@@ -139,7 +139,7 @@ beginning of a list, throw invalid-read-syntax."
   (cond ((eobp) 'retry)
 	((= (char-after) ?\()
 	 (forward-char)
-	 (incf (notmuch-sexp--depth sp))
+	 (cl-incf (notmuch-sexp--depth sp))
 	 t)
 	(t
 	 ;; Skip over the bad character like `read' does
@@ -181,7 +181,7 @@ move point in the input buffer."
     (set (make-local-variable 'notmuch-sexp--state) 'begin))
   (let (done)
     (while (not done)
-      (case notmuch-sexp--state
+      (cl-case notmuch-sexp--state
 	(begin
 	 ;; Enter the list
 	 (if (eq (notmuch-sexp-begin-list notmuch-sexp--parser) 'retry)
@@ -190,7 +190,7 @@ move point in the input buffer."
 	(result
 	 ;; Parse a result
 	 (let ((result (notmuch-sexp-read notmuch-sexp--parser)))
-	   (case result
+	   (cl-case result
 	     (retry (setq done t))
 	     (end   (setq notmuch-sexp--state 'end))
 	     (t     (with-current-buffer result-buffer
@@ -203,9 +203,5 @@ move point in the input buffer."
   (delete-region (point-min) (point)))
 
 (provide 'notmuch-parser)
-
-;; Local Variables:
-;; byte-compile-warnings: (not cl-functions)
-;; End:
 
 ;;; notmuch-parser.el ends here

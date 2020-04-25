@@ -1,3 +1,4 @@
+(require 'cl-lib)
 (require 'notmuch-mua)
 
 (defun attachment-check-test (&optional fn)
@@ -12,7 +13,8 @@ Return `t' if the message would be sent, otherwise `nil'"
       (condition-case nil
 	  ;; Force `y-or-n-p' to always return `nil', as if the user
 	  ;; pressed "n".
-	  (letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+	  (cl-letf (((symbol-function 'y-or-n-p)
+		     (lambda (&rest args) nil)))
 	    (notmuch-mua-attachment-check)
 	    t)
 	('error nil))

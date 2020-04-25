@@ -22,7 +22,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
+
 (require 'message)
 
 (require 'notmuch-lib)
@@ -251,12 +252,12 @@ If CREATE is non-nil then create the folder if necessary."
        (let ((response (notmuch-read-char-choice
 			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or (e)dit the header? "
 			'(?r ?c ?i ?e))))
-	 (case response
-	       (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
-	       (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
-	       (?i 't)
-	       (?e (notmuch-maildir-fcc-with-notmuch-insert
-		    (read-from-minibuffer "Fcc header: " fcc-header)))))))))
+	 (cl-case response
+	   (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
+	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
+	   (?i 't)
+	   (?e (notmuch-maildir-fcc-with-notmuch-insert
+		(read-from-minibuffer "Fcc header: " fcc-header)))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -335,16 +336,16 @@ if needed."
     (let* ((prompt (format "Fcc %s is not a maildir: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
 			   fcc-header))
 	    (response (notmuch-read-char-choice prompt '(?r ?c ?i ?e))))
-	 (case response
-	       (?r (notmuch-maildir-fcc-file-fcc fcc-header))
-	       (?c (if (file-writable-p fcc-header)
-		       (notmuch-maildir-fcc-create-maildir fcc-header)
-		     (message "No permission to create %s." fcc-header)
-		     (sit-for 2))
-		   (notmuch-maildir-fcc-file-fcc fcc-header))
-	       (?i 't)
-	       (?e (notmuch-maildir-fcc-file-fcc
-		    (read-from-minibuffer "Fcc header: " fcc-header)))))))
+	 (cl-case response
+	   (?r (notmuch-maildir-fcc-file-fcc fcc-header))
+	   (?c (if (file-writable-p fcc-header)
+		   (notmuch-maildir-fcc-create-maildir fcc-header)
+		 (message "No permission to create %s." fcc-header)
+		 (sit-for 2))
+	       (notmuch-maildir-fcc-file-fcc fcc-header))
+	   (?i 't)
+	   (?e (notmuch-maildir-fcc-file-fcc
+		(read-from-minibuffer "Fcc header: " fcc-header)))))))
 
 (defun notmuch-maildir-fcc-write-buffer-to-maildir (destdir &optional mark-seen)
   "Writes the current buffer to maildir destdir. If mark-seen is

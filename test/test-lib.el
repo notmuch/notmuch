@@ -20,7 +20,7 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
-(require 'cl)	;; This code is generally used uncompiled.
+(require 'cl-lib)
 
 ;; `read-file-name' by default uses `completing-read' function to read
 ;; user input.  It does not respect `standard-input' variable which we
@@ -116,10 +116,10 @@ nothing."
 (defadvice notmuch-search-process-filter (around pessimal activate disable)
   "Feed notmuch-search-process-filter one character at a time."
   (let ((string (ad-get-arg 1)))
-    (loop for char across string
-	  do (progn
-	       (ad-set-arg 1 (char-to-string char))
-	       ad-do-it))))
+    (cl-loop for char across string
+	     do (progn
+		  (ad-set-arg 1 (char-to-string char))
+		  ad-do-it))))
 
 (defun notmuch-test-mark-links ()
   "Enclose links in the current buffer with << and >>."
@@ -162,10 +162,10 @@ nothing."
       ;; reporting differing elements of OUTPUT and EXPECTED
       ;; pairwise. This is expected to make analysis of failures
       ;; simpler.
-      (apply #'concat (loop for o in output
-			    for e in expected
-			    if (not (equal o e))
-			    collect (notmuch-test-report-unexpected o e))))
+      (apply #'concat (cl-loop for o in output
+			       for e in expected
+			       if (not (equal o e))
+			       collect (notmuch-test-report-unexpected o e))))
 
      (t
       (notmuch-test-report-unexpected output expected)))))
