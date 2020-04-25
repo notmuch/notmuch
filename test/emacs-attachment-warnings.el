@@ -67,16 +67,15 @@ Return `t' if the message would be sent, otherwise `nil'"
 
 (defun notmuch-test-attachment-warning-1 ()
   (let (output expected)
-    (mapcar (lambda (test)
-	      (let* ((expect (car test))
-		     (body (cdr test))
-		     (result (attachment-check-test body)))
-		(push expect expected)
-		(push (if (eq result expect)
-			  result
-			;; In the case of a failure, include the test
-			;; details to make it simpler to debug.
-			(format "%S <-- %S" result body))
-		      output)))
-	    attachment-check-tests)
+    (dolist (test attachment-check-tests)
+      (let* ((expect (car test))
+	     (body (cdr test))
+	     (result (attachment-check-test body)))
+	(push expect expected)
+	(push (if (eq result expect)
+		  result
+		;; In the case of a failure, include the test
+		;; details to make it simpler to debug.
+		(format "%S <-- %S" result body))
+	      output)))
     (notmuch-test-expect-equal output expected)))
