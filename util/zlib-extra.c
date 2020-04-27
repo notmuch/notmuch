@@ -85,3 +85,10 @@ gz_error_string (util_status_t status, gzFile file)
     else
 	return util_error_string (status);
 }
+
+const char *
+gzerror_str(gzFile file)
+{
+    int dummy;
+    return gzerror (file, &dummy);
+}
