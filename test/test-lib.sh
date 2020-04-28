@@ -129,6 +129,19 @@ add_gnupg_home ()
     printf '%s:6:\n' "$FINGERPRINT" | gpg --quiet --batch --no-tty --import-ownertrust
 }
 
+add_gpgsm_home ()
+{
+    local fpr
+    [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
+    mkdir -m 0700 "$GNUPGHOME"
+    gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
+    fpr=$(gpgsm  --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
+    echo "$fpr S relax" >> $GNUPGHOME/trustlist.txt
+    test_debug "cat $GNUPGHOME/import.log"
+}
+
 # Each test should start with something like this, after copyright notices:
 #
 # test_description='Description of this test...

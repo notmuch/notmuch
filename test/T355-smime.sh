@@ -3,19 +3,6 @@
 test_description='S/MIME signature verification and decryption'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-add_gpgsm_home ()
-{
-    local fpr
-    [ -d ${GNUPGHOME} ] && return
-    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
-    at_exit_function _gnupg_exit
-    mkdir -m 0700 "$GNUPGHOME"
-    gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
-    fpr=$(gpgsm  --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
-    echo "$fpr S relax" >> $GNUPGHOME/trustlist.txt
-    test_debug "cat $GNUPGHOME/import.log"
-}
-
 test_require_external_prereq openssl
 test_require_external_prereq gpgsm
 
