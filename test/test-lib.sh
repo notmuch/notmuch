@@ -524,6 +524,12 @@ test_expect_equal_json () {
     test_expect_equal "$output" "$expected" "$@"
 }
 
+# Ensure that the argument is valid JSON data.
+test_valid_json () {
+    PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "import sys, json; json.load(sys.stdin)" <<<"$1"
+    test_expect_equal "$?" 0
+}
+
 # Sort the top-level list of JSON data from stdin.
 test_sort_json () {
     PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c \
