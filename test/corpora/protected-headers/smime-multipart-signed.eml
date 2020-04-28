@@ -1,0 +1,68 @@
+Received: from localhost (localhost [127.0.0.1]); Tue, 26 Nov 2019
+ 20:03:17 -0400 (UTC-04:00)
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="179";
+ protocol="application/pkcs7-signature"; micalg="sha-256"
+From: Alice Lovelace <alice@smime.example>
+To: Bob Babbage <bob@smime.example>
+Date: Tue, 26 Nov 2019 20:03:00 -0400
+Subject: The FooCorp contract
+Message-ID: <smime-multipart-signed@protected-headers.example>
+
+--179
+Content-Type: text/plain; charset="us-ascii"; protected-headers="v1"
+From: Alice Lovelace <alice@smime.example>
+To: Bob Babbage <bob@smime.example>
+Date: Tue, 26 Nov 2019 20:03:00 -0400
+Subject: The FooCorp contract
+Message-ID: <smime-multipart-signed@protected-headers.example>
+
+Bob, we need to cancel this contract.
+
+Please start the necessary processes to make that happen today.
+
+(this is the 'smime-multipart-signed' message)
+
+Thanks, Alice
+-- 
+Alice Lovelace
+President
+Example Corp
+
+--179
+Content-Transfer-Encoding: base64
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+
+MIIFhQYJKoZIhvcNAQcCoIIFdjCCBXICAQExDTALBglghkgBZQMEAgEwCwYJKoZI
+hvcNAQcBoIIDcjCCA24wggJWoAMCAQICFGeCtFlzUkvB9HFHGWrw/RGKqkwLMA0G
+CSqGSIb3DQEBDQUAMC0xKzApBgNVBAMTIlNhbXBsZSBMQU1QUyBDZXJ0aWZpY2F0
+ZSBBdXRob3JpdHkwIBcNMTkxMTIwMDY1NDE4WhgPMjA1MjA5MjcwNjU0MThaMBkx
+FzAVBgNVBAMTDkFsaWNlIExvdmVsYWNlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAw+6t+WXRtiQM8yRjWQ2fbFewCodIZUX6BY02TeZuEXoEAGEsmoON
+6LlotcUTdGr39FE2K8IytOKkXVexswgAqBCqv8YjVDrI3yV82wrm5Td32TDlw7IS
+igak4ZSu+UowPQs8YO3oxqImP4onZNHvdZ3it9EggmgUyZX0dmQ6z5O9yDzHpLMa
+E2rXxfYcPXQwPvx4tcqbTf2htEP7PYnBa8a+sts0F7I7kD5ozGYI9dGg/XGs1lYE
+WAoH5YZgNFdbkJdcKG2FPAwFcVZ/hoGm6soxkDKMrYSCtBp+fqH8MV11DP821PoO
+vtSEnaF8UURbaths2yKpAB2WUJvgW5xa4QIDAQABo4GXMIGUMAwGA1UdEwEB/wQC
+MAAwHgYDVR0RBBcwFYETYWxpY2VAc21pbWUuZXhhbXBsZTATBgNVHSUEDDAKBggr
+BgEFBQcDBDAPBgNVHQ8BAf8EBQMDB6AAMB0GA1UdDgQWBBSsLlRapP1VGK8u6GZE
+ONEl0dcAeTAfBgNVHSMEGDAWgBS3Uk1zwIg9ssN6WgzzlPf3gKJ32zANBgkqhkiG
+9w0BAQ0FAAOCAQEAe+qOGM+8q1UhXKV6i63BrXSOKvd2iglxAggszUC6eMnrIem6
+6mmRzSbcGHCeU6m1MpvYSe9IiROIxjTfsgGUdZbbXtBxSmCASjOBCbphvvtoam1G
+i8+LZdOgR2kDwr//TYjWO6vUfXPwerNWMx4cKpFobdmvgLYCeAZKRvoPjJmTEFfw
+KO0cCxSifTpTFiwZhFxXKSCTdB6T2rE9JxJfzJqLUrvvEZwpQIt8hX8kym/vKw+1
+cbsl3rag2enVP/f4qg/0mUuzkCI8sLXd+N5gAs9wdUZRcTB0gOnUAH9m7RrpqkdC
+ogKdypGEQHj6GiamJAe2WndOp4BZdBtBRzjfuzGCAdkwggHVAgEBMEUwLTErMCkG
+A1UEAxMiU2FtcGxlIExBTVBTIENlcnRpZmljYXRlIEF1dGhvcml0eQIUZ4K0WXNS
+S8H0cUcZavD9EYqqTAswCwYJYIZIAWUDBAIBoGkwGAYJKoZIhvcNAQkDMQsGCSqG
+SIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTkxMTI3MDAwMzAwWjAvBgkqhkiG9w0B
+CQQxIgQgGeoQw8WDmjB606EKGR5n1oMuV7Te1VjfA2oB2ebW390wDQYJKoZIhvcN
+AQEBBQAEggEABblYEWSnYyzL3jTS3AoPr93YKksIZr5q/b8Y5/1rMxdYxPm+iReO
+RHRgpbFQeiqZXzRXtMohfoIkh7RmdQoSV4OpwiUmNU+f0ZEAu8cMVJM6gdyUD+1D
+JwDNr+YNLV/1UUGhqx0FExOa/4O92KYBD4eRQw4KDWrkfh9dlSj0Bsl4thrZYGLz
+e7ut3FN5TBruZfmqMy50xZ9yUW91YyQUBLiIcuF185y5ZW/aQCxBKBbrNNGXLJbo
+8yKFJqSPiWZvwUmVQvfgL182hg823OJTtP4VImcUakTF0+k+BM//qqKXYrlX/tZn
+QzG+4ZH/XM1vgHl7ShjHS6TSOHz2ODqD6Q==
+
+--179--
+
