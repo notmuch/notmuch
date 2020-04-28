@@ -119,4 +119,81 @@ test_subtest_known_broken
 output=$(notmuch search 'this is a test encrypted message')
 test_expect_equal "$output" "thread:0000000000000002   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox signed)"
 
+add_email_corpus pkcs7
+
+test_begin_subtest "index PKCS#7 SignedData message"
+output=$(notmuch search --output=messages Thanks)
+expected=id:smime-onepart-signed@protected-headers.example
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "do not index embedded certificates from PKCS#7 SignedData"
+output=$(notmuch search --output=messages 'LAMPS Certificate')
+expected=''
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "know the MIME type of the embedded part in PKCS#7 SignedData"
+test_subtest_known_broken
+output=$(notmuch search --output=messages 'mimetype:text/plain')
+expected=id:smime-onepart-signed@protected-headers.example
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "PKCS#7 SignedData message is tagged 'signed'"
+test_subtest_known_broken
+output=$(notmuch dump id:smime-onepart-signed@protected-headers.example)
+expected='#notmuch-dump batch-tag:3 config,properties,tags
++inbox +signed +unread -- id:smime-onepart-signed@protected-headers.example'
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "show contents of PKCS#7 SignedData message"
+test_subtest_known_broken
+output=$(notmuch show --format=raw --part=2 id:smime-onepart-signed@protected-headers.example)
+whitespace=' '
+expected="Bob, we need to cancel this contract.
+
+Please start the necessary processes to make that happen today.
+
+Thanks, Alice
+--${whitespace}
+Alice Lovelace
+President
+OpenPGP Example Corp"
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "reply to PKCS#7 SignedData message with proper quoting and attribution"
+test_subtest_known_broken
+output=$(notmuch reply id:smime-onepart-signed@protected-headers.example)
+expected="From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: The FooCorp contract
+To: Alice Lovelace <alice@smime.example>, Bob Babbage <bob@smime.example>
+In-Reply-To: <smime-onepart-signed@protected-headers.example>
+References: <smime-onepart-signed@protected-headers.example>
+
+On Tue, 26 Nov 2019 20:11:29 -0400, Alice Lovelace <alice@smime.example> wrote:
+> Bob, we need to cancel this contract.
+>${whitespace}
+> Please start the necessary processes to make that happen today.
+>${whitespace}
+> Thanks, Alice
+> --${whitespace}
+> Alice Lovelace
+> President
+> OpenPGP Example Corp"
+test_expect_equal "$expected" "$output"
+
+test_begin_subtest "show PKCS#7 SignedData outputs valid JSON"
+output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
+test_valid_json "$output"
+
+test_begin_subtest "Verify signature on PKCS#7 SignedData message"
+test_subtest_known_broken
+output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
+test_json_nodes <<<"$output" \
+                'crypto:[0][0][0]["crypto"]["signed"]["status"][0]={
+                        "created" : 1574813489,
+                        "expires" : 2611032858,
+                        "fingerprint" : "702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB",
+                        "userid" : "CN=Alice Lovelace",
+                        "status" : "good"
+                     }'
+
 test_done
