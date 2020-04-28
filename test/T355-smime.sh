@@ -24,7 +24,7 @@ test_begin_subtest "emacs delivery of S/MIME encrypted + signed message"
 test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 001" \
-    "<#secure method=smime mode=signencrypt keyfile=\\\"test_suite.pem\\\" certfile=\\\"test_suite.pem\\\">\nThis is a test encrypted message.\n"'
+    "<#secure method=smime mode=signencrypt>\nThis is a test encrypted message.\n"'
 
 test_begin_subtest "Signature verification (openssl)"
 notmuch show --format=raw subject:"test signed message 001" |\
@@ -65,7 +65,7 @@ expected='[[[{"id": "XXXXX",
   "content-disposition": "attachment",
   "content-length": "NONZERO",
   "content-transfer-encoding": "base64",
-  "content-type": "application/x-pkcs7-signature",
+  "content-type": "application/pkcs7-signature",
   "filename": "smime.p7s"}]}]},
  []]]]'
 test_expect_equal_json \
