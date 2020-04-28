@@ -6,9 +6,7 @@ test_description='S/MIME signature verification and decryption'
 test_require_external_prereq openssl
 test_require_external_prereq gpgsm
 
-cp $NOTMUCH_SRCDIR/test/smime/key+cert.pem test_suite.pem
-
-FINGERPRINT=$(openssl x509 -fingerprint -in test_suite.pem -noout | sed -e 's/^.*=//' -e s/://g)
+FINGERPRINT=$(openssl x509 -fingerprint -in "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" -noout | sed -e 's/^.*=//' -e s/://g)
 
 add_gpgsm_home
 
@@ -74,7 +72,7 @@ test_expect_equal_json \
 
 test_begin_subtest "Decryption and signature verification (openssl)"
 notmuch show --format=raw subject:"test encrypted message 001" |\
-    openssl smime -decrypt -recip test_suite.pem |\
+    openssl smime -decrypt -recip $NOTMUCH_SRCDIR/test/smime/key+cert.pem |\
     openssl smime -verify -CAfile $NOTMUCH_SRCDIR/test/smime/test.crt 2>OUTPUT
 cat <<EOF > EXPECTED
 Verification successful
