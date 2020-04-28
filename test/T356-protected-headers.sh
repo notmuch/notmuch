@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# TODO:
-#  * check S/MIME as well as PGP/MIME
-
 test_description='Message decryption with protected headers'
 . $(dirname "$0")/test-lib.sh || exit 1
 
 ##################################################
 
+test_require_external_prereq gpgsm
+
 add_gnupg_home
+add_gpgsm_home
 
 add_email_corpus protected-headers
 
@@ -154,6 +154,38 @@ test_expect_equal "$output" ''
 test_begin_subtest "identify message that had a legacy display part skipped during indexing"
 output=$(notmuch search --output=messages property:index.repaired=skip-protected-headers-legacy-display)
 test_expect_equal "$output" id:protected-with-legacy-display@crypto.notmuchmail.org
+
+for variant in multipart-signed onepart-signed; do
+    test_begin_subtest "verify signed PKCS#7 subject ($variant)"
+    test_subtest_known_broken
+    output=$(notmuch show --verify --format=json "id:smime-${variant}@protected-headers.example")
+    test_json_nodes <<<"$output" \
+                    'signed_subject:[0][0][0]["crypto"]["signed"]["headers"]=["Subject"]' \
+                    'sig_good:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"' \
+                    'sig_fpr:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
+                    'sig_uid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Alice Lovelace"' \
+                    'not_encrypted:[0][0][0]["crypto"]!"decrypted"'
+done
+
+for variant in sign+enc sign+enc+legacy-disp; do
+    test_begin_subtest "confirm signed and encrypted PKCS#7 subject ($variant)"
+    test_subtest_known_broken
+    output=$(notmuch show --decrypt=true --format=json "id:smime-${variant}@protected-headers.example")
+    test_json_nodes <<<"$output" \
+                    'signed_subject:[0][0][0]["crypto"]["signed"]["headers"]=["Subject"]' \
+                    'sig_good:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"' \
+                    'sig_fpr:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
+                    'sig_uid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Alice Lovelace"' \
+                    'encrypted:[0][0][0]["crypto"]["decrypted"]={"status":"full","header-mask":{"Subject":"..."}}'
+done
+
+test_begin_subtest "confirm encryption-protected PKCS#7 subject (enc+legacy-disp)"
+test_subtest_known_broken
+output=$(notmuch show --decrypt=true --format=json "id:smime-enc+legacy-disp@protected-headers.example")
+test_json_nodes <<<"$output" \
+                'encrypted:[0][0][0]["crypto"]["decrypted"]={"status":"full","header-mask":{"Subject":"..."}}' \
+                'no_sig:[0][0][0]["crypto"]!"signed"'
+
 
 # TODO: test that a part that looks like a legacy-display in
 # multipart/signed, but not encrypted, is indexed and not stripped.
