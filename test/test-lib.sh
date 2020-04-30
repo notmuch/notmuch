@@ -145,6 +145,8 @@ add_gpgsm_home ()
     gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
     echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
     echo include-certs::1 | gpgconf --output /dev/null --change-options gpgsm
+    gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
+              --disable-dirmngr --import "$NOTMUCH_SRCDIR/test/smime/bob.p12" >>"$GNUPGHOME"/import.log 2>&1 3<<<''
     test_debug "cat $GNUPGHOME/import.log"
 }
 
