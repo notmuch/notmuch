@@ -5,3 +5,5 @@ key+cert.pem: cert + unencryped private
     % gpgsm --import test.crt
     % gpgsm --export-private-key-p12 -out foo.p12  (no passphrase)
     % openssl pkcs12 -in ns.p12 -clcerts -nodes > key+cert.pem
+
+ca.crt: from https://tools.ietf.org/id/draft-dkg-lamps-samples-01.html#name-certificate-authority-certi

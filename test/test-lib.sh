@@ -139,6 +139,8 @@ add_gpgsm_home ()
     gpgsm --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
     fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
     echo "$fpr S relax" >> $GNUPGHOME/trustlist.txt
+    gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
+    echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
     test_debug "cat $GNUPGHOME/import.log"
 }
 
