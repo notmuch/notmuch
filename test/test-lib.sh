@@ -110,10 +110,10 @@ unset ALTERNATE_EDITOR
 add_gnupg_home ()
 {
     local output
-    [ -d ${GNUPGHOME} ] && return
+    [ -e "${GNUPGHOME}/gpg.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
-    mkdir -m 0700 "$GNUPGHOME"
+    mkdir -p -m 0700 "$GNUPGHOME"
     gpg --no-tty --import <$NOTMUCH_SRCDIR/test/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
     if (gpg --quick-random --version >/dev/null 2>&1) ; then
@@ -132,10 +132,10 @@ add_gnupg_home ()
 add_gpgsm_home ()
 {
     local fpr
-    [ -d "$GNUPGHOME" ] && return
+    [ -e "$GNUPGHOME/gpgsm.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
-    mkdir -m 0700 "$GNUPGHOME"
+    mkdir -p -m 0700 "$GNUPGHOME"
     openssl pkcs12 -export -passout pass: -inkey "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" \
         < "$NOTMUCH_SRCDIR/test/smime/test.crt" | \
         gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
