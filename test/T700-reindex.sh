@@ -33,6 +33,15 @@ notmuch reindex '*'
 notmuch dump > OUTPUT
 test_expect_equal_file initial-dump OUTPUT
 
+test_begin_subtest 'reindex preserves tags with special prefixes'
+test_subtest_known_broken
+notmuch tag +attachment2 +encrypted2 +signed2  '*'
+notmuch dump > EXPECTED
+notmuch reindex '*'
+notmuch dump > OUTPUT
+notmuch tag -attachment2 -encrypted2 -signed2  '*'
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest 'reindex moves a message between threads'
 notmuch search --output=threads id:87iqd9rn3l.fsf@vertex.dottedmag > EXPECTED
 # re-parent
