@@ -751,9 +751,9 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 
 	const char *tag = notmuch_tags_get (tags);
 
-	if (STRNCMP_LITERAL (tag, "encrypted") != 0 &&
-	    STRNCMP_LITERAL (tag, "signed") != 0 &&
-	    STRNCMP_LITERAL (tag, "attachment") != 0) {
+	if (strcmp (tag, "encrypted") != 0 &&
+	    strcmp (tag, "signed") != 0 &&
+	    strcmp (tag, "attachment") != 0) {
 	    std::string term = tag_prefix + tag;
 	    message->doc.add_term (term);
 	}

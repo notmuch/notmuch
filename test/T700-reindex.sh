@@ -34,7 +34,6 @@ notmuch dump > OUTPUT
 test_expect_equal_file initial-dump OUTPUT
 
 test_begin_subtest 'reindex preserves tags with special prefixes'
-test_subtest_known_broken
 notmuch tag +attachment2 +encrypted2 +signed2  '*'
 notmuch dump > EXPECTED
 notmuch reindex '*'
