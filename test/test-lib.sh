@@ -109,7 +109,6 @@ unset ALTERNATE_EDITOR
 
 add_gnupg_home ()
 {
-    local output
     [ -e "${GNUPGHOME}/gpg.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
@@ -345,13 +344,14 @@ trap 'trap_signal' HUP INT TERM
 # to the message and encrypting/signing.
 emacs_deliver_message ()
 {
-    local subject="$1"
-    local body="$2"
+    local subject body smtp_dummy_pid smtp_dummy_port
+    subject="$1"
+    body="$2"
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
     # eval'ing smtp-dummy --background will set smtp_dummy_pid and -_port
-    local smtp_dummy_pid= smtp_dummy_port=
+    smtp_dummy_pid= smtp_dummy_port=
     eval `$TEST_DIRECTORY/smtp-dummy --background sent_message`
     test -n "$smtp_dummy_pid" || return 1
     test -n "$smtp_dummy_port" || return 1
@@ -391,13 +391,14 @@ emacs_deliver_message ()
 # new" after message delivery
 emacs_fcc_message ()
 {
-    local nmn_args=''
+    local nmn_args subject body
+    nmn_args=''
     while [[ "$1" =~ ^-- ]]; do
         nmn_args="$nmn_args $1"
         shift
     done
-    local subject="$1"
-    local body="$2"
+    subject="$1"
+    body="$2"
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
@@ -427,6 +428,7 @@ emacs_fcc_message ()
 # number of messages.
 add_email_corpus ()
 {
+    local corpus
     corpus=${1:-default}
 
     rm -rf ${MAIL_DIR}
@@ -457,6 +459,7 @@ test_begin_subtest ()
 # name.
 test_expect_equal ()
 {
+	local output expected testname
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_expect_equal without test_begin_subtest"
@@ -483,6 +486,7 @@ test_expect_equal ()
 # Like test_expect_equal, but takes two filenames.
 test_expect_equal_file ()
 {
+	local file1 file2 testname basename1 basename2
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
@@ -512,10 +516,11 @@ test_expect_equal_file ()
 # canonicalized before diff'ing.  If an argument cannot be parsed, it
 # is used unchanged so that there's something to diff against.
 test_expect_equal_json () {
+    local script output expected
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    local script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
+    script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
     output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
         || echo "$1")
     expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
@@ -540,6 +545,7 @@ test_sort_json () {
 # read the source of test/json_check_nodes.py (or the output when
 # invoking it without arguments) for an explanation of the syntax.
 test_json_nodes () {
+        local output
         exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_json_eval without test_begin_subtest"
@@ -561,6 +567,7 @@ test_json_nodes () {
 }
 
 test_emacs_expect_t () {
+	local result
 	test "$#" = 1 ||
 	error "bug in the test script: not 1 parameter to test_emacs_expect_t"
 	if [ -z "$inside_subtest" ]; then
@@ -653,7 +660,8 @@ notmuch_json_show_sanitize ()
 
 notmuch_emacs_error_sanitize ()
 {
-    local command=$1
+    local command
+    command=$1
     shift
     for file in "$@"; do
 	echo "=== $file ==="
@@ -717,6 +725,7 @@ declare -A test_subtest_missing_external_prereq_
 
 # declare prerequisite for the given external binary
 test_declare_external_prereq () {
+	local binary
 	binary="$1"
 	test "$#" = 2 && name=$2 || name="$binary(1)"
 
@@ -734,6 +743,7 @@ $binary () {
 # called indirectly (e.g. from emacs).
 # Returns success if dependency is available, failure otherwise.
 test_require_external_prereq () {
+	local binary
 	binary="$1"
 	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
 		# dependency is missing, call the replacement function to note it
@@ -1075,6 +1085,7 @@ test_ruby() {
 }
 
 test_C () {
+    local exec_file test_file
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
@@ -1086,6 +1097,7 @@ test_C () {
 }
 
 make_shim () {
+    local base_name test_file shim_file
     base_name="$1"
     test_file="${base_name}.c"
     shim_file="${base_name}.so"
@@ -1094,6 +1106,7 @@ make_shim () {
 }
 
 notmuch_with_shim () {
+    local base_name shim_file
     base_name="$1"
     shift
     shim_file="${base_name}.so"
