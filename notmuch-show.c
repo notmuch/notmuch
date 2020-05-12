@@ -759,7 +759,16 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    sp->string_len (sp, (char *) part_content->data, part_content->len);
 	    g_object_unref (stream_memory);
 	} else {
-	    format_omitted_part_meta_sprinter (sp, meta, GMIME_PART (node->part));
+	    /* if we have a child part despite being a standard
+	     * (non-multipart) MIME part, that means there is
+	     * something to unwrap, which we will present in
+	     * content: */
+	    if (node->nchildren) {
+		sp->map_key (sp, "content");
+		sp->begin_list (sp);
+		nclose = 1;
+	    } else
+		format_omitted_part_meta_sprinter (sp, meta, GMIME_PART (node->part));
 	}
     } else if (GMIME_IS_MULTIPART (node->part)) {
 	sp->map_key (sp, "content");

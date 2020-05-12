@@ -157,7 +157,6 @@ test_expect_equal "$output" id:protected-with-legacy-display@crypto.notmuchmail.
 
 for variant in multipart-signed onepart-signed; do
     test_begin_subtest "verify signed PKCS#7 subject ($variant)"
-    [ "$variant" = multipart-signed ] || test_subtest_known_broken
     output=$(notmuch show --verify --format=json "id:smime-${variant}@protected-headers.example")
     test_json_nodes <<<"$output" \
                     'signed_subject:[0][0][0]["crypto"]["signed"]["headers"]=["Subject"]' \
@@ -165,7 +164,7 @@ for variant in multipart-signed onepart-signed; do
                     'sig_fpr:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
                     'not_encrypted:[0][0][0]["crypto"]!"decrypted"'
     test_begin_subtest "verify signed PKCS#7 subject ($variant) signer User ID"
-    if [ $NOTMUCH_GMIME_X509_CERT_VALIDITY -ne 1 ] || [ "$variant" != multipart-signed ]; then
+    if [ $NOTMUCH_GMIME_X509_CERT_VALIDITY -ne 1 ]; then
         test_subtest_known_broken
     fi
     test_json_nodes <<<"$output" \

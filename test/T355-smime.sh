@@ -177,12 +177,10 @@ On Tue, 26 Nov 2019 20:11:29 -0400, Alice Lovelace <alice@smime.example> wrote:
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "show PKCS#7 SignedData outputs valid JSON"
-test_subtest_known_broken
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
 test_valid_json "$output"
 
 test_begin_subtest "Verify signature on PKCS#7 SignedData message"
-test_subtest_known_broken
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
 
 test_json_nodes <<<"$output" \
@@ -192,7 +190,9 @@ test_json_nodes <<<"$output" \
                 'status:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"'
 
 test_begin_subtest "Verify signature on PKCS#7 SignedData message signer User ID"
-test_subtest_known_broken
+if [ $NOTMUCH_GMIME_X509_CERT_VALIDITY -ne 1 ]; then
+    test_subtest_known_broken
+fi
 test_json_nodes <<<"$output" \
                 'userid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Alice Lovelace"'
 
