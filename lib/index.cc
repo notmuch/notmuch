@@ -372,6 +372,12 @@ _index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *ind
 			    GMimeMultipartEncrypted *part,
 			    _notmuch_message_crypto_t *msg_crypto);
 
+static void
+_index_pkcs7_part (notmuch_message_t *message,
+		   notmuch_indexopts_t *indexopts,
+		   GMimeObject *part,
+		   _notmuch_message_crypto_t *msg_crypto);
+
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -463,6 +469,11 @@ _index_mime_part (notmuch_message_t *message,
 
 	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
 
+	goto DONE;
+    }
+
+    if (GMIME_IS_APPLICATION_PKCS7_MIME (part)) {
+	_index_pkcs7_part (message, indexopts, part, msg_crypto);
 	goto DONE;
     }
 
@@ -606,6 +617,52 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	_notmuch_database_log (notmuch, "failed to add index.decryption "
 			       "property (%d)\n", status);
 
+}
+
+static void
+_index_pkcs7_part (notmuch_message_t *message,
+		   notmuch_indexopts_t *indexopts,
+		   GMimeObject *part,
+		   _notmuch_message_crypto_t *msg_crypto)
+{
+    GMimeApplicationPkcs7Mime *pkcs7;
+    GMimeSecureMimeType p7type;
+    GMimeObject *mimeobj = NULL;
+    GMimeSignatureList *sigs = NULL;
+    GError *err = NULL;
+    notmuch_database_t *notmuch = NULL;
+
+    pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
+    p7type = g_mime_application_pkcs7_mime_get_smime_type (pkcs7);
+    notmuch = notmuch_message_get_database (message);
+    _index_content_type (message, part);
+
+    if (p7type == GMIME_SECURE_MIME_TYPE_SIGNED_DATA) {
+	sigs = g_mime_application_pkcs7_mime_verify (pkcs7, GMIME_VERIFY_NONE, &mimeobj, &err);
+	if (sigs == NULL) {
+	    _notmuch_database_log (notmuch, "Failed to verify PKCS#7 SignedData during indexing. (%d:%d) [%s]\n",
+				   err->domain, err->code, err->message);
+	    g_error_free (err);
+	    goto DONE;
+	}
+	_notmuch_message_add_term (message, "tag", "signed");
+	GMimeObject *toindex = mimeobj;
+	if (_notmuch_message_crypto_potential_payload (msg_crypto, mimeobj, part, 0) &&
+	    msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	    toindex = _notmuch_repair_crypto_payload_skip_legacy_display (mimeobj);
+	    if (toindex != mimeobj)
+		notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+	}
+	_index_mime_part (message, indexopts, toindex, msg_crypto);
+    } else {
+	_notmuch_database_log (notmuch, "Cannot currently handle PKCS#7 smime-type '%s'\n",
+			       g_mime_object_get_content_type_parameter (part, "smime-type"));
+    }
+ DONE:
+    if (mimeobj)
+	g_object_unref (mimeobj);
+    if (sigs)
+	g_object_unref (sigs);
 }
 
 static notmuch_status_t

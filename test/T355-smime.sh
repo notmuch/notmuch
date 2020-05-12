@@ -132,13 +132,11 @@ expected=''
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "know the MIME type of the embedded part in PKCS#7 SignedData"
-test_subtest_known_broken
 output=$(notmuch search --output=messages 'mimetype:text/plain')
 expected=id:smime-onepart-signed@protected-headers.example
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "PKCS#7 SignedData message is tagged 'signed'"
-test_subtest_known_broken
 output=$(notmuch dump id:smime-onepart-signed@protected-headers.example)
 expected='#notmuch-dump batch-tag:3 config,properties,tags
 +inbox +signed +unread -- id:smime-onepart-signed@protected-headers.example'
