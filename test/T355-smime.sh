@@ -98,7 +98,6 @@ test_json_nodes <<<"$output" \
                 'crypto_uid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Notmuch Test Suite"'
 
 test_begin_subtest "encrypted+signed message is known to be encrypted, but signature is unknown"
-test_subtest_known_broken
 output=$(notmuch search subject:"test encrypted message 001")
 test_expect_equal "$output" "thread:0000000000000002   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox)"
 
