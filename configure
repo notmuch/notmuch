@@ -468,7 +468,7 @@ fi
 
 GMIME_MINVER=3.0.3
 
-printf "Checking for GMime development files... "
+printf "Checking for GMime development files (>= $GMIME_MINVER)... "
 if pkg-config --exists "gmime-3.0 >= $GMIME_MINVER"; then
     printf "Yes.\n"
     have_gmime=1
