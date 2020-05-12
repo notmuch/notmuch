@@ -18,7 +18,7 @@ GMimeObject *
 _notmuch_crypto_decrypt (bool *attempted,
 			 notmuch_decryption_policy_t decrypt,
 			 notmuch_message_t *message,
-			 GMimeMultipartEncrypted *part,
+			 GMimeObject *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err);
 

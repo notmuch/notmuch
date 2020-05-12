@@ -369,7 +369,7 @@ _index_content_type (notmuch_message_t *message, GMimeObject *part)
 
 static void
 _index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *part,
+			    GMimeObject *part,
 			    _notmuch_message_crypto_t *msg_crypto);
 
 static void
@@ -439,7 +439,7 @@ _index_mime_part (notmuch_message_t *message,
 				     g_mime_multipart_get_part (multipart, i));
 		if (i == GMIME_MULTIPART_ENCRYPTED_CONTENT) {
 		    _index_encrypted_mime_part (message, indexopts,
-						GMIME_MULTIPART_ENCRYPTED (part),
+						part,
 						msg_crypto);
 		} else {
 		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
@@ -551,7 +551,7 @@ _index_mime_part (notmuch_message_t *message,
 static void
 _index_encrypted_mime_part (notmuch_message_t *message,
 			    notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *encrypted_data,
+			    GMimeObject *encrypted_data,
 			    _notmuch_message_crypto_t *msg_crypto)
 {
     notmuch_status_t status;
@@ -603,7 +603,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	g_object_unref (decrypt_result);
     }
     GMimeObject *toindex = clear;
-    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
+    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, encrypted_data, GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
 	msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
 	toindex = _notmuch_repair_crypto_payload_skip_legacy_display (clear);
 	if (toindex != clear)

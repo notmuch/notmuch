@@ -253,7 +253,6 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
     notmuch_status_t status;
-    GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
     notmuch_message_t *message = NULL;
 
     if (! node->unwrapped_child) {
@@ -266,7 +265,7 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	node->unwrapped_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
 							 node->ctx->crypto->decrypt,
 							 message,
-							 encrypteddata, &decrypt_result, &err);
+							 part, &decrypt_result, &err);
 	if (node->unwrapped_child)
 	    set_unwrapped_child_destructor (node);
     }

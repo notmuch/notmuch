@@ -34,7 +34,7 @@ GMimeObject *
 _notmuch_crypto_decrypt (bool *attempted,
 			 notmuch_decryption_policy_t decrypt,
 			 notmuch_message_t *message,
-			 GMimeMultipartEncrypted *part,
+			 GMimeObject *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err)
 {
@@ -55,7 +55,7 @@ _notmuch_crypto_decrypt (bool *attempted,
 	    }
 	    if (attempted)
 		*attempted = true;
-	    ret = g_mime_multipart_encrypted_decrypt (part,
+	    ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part),
 						      GMIME_DECRYPT_NONE,
 						      notmuch_message_properties_value (list),
 						      decrypt_result, err);
@@ -81,7 +81,7 @@ _notmuch_crypto_decrypt (bool *attempted,
     GMimeDecryptFlags flags = GMIME_DECRYPT_NONE;
     if (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result)
 	flags |= GMIME_DECRYPT_EXPORT_SESSION_KEY;
-    ret = g_mime_multipart_encrypted_decrypt (part, flags, NULL,
+    ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part), flags, NULL,
 					      decrypt_result, err);
     return ret;
 }
