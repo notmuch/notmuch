@@ -220,8 +220,17 @@ node_verify (mime_node_t *node, GMimeObject *part)
     notmuch_status_t status;
 
     node->verify_attempted = true;
-    node->sig_list = g_mime_multipart_signed_verify (
-	GMIME_MULTIPART_SIGNED (part), GMIME_VERIFY_NONE, &err);
+    if (GMIME_IS_APPLICATION_PKCS7_MIME (part))
+	node->sig_list = g_mime_application_pkcs7_mime_verify (
+	    GMIME_APPLICATION_PKCS7_MIME (part), GMIME_VERIFY_NONE, &node->unwrapped_child, &err);
+    else
+	node->sig_list = g_mime_multipart_signed_verify (
+	    GMIME_MULTIPART_SIGNED (part), GMIME_VERIFY_NONE, &err);
+
+    if (node->unwrapped_child) {
+	node->nchildren = 1;
+	set_unwrapped_child_destructor (node);
+    }
 
     if (node->sig_list)
 	set_signature_list_destructor (node);
@@ -376,6 +385,12 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	} else {
 	    node_verify (node, part);
 	}
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
+	       GMIME_SECURE_MIME_TYPE_SIGNED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part))) {
+	/* If node->ctx->crypto->verify is false, it would be better
+	 * to just unwrap (instead of verifying), but
+	 * https://github.com/jstedfast/gmime/issues/67 */
+	node_verify (node, part);
     } else {
 	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild) &&
 	    node->ctx->msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
@@ -409,6 +424,10 @@ mime_node_child (mime_node_t *parent, int child)
 		GMIME_MULTIPART (parent->part), child);
     } else if (GMIME_IS_MESSAGE (parent->part)) {
 	sub = g_mime_message_get_mime_part (GMIME_MESSAGE (parent->part));
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (parent->part) &&
+	       parent->unwrapped_child &&
+	       child == 0) {
+	sub = parent->unwrapped_child;
     } else {
 	/* This should have been caught by _mime_node_set_up_part */
 	INTERNAL_ERROR ("Unexpected GMimeObject type: %s",

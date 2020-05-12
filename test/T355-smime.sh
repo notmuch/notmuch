@@ -142,7 +142,6 @@ expected='#notmuch-dump batch-tag:3 config,properties,tags
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "show contents of PKCS#7 SignedData message"
-test_subtest_known_broken
 output=$(notmuch show --format=raw --part=2 id:smime-onepart-signed@protected-headers.example)
 whitespace=' '
 expected="Bob, we need to cancel this contract.
@@ -178,6 +177,7 @@ On Tue, 26 Nov 2019 20:11:29 -0400, Alice Lovelace <alice@smime.example> wrote:
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "show PKCS#7 SignedData outputs valid JSON"
+test_subtest_known_broken
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
 test_valid_json "$output"
 
