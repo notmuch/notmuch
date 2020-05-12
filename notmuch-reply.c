@@ -65,8 +65,9 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (node->part);
 
 	if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
-	    g_mime_content_type_is_type (content_type, "application", "pgp-signature")) {
-	    /* Ignore PGP/MIME cruft parts */
+	    g_mime_content_type_is_type (content_type, "application", "pgp-signature") ||
+	    g_mime_content_type_is_type (content_type, "application", "pkcs7-mime")) {
+	    /* Ignore PGP/MIME and S/MIME cruft parts */
 	} else if (g_mime_content_type_is_type (content_type, "text", "*") &&
 		   ! g_mime_content_type_is_type (content_type, "text", "html")) {
 	    show_text_part_content (node->part, stream, NOTMUCH_SHOW_TEXT_PART_REPLY);

@@ -156,7 +156,6 @@ OpenPGP Example Corp"
 test_expect_equal "$expected" "$output"
 
 test_begin_subtest "reply to PKCS#7 SignedData message with proper quoting and attribution"
-test_subtest_known_broken
 output=$(notmuch reply id:smime-onepart-signed@protected-headers.example)
 expected="From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: The FooCorp contract
