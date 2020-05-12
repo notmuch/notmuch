@@ -107,12 +107,10 @@ test_begin_subtest "Reindex cleartext"
 test_expect_success "notmuch reindex --decrypt=true subject:'test encrypted message 001'"
 
 test_begin_subtest "signature is now known"
-test_subtest_known_broken
 output=$(notmuch search subject:"test encrypted message 001")
 test_expect_equal "$output" "thread:0000000000000002   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox signed)"
 
 test_begin_subtest "Encrypted body is indexed"
-test_subtest_known_broken
 output=$(notmuch search 'this is a test encrypted message')
 test_expect_equal "$output" "thread:0000000000000002   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message 001 (encrypted inbox signed)"
 

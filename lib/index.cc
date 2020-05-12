@@ -656,8 +656,9 @@ _index_pkcs7_part (notmuch_message_t *message,
 	_index_mime_part (message, indexopts, toindex, msg_crypto);
     } else if (p7type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
 	_notmuch_message_add_term (message, "tag", "encrypted");
-	if (notmuch_indexopts_get_decrypt_policy (indexopts) != NOTMUCH_DECRYPT_FALSE)
-	    _notmuch_database_log (notmuch, "Cannot decrypt PKCS#7 envelopedData (S/MIME encrypted messages)\n");
+	_index_encrypted_mime_part (message, indexopts,
+				    part,
+				    msg_crypto);
     } else {
 	_notmuch_database_log (notmuch, "Cannot currently handle PKCS#7 smime-type '%s'\n",
 			       g_mime_object_get_content_type_parameter (part, "smime-type"));
