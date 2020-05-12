@@ -55,10 +55,21 @@ _notmuch_crypto_decrypt (bool *attempted,
 	    }
 	    if (attempted)
 		*attempted = true;
-	    ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part),
-						      GMIME_DECRYPT_NONE,
-						      notmuch_message_properties_value (list),
-						      decrypt_result, err);
+	    if (GMIME_IS_MULTIPART_ENCRYPTED (part)) {
+		ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part),
+							  GMIME_DECRYPT_NONE,
+							  notmuch_message_properties_value (list),
+							  decrypt_result, err);
+	    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part)) {
+	        GMimeApplicationPkcs7Mime *pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
+		GMimeSecureMimeType type = g_mime_application_pkcs7_mime_get_smime_type (pkcs7);
+		if (type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
+		    ret = g_mime_application_pkcs7_mime_decrypt (pkcs7,
+								 GMIME_DECRYPT_NONE,
+								 notmuch_message_properties_value (list),
+								 decrypt_result, err);
+		}
+	    }
 	    if (ret)
 		break;
 	}
@@ -81,8 +92,17 @@ _notmuch_crypto_decrypt (bool *attempted,
     GMimeDecryptFlags flags = GMIME_DECRYPT_NONE;
     if (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result)
 	flags |= GMIME_DECRYPT_EXPORT_SESSION_KEY;
-    ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part), flags, NULL,
-					      decrypt_result, err);
+    if (GMIME_IS_MULTIPART_ENCRYPTED (part)) {
+	ret = g_mime_multipart_encrypted_decrypt (GMIME_MULTIPART_ENCRYPTED (part), flags, NULL,
+						  decrypt_result, err);
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part)) {
+	GMimeApplicationPkcs7Mime *pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
+	GMimeSecureMimeType p7type = g_mime_application_pkcs7_mime_get_smime_type (pkcs7);
+	if (p7type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
+	    ret = g_mime_application_pkcs7_mime_decrypt (pkcs7, flags, NULL,
+							 decrypt_result, err);
+	}
+    }
     return ret;
 }
 
