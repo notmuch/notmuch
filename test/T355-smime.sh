@@ -80,7 +80,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Decryption (notmuch CLI)"
-test_subtest_known_broken
 notmuch show --decrypt=true subject:"test encrypted message 001" |\
     grep "^This is a" > OUTPUT
 cat <<EOF > EXPECTED
@@ -89,7 +88,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Cryptographic message status (encrypted+signed)"
-test_subtest_known_broken
 output=$(notmuch show --format=json --decrypt=true subject:"test encrypted message 001")
 test_json_nodes <<<"$output" \
                 'crypto_encrypted:[0][0][0]["crypto"]["decrypted"]["status"]="full"' \

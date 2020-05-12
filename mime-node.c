@@ -390,6 +390,12 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	 * to just unwrap (instead of verifying), but
 	 * https://github.com/jstedfast/gmime/issues/67 */
 	node_verify (node, part);
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
+	       GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part)) &&
+	       (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
+	node_decrypt_and_verify (node, part);
+	if (node->unwrapped_child && node->nchildren == 0)
+	    node->nchildren = 1;
     } else {
 	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild) &&
 	    node->ctx->msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {

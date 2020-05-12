@@ -173,7 +173,6 @@ done
 
 for variant in sign+enc sign+enc+legacy-disp; do
     test_begin_subtest "confirm signed and encrypted PKCS#7 subject ($variant)"
-    test_subtest_known_broken
     output=$(notmuch show --decrypt=true --format=json "id:smime-${variant}@protected-headers.example")
     test_json_nodes <<<"$output" \
                     'signed_subject:[0][0][0]["crypto"]["signed"]["headers"]=["Subject"]' \
@@ -181,14 +180,15 @@ for variant in sign+enc sign+enc+legacy-disp; do
                     'sig_fpr:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
                     'encrypted:[0][0][0]["crypto"]["decrypted"]={"status":"full","header-mask":{"Subject":"..."}}'
     test_begin_subtest "confirm signed and encrypted PKCS#7 subject ($variant) signer User ID"
-    test_subtest_known_broken
+    if [ $NOTMUCH_GMIME_X509_CERT_VALIDITY -ne 1 ]; then
+        test_subtest_known_broken
+    fi
     test_json_nodes <<<"$output" \
                     'sig_uid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Alice Lovelace"'
 
 done
 
 test_begin_subtest "confirm encryption-protected PKCS#7 subject (enc+legacy-disp)"
-test_subtest_known_broken
 output=$(notmuch show --decrypt=true --format=json "id:smime-enc+legacy-disp@protected-headers.example")
 test_json_nodes <<<"$output" \
                 'encrypted:[0][0][0]["crypto"]["decrypted"]={"status":"full","header-mask":{"Subject":"..."}}' \
