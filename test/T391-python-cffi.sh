@@ -8,7 +8,7 @@ fi
 
 
 test_begin_subtest "python cffi tests"
-pytest_dir=$NOTMUCH_SRCDIR/bindings/python-cffi/build/stage
+pytest_dir=$NOTMUCH_BUILDDIR/bindings/python-cffi/build/stage
 printf "[pytest]\nminversion = 3.0\naddopts = -ra\n" > $pytest_dir/pytest.ini
 test_expect_success "(cd $pytest_dir && ${NOTMUCH_PYTHON} -m pytest --log-file=$TMP_DIRECTORY/test.output)"
 test_done

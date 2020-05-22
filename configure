@@ -70,6 +70,14 @@ if [ "$srcdir" != "." ]; then
     mkdir bindings/ruby
     cp -a "$srcdir"/bindings/ruby/*.[ch] bindings/ruby
     cp -a "$srcdir"/bindings/ruby/extconf.rb bindings/ruby
+
+    # Use the same hack to replicate python-cffi source for
+    # out-of-tree builds (again, not ideal).
+    mkdir bindings/python-cffi
+    cp -a "$srcdir"/bindings/python-cffi/tests \
+       "$srcdir"/bindings/python-cffi/notmuch2 \
+       "$srcdir"/bindings/python-cffi/setup.py \
+       bindings/python-cffi/
 fi
 
 # Set several defaults (optionally specified by the user in
