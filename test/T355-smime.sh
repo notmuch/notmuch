@@ -187,13 +187,16 @@ test_valid_json "$output"
 test_begin_subtest "Verify signature on PKCS#7 SignedData message"
 test_subtest_known_broken
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
+
 test_json_nodes <<<"$output" \
-                'crypto:[0][0][0]["crypto"]["signed"]["status"][0]={
-                        "created" : 1574813489,
-                        "expires" : 2611032858,
-                        "fingerprint" : "702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB",
-                        "userid" : "CN=Alice Lovelace",
-                        "status" : "good"
-                     }'
+                'created:[0][0][0]["crypto"]["signed"]["status"][0]["created"]=1574813489' \
+                'expires:[0][0][0]["crypto"]["signed"]["status"][0]["expires"]=2611032858' \
+                'fingerprint:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
+                'status:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"'
+
+test_begin_subtest "Verify signature on PKCS#7 SignedData message signer User ID"
+test_subtest_known_broken
+test_json_nodes <<<"$output" \
+                'userid:[0][0][0]["crypto"]["signed"]["status"][0]["userid"]="CN=Alice Lovelace"'
 
 test_done
