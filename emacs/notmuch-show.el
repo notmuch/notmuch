@@ -179,7 +179,7 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-indent-content)
 
 (defvar notmuch-show-attachment-debug nil
-  "If t log stdout and stderr from attachment handlers
+  "If t log stdout and stderr from attachment handlers.
 
 When set to nil (the default) stdout and stderr from attachment
 handlers is discarded. When set to t the stdout and stderr from
@@ -266,7 +266,7 @@ position of the message in the thread."
   :group 'notmuch-show)
 
 (defmacro with-current-notmuch-show-message (&rest body)
-  "Evaluate body with current buffer set to the text of current message"
+  "Evaluate body with current buffer set to the text of current message."
   `(save-excursion
      (let ((id (notmuch-show-get-message-id)))
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
@@ -887,7 +887,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 		    nil))))
 
 (defun notmuch-show-create-part-overlays (button beg end)
-  "Add an overlay to the part between BEG and END"
+  "Add an overlay to the part between BEG and END."
 
   ;; If there is no button (i.e., the part is text/plain and the first
   ;; part) or if the part has no content then we don't make the part
@@ -898,7 +898,7 @@ will return nil if the CID is unknown or cannot be retrieved."
     t))
 
 (defun notmuch-show-record-part-information (part beg end)
-  "Store PART as a text property from BEG to END"
+  "Store PART as a text property from BEG to END."
 
   ;; Record part information.  Since we already inserted subparts,
   ;; don't override existing :notmuch-part properties.
@@ -1381,7 +1381,7 @@ This includes:
     (list win-id-combo (notmuch-show-get-message-ids-for-open-messages))))
 
 (defun notmuch-show-get-query ()
-  "Return the current query in this show buffer"
+  "Return the current query in this show buffer."
   (if notmuch-show-query-context
       (concat notmuch-show-thread-id
 	      " and ("
@@ -1459,7 +1459,7 @@ reset based on the original query."
     (define-key map "G" 'notmuch-show-stash-git-send-email)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
-  "Submap for stash commands")
+  "Submap for stash commands.")
 (fset 'notmuch-show-stash-map notmuch-show-stash-map)
 
 (defvar notmuch-show-part-map
@@ -1471,7 +1471,7 @@ reset based on the original query."
     (define-key map "m" 'notmuch-show-choose-mime-of-part)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
-  "Submap for part commands")
+  "Submap for part commands.")
 (fset 'notmuch-show-part-map notmuch-show-part-map)
 
 (defvar notmuch-show-mode-map
@@ -1561,14 +1561,14 @@ All currently available key bindings:
         #'notmuch-show-imenu-extract-index-name-function))
 
 (defun notmuch-tree-from-show-current-query ()
-  "Call notmuch tree with the current query"
+  "Call notmuch tree with the current query."
   (interactive)
   (notmuch-tree notmuch-show-thread-id
 		notmuch-show-query-context
 		(notmuch-show-get-message-id)))
 
 (defun notmuch-unthreaded-from-show-current-query ()
-  "Call notmuch unthreaded with the current query"
+  "Call notmuch unthreaded with the current query."
   (interactive)
   (notmuch-unthreaded notmuch-show-thread-id
 		      notmuch-show-query-context
@@ -2011,7 +2011,7 @@ to show, nil otherwise."
     (notmuch-show-message-visible props (plist-get props :match))))
 
 (defun notmuch-show-goto-first-wanted-message ()
-  "Move to the first open message and mark it read"
+  "Move to the first open message and mark it read."
   (goto-char (point-min))
   (unless (notmuch-show-message-visible-p)
     (notmuch-show-next-open-message))
@@ -2511,7 +2511,7 @@ the new buffer."
       (view-buffer buf 'kill-buffer-if-not-modified))))
 
 (defun notmuch-show-choose-mime-of-part (mime-type)
-  "Choose the mime type to use for displaying part"
+  "Choose the mime type to use for displaying part."
   (interactive
    (list (completing-read "Mime type to use (default text/plain): "
 			  (mailcap-mime-types) nil nil nil nil "text/plain")))

@@ -76,7 +76,7 @@ postponing and resuming a message."
 
 (defcustom notmuch-draft-save-plaintext 'ask
   "Should notmuch save/postpone in plaintext messages that seem
-  like they are intended to be sent encrypted
+like they are intended to be sent encrypted
 (i.e with an mml encryption tag in it)."
   :type '(radio
 	  (const :tag "Never" nil)
@@ -87,10 +87,10 @@ postponing and resuming a message."
 
 (defvar notmuch-draft-encryption-tag-regex
   "<#\\(part encrypt\\|secure.*mode=.*encrypt>\\)"
-  "Regular expression matching mml tags indicating encryption of part or message")
+  "Regular expression matching mml tags indicating encryption of part or message.")
 
 (defvar notmuch-draft-id nil
-  "Message-id of the most recent saved draft of this message")
+  "Message-id of the most recent saved draft of this message.")
 (make-variable-buffer-local 'notmuch-draft-id)
 
 (defun notmuch-draft--mark-deleted ()

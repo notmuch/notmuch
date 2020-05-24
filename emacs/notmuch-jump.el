@@ -88,8 +88,7 @@ ACTION-MAP must be a list of triples of the form
 where KEY is a key binding, LABEL is a string label to display in
 the buffer, and ACTION is a nullary function to call.  LABEL may
 be null, in which case the action will still be bound, but will
-not appear in the pop-up buffer.
-"
+not appear in the pop-up buffer."
 
   (let* ((items (notmuch-jump--format-actions action-map))
 	 ;; Format the table of bindings and the full prompt

@@ -78,7 +78,7 @@ directory if it does not exist yet when sending a mail."
  :group 'notmuch-send)
 
 (defcustom notmuch-maildir-use-notmuch-insert 't
-  "Should fcc use notmuch insert instead of simple fcc"
+  "Should fcc use notmuch insert instead of simple fcc."
   :type '(choice :tag "Fcc Method"
 		 (const :tag "Use notmuch insert" t)
 		 (const :tag "Use simple fcc" nil))
@@ -93,7 +93,7 @@ directory if it does not exist yet when sending a mail."
 Sets the Fcc header based on the values of `notmuch-fcc-dirs'.
 
 Originally intended to be use a hook function, but now called directly
-by notmuch-mua-mail"
+by notmuch-mua-mail."
 
   (let ((subdir
 	 (cond

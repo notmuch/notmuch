@@ -29,11 +29,11 @@
 (declare-function company-manual-begin "company")
 
 (defvar notmuch-address-last-harvest 0
-  "Time of last address harvest")
+  "Time of last address harvest.")
 
 (defvar notmuch-address-completions (make-hash-table :test 'equal)
   "Hash of email addresses for completion during email composition.
-  This variable is set by calling `notmuch-address-harvest'.")
+This variable is set by calling `notmuch-address-harvest'.")
 
 (defvar notmuch-address-full-harvest-finished nil
   "t indicates that full completion address harvesting has been
@@ -73,11 +73,11 @@ disabled."
   "Determines how internal address completion generates candidates.
 
 This should be a list of the form '(DIRECTION FILTER), where
- DIRECTION is either sent or received and specifies whether the
- candidates are searched in messages sent by the user or received
- by the user (note received by is much faster), and FILTER is
- either nil or a filter-string, such as \"date:1y..\" to append
- to the query."
+DIRECTION is either sent or received and specifies whether the
+candidates are searched in messages sent by the user or received
+by the user (note received by is much faster), and FILTER is
+either nil or a filter-string, such as \"date:1y..\" to append
+to the query."
   :type '(list :tag "Use internal address completion"
 	       (radio
 		:tag "Base completion on messages you have"
@@ -126,8 +126,7 @@ to know how address selection is made by default."
 
 The completed address is passed as an argument to each function.
 Note that this hook will be invoked for completion in headers
-matching `notmuch-address-completion-headers-regexp'.
-"
+matching `notmuch-address-completion-headers-regexp'."
   :type 'hook
   :group 'notmuch-address
   :group 'notmuch-hooks)
@@ -147,7 +146,7 @@ matching `notmuch-address-completion-headers-regexp'.
   (message "calling notmuch-address-message-insinuate is no longer needed"))
 
 (defcustom notmuch-address-use-company t
-  "If available, use company mode for address completion"
+  "If available, use company mode for address completion."
   :type 'boolean
   :group 'notmuch-send
   :group 'notmuch-address)
@@ -285,7 +284,7 @@ external commands."
 (defvar notmuch-address-harvest-procs '(nil . nil)
   "The currently running harvests.
 
-The car is a partial harvest, and the cdr is a full harvest")
+The car is a partial harvest, and the cdr is a full harvest.")
 
 (defun notmuch-address-harvest (&optional addr-prefix synchronous callback)
   "Collect addresses completion candidates.

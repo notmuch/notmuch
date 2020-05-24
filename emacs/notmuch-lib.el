@@ -189,7 +189,7 @@ If notmuch exits with a non-zero status, output from the process
 will appear in a buffer named \"*Notmuch errors*\" and an error
 will be signaled.
 
-Otherwise the output will be returned"
+Otherwise the output will be returned."
   (with-temp-buffer
     (let* ((status (apply #'call-process notmuch-command nil t nil args))
 	   (output (buffer-string)))
@@ -299,7 +299,7 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
 
 
 (defun notmuch-describe-key (actual-key binding prefix ua-keys tail)
-  "Prepend cons cells describing prefix-arg ACTUAL-KEY and ACTUAL-KEY to TAIL
+  "Prepend cons cells describing prefix-arg ACTUAL-KEY and ACTUAL-KEY to TAIL.
 
 It does not prepend if ACTUAL-KEY is already listed in TAIL."
   (let ((key-string (concat prefix (key-description actual-key))))
@@ -530,11 +530,11 @@ This replaces spaces, percents, and double quotes in STR with
     (cdr xplist)))
 
 (defun notmuch-split-content-type (content-type)
-  "Split content/type into 'content' and 'type'"
+  "Split content/type into 'content' and 'type'."
   (split-string content-type "/"))
 
 (defun notmuch-match-content-type (t1 t2)
-  "Return t if t1 and t2 are matching content types, taking wildcards into account"
+  "Return t if t1 and t2 are matching content types, taking wildcards into account."
   (let ((st1 (notmuch-split-content-type t1))
 	(st2 (notmuch-split-content-type t2)))
     (if (or (string= (cadr st1) "*")

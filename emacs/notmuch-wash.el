@@ -192,7 +192,7 @@ message parts."
     (format label-format lines-count)))
 
 (defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
-  "Auxiliary function to do the actual making of overlays and buttons
+  "Auxiliary function to do the actual making of overlays and buttons.
 
 BEG and END are buffer locations. TYPE should a string, either
 \"citation\" or \"signature\". Optional PREFIX is some arbitrary

@@ -84,7 +84,7 @@ from TAGGING-OPERATIONS."
   :group 'notmuch-tag)
 
 (define-widget 'notmuch-tag-format-type 'lazy
-  "Customize widget for notmuch-tag-format and friends"
+  "Customize widget for notmuch-tag-format and friends."
   :type '(alist :key-type (regexp :tag "Tag")
 		:extra-offset -3
 		:value-type
@@ -313,7 +313,7 @@ are not in TAGS) are shown using formats from
 are in TAGS but are not in ORIG-TAGS) are shown using formats
 from `notmuch-tag-added-formats' and tags which have not been
 changed (the normal case) are shown using formats from
-`notmuch-tag-formats'"
+`notmuch-tag-formats'."
   (let* ((tag-state (cond ((not (member tag tags)) 'deleted)
 			  ((not (member tag orig-tags)) 'added)))
 	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
@@ -351,7 +351,7 @@ changed (the normal case) are shown using formats from
 'tag-changes' will contain the tags that are about to be added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
-the messages that are about to be tagged"
+the messages that are about to be tagged."
 
   :type 'hook
   :options '(notmuch-hl-line-mode)
@@ -363,7 +363,7 @@ the messages that are about to be tagged"
 'tag-changes' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
-the messages that were tagged"
+the messages that were tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)

@@ -113,7 +113,7 @@ there will be called at other points of notmuch execution."
   :group 'notmuch)
 
 (defvar notmuch-query-history nil
-  "Variable to store minibuffer history for notmuch queries")
+  "Variable to store minibuffer history for notmuch queries.")
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
@@ -202,7 +202,7 @@ there will be called at other points of notmuch execution."
     (define-key map "q" 'notmuch-stash-query)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
-  "Submap for stash commands")
+  "Submap for stash commands.")
 (fset 'notmuch-search-stash-map notmuch-search-stash-map)
 
 (defun notmuch-search-stash-thread-id ()
@@ -417,7 +417,7 @@ If there is no thread at POS (or point), returns nil."
 
 The returned point will be just after the newline character that
 ends the result line.  If there is no thread at POS (or point),
-returns nil"
+returns nil."
   (when (notmuch-search-get-result pos)
     (next-single-property-change (or pos (point)) 'notmuch-search-result
 				 nil (point-max))))
@@ -457,9 +457,9 @@ BEG."
     output))
 
 (defun notmuch-search-find-thread-id (&optional bare)
-  "Return the thread for the current thread
+  "Return the thread for the current thread.
 
-If BARE is set then do not prefix with \"thread:\""
+If BARE is set then do not prefix with \"thread:\"."
   (let ((thread (plist-get (notmuch-search-get-result) :thread)))
     (when thread (concat (unless bare "thread:") thread))))
 
@@ -486,19 +486,19 @@ no messages in the region then return nil."
       (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
 (defun notmuch-search-find-authors ()
-  "Return the authors for the current thread"
+  "Return the authors for the current thread."
   (plist-get (notmuch-search-get-result) :authors))
 
 (defun notmuch-search-find-authors-region (beg end)
-  "Return a list of authors for the current region"
+  "Return a list of authors for the current region."
   (notmuch-search-properties-in-region :authors beg end))
 
 (defun notmuch-search-find-subject ()
-  "Return the subject for the current thread"
+  "Return the subject for the current thread."
   (plist-get (notmuch-search-get-result) :subject))
 
 (defun notmuch-search-find-subject-region (beg end)
-  "Return a list of authors for the current region"
+  "Return a list of authors for the current region."
   (notmuch-search-properties-in-region :subject beg end))
 
 (defun notmuch-search-show-thread (&optional elide-toggle)
@@ -520,22 +520,22 @@ thread."
       (message "End of search results."))))
 
 (defun notmuch-tree-from-search-current-query ()
-  "Call notmuch tree with the current query"
+  "Call notmuch tree with the current query."
   (interactive)
   (notmuch-tree notmuch-search-query-string))
 
 (defun notmuch-unthreaded-from-search-current-query ()
-  "Call notmuch tree with the current query"
+  "Call notmuch tree with the current query."
   (interactive)
   (notmuch-unthreaded notmuch-search-query-string))
 
 (defun notmuch-tree-from-search-thread ()
-  "Show the selected thread with notmuch-tree"
+  "Show the selected thread with notmuch-tree."
   (interactive)
   (notmuch-tree (notmuch-search-find-thread-id)
-                notmuch-search-query-string
+		notmuch-search-query-string
 		nil
-                (notmuch-prettify-subject (notmuch-search-find-subject))
+		(notmuch-prettify-subject (notmuch-search-find-subject))
 		t))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
@@ -660,7 +660,7 @@ of the result."
 	(goto-char new-point)))))
 
 (defun notmuch-search-process-sentinel (proc msg)
-  "Add a message to let user know when \"notmuch search\" exits"
+  "Add a message to let user know when \"notmuch search\" exits."
   (let ((buffer (process-buffer proc))
 	(status (process-status proc))
 	(exit-status (process-exit-status proc))
@@ -862,7 +862,7 @@ sets the :orig-tag property."
       (goto-char pos))))
 
 (defun notmuch-search-process-filter (proc string)
-  "Process and filter the output of \"notmuch search\""
+  "Process and filter the output of \"notmuch search\"."
   (let ((results-buf (process-buffer proc))
 	(parse-buf (process-get proc 'parse-buf))
 	(inhibit-read-only t)
@@ -952,7 +952,7 @@ PROMPT is the string to prompt with."
 			      'notmuch-search-history current-query nil)))))
 
 (defun notmuch-search-get-query ()
-  "Return the current query in this search buffer"
+  "Return the current query in this search buffer."
   notmuch-search-query-string)
 
 (put 'notmuch-search 'notmuch-doc "Search for messages.")

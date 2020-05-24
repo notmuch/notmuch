@@ -359,7 +359,7 @@ supported for \"Customized queries section\" items."
   :type 'boolean)
 
 (defvar notmuch-hello-hidden-sections nil
-  "List of sections titles whose contents are hidden")
+  "List of sections titles whose contents are hidden.")
 
 (defvar notmuch-hello-first-run t
   "True if `notmuch-hello' is run for the first time, set to nil
@@ -501,8 +501,7 @@ If FILTER is a function, it is called with QUERY as a parameter and
 the string it returns is used as the query. If nil is returned,
 the entry is hidden.
 
-Otherwise, FILTER is ignored.
-"
+Otherwise, FILTER is ignored."
   (cond
    ((functionp filter) (funcall filter query))
    ((stringp filter)
@@ -656,7 +655,7 @@ with `notmuch-hello-query-counts'."
 (defvar notmuch-emacs-version)
 
 (defun notmuch-hello-versions ()
-  "Display the notmuch version(s)"
+  "Display the notmuch version(s)."
   (interactive)
   (let ((notmuch-cli-version (notmuch-cli-version)))
     (message "notmuch version %s"
@@ -923,7 +922,7 @@ following:
 	 options))
 
 (defun notmuch-hello-insert-inbox ()
-  "Show an entry for each saved search and inboxed messages for each tag"
+  "Show an entry for each saved search and inboxed messages for each tag."
   (notmuch-hello-insert-searches "What's in your inbox"
 				 (append
 				  notmuch-saved-searches
@@ -931,7 +930,7 @@ following:
 				 :filter "tag:inbox"))
 
 (defun notmuch-hello-insert-alltags ()
-  "Insert a section displaying all tags and associated message counts"
+  "Insert a section displaying all tags and associated message counts."
   (notmuch-hello-insert-tags-section
    nil
    :initially-hidden (not notmuch-show-all-tags-list)
