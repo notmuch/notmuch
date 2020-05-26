@@ -1081,7 +1081,7 @@ test_python() {
 }
 
 test_ruby() {
-    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I $NOTMUCH_SRCDIR/bindings/ruby> OUTPUT
+    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
 }
 
 test_C () {
