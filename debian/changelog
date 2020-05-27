@@ -1,3 +1,9 @@
+notmuch (0.29.3-1~bpo10+1) buster-backports; urgency=medium
+
+  * Rebuild for buster-backports.
+
+ -- David Bremner <bremner@debian.org>  Wed, 27 May 2020 11:49:20 -0300
+
 notmuch (0.29.3-1) unstable; urgency=medium
 
   * New upstream bugfix release.
