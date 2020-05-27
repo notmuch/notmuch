@@ -167,4 +167,11 @@ This is just a test message (#7)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+# there are more than 200 messages in this corpus
+add_email_corpus lkml
+test_begin_subtest "new doesn't run out of file descriptors with many gzipped files"
+ulimit -n 200
+gzip --recursive ${MAIL_DIR}
+test_expect_success "notmuch new"
+
 test_done

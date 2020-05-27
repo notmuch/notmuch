@@ -1,3 +1,26 @@
+notmuch (0.29.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+    - fix use-after-free bug in libnotmuch
+    - fix double close of file in "notmuch dump"
+
+ -- David Bremner <bremner@debian.org>  Wed, 27 Nov 2019 08:19:57 -0400
+
+notmuch (0.29.2-2) experimental; urgency=medium
+
+  * Drop python-notmuch binary package.
+  * Drop python2 build-dependency (Closes: #937161).
+  * Convert to pybuild for python bindings
+
+ -- David Bremner <bremner@debian.org>  Sat, 02 Nov 2019 18:21:06 -0300
+
+notmuch (0.29.2-1) unstable; urgency=medium
+
+  * New upstream bug fix release: fix file descriptor leak with gzipped
+    files. Thanks to James Troup for reporting and the fix.
+
+ -- David Bremner <bremner@debian.org>  Sat, 19 Oct 2019 07:23:21 -0300
+
 notmuch (0.29.1-2~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

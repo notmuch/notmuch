@@ -150,13 +150,17 @@ notmuch_config_list_valid (notmuch_config_list_t *metadata)
     return true;
 }
 
+static inline char * _key_from_iterator (notmuch_config_list_t *list) {
+    return talloc_strdup (list, (*list->iterator).c_str () + CONFIG_PREFIX.length ());
+}
+
 const char *
 notmuch_config_list_key (notmuch_config_list_t *list)
 {
     if (list->current_key)
 	talloc_free (list->current_key);
 
-    list->current_key = talloc_strdup (list, (*list->iterator).c_str () + CONFIG_PREFIX.length ());
+    list->current_key = _key_from_iterator (list);
 
     return list->current_key;
 }
@@ -166,7 +170,7 @@ notmuch_config_list_value (notmuch_config_list_t *list)
 {
     std::string strval;
     notmuch_status_t status;
-    const char *key = notmuch_config_list_key (list);
+    char *key = _key_from_iterator (list);
 
     /* TODO: better error reporting?? */
     status = _metadata_value (list->notmuch, key, strval);
@@ -177,6 +181,7 @@ notmuch_config_list_value (notmuch_config_list_t *list)
 	talloc_free (list->current_val);
 
     list->current_val = talloc_strdup (list, strval.c_str ());
+    talloc_free (key);
     return list->current_val;
 }
 
