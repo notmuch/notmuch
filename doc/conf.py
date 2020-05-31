@@ -29,10 +29,20 @@ release = version
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
-# If we don't have emacs (or the user configured --without-emacs),
-# don't build the notmuch-emacs docs, as they need emacs to generate
-# the docstring include files
-if os.environ.get('WITH_EMACS') != '1':
+if os.environ.get('WITH_EMACS') == '1':
+    # Hacky reimplementation of include to workaround limitations of
+    # sphinx-doc
+    lines = ['.. include:: /../emacs/rstdoc.rsti\n\n'] # in the source tree
+    rsti_dir = os.environ.get('RSTI_DIR')
+    # the other files are from the build tree
+    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti'):
+        lines.extend(open(rsti_dir+'/'+file))
+    rst_epilog = ''.join(lines)
+    del lines
+else:
+    # If we don't have emacs (or the user configured --without-emacs),
+    # don't build the notmuch-emacs docs, as they need emacs to generate
+    # the docstring include files
     exclude_patterns.append('notmuch-emacs.rst')
 
 # The name of the Pygments (syntax highlighting) style to use.

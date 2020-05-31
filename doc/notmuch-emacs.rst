@@ -377,13 +377,3 @@ suffix exist it will be read instead (just one of these, chosen in this
 order). Most often users create ``~/.emacs.d/notmuch-config.el`` and just
 work with it. If Emacs was invoked with the ``-q`` or ``--no-init-file``
 options, ``notmuch-init-file`` is not read.
-
-.. include:: ../emacs/rstdoc.rsti
-
-.. include:: ../emacs/notmuch.rsti
-
-.. include:: ../emacs/notmuch-lib.rsti
-
-.. include:: ../emacs/notmuch-show.rsti
-
-.. include:: ../emacs/notmuch-tag.rsti
