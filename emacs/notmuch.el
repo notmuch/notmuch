@@ -1148,8 +1148,6 @@ beginning of the line."
 
 ;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.
 (if init-file-user ; don't load init file if the -q option was used.
-    (let ((init-file (locate-file notmuch-init-file '("/")
-				  (get-load-suffixes))))
-      (if init-file (load init-file nil t t))))
+    (load notmuch-init-file t t nil t))
 
 ;;; notmuch.el ends here
