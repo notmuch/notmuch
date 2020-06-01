@@ -711,12 +711,14 @@ if [ $have_python -eq 0 ]; then
     errors=$((errors + 1))
 fi
 
-have_python3=0
+have_python3_dev=0
 if [ $have_python -eq 1 ]; then
-    printf "Checking for python3..."
-    if "$python" -c 'import sys; assert sys.version_info >= (3,0)' > /dev/null 2>&1; then
+    printf "Checking for python3 dev..."
+    if "$python" -c 'import os, sys, sysconfig;
+assert sys.version_info >= (3,0)
+assert os.path.isfile(sysconfig.get_config_h_filename())' >/dev/null 2>&1; then
         printf "Yes.\n"
-        have_python3=1
+        have_python3_dev=1
     else
         printf "No.\n"
     fi
@@ -724,9 +726,9 @@ fi
 
 have_python3_cffi=0
 have_python3_pytest=0
-if [ $have_python3 -eq 1 ]; then
-    printf "Checking for python3 cffi... "
-    if "$python" -c 'import cffi' >/dev/null 2>&1; then
+if [ $have_python3_dev -eq 1 ]; then
+    printf "Checking for python3 cffi and setuptools... "
+    if "$python" -c 'import cffi; import setuptools' >/dev/null 2>&1; then
         printf "Yes.\n"
         have_python3_cffi=1
     else
