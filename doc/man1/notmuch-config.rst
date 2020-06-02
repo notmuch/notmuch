@@ -198,8 +198,9 @@ The available configuration items are described below.
 
 **built_with.<name>**
     Compile time feature <name>. Current possibilities include
-    "compact" (see **notmuch-compact(1)**) and "field_processor" (see
-    **notmuch-search-terms(7)**).
+    "retry_lock" (configure option, included by default).
+    (since notmuch 0.30, "compact" and "field_processor" are
+    always included.)
 
 **query.<name>** **[STORED IN DATABASE]**
     Expansion for named query called <name>. See
