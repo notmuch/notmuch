@@ -1,3 +1,9 @@
+notmuch (0.30~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Mon, 01 Jun 2020 21:01:27 -0300
+
 notmuch (0.29.3-1) unstable; urgency=medium
 
   * New upstream bugfix release.
