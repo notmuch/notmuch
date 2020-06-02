@@ -14,6 +14,7 @@ Build-Depends:
  debhelper-compat (= 12),
  dh-elpa (>= 1.3),
  dh-python,
+ desktop-file-utils,
  dpkg-dev (>= 1.17.14),
  dtach (>= 0.8) <!nocheck>,
  emacs-nox | emacs-gtk | emacs-lucid | emacs25-nox | emacs25 (>=25~) | emacs25-lucid (>=25~) | emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
