@@ -1,6 +1,41 @@
 Notmuch 0.30 (2020-06-01)
 =========================
 
+S/MIME
+------
+
+Handle S/MIME (PKCS#7) messages -- one-part signed messages, encrypted
+messages, and multilayer messages.  Treat them symmetrically to
+OpenPGP messages.  This includes handling protected headers
+gracefully.
+
+If you're using Notmuch with S/MIME, you currently need to configure
+gpgsm appropriately.
+
+Mixed-up MIME Repair
+--------------------
+
+Detect and automatically repair a common form of message mangling
+created by Microsoft Exchange. (see index.repaired=mixedup in
+notmuch-properties(7).
+
+Protected Headers
+-----------------
+
+Avoid indexing the legacy-display part of an encrypted message that
+has protected headers. (see
+index.repaired=skip-protected-headers-legacy-display in
+notmuch-properties(7).
+
+Python
+------
+
+Drop compatibility with python2, focus on python3.
+
+Introduce new CFFI-based python bindings in the python module named
+"notmuch2".  Officially deprecate (but still support) the older
+"notmuch" module.
+
 Notmuch 0.29.3 (2019-11-27)
 ===========================
 
