@@ -36,6 +36,12 @@ Introduce new CFFI-based python bindings in the python module named
 "notmuch2".  Officially deprecate (but still support) the older
 "notmuch" module.
 
+Dependencies
+------------
+
+Support for Xapian 1.2 is removed. The minimum supported version of
+Xapian is now 1.4.0.
+
 Notmuch 0.29.3 (2019-11-27)
 ===========================
 
