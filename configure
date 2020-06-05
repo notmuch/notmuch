@@ -713,14 +713,14 @@ fi
 
 have_python3_dev=0
 if [ $have_python -eq 1 ]; then
-    printf "Checking for python3 dev..."
+    printf "Checking for python3 dev (>= 3.5)..."
     if "$python" -c 'import os, sys, sysconfig;
-assert sys.version_info >= (3,0)
+assert sys.version_info >= (3,5)
 assert os.path.isfile(sysconfig.get_config_h_filename())' >/dev/null 2>&1; then
         printf "Yes.\n"
         have_python3_dev=1
     else
-        printf "No.\n"
+        printf "No (will not install CFFI-based python bindings).\n"
     fi
 fi
 
@@ -732,7 +732,7 @@ if [ $have_python3_dev -eq 1 ]; then
         printf "Yes.\n"
         have_python3_cffi=1
     else
-        printf "No.\n"
+        printf "No (will not install CFFI-based python bindings).\n"
     fi
 
     printf "Checking for python3 pytest (>= 3.0)... "
@@ -742,7 +742,7 @@ if [ $have_python3_dev -eq 1 ]; then
         printf "Yes.\n"
         have_python3_pytest=1
     else
-        printf "No.\n"
+        printf "No (will not test CFFI-based python bindings).\n"
     fi
     rm -f $conf
 fi
