@@ -110,6 +110,27 @@ class ImmutableTagSet(base.NotmuchObject, collections.abc.Set):
     def __eq__(self, other):
         return tuple(sorted(self.iter())) == tuple(sorted(other.iter()))
 
+    def issubset(self, other):
+        return self <= other
+
+    def issuperset(self, other):
+        return self >= other
+
+    def union(self, other):
+        return self | other
+
+    def intersection(self, other):
+        return self & other
+
+    def difference(self, other):
+        return self - other
+
+    def symmetric_difference(self, other):
+        return self ^ other
+
+    def copy(self):
+        return set(self)
+
     def __hash__(self):
         return hash(tuple(self.iter()))
 

@@ -50,6 +50,22 @@ class TestImmutable:
         assert 'unread' in tagset
         assert 'foo' not in tagset
 
+    def test_isdisjoint(self, tagset):
+        assert tagset.isdisjoint(set(['spam', 'ham']))
+        assert not tagset.isdisjoint(set(['inbox']))
+
+    def test_issubset(self, tagset):
+        assert {'inbox'} <= tagset
+        assert {'inbox'}.issubset(tagset)
+        assert tagset <= {'inbox', 'unread', 'spam'}
+        assert tagset.issubset({'inbox', 'unread', 'spam'})
+
+    def test_issuperset(self, tagset):
+        assert {'inbox', 'unread', 'spam'} >= tagset
+        assert {'inbox', 'unread', 'spam'}.issuperset(tagset)
+        assert tagset >= {'inbox'}
+        assert tagset.issuperset({'inbox'})
+
     def test_iter(self, tagset):
         expected = sorted(['unread', 'inbox'])
         found = []
@@ -78,15 +94,27 @@ class TestImmutable:
         assert isinstance(common, set)
         assert isinstance(common, collections.abc.Set)
         assert common == {'unread'}
+        common = tagset.intersection({'unread'})
+        assert isinstance(common, set)
+        assert isinstance(common, collections.abc.Set)
+        assert common == {'unread'}
 
     def test_or(self, tagset):
         res = tagset | {'foo'}
         assert isinstance(res, set)
         assert isinstance(res, collections.abc.Set)
         assert res == {'unread', 'inbox', 'foo'}
+        res = tagset.union({'foo'})
+        assert isinstance(res, set)
+        assert isinstance(res, collections.abc.Set)
+        assert res == {'unread', 'inbox', 'foo'}
 
     def test_sub(self, tagset):
         res = tagset - {'unread'}
+        assert isinstance(res, set)
+        assert isinstance(res, collections.abc.Set)
+        assert res == {'inbox'}
+        res = tagset.difference({'unread'})
         assert isinstance(res, set)
         assert isinstance(res, collections.abc.Set)
         assert res == {'inbox'}
@@ -102,12 +130,22 @@ class TestImmutable:
         assert isinstance(res, set)
         assert isinstance(res, collections.abc.Set)
         assert res == {'inbox', 'foo'}
+        res = tagset.symmetric_difference({'unread', 'foo'})
+        assert isinstance(res, set)
+        assert isinstance(res, collections.abc.Set)
+        assert res == {'inbox', 'foo'}
 
     def test_rxor(self, tagset):
         res = {'unread', 'foo'} ^ tagset
         assert isinstance(res, set)
         assert isinstance(res, collections.abc.Set)
         assert res == {'inbox', 'foo'}
+
+    def test_copy(self, tagset):
+        res = tagset.copy()
+        assert isinstance(res, set)
+        assert isinstance(res, collections.abc.Set)
+        assert res == {'inbox', 'unread'}
 
 
 class TestMutableTagset:
@@ -175,3 +213,27 @@ class TestMutableTagset:
             msg.tags.to_maildir_flags()
             flags = msg.path.name.split(',')[-1]
             assert 'F' not in flags
+
+    def test_isdisjoint(self, tagset):
+        assert tagset.isdisjoint(set(['spam', 'ham']))
+        assert not tagset.isdisjoint(set(['inbox']))
+
+    def test_issubset(self, tagset):
+        assert {'inbox'} <= tagset
+        assert {'inbox'}.issubset(tagset)
+        assert not {'spam'} <= tagset
+        assert not {'spam'}.issubset(tagset)
+        assert tagset <= {'inbox', 'unread', 'spam'}
+        assert tagset.issubset({'inbox', 'unread', 'spam'})
+        assert not {'inbox', 'unread', 'spam'} <= tagset
+        assert not {'inbox', 'unread', 'spam'}.issubset(tagset)
+
+    def test_issuperset(self, tagset):
+        assert {'inbox', 'unread', 'spam'} >= tagset
+        assert {'inbox', 'unread', 'spam'}.issuperset(tagset)
+        assert tagset >= {'inbox'}
+        assert tagset.issuperset({'inbox'})
+
+    def test_union(self, tagset):
+        assert {'spam'}.union(tagset) == {'inbox', 'unread', 'spam'}
+        assert tagset.union({'spam'}) == {'inbox', 'unread', 'spam'}
