@@ -127,6 +127,11 @@ class TestAtomic:
         with pytest.raises(errors.UnbalancedAtomicError):
             ctx.force_end()
 
+    def test_abort(self, db):
+        with db.atomic() as txn:
+            txn.abort()
+        assert db.closed
+
 
 class TestRevision:
 

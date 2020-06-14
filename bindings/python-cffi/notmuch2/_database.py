@@ -664,6 +664,7 @@ class AtomicContext:
     def __init__(self, db, ptr_name):
         self._db = db
         self._ptr = lambda: getattr(db, ptr_name)
+        self._exit_fn = lambda: None
 
     def __del__(self):
         self._destroy()
@@ -679,12 +680,16 @@ class AtomicContext:
         ret = capi.lib.notmuch_database_begin_atomic(self._ptr())
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
+        self._exit_fn = self._end_atomic
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def _end_atomic(self):
         ret = capi.lib.notmuch_database_end_atomic(self._ptr())
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._exit_fn()
 
     def force_end(self):
         """Force ending the atomic section.
@@ -703,6 +708,15 @@ class AtomicContext:
         ret = capi.lib.notmuch_database_end_atomic(self._ptr())
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
+
+    def abort(self):
+        """Abort the transaction.
+
+        Aborting a transaction will not commit any of the changes, but
+        will also implicitly close the database.
+        """
+        self._exit_fn = lambda: None
+        self._db.close()
 
 
 @functools.total_ordering
