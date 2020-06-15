@@ -400,7 +400,7 @@ class Database(base.NotmuchObject):
               capi.lib.NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID]
         if ret not in ok:
             raise errors.NotmuchError(ret)
-        msg = message.Message(self, msg_pp[0], db=self)
+        msg = message.StandaloneMessage(self, msg_pp[0], db=self)
         if sync_flags:
             msg.tags.from_maildir_flags()
         return self.AddedMessage(
@@ -469,7 +469,7 @@ class Database(base.NotmuchObject):
         msg_p = msg_pp[0]
         if msg_p == capi.ffi.NULL:
             raise LookupError
-        msg = message.Message(self, msg_p, db=self)
+        msg = message.StandaloneMessage(self, msg_p, db=self)
         return msg
 
     def get(self, filename):
@@ -502,7 +502,7 @@ class Database(base.NotmuchObject):
         msg_p = msg_pp[0]
         if msg_p == capi.ffi.NULL:
             raise LookupError
-        msg = message.Message(self, msg_p, db=self)
+        msg = message.StandaloneMessage(self, msg_p, db=self)
         return msg
 
     @property

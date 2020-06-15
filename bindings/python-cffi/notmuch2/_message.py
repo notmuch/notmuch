@@ -14,7 +14,7 @@ __all__ = ['Message']
 
 
 class Message(base.NotmuchObject):
-    """An email message stored in the notmuch database.
+    """An email message stored in the notmuch database retrieved via a query.
 
     This should not be directly created, instead it will be returned
     by calling methods on :class:`Database`.  A message keeps a
@@ -61,22 +61,10 @@ class Message(base.NotmuchObject):
 
     @property
     def alive(self):
-        if not self._parent.alive:
-            return False
-        try:
-            self._msg_p
-        except errors.ObjectDestroyedError:
-            return False
-        else:
-            return True
-
-    def __del__(self):
-        self._destroy()
+        return self._parent.alive
 
     def _destroy(self):
-        if self.alive:
-            capi.lib.notmuch_message_destroy(self._msg_p)
-        self._msg_p = None
+        pass
 
     @property
     def messageid(self):
@@ -375,6 +363,30 @@ class Message(base.NotmuchObject):
         if isinstance(other, self.__class__):
             return self.messageid == other.messageid
 
+class StandaloneMessage(Message):
+    """An email message stored in the notmuch database.
+
+    This subclass of Message is used for messages that are retrieved from the
+    database directly and are not owned by a query.
+    """
+    @property
+    def alive(self):
+        if not self._parent.alive:
+            return False
+        try:
+            self._msg_p
+        except errors.ObjectDestroyedError:
+            return False
+        else:
+            return True
+
+    def __del__(self):
+        self._destroy()
+
+    def _destroy(self):
+        if self.alive:
+            capi.lib.notmuch_message_destroy(self._msg_p)
+        self._msg_p = None
 
 class FilenamesIter(base.NotmuchIter):
     """Iterator for binary filenames objects."""
