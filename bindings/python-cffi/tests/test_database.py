@@ -324,3 +324,14 @@ class TestQuery:
         threads = db.threads('*')
         thread = next(threads)
         assert isinstance(thread, notmuch2.Thread)
+
+    def test_use_threaded_message_twice(self, db):
+        thread = next(db.threads('*'))
+        for msg in thread.toplevel():
+            assert isinstance(msg, notmuch2.Message)
+            assert msg.alive
+            del msg
+        for msg in thread:
+            assert isinstance(msg, notmuch2.Message)
+            assert msg.alive
+            del msg

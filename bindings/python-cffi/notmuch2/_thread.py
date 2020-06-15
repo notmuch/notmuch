@@ -62,7 +62,9 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         :raises ObjectDestroyedError: if used after destroyed.
         """
         msgs_p = capi.lib.notmuch_thread_get_toplevel_messages(self._thread_p)
-        return message.MessageIter(self, msgs_p, db=self._db)
+        return message.MessageIter(self, msgs_p,
+                                   db=self._db,
+                                   msg_cls=message.OwnedMessage)
 
     def __iter__(self):
         """Return an iterator over all the messages in the thread.
@@ -72,7 +74,9 @@ class Thread(base.NotmuchObject, collections.abc.Iterable):
         :raises ObjectDestroyedError: if used after destroyed.
         """
         msgs_p = capi.lib.notmuch_thread_get_messages(self._thread_p)
-        return message.MessageIter(self, msgs_p, db=self._db)
+        return message.MessageIter(self, msgs_p,
+                                   db=self._db,
+                                   msg_cls=message.OwnedMessage)
 
     @property
     def matched(self):

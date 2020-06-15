@@ -47,9 +47,7 @@ class Message(base.NotmuchObject):
     :type db: Database
     :param msg_p: The C pointer to the ``notmuch_message_t``.
     :type msg_p: <cdata>
-
     :param dup: Whether the message was a duplicate on insertion.
-
     :type dup: None or bool
     """
     _msg_p = base.MemoryPointer()
@@ -61,10 +59,22 @@ class Message(base.NotmuchObject):
 
     @property
     def alive(self):
-        return self._parent.alive
+        if not self._parent.alive:
+            return False
+        try:
+            self._msg_p
+        except errors.ObjectDestroyedError:
+            return False
+        else:
+            return True
+
+    def __del__(self):
+        self._destroy()
 
     def _destroy(self):
-        pass
+        if self.alive:
+            capi.lib.notmuch_message_destroy(self._msg_p)
+        self._msg_p = None
 
     @property
     def messageid(self):
@@ -363,30 +373,26 @@ class Message(base.NotmuchObject):
         if isinstance(other, self.__class__):
             return self.messageid == other.messageid
 
-class StandaloneMessage(Message):
-    """An email message stored in the notmuch database.
 
-    This subclass of Message is used for messages that are retrieved from the
-    database directly and are not owned by a query.
+class OwnedMessage(Message):
+    """An email message owned by parent thread object.
+
+    This subclass of Message is used for messages that are retrieved
+    from the notmuch database via a parent :class:`notmuch2.Thread`
+    object, which "owns" this message.  This means that when this
+    message object is destroyed, by calling :func:`del` or
+    :meth:`_destroy` directly or indirectly, the message is not freed
+    in the notmuch API and the parent :class:`notmuch2.Thread` object
+    can return the same object again when needed.
     """
+
     @property
     def alive(self):
-        if not self._parent.alive:
-            return False
-        try:
-            self._msg_p
-        except errors.ObjectDestroyedError:
-            return False
-        else:
-            return True
-
-    def __del__(self):
-        self._destroy()
+        return self._parent.alive
 
     def _destroy(self):
-        if self.alive:
-            capi.lib.notmuch_message_destroy(self._msg_p)
-        self._msg_p = None
+        pass
+
 
 class FilenamesIter(base.NotmuchIter):
     """Iterator for binary filenames objects."""
@@ -690,8 +696,9 @@ collections.abc.ValuesView.register(PropertiesValuesView)
 
 class MessageIter(base.NotmuchIter):
 
-    def __init__(self, parent, msgs_p, *, db):
+    def __init__(self, parent, msgs_p, *, db, msg_cls=Message):
         self._db = db
+        self._msg_cls = msg_cls
         super().__init__(parent, msgs_p,
                          fn_destroy=capi.lib.notmuch_messages_destroy,
                          fn_valid=capi.lib.notmuch_messages_valid,
@@ -700,4 +707,4 @@ class MessageIter(base.NotmuchIter):
 
     def __next__(self):
         msg_p = super().__next__()
-        return Message(self, msg_p, db=self._db)
+        return self._msg_cls(self, msg_p, db=self._db)
