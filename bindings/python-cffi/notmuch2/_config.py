@@ -4,9 +4,12 @@ import notmuch2._base as base
 import notmuch2._capi as capi
 import notmuch2._errors as errors
 
+
 __all__ = ['ConfigMapping']
 
+
 class ConfigIter(base.NotmuchIter):
+
     def __init__(self, parent, iter_p):
         super().__init__(
             parent, iter_p,
@@ -18,6 +21,7 @@ class ConfigIter(base.NotmuchIter):
     def __next__(self):
         item = super().__next__()
         return base.BinString.from_cffi(item)
+
 
 class ConfigMapping(base.NotmuchObject, collections.abc.MutableMapping):
     """The config key/value pairs stored in the database.
@@ -50,11 +54,10 @@ class ConfigMapping(base.NotmuchObject, collections.abc.MutableMapping):
         ret = capi.lib.notmuch_database_get_config(self._ptr(), key, val_pp)
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
-        if val_pp[0] == "":
-            capi.lib.free(val_pp[0])
-            raise KeyError
         val = base.BinString.from_cffi(val_pp[0])
         capi.lib.free(val_pp[0])
+        if val == '':
+            raise KeyError
         return val
 
     def __setitem__(self, key, val):
