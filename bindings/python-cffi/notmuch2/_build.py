@@ -314,6 +314,23 @@ ffibuilder.cdef(
     notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts);
     void
     notmuch_indexopts_destroy (notmuch_indexopts_t *options);
+
+    notmuch_status_t
+    notmuch_database_set_config (notmuch_database_t *db, const char *key, const char *value);
+    notmuch_status_t
+    notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
+    notmuch_status_t
+    notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix, notmuch_config_list_t **out);
+    notmuch_bool_t
+    notmuch_config_list_valid (notmuch_config_list_t *config_list);
+    const char *
+    notmuch_config_list_key (notmuch_config_list_t *config_list);
+    const char *
+    notmuch_config_list_value (notmuch_config_list_t *config_list);
+    void
+    notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
+    void
+    notmuch_config_list_destroy (notmuch_config_list_t *config_list);
     """
 )
 

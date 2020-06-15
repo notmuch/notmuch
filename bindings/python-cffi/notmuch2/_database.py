@@ -7,6 +7,7 @@ import pathlib
 import weakref
 
 import notmuch2._base as base
+import notmuch2._config as config
 import notmuch2._capi as capi
 import notmuch2._errors as errors
 import notmuch2._message as message
@@ -535,6 +536,28 @@ class Database(base.NotmuchObject):
                 self, '_db_p', capi.lib.notmuch_database_get_all_tags)
             self._cached_tagset = weakref.ref(tagset)
         return tagset
+
+    @property
+    def config(self):
+        """Return a mutable mapping with the settings stored in this database.
+
+        This returns an mutable dict-like object implementing the
+        collections.abc.MutableMapping Abstract Base Class.
+
+        :rtype: Config
+
+        :raises ObjectDestroyedError: if used after destroyed.
+        """
+        try:
+            ref = self._cached_config
+        except AttributeError:
+            config_mapping = None
+        else:
+            config_mapping = ref()
+        if config_mapping is None:
+            config_mapping = config.ConfigMapping(self, '_db_p')
+            self._cached_config = weakref.ref(config_mapping)
+        return config_mapping
 
     def _create_query(self, query, *,
                       omit_excluded=EXCLUDE.TRUE,
