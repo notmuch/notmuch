@@ -1,3 +1,11 @@
+notmuch (0.30~rc2-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Upstream fixes for new python bindings (python3-notmuch2).
+  * Update debian/copyright (one new author).
+
+ -- David Bremner <bremner@debian.org>  Tue, 16 Jun 2020 08:32:16 -0300
+
 notmuch (0.30~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate
