@@ -33,9 +33,9 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  Mark Walters
  Floris Bruynooghe
  David Edmondson
+ Tomi Ollila
  Sebastian Spaeth
  Ali Polatel
- Tomi Ollila
  Michal Sojka
  Justus Winter
  Sebastien Binet
@@ -63,6 +63,7 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  Jonas Bernoulli
  Damien Cassou
  Vladimir Panteleev
+ Anton Khirnov
  Matt Armstrong
  Örjan Ekeberg
  Jan Janak
