@@ -1,9 +1,17 @@
+import pathlib
+
 import setuptools
+
+
+THIS_FILE = pathlib.Path(__file__).absolute()
+PROJECT_ROOT = THIS_FILE.parent.parent.parent
+with open(PROJECT_ROOT.joinpath('version')) as fp:
+    VERSION = fp.read().strip()
 
 
 setuptools.setup(
     name='notmuch2',
-    version='0.1',
+    version=VERSION,
     description='Pythonic bindings for the notmuch mail database using CFFI',
     author='Floris Bruynooghe',
     author_email='flub@devork.be',
