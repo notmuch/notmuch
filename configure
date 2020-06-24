@@ -1045,6 +1045,22 @@ else
 fi
 rm -f compat/have_timegm
 
+cat <<EOF > _time_t.c
+#include <time.h>
+#include <assert.h>
+static_assert(sizeof(time_t) >= 8, "sizeof(time_t) < 8");
+EOF
+
+printf "Checking for 64 bit time_t... "
+if ${CC} -c _time_t.c -o /dev/null
+then
+    printf "Yes.\n"
+    have_64bit_time_t=1
+else
+    printf "No.\n"
+    have_64bit_time_t=0
+fi
+
 printf "Checking for dirent.d_type... "
 if ${CC} -o compat/have_d_type "$srcdir"/compat/have_d_type.c > /dev/null 2>&1
 then
@@ -1128,7 +1144,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
-rm -f minimal minimal.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_x509_validity.c _check_x509_validity
+rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_x509_validity.c _check_x509_validity
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
@@ -1428,6 +1444,9 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 # Whether bash exists, and if so where
 NOTMUCH_HAVE_BASH=${have_bash}
 NOTMUCH_BASH_ABSOLUTE=${bash_absolute}
+
+# Whether time_t is 64 bits (or more)
+NOTMUCH_HAVE_64BIT_TIME_T=${have_64bit_time_t}
 
 # Whether perl exists, and if so where
 NOTMUCH_HAVE_PERL=${have_perl}
