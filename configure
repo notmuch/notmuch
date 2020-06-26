@@ -1028,7 +1028,7 @@ On Debian and similar systems:
 
 Or on Fedora and similar systems:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel
+	sudo dnf install xapian-core-devel gmime30-devel libtalloc-devel zlib-devel
 
 On other systems, similar commands can be used, but the details of the
 package names may be different.
@@ -1043,7 +1043,7 @@ to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
 Or:
-	sudo yum install pkgconfig
+	sudo dnf install pkgconfig
 
 But if pkg-config is not available for your system, then you will need
 to modify the configure script to manually set the cflags and ldflags
