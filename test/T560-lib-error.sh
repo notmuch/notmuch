@@ -358,4 +358,22 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+backup_database
+test_begin_subtest "Handle getting thread-id from closed database"
+test_subtest_known_broken
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        const char *id2;
+        id2=notmuch_message_get_thread_id (message);
+        printf("%s\n%d\n", id, id2==NULL);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
