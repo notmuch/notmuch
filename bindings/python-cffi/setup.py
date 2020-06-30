@@ -1,13 +1,7 @@
-import pathlib
-
 import setuptools
 
-
-THIS_FILE = pathlib.Path(__file__).absolute()
-PROJECT_ROOT = THIS_FILE.parent.parent.parent
-with open(PROJECT_ROOT.joinpath('version')) as fp:
+with open('version') as fp:
     VERSION = fp.read().strip()
-
 
 setuptools.setup(
     name='notmuch2',
