@@ -604,7 +604,12 @@ _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_metadata (message, message->thread_id);
+    try {
+	_notmuch_message_ensure_metadata (message, message->thread_id);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
     if (! message->thread_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no thread ID.\n",
 			message->doc_id);
