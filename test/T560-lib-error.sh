@@ -343,7 +343,6 @@ EOF
 
 backup_database
 test_begin_subtest "Handle getting message-id from closed database"
-test_subtest_known_broken
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         const char *id2;

@@ -1363,9 +1363,8 @@ notmuch_message_get_database (const notmuch_message_t *message);
  * message is valid, (which is until the query from which it derived
  * is destroyed).
  *
- * This function will not return NULL since Notmuch ensures that every
- * message has a unique message ID, (Notmuch will generate an ID for a
- * message if the original file does not contain one).
+ * This function will return NULL if triggers an unhandled Xapian
+ * exception.
  */
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);

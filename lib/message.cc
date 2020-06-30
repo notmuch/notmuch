@@ -90,6 +90,18 @@ _notmuch_message_destructor (notmuch_message_t *message)
     return 0;
 }
 
+#define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error) {
+    notmuch_database_t *notmuch = notmuch_message_get_database (message);
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred %s retrieving %s : %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
+}
+
 static notmuch_message_t *
 _notmuch_message_create_for_document (const void *talloc_owner,
 				      notmuch_database_t *notmuch,
@@ -447,9 +459,6 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 	    if (status != NOTMUCH_STATUS_SUCCESS)
 		INTERNAL_ERROR ("unhandled error from notmuch_database_reopen: %s\n",
 				notmuch_status_to_string (status));
-	} catch (const Xapian::Error &error) {
-	    INTERNAL_ERROR ("A Xapian exception occurred fetching message metadata: %s\n",
-			    error.get_msg ().c_str ());
 	}
     }
     message->last_view = message->notmuch->view;
@@ -507,7 +516,13 @@ _notmuch_message_get_doc_id (notmuch_message_t *message)
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_metadata (message, message->message_id);
+    try {
+	_notmuch_message_ensure_metadata (message, message->message_id);
+    } catch (const Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
+
     if (! message->message_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no message ID.\n",
 			message->doc_id);
