@@ -306,6 +306,9 @@ test_json_nodes <<<"$output" "$goodsig"
 
 test_begin_subtest "verify signature with stashed session key"
 output=$(notmuch show --format=json id:encrypted-signed@crypto.notmuchmail.org)
+if [ $NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY -ne 1 ]; then
+    test_subtest_known_broken
+fi
 test_json_nodes <<<"$output" "$goodsig"
 
 # TODO: test removal of a message from the message store between
