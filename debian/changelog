@@ -1,3 +1,11 @@
+notmuch (0.30~rc3-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Mark two tests broken on legacy (32 bit time_t) architectures.
+  * Drop -std=c99
+
+ -- David Bremner <bremner@debian.org>  Fri, 03 Jul 2020 06:48:51 -0300
+
 notmuch (0.30~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate.
