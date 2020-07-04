@@ -572,9 +572,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 		return talloc_strdup (message, value.c_str ());
 
 	} catch (Xapian::Error &error) {
-	    _notmuch_database_log (notmuch_message_get_database (message), "A Xapian exception occurred when reading header: %s\n",
-				   error.get_msg ().c_str ());
-	    message->notmuch->exception_reported = true;
+	    LOG_XAPIAN_EXCEPTION (message, error);
 	    return NULL;
 	}
     }
