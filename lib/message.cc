@@ -1166,15 +1166,40 @@ notmuch_message_count_files (notmuch_message_t *message)
     return _notmuch_string_list_length (message->filename_list);
 }
 
+notmuch_status_t
+notmuch_message_get_flag_st (notmuch_message_t *message,
+			     notmuch_message_flag_t flag,
+			     notmuch_bool_t *is_set)
+{
+    if (! is_set)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    try {
+	if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
+	    ! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
+	    _notmuch_message_ensure_metadata (message, NULL);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    *is_set = NOTMUCH_TEST_BIT (message->flags, flag);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag)
 {
-    if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
-	! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
-	_notmuch_message_ensure_metadata (message, NULL);
+    notmuch_bool_t is_set;
+    notmuch_status_t status;
 
-    return NOTMUCH_TEST_BIT (message->flags, flag);
+    status = notmuch_message_get_flag_st (message, flag, &is_set);
+
+    if (status)
+	return FALSE;
+    else
+	return is_set;
 }
 
 void

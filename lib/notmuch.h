@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION        5
-#define LIBNOTMUCH_MINOR_VERSION        2
+#define LIBNOTMUCH_MINOR_VERSION        3
 #define LIBNOTMUCH_MICRO_VERSION        0
 
 
@@ -1486,10 +1486,35 @@ typedef enum _notmuch_message_flag {
 
 /**
  * Get a value of a flag for the email corresponding to 'message'.
+ *
+ * returns FALSE in case of errors.
+ *
+ * @deprecated Deprecated as of libnotmuch 5.3 (notmuch 0.31). Please
+ * use notmuch_message_get_flag_st instead.
  */
+NOTMUCH_DEPRECATED(5,3)
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag);
+
+/**
+ * Get a value of a flag for the email corresponding to 'message'.
+ *
+ * @param message a message object
+ * @param flag flag to check
+ * @param is_set pointer to boolean to store flag value.
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS
+ * @retval #NOTMUCH_STATUS_NULL_POINTER is_set is NULL
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION Accessing the database
+ * triggered an exception.
+ *
+ * @since libnotmuch 5.3 (notmuch 0.31)
+ */
+notmuch_status_t
+notmuch_message_get_flag_st (notmuch_message_t *message,
+			     notmuch_message_flag_t flag,
+			     notmuch_bool_t *is_set);
 
 /**
  * Set a value of a flag for the email corresponding to 'message'.
