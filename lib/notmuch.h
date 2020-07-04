@@ -1402,7 +1402,10 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
  * NULL. (Note that notmuch_messages_valid will accept that NULL
  * value as legitimate, and simply return FALSE for it.)
  *
- * The returned list will be destroyed when the thread is destroyed.
+ * This function also returns NULL if it triggers a Xapian exception.
+ *
+ * The returned list will be destroyed when the thread is
+ * destroyed.
  */
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);

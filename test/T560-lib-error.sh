@@ -387,4 +387,22 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+# XXX TODO: test on a message from notmuch_thread_get_toplevel_messages
+# XXX this test only tests the trivial code path
+test_begin_subtest "Handle getting replies from closed database"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_messages_t *replies;
+        replies = notmuch_message_get_replies (message);
+        printf("%d\n%d\n", message != NULL, replies==NULL);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
