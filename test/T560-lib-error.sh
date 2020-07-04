@@ -322,7 +322,6 @@ cat <<EOF > c_head2
 #include <stdio.h>
 #include <notmuch.h>
 #include <notmuch-test.h>
-#include <assert.h>
 int main (int argc, char** argv)
 {
    notmuch_database_t *db;
@@ -337,7 +336,6 @@ int main (int argc, char** argv)
      exit (1);
    }
    EXPECT0(notmuch_database_find_message (db, id, &message));
-   assert(message != NULL);
    EXPECT0(notmuch_database_close (db));
 EOF
 
@@ -346,12 +344,12 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         const char *id2;
         id2=notmuch_message_get_message_id (message);
-        printf("%s\n%d\n", id, id2==NULL);
+        printf("%d\n%d\n", message != NULL, id2==NULL);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+1
 1
 == stderr ==
 EOF
@@ -362,12 +360,12 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         const char *id2;
         id2=notmuch_message_get_thread_id (message);
-        printf("%s\n%d\n", id, id2==NULL);
+        printf("%d\n%d\n", message != NULL, id2==NULL);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+1
 1
 == stderr ==
 EOF
