@@ -341,7 +341,6 @@ int main (int argc, char** argv)
    EXPECT0(notmuch_database_close (db));
 EOF
 
-backup_database
 test_begin_subtest "Handle getting message-id from closed database"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
@@ -358,7 +357,6 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-backup_database
 test_begin_subtest "Handle getting thread-id from closed database"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
