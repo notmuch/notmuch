@@ -437,4 +437,22 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle getting ghost flag from closed database"
+test_subtest_known_broken
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_bool_t result;
+        result = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_GHOST);
+        printf("%d\n%d\n", message != NULL, result == FALSE);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_done
