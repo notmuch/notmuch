@@ -1433,6 +1433,8 @@ notmuch_message_count_files (notmuch_message_t *message);
  * this function will arbitrarily return a single one of those
  * filenames. See notmuch_message_get_filenames for returning the
  * complete list of filenames.
+ *
+ * This function returns NULL if it triggers a Xapian exception.
  */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);

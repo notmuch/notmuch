@@ -1122,7 +1122,12 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     if (message->filename_list == NULL)
 	return NULL;
