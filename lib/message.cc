@@ -1143,7 +1143,12 @@ notmuch_message_get_filename (notmuch_message_t *message)
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     return _notmuch_filenames_create (message, message->filename_list);
 }

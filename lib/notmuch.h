@@ -1448,6 +1448,8 @@ notmuch_message_get_filename (notmuch_message_t *message);
  *
  * Each filename in the iterator is an absolute filename, (the initial
  * component will match notmuch_database_get_path() ).
+ *
+ * This function returns NULL if it triggers a Xapian exception.
  */
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message);
