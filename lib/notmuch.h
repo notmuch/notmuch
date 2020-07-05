@@ -1503,6 +1503,8 @@ notmuch_message_set_flag (notmuch_message_t *message,
  * For the original textual representation of the Date header from the
  * message call notmuch_message_get_header() with a header value of
  * "date".
+ *
+ * Returns 0 in case of error.
  */
 time_t
 notmuch_message_get_date (notmuch_message_t *message);

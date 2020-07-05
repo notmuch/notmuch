@@ -454,5 +454,21 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle getting date from closed database"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        time_t result;
+        result = notmuch_message_get_date (message);
+        printf("%d\n%d\n", message != NULL, result == 0);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_done
