@@ -1623,24 +1623,29 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     notmuch_private_status_t private_status;
     notmuch_status_t status;
 
-    status = _notmuch_database_ensure_writable (message->notmuch);
-    if (status)
-	return status;
+    try {
+	status = _notmuch_database_ensure_writable (message->notmuch);
+	if (status)
+	    return status;
 
-    if (tag == NULL)
-	return NOTMUCH_STATUS_NULL_POINTER;
+	if (tag == NULL)
+	    return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (strlen (tag) > NOTMUCH_TAG_MAX)
-	return NOTMUCH_STATUS_TAG_TOO_LONG;
+	if (strlen (tag) > NOTMUCH_TAG_MAX)
+	    return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    private_status = _notmuch_message_remove_term (message, "tag", tag);
-    if (private_status) {
-	INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			private_status);
+	private_status = _notmuch_message_remove_term (message, "tag", tag);
+	if (private_status) {
+	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
+			    private_status);
+	}
+
+	if (! message->frozen)
+	    _notmuch_message_sync (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
-
-    if (! message->frozen)
-	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
