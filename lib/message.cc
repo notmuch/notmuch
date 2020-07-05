@@ -1156,7 +1156,12 @@ notmuch_message_get_filenames (notmuch_message_t *message)
 int
 notmuch_message_count_files (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return -1;
+    }
 
     return _notmuch_string_list_length (message->filename_list);
 }

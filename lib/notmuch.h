@@ -1412,7 +1412,8 @@ notmuch_message_get_replies (notmuch_message_t *message);
 
 /**
  * Get the total number of files associated with a message.
- * @returns Non-negative integer
+ * @returns Non-negative integer for file count.
+ * @returns Negative integer for error.
  * @since libnotmuch 5.0 (notmuch 0.25)
  */
 int
