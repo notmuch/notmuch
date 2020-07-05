@@ -1191,9 +1191,7 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	_notmuch_database_log (notmuch_message_get_database (message), "A Xapian exception occurred when reading date: %s\n",
-			       error.get_msg ().c_str ());
-	message->notmuch->exception_reported = true;
+	LOG_XAPIAN_EXCEPTION (message, error);
 	return 0;
     }
 
