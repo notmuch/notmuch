@@ -1206,7 +1206,12 @@ notmuch_message_get_tags (notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
 
-    _notmuch_message_ensure_metadata (message, message->tag_list);
+    try {
+	_notmuch_message_ensure_metadata (message, message->tag_list);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     tags = _notmuch_tags_create (message, message->tag_list);
     /* _notmuch_tags_create steals the reference to the tag_list, but
