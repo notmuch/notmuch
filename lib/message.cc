@@ -1602,8 +1602,9 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 
 	private_status = _notmuch_message_add_term (message, "tag", tag);
 	if (private_status) {
-	    INTERNAL_ERROR ("_notmuch_message_add_term return unexpected value: %d\n",
-			    private_status);
+	    return COERCE_STATUS (private_status,
+				  "_notmuch_message_remove_term return unexpected value: %d\n",
+				  private_status);
 	}
 
 	if (! message->frozen)
@@ -1636,8 +1637,9 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 
 	private_status = _notmuch_message_remove_term (message, "tag", tag);
 	if (private_status) {
-	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			    private_status);
+	    return COERCE_STATUS (private_status,
+				  "_notmuch_message_remove_term return unexpected value: %d\n",
+				  private_status);
 	}
 
 	if (! message->frozen)
