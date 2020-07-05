@@ -486,5 +486,22 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle counting files from closed database"
+test_subtest_known_broken
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        int result;
+        result = notmuch_message_count_files (message);
+        printf("%d\n%d\n", message != NULL, result < 0);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_done
