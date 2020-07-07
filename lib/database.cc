@@ -1281,11 +1281,7 @@ notmuch_database_compact (const char *path,
 
     try {
 	NotmuchCompactor compactor (status_cb, closure);
-
-	compactor.set_renumber (false);
-	compactor.add_source (xapian_path);
-	compactor.set_destdir (compact_xapian_path);
-	compactor.compact ();
+	notmuch->xapian_db->compact (compact_xapian_path, Xapian::DBCOMPACT_NO_RENUMBER, 0, compactor);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg ().c_str ());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
