@@ -385,8 +385,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	Xapian::FieldProcessor *fp;
 
 	if (STRNCMP_LITERAL (prefix->name, "date") == 0)
-	    fp = (new DateFieldProcessor ())->release ();
-	else if (STRNCMP_LITERAL (prefix->name, "query") == 0)
+	    fp = (new DateFieldProcessor(NOTMUCH_VALUE_TIMESTAMP))->release ();
+	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else if (STRNCMP_LITERAL (prefix->name, "thread") == 0)
 	    fp = (new ThreadFieldProcessor (*notmuch->query_parser, notmuch))->release ();
@@ -1036,17 +1036,16 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
-	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
-	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
-	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
-
+	notmuch->value_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+	notmuch->date_range_processor = new ParseTimeRangeProcessor (NOTMUCH_VALUE_TIMESTAMP, "date:");
+	notmuch->last_mod_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
 	notmuch->query_parser->set_stemmer (Xapian::Stem ("english"));
 	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
-	notmuch->query_parser->add_valuerangeprocessor (notmuch->value_range_processor);
-	notmuch->query_parser->add_valuerangeprocessor (notmuch->date_range_processor);
-	notmuch->query_parser->add_valuerangeprocessor (notmuch->last_mod_range_processor);
+	notmuch->query_parser->add_rangeprocessor (notmuch->value_range_processor);
+	notmuch->query_parser->add_rangeprocessor (notmuch->date_range_processor);
+	notmuch->query_parser->add_rangeprocessor (notmuch->last_mod_range_processor);
 
 	for (i = 0; i < ARRAY_SIZE (prefix_table); i++) {
 	    const prefix_t *prefix = &prefix_table[i];
@@ -1401,8 +1400,8 @@ handle_sigalrm (unused (int signal))
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *notmuch,
-			  void (*progress_notify)(void *closure,
-						  double progress),
+			  void (*progress_notify) (void *closure,
+						   double progress),
 			  void *closure)
 {
     void *local = talloc_new (NULL);

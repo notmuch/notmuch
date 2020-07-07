@@ -218,9 +218,9 @@ struct _notmuch_database {
     unsigned long view;
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
-    Xapian::ValueRangeProcessor *value_range_processor;
-    Xapian::ValueRangeProcessor *date_range_processor;
-    Xapian::ValueRangeProcessor *last_mod_range_processor;
+    Xapian::RangeProcessor *value_range_processor;
+    Xapian::RangeProcessor *date_range_processor;
+    Xapian::RangeProcessor *last_mod_range_processor;
 
     /* XXX it's slightly gross to use two parallel string->string maps
      * here, but at least they are small */
