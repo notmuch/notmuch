@@ -48,7 +48,7 @@ case $PWD in ( *["$IFS"]* )
 esac
 
 subdirs="util compat lib parse-time-string completion doc emacs"
-subdirs="${subdirs} performance-test test test/test-databases"
+subdirs="${subdirs} performance-test test"
 subdirs="${subdirs} bindings"
 
 # For a non-srcdir configure invocation (such as ../configure), create
