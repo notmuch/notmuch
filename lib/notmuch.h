@@ -1635,8 +1635,10 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
  *
- * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
- *	mode so message cannot be modified.
+ * @retval #NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *	read-only mode so message cannot be modified.
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION: an execption was thrown
+ *      accessing the database.
  */
 notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);

@@ -2071,16 +2071,20 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     status = _notmuch_database_ensure_writable (message->notmuch);
     if (status)
 	return status;
+    tags = notmuch_message_get_tags (message);
+    if (! tags)
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 
-    for (tags = notmuch_message_get_tags (message);
+    for (;
 	 notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 
 	private_status = _notmuch_message_remove_term (message, "tag", tag);
 	if (private_status) {
-	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			    private_status);
+	    return COERCE_STATUS (private_status,
+				   "_notmuch_message_remove_term return unexpected value: %d\n",
+				   private_status);
 	}
     }
 
