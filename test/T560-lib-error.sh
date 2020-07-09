@@ -661,4 +661,21 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle reindexing message with closed db"
+test_subtest_known_broken
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_status_t status;
+        status = notmuch_message_reindex (message, NULL);
+        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
