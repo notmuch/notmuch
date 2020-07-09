@@ -598,4 +598,36 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle freezing message with closed db"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_status_t status;
+        status = notmuch_message_freeze (message);
+        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Handle thawing message with closed db"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_status_t status;
+        status = notmuch_message_thaw (message);
+        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
