@@ -1717,7 +1717,7 @@ _filename_is_in_maildir (const char *filename)
     return NULL;
 }
 
-static void
+static notmuch_status_t
 _ensure_maildir_flags (notmuch_message_t *message, bool force)
 {
     const char *flags;
@@ -1732,9 +1732,10 @@ _ensure_maildir_flags (notmuch_message_t *message, bool force)
 	    message->maildir_flags = NULL;
 	}
     }
-    /* n_m_get_filenames returns NULL for errors, which terminates the
-     * loop */
-    for (filenames = notmuch_message_get_filenames (message);
+    filenames = notmuch_message_get_filenames (message);
+    if (! filenames)
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    for (;
 	 notmuch_filenames_valid (filenames);
 	 notmuch_filenames_move_to_next (filenames)) {
 	filename = notmuch_filenames_get (filenames);
@@ -1760,13 +1761,37 @@ _ensure_maildir_flags (notmuch_message_t *message, bool force)
     }
     if (seen_maildir_info)
 	message->maildir_flags = combined_flags;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag)
 {
-    _ensure_maildir_flags (message, false);
-    return message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
+    notmuch_status_t status;
+    notmuch_bool_t ret;
+    status = notmuch_message_has_maildir_flag_st (message, flag, &ret);
+    if (status)
+	return FALSE;
+
+    return ret;
+}
+
+notmuch_status_t
+notmuch_message_has_maildir_flag_st (notmuch_message_t *message,
+				     char flag,
+				     notmuch_bool_t *is_set)
+{
+    notmuch_status_t status;
+    
+    if (! is_set)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    status = _ensure_maildir_flags (message, false);
+    if (status)
+	return status;
+    
+    *is_set =  message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
@@ -1775,7 +1800,9 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     notmuch_status_t status;
     unsigned i;
 
-    _ensure_maildir_flags (message, true);
+    status = _ensure_maildir_flags (message, true);
+    if (status)
+	return status;
     /* If none of the filenames have any maildir info field (not even
      * an empty info with no flags set) then there's no information to
      * go on, so do nothing. */

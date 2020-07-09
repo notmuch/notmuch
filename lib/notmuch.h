@@ -1680,9 +1680,31 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * return TRUE if any filename of 'message' has maildir flag 'flag',
  * FALSE otherwise.
  *
+ * Deprecated wrapper for notmuch_message_has_maildir_flag_st
+ *
+ * @returns FALSE in case of error
+ * @deprecated libnotmuch 5.3 (notmuch 0.31)
  */
+NOTMUCH_DEPRECATED(5, 3)
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag);
+
+/**
+ * check message for maildir flag
+ *
+ * @param [in,out]	message message to check
+ * @param [in] flag	flag to check for
+ * @param [out] is_set  pointer to boolean
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS
+ * @retval #NOTMUCH_STATUS_NULL_POINTER is_set is NULL
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION Accessing the database
+ * triggered an exception.
+ */
+notmuch_status_t
+notmuch_message_has_maildir_flag_st (notmuch_message_t *message,
+				     char flag,
+				     notmuch_bool_t *is_set);
 
 /**
  * Rename message filename(s) to encode tags as maildir flags.
