@@ -1732,7 +1732,8 @@ _ensure_maildir_flags (notmuch_message_t *message, bool force)
 	    message->maildir_flags = NULL;
 	}
     }
-
+    /* n_m_get_filenames returns NULL for errors, which terminates the
+     * loop */
     for (filenames = notmuch_message_get_filenames (message);
 	 notmuch_filenames_valid (filenames);
 	 notmuch_filenames_move_to_next (filenames)) {

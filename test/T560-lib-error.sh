@@ -533,4 +533,20 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle read maildir flag with closed database"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_bool_t is_set = -1;
+        is_set = notmuch_message_has_maildir_flag (message, 'S');
+        printf("%d\n%d\n", message != NULL, is_set == FALSE || is_set == TRUE);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
