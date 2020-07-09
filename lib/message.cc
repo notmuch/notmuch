@@ -2205,8 +2205,10 @@ notmuch_message_reindex (notmuch_message_t *message,
     /* Save in case we need to delete message */
     orig_thread_id = notmuch_message_get_thread_id (message);
     if (! orig_thread_id) {
-	/* XXX TODO: make up new error return? */
-	INTERNAL_ERROR ("message without thread-id");
+	/* the following is correct as long as there is only one reason
+	   n_m_get_thread_id returns NULL
+	*/
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
     /* strdup it because the metadata may be invalidated */

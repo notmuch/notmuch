@@ -1378,8 +1378,8 @@ notmuch_message_get_message_id (notmuch_message_t *message);
  * notmuch_message_destroy on 'message' or until a query from which it
  * derived is destroyed).
  *
- * This function will not return NULL since Notmuch ensures that every
- * message belongs to a single thread.
+ * This function will return NULL if triggers an unhandled Xapian
+ * exception.
  */
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message);
