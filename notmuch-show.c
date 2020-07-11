@@ -80,6 +80,18 @@ _get_disposition (GMimeObject *meta)
     return g_mime_content_disposition_get_disposition (disposition);
 }
 
+static bool _get_message_flag (notmuch_message_t *message, notmuch_message_flag_t flag) {
+    notmuch_bool_t is_set;
+    notmuch_status_t status;
+
+    status = notmuch_message_get_flag_st (message, flag, &is_set);
+
+    if (print_status_message ("notmuch show", message, status))
+	INTERNAL_ERROR("unexpected error getting message flag\n");
+
+    return is_set;
+}
+
 /* Emit a sequence of key/value pairs for the metadata of message.
  * The caller should begin a map before calling this. */
 static void
@@ -97,10 +109,10 @@ format_message_sprinter (sprinter_t *sp, notmuch_message_t *message)
     sp->string (sp, notmuch_message_get_message_id (message));
 
     sp->map_key (sp, "match");
-    sp->boolean (sp, notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH));
+    sp->boolean (sp, _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH));
 
     sp->map_key (sp, "excluded");
-    sp->boolean (sp, notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED));
+    sp->boolean (sp, _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED));
 
     sp->map_key (sp, "filename");
     if (notmuch_format_version >= 3) {
@@ -507,8 +519,8 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 			      part_type,
 			      notmuch_message_get_message_id (message),
 			      indent,
-			      notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? 1 : 0,
-			      notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
+			      _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? 1 : 0,
+			      _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 			      notmuch_message_get_filename (message));
     } else {
 	char *content_string;
@@ -1002,8 +1014,8 @@ show_messages (void *ctx,
 
 	message = notmuch_messages_get (messages);
 
-	match = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
-	excluded = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
+	match = _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
+	excluded = _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
 
 	next_indent = indent;
 
@@ -1143,7 +1155,7 @@ do_show_unthreaded (void *ctx,
 	message = notmuch_messages_get (messages);
 
 	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, TRUE);
-	excluded = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
+	excluded = _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
 
 	if (!excluded || !params->omit_excluded) {
 	    status = show_message (ctx, format, sp, message, 0, params);
