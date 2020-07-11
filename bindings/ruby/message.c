@@ -137,13 +137,18 @@ VALUE
 notmuch_rb_message_get_flag (VALUE self, VALUE flagv)
 {
     notmuch_message_t *message;
+    notmuch_bool_t is_set;
+    notmuch_status_t status;
 
     Data_Get_Notmuch_Message (self, message);
 
     if (!FIXNUM_P (flagv))
 	rb_raise (rb_eTypeError, "Flag not a Fixnum");
 
-    return notmuch_message_get_flag (message, FIX2INT (flagv)) ? Qtrue : Qfalse;
+    status = notmuch_message_get_flag_st (message, FIX2INT (flagv), &is_set);
+    notmuch_rb_status_raise (status);
+
+    return is_set ? Qtrue : Qfalse;
 }
 
 /*
