@@ -40,7 +40,7 @@ INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 .PHONY: install-man build-man apidocs install-apidocs
 
 %.gz: %
-	rm -f $@ && gzip --stdout $^ > $@
+	rm -f $@ && gzip --no-name --stdout $^ > $@
 
 ifeq ($(WITH_EMACS),1)
 $(DOCBUILDDIR)/.roff.stamp sphinx-html sphinx-texinfo: docstring.stamp
