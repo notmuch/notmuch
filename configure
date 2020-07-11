@@ -801,6 +801,7 @@ if [ $have_python3 -eq 1 ]; then
     if "$python" -c 'import cffi,setuptools; cffi.FFI().verify()' >/dev/null 2>&1; then
         printf "Yes.\n"
         have_python3_cffi=1
+        WITH_PYTHON_DOCS=1
     else
         printf "No (will not install CFFI-based python bindings).\n"
     fi
@@ -1553,6 +1554,9 @@ cat > sphinx.config <<EOF
 EOF
 if [ $WITH_EMACS = "1" ]; then
     printf "tags.add('WITH_EMACS')\n" >> sphinx.config
+fi
+if [ $WITH_PYTHON_DOCS = "1" ]; then
+    printf "tags.add('WITH_PYTHON')\n" >> sphinx.config
 fi
 printf "rsti_dir = '%s'\n" $(realpath emacs) >> sphinx.config
 

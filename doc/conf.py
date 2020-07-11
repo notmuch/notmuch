@@ -4,6 +4,8 @@
 import sys
 import os
 
+extensions = [ 'sphinx.ext.autodoc' ]
+
 # The suffix of source filenames.
 source_suffix = '.rst'
 
@@ -21,6 +23,9 @@ for pathdir in ['.', '..']:
     if os.path.exists(version_file):
         with open(version_file,'r') as infile:
             version=infile.read().replace('\n','')
+
+# for autodoc
+sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'notmuch2'))
 
 # read generated config
 for pathdir in ['.', '..']:
@@ -49,6 +54,9 @@ else:
     # don't build the notmuch-emacs docs, as they need emacs to generate
     # the docstring include files
     exclude_patterns.append('notmuch-emacs.rst')
+
+if not tags.has('WITH_PYTHON'):
+    exclude_patterns.append('python-bindings.rst')
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
