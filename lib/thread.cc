@@ -351,14 +351,16 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
 /* Add a message to this thread which is known to match the original
  * search specification. The 'sort' parameter controls whether the
  * oldest or newest matching subject is applied to the thread as a
- * whole. */
-static void
+ * whole. Returns 0 on success.
+ */
+static int
 _thread_add_matched_message (notmuch_thread_t *thread,
 			     notmuch_message_t *message,
 			     notmuch_sort_t sort)
 {
     time_t date;
     notmuch_message_t *hashed_message;
+    notmuch_bool_t is_set;
 
     date = notmuch_message_get_date (message);
 
@@ -375,7 +377,9 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	    _thread_set_subject_from_message (thread, message);
     }
 
-    if (! notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED))
+    if (notmuch_message_get_flag_st (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, &is_set))
+	return -1;
+    if (! is_set)
 	thread->matched_messages++;
 
     if (g_hash_table_lookup_extended (thread->message_hash,
@@ -386,6 +390,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
     }
 
     _thread_add_matched_author (thread, _notmuch_message_get_author (hashed_message));
+    return 0;
 }
 
 static bool
@@ -625,7 +630,10 @@ _notmuch_thread_create (void *ctx,
 
 	if ( _notmuch_doc_id_set_contains (match_set, doc_id)) {
 	    _notmuch_doc_id_set_remove (match_set, doc_id);
-	    _thread_add_matched_message (thread, message, sort);
+	    if (_thread_add_matched_message (thread, message, sort)) {
+		thread = NULL;
+		goto DONE;
+	    }
 	}
 
 	_notmuch_message_close (message);
