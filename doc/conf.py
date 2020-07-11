@@ -22,6 +22,13 @@ for pathdir in ['.', '..']:
         with open(version_file,'r') as infile:
             version=infile.read().replace('\n','')
 
+# read generated config
+for pathdir in ['.', '..']:
+    conf_file = os.path.join(location,pathdir,'sphinx.config')
+    if os.path.exists(conf_file):
+        with open(conf_file,'r') as infile:
+            exec(''.join(infile.readlines()))
+
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -29,12 +36,10 @@ release = version
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
-if os.environ.get('WITH_EMACS') == '1':
+if tags.has('WITH_EMACS'):
     # Hacky reimplementation of include to workaround limitations of
     # sphinx-doc
     lines = ['.. include:: /../emacs/rstdoc.rsti\n\n'] # in the source tree
-    rsti_dir = os.environ.get('RSTI_DIR')
-    # the other files are from the build tree
     for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti'):
         lines.extend(open(rsti_dir+'/'+file))
     rst_epilog = ''.join(lines)
