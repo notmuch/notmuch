@@ -477,7 +477,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
     notmuch_message_t *message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
-    bool is_ghost = false, is_new = false;
+    notmuch_bool_t is_ghost = false, is_new = false;
     notmuch_indexopts_t *def_indexopts = NULL;
 
     const char *date;
@@ -525,7 +525,9 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	    is_new = true;
 	    break;
 	case NOTMUCH_PRIVATE_STATUS_SUCCESS:
-	    is_ghost = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_GHOST);
+	    ret = notmuch_message_get_flag_st (message, NOTMUCH_MESSAGE_FLAG_GHOST, &is_ghost);
+	    if (ret)
+		goto DONE;
 	    is_new = false;
 	    break;
 	default:
