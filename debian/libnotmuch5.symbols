@@ -129,8 +129,6 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  (c++)"typeinfo for Xapian::DatabaseError@Base" 0.24~rc0
  (c++)"typeinfo for Xapian::DatabaseModifiedError@Base" 0.24~rc0
  (c++|optional=present with Xapian 1.4)"typeinfo for Xapian::QueryParserError@Base" 0.23~rc0
- (c++)"typeinfo for Xapian::QueryParser::add_valuerangeprocessor(Xapian::ValueRangeProcessor*)::ShimRangeProcessor@Base" 0.25~rc0
- (c++)"typeinfo name for Xapian::QueryParser::add_valuerangeprocessor(Xapian::ValueRangeProcessor*)::ShimRangeProcessor@Base" 0.25~rc0
  (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::DocNotFoundError@Base" 0.6.1
