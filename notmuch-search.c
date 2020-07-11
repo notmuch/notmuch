@@ -90,9 +90,13 @@ get_thread_query (notmuch_thread_t *thread,
 	 notmuch_messages_move_to_next (messages)) {
 	notmuch_message_t *message = notmuch_messages_get (messages);
 	const char *mid = notmuch_message_get_message_id (message);
+	notmuch_bool_t is_set;
+	char **buf;
+
+	if (notmuch_message_get_flag_st (message, NOTMUCH_MESSAGE_FLAG_MATCH, &is_set))
+	    return -1;
 	/* Determine which query buffer to extend */
-	char **buf = notmuch_message_get_flag (
-	    message, NOTMUCH_MESSAGE_FLAG_MATCH) ? matched_out : unmatched_out;
+	buf = is_set ? matched_out : unmatched_out;
 	/* Add this message's id: query.  Since "id" is an exclusive
 	 * prefix, it is implicitly 'or'd together, so we only need to
 	 * join queries with a space. */
