@@ -388,8 +388,11 @@ add_file (notmuch_database_t *notmuch, const char *filename,
 	    notmuch_message_maildir_flags_to_tags (message);
 
 	for (tag = state->new_tags; *tag != NULL; tag++) {
-	    if (strcmp ("unread", *tag) != 0 ||
-		! notmuch_message_has_maildir_flag (message, 'S')) {
+	    notmuch_bool_t is_set;
+	    /* Currently all errors from has_maildir_flag are fatal */
+	    if ((status = notmuch_message_has_maildir_flag_st (message, 'S', &is_set)))
+		goto DONE;
+	    if (strcmp ("unread", *tag) != 0 || ! is_set) {
 		notmuch_message_add_tag (message, *tag);
 	    }
 	}
