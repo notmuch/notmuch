@@ -58,6 +58,17 @@ typedef struct {
 #define DB_ACTION Xapian::DB_CREATE_OR_OPEN
 #endif
 
+#define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_database_t *notmuch,  const Xapian::Error error) {
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred at %s: %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
+}
+
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
  * We currently have three different types of documents (mail, ghost,
@@ -1360,7 +1371,13 @@ notmuch_database_get_version (notmuch_database_t *notmuch)
     const char *str;
     char *end;
 
-    version_string = notmuch->xapian_db->get_metadata ("version");
+    try {
+	version_string = notmuch->xapian_db->get_metadata ("version");
+    } catch (const Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (notmuch, error);
+	return 0;
+    }
+
     if (version_string.empty ())
 	return 0;
 

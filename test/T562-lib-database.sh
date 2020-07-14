@@ -15,7 +15,7 @@ cat <<EOF > c_head
 int main (int argc, char** argv)
 {
    notmuch_database_t *db;
-   notmuch_status_t stat;
+   notmuch_status_t stat = NOTMUCH_STATUS_SUCCESS;
    char *msg = NULL;
 
    stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
@@ -68,19 +68,20 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get version with closed db"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         unsigned int version;
         EXPECT0(notmuch_database_close (db));
         version = notmuch_database_get_version (db);
         printf ("%u\n", version);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
 0
 == stderr ==
+A Xapian exception occurred at lib/database.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

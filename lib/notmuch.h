@@ -431,6 +431,8 @@ notmuch_database_get_path (notmuch_database_t *database);
 
 /**
  * Return the database format version of the given database.
+ *
+ * @retval 0 on error
  */
 unsigned int
 notmuch_database_get_version (notmuch_database_t *database);
@@ -444,6 +446,7 @@ notmuch_database_get_version (notmuch_database_t *database);
  * fail with NOTMUCH_STATUS_UPGRADE_REQUIRED.  This always returns
  * FALSE for a read-only database because there's no way to upgrade a
  * read-only database.
+ *
  */
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *database);
