@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-test_description="error reporting for library"
+test_description="notmuch_database_* API"
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
@@ -63,6 +63,23 @@ EOF
 cat <<EOF > EXPECTED
 == stdout ==
 MAIL_DIR
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get version with closed db"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        unsigned int version;
+        EXPECT0(notmuch_database_close (db));
+        version = notmuch_database_get_version (db);
+        printf ("%u\n", version);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+0
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
