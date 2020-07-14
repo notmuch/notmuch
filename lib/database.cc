@@ -1076,6 +1076,10 @@ notmuch_database_open_verbose (const char *path,
 	*database = notmuch;
     else
 	talloc_free (notmuch);
+
+    if (notmuch)
+	notmuch->open = true;
+
     return status;
 }
 
@@ -1087,7 +1091,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
     /* Many Xapian objects (and thus notmuch objects) hold references to
      * the database, so merely deleting the database may not suffice to
      * close it.  Thus, we explicitly close it here. */
-    if (notmuch->xapian_db != NULL) {
+    if (notmuch->open) {
 	try {
 	    /* If there's an outstanding transaction, it's unclear if
 	     * closing the Xapian database commits everything up to
@@ -1110,20 +1114,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	    }
 	}
     }
-
-    delete notmuch->term_gen;
-    notmuch->term_gen = NULL;
-    delete notmuch->query_parser;
-    notmuch->query_parser = NULL;
-    delete notmuch->xapian_db;
-    notmuch->xapian_db = NULL;
-    delete notmuch->value_range_processor;
-    notmuch->value_range_processor = NULL;
-    delete notmuch->date_range_processor;
-    notmuch->date_range_processor = NULL;
-    delete notmuch->last_mod_range_processor;
-    notmuch->last_mod_range_processor = NULL;
-
+    notmuch->open = false;
     return status;
 }
 
@@ -1336,6 +1327,20 @@ notmuch_database_destroy (notmuch_database_t *notmuch)
     notmuch_status_t status;
 
     status = notmuch_database_close (notmuch);
+
+    delete notmuch->term_gen;
+    notmuch->term_gen = NULL;
+    delete notmuch->query_parser;
+    notmuch->query_parser = NULL;
+    delete notmuch->xapian_db;
+    notmuch->xapian_db = NULL;
+    delete notmuch->value_range_processor;
+    notmuch->value_range_processor = NULL;
+    delete notmuch->date_range_processor;
+    notmuch->date_range_processor = NULL;
+    delete notmuch->last_mod_range_processor;
+    notmuch->last_mod_range_processor = NULL;
+
     talloc_free (notmuch);
 
     return status;

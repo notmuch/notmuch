@@ -194,7 +194,7 @@ struct _notmuch_database {
     /* true if changes have been made in this atomic section */
     bool atomic_dirty;
     Xapian::Database *xapian_db;
-
+    bool open;
     /* Bit mask of features used by this database.  This is a
      * bitwise-OR of NOTMUCH_FEATURE_* values (above). */
     enum _notmuch_features features;
