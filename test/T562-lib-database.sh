@@ -131,4 +131,24 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "check a closed db for upgrade"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_bool_t ret;
+
+        EXPECT0(notmuch_database_close (db));
+        ret = notmuch_database_needs_upgrade (db);
+        printf ("%d\n", ret == FALSE);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred at lib/database.cc:XXX: Database has been closed
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
