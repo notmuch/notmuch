@@ -1395,9 +1395,17 @@ notmuch_database_get_version (notmuch_database_t *notmuch)
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
 {
-    return notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
-	   ((NOTMUCH_FEATURES_CURRENT & ~notmuch->features) ||
-	    (notmuch_database_get_version (notmuch) < NOTMUCH_DATABASE_VERSION));
+    unsigned int version;
+
+    if (notmuch->mode != NOTMUCH_DATABASE_MODE_READ_WRITE)
+	return FALSE;
+
+    if (NOTMUCH_FEATURES_CURRENT & ~notmuch->features)
+	return TRUE;
+
+    version = notmuch_database_get_version (notmuch);
+
+    return (version > 0 && version < NOTMUCH_DATABASE_VERSION);
 }
 
 static volatile sig_atomic_t do_progress_notify = 0;

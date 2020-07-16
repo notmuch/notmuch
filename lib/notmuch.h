@@ -447,6 +447,8 @@ notmuch_database_get_version (notmuch_database_t *database);
  * FALSE for a read-only database because there's no way to upgrade a
  * read-only database.
  *
+ * Also returns FALSE if an error occurs accessing the database.
+ *
  */
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *database);
