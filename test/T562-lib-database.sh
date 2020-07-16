@@ -202,4 +202,22 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get revision for a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        const char *uuid;
+        unsigned long rev;
+
+        EXPECT0(notmuch_database_close (db));
+        rev = notmuch_database_get_revision (db, &uuid);
+        printf ("%d\n", rev, uuid);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+53
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
