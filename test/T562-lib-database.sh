@@ -85,4 +85,19 @@ A Xapian exception occurred at lib/database.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "re-close a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_close (db);
+        printf ("%d\n", stat);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
