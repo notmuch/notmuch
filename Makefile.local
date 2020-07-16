@@ -64,7 +64,7 @@ update-versions:
 # are part of the release and need to take the version from the
 # version file).
 .PHONY: release
-release: verify-source-tree-and-version
+release: verify-source-tree-and-version sphinx-html
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
@@ -80,6 +80,7 @@ ifeq ($(REALLY_UPLOAD),yes)
 	git push origin $(VERSION) $(DEB_TAG) release pristine-tar
 	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
+	rsync --verbose --delete --recursive doc/_build/html/ $(RELEASE_HOST):$(DOC_DIR)
 endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 

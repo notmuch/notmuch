@@ -39,6 +39,7 @@ DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
+DOC_DIR=/srv/notmuchmail.org/www/doc/latest
 RELEASE_URL=https://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.xz
 ELPA_FILE:=$(PACKAGE)-emacs-$(ELPA_VERSION).tar
