@@ -108,6 +108,7 @@ PREFIX=/usr/local
 LIBDIR=
 WITH_DOCS=1
 WITH_API_DOCS=1
+WITH_PYTHON_DOCS=1
 WITH_EMACS=1
 WITH_DESKTOP=1
 WITH_BASH=1
@@ -803,6 +804,7 @@ if [ $have_python3 -eq 1 ]; then
         have_python3_cffi=1
         WITH_PYTHON_DOCS=1
     else
+        WITH_PYTHON_DOCS=0
         printf "No (will not install CFFI-based python bindings).\n"
     fi
     rm -rf __pycache__  # cffi.FFI().verify() uses this space
