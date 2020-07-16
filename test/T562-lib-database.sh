@@ -167,4 +167,39 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "begin atomic section for a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_begin_atomic (db);
+        printf ("%d\n", stat == NOTMUCH_STATUS_SUCCESS ||
+                        stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = NOTMUCH_STATUS_SUCCESS;
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "end atomic section for a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        EXPECT0(notmuch_database_close (db));
+        EXPECT0(notmuch_database_begin_atomic (db));
+        stat = notmuch_database_end_atomic (db);
+        printf ("%d\n", stat == NOTMUCH_STATUS_SUCCESS ||
+                        stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = NOTMUCH_STATUS_SUCCESS;
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
