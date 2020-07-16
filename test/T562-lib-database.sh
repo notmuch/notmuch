@@ -100,4 +100,35 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "destroy a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        unsigned int version;
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_destroy (db);
+        printf ("%d\n", stat);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "destroy an open db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        unsigned int version;
+        stat = notmuch_database_destroy (db);
+        printf ("%d\n", stat);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
