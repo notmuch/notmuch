@@ -12,6 +12,7 @@ cat <<EOF > c_head
 #include <stdio.h>
 #include <notmuch.h>
 #include <notmuch-test.h>
+#include <talloc.h>
 int main (int argc, char** argv)
 {
    notmuch_database_t *db;
@@ -234,6 +235,25 @@ cat <<EOF > EXPECTED
 1
 == stderr ==
 A Xapian exception occurred creating a directory: Database has been closed.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+# XXX TODO: test with relative path
+test_begin_subtest "index file with a closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_message_t *msg;
+        const char *path = talloc_asprintf(db, "%s/01:2,", argv[1]);
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_index_file (db, path, NULL, &msg);
+        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred finding message: Database has been closed.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
