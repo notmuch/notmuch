@@ -238,7 +238,6 @@ A Xapian exception occurred creating a directory: Database has been closed.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-# XXX TODO: test with relative path
 test_begin_subtest "index file with a closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
@@ -254,6 +253,23 @@ cat <<EOF > EXPECTED
 1
 == stderr ==
 A Xapian exception occurred finding message: Database has been closed.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+generate_message '[filename]=relative_path'
+test_begin_subtest "index file (relative path)"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_message_t *msg;
+        stat = notmuch_database_index_file (db, "relative_path", NULL, &msg);
+        printf ("%d\n", stat == NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
