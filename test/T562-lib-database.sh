@@ -372,4 +372,21 @@ Error: A Xapian exception occurred setting metadata: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get indexopts from closed database"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_indexopts_t *result;
+        EXPECT0(notmuch_database_close (db));
+        result = notmuch_database_get_default_indexopts (db);
+        printf("%d\n",  result == NULL);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
