@@ -321,4 +321,22 @@ A Xapian exception occurred finding/creating a directory: Database has been clos
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Handle getting tags from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_tags_t *result;
+        EXPECT0(notmuch_database_close (db));
+        result = notmuch_database_get_all_tags (db);
+        printf("%d\n",  result == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred getting tags: Database has been closed.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
