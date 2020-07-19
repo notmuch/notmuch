@@ -94,10 +94,10 @@ find_directory_document (notmuch_database_t *notmuch,
  * NOTMUCH_STATUS_SUCCESS and this returns NULL.
  */
 notmuch_directory_t *
-_notmuch_directory_create (notmuch_database_t *notmuch,
-			   const char *path,
-			   notmuch_find_flags_t flags,
-			   notmuch_status_t *status_ret)
+_notmuch_directory_find_or_create (notmuch_database_t *notmuch,
+				   const char *path,
+				   notmuch_find_flags_t flags,
+				   notmuch_status_t *status_ret)
 {
     Xapian::WritableDatabase *db;
     notmuch_directory_t *directory;
@@ -187,7 +187,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    directory->doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
-			       "A Xapian exception occurred creating a directory: %s.\n",
+			       "A Xapian exception occurred finding/creating a directory: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	notmuch_directory_destroy (directory);

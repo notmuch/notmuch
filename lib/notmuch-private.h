@@ -251,10 +251,10 @@ _notmuch_database_filename_to_direntry (void *ctx,
 /* directory.cc */
 
 notmuch_directory_t *
-_notmuch_directory_create (notmuch_database_t *notmuch,
-			   const char *path,
-			   notmuch_find_flags_t flags,
-			   notmuch_status_t *status_ret);
+_notmuch_directory_find_or_create (notmuch_database_t *notmuch,
+				   const char *path,
+				   notmuch_find_flags_t flags,
+				   notmuch_status_t *status_ret);
 
 unsigned int
 _notmuch_directory_get_document_id (notmuch_directory_t *directory);

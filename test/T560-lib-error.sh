@@ -275,7 +275,7 @@ sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-A Xapian exception occurred creating a directory
+A Xapian exception occurred finding/creating a directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database

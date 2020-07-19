@@ -234,7 +234,7 @@ cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred creating a directory: Database has been closed.
+A Xapian exception occurred finding/creating a directory: Database has been closed.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -289,7 +289,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "remove message file with a closed db"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         EXPECT0(notmuch_database_close (db));

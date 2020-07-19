@@ -1605,8 +1605,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		mtime = Xapian::sortable_unserialise (
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
 
-		directory = _notmuch_directory_create (notmuch, term.c_str () + 10,
-						       NOTMUCH_FIND_CREATE, &status);
+		directory = _notmuch_directory_find_or_create (notmuch, term.c_str () + 10,
+							       NOTMUCH_FIND_CREATE, &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
 
@@ -1878,7 +1878,7 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    directory = _notmuch_directory_create (notmuch, path, flags, &status);
+    directory = _notmuch_directory_find_or_create (notmuch, path, flags, &status);
     if (status || ! directory) {
 	*directory_id = -1;
 	return status;
@@ -1988,8 +1988,8 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
     *directory = NULL;
 
     try {
-	*directory = _notmuch_directory_create (notmuch, path,
-						NOTMUCH_FIND_LOOKUP, &status);
+	*directory = _notmuch_directory_find_or_create (notmuch, path,
+							NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting directory: %s.\n",
 			       error.get_msg ().c_str ());
