@@ -258,7 +258,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 generate_message '[filename]=relative_path'
 test_begin_subtest "index file (relative path)"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_message_t *msg;
@@ -272,5 +271,22 @@ cat <<EOF > EXPECTED
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "index file (absolute path outside mail root)"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_message_t *msg;
+        stat = notmuch_database_index_file (db, "/dev/zero", NULL, &msg);
+        printf ("%d\n", stat == NOTMUCH_STATUS_FILE_ERROR);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+Error opening /dev/zero: path outside mail root
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_done
