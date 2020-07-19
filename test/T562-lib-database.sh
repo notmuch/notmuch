@@ -288,5 +288,21 @@ Error opening /dev/zero: path outside mail root
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "remove message file with a closed db"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_remove_message (db, "01:2,");
+        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred finding/creating a directory: Database has been closed.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done
