@@ -355,4 +355,22 @@ cat <<EOF > EXPECTED
 Error: A Xapian exception occurred getting metadata: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "set config in closed database"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_database_set_config (db, "foo", "bar");
+        printf("%d\n",  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+Error: A Xapian exception occurred setting metadata: Database has been closed
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
