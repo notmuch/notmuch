@@ -60,7 +60,7 @@ notmuch_database_set_config (notmuch_database_t *notmuch,
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred setting metadata: %s\n",
 			       error.get_msg ().c_str ());
     }
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 static notmuch_status_t
