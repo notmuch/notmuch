@@ -185,4 +185,50 @@ Query string was: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "count messages on closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+        unsigned int count;
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_query_count_messages (query, &count);
+
+        printf("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred performing query: Database has been closed
+Query string was: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "count threads on closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+        unsigned int count;
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_query_count_threads (query, &count);
+
+        printf("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred performing query: Database has been closed
+Query string was: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
