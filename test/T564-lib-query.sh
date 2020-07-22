@@ -120,4 +120,23 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "add tag_exclude on closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        stat = notmuch_query_add_tag_exclude (query, "spam");
+        printf("%d\n", stat == NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
