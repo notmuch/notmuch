@@ -345,6 +345,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         const char *id2;
         id2=notmuch_message_get_message_id (message);
         printf("%d\n%d\n", message != NULL, id2==NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -352,6 +353,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -361,6 +363,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         const char *id2;
         id2=notmuch_message_get_thread_id (message);
         printf("%d\n%d\n", message != NULL, id2==NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -368,6 +371,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -377,6 +381,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         const char *from;
         from=notmuch_message_get_header (message, "from");
         printf("%s\n%d\n", id, from == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -384,6 +389,7 @@ cat <<EOF > EXPECTED
 1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -395,6 +401,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_messages_t *replies;
         replies = notmuch_message_get_replies (message);
         printf("%d\n%d\n", message != NULL, replies==NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -411,6 +418,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         const char *filename;
         filename = notmuch_message_get_filename (message);
         printf("%d\n%d\n", message != NULL, filename == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -418,6 +426,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -427,6 +436,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_filenames_t *filenames;
         filenames = notmuch_message_get_filenames (message);
         printf("%d\n%d\n", message != NULL, filenames == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -434,6 +444,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -443,6 +454,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_bool_t result;
         result = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_GHOST);
         printf("%d\n%d\n", message != NULL, result == FALSE);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -450,6 +462,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -459,6 +472,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         time_t result;
         result = notmuch_message_get_date (message);
         printf("%d\n%d\n", message != NULL, result == 0);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -466,6 +480,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -475,6 +490,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_tags_t *result;
         result = notmuch_message_get_tags (message);
         printf("%d\n%d\n", message != NULL, result == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -482,6 +498,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -491,6 +508,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         int result;
         result = notmuch_message_count_files (message);
         printf("%d\n%d\n", message != NULL, result < 0);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -498,15 +516,15 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle adding tag with closed database"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_add_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_add_tag (message, "boom");
+        printf("%d\n%d\n", message != NULL, stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -514,15 +532,15 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle removing tag with closed database"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_remove_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_remove_tag (message, "boom");
+        printf("%d\n%d\n", message != NULL, stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -530,6 +548,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -539,6 +558,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_bool_t is_set = -1;
         is_set = notmuch_message_has_maildir_flag (message, 'S');
         printf("%d\n%d\n", message != NULL, is_set == FALSE || is_set == TRUE);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
 cat <<EOF > EXPECTED
@@ -546,16 +566,16 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle checking maildir flag with closed db (new API)"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
         notmuch_bool_t out;
-        status = notmuch_message_has_maildir_flag_st (message, 'S', &out);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_has_maildir_flag_st (message, 'S', &out);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -563,15 +583,15 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle converting maildir flags to tags with closed db"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_maildir_flags_to_tags (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_maildir_flags_to_tags (message);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -579,15 +599,15 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle removing all tags with closed db"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_remove_all_tags (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_remove_all_tags (message);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -595,15 +615,15 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Handle freezing message with closed db"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_freeze (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_SUCCESS);
+        stat = notmuch_message_freeze (message);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -617,9 +637,8 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "Handle thawing message with closed db"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_thaw (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
+        stat = notmuch_message_thaw (message);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -664,9 +683,8 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "Handle reindexing message with closed db"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_status_t status;
-        status = notmuch_message_reindex (message, NULL);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        stat = notmuch_message_reindex (message, NULL);
+        printf("%d\n%d\n", message != NULL,  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -674,6 +692,7 @@ cat <<EOF > EXPECTED
 1
 1
 == stderr ==
+A Xapian exception occurred at lib/message.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

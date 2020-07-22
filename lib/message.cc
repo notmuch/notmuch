@@ -96,7 +96,7 @@ static void
 _log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error) {
     notmuch_database_t *notmuch = notmuch_message_get_database (message);
     _notmuch_database_log (notmuch,
-			   "A Xapian exception occurred %s retrieving %s : %s\n",
+			   "A Xapian exception occurred at %s: %s\n",
 			   where,
 			   error.get_msg ().c_str ());
     notmuch->exception_reported = true;
