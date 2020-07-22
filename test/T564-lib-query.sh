@@ -79,4 +79,24 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "set omit_excluded on closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_ALL);
+
+        printf("SUCCESS\n");
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+SUCCESS
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
