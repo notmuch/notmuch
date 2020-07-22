@@ -987,7 +987,11 @@ the configured default sort order."
     (if no-display
 	(set-buffer buffer)
       (switch-to-buffer buffer))
-    (notmuch-search-mode)
+    ;; avoid wiping out third party buffer-local variables in the case
+    ;; where we're just refreshing or changing the sort order of an
+    ;; existing search results buffer
+    (unless (eq major-mode 'notmuch-search-mode)
+      (notmuch-search-mode))
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
     (set 'notmuch-search-query-string query)
