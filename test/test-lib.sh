@@ -619,6 +619,11 @@ print(msg.as_string(False))
 ' "$@"
 }
 
+notmuch_exception_sanitize ()
+{
+    perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
+}
+
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
@@ -1093,7 +1098,7 @@ test_C () {
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
-    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr > OUTPUT
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr | notmuch_exception_sanitize > OUTPUT
 }
 
 make_shim () {
