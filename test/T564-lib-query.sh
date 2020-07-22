@@ -99,4 +99,25 @@ SUCCESS
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "roundtrip sort on closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+        notmuch_sort_t sort;
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
+        sort = notmuch_query_get_sort (query);
+        printf("%d\n", sort == NOTMUCH_SORT_UNSORTED);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
