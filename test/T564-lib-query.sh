@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-test_description="notmuch_database_* API"
+test_description="notmuch_query_* API"
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
@@ -54,6 +54,27 @@ cat <<EOF > EXPECTED
 == stdout ==
 id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "retrieve closed db from query"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_query_t *query;
+        const char *str = "id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+        notmuch_database_t *db2;
+
+        query = notmuch_query_create (db, str);
+        EXPECT0(notmuch_database_close (db));
+        db2 = notmuch_query_get_database (query);
+
+        printf("%d\n", db == db2);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
