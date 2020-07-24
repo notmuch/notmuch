@@ -60,4 +60,36 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get total messages with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        int count;
+        count = notmuch_thread_get_total_messages (thread);
+        printf("%d\n%d\n", thread != NULL, count);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+7
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get total files with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        int count;
+        count = notmuch_thread_get_total_files (thread);
+        printf("%d\n%d\n", thread != NULL, count);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+7
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
