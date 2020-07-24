@@ -198,4 +198,37 @@ yunaayketfm.fsf@aiko.keithp.com
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get authors from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        const char *authors;
+        authors = notmuch_thread_get_authors (thread);
+        printf("%d\n%s\n", thread != NULL, authors);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get subject from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        const char *subject;
+        subject = notmuch_thread_get_subject (thread);
+        printf("%d\n%s\n", thread != NULL, subject);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+[notmuch] Working with Maildir storage?
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_done
