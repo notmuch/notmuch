@@ -230,5 +230,37 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "oldest date from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        time_t stamp;
+        stamp = notmuch_thread_get_oldest_date (thread);
+        printf("%d\n%d\n", thread != NULL, stamp > 0);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "newest date from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        time_t stamp;
+        stamp = notmuch_thread_get_newest_date (thread);
+        printf("%d\n%d\n", thread != NULL, stamp > 0);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_done
