@@ -87,7 +87,6 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-# XXX TODO: test on a message from notmuch_thread_get_toplevel_messages
 # XXX this test only tests the trivial code path
 test_begin_subtest "Handle getting replies from closed database"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}

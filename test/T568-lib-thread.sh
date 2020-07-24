@@ -92,4 +92,84 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get top level messages with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_messages_t *messages;
+        messages = notmuch_thread_get_toplevel_messages (thread);
+        printf("%d\n%d\n", thread != NULL, messages != NULL);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "iterate over level messages with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+      notmuch_messages_t *messages;
+      for (messages = notmuch_thread_get_toplevel_messages (thread);
+           notmuch_messages_valid (messages);
+           notmuch_messages_move_to_next (messages)) {
+        notmuch_message_t *message = notmuch_messages_get (messages);
+        const char *mid = notmuch_message_get_message_id (message);
+        printf("%s\n", mid);
+      }
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+20091117190054.GU3165@dottiness.seas.harvard.edu
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "iterate over level messages with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+      notmuch_messages_t *messages;
+      for (messages = notmuch_thread_get_toplevel_messages (thread);
+           notmuch_messages_valid (messages);
+           notmuch_messages_move_to_next (messages)) {
+        notmuch_message_t *message = notmuch_messages_get (messages);
+        const char *mid = notmuch_message_get_message_id (message);
+        printf("%s\n", mid);
+      }
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+20091117190054.GU3165@dottiness.seas.harvard.edu
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "iterate over replies with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+      notmuch_messages_t *messages = notmuch_thread_get_toplevel_messages (thread);
+      notmuch_message_t *message = notmuch_messages_get (messages);
+      notmuch_messages_t *replies;
+      for (replies = notmuch_message_get_replies (message);
+           notmuch_messages_valid (replies);
+           notmuch_messages_move_to_next (replies)) {
+        notmuch_message_t *message = notmuch_messages_get (replies);
+        const char *mid = notmuch_message_get_message_id (message);
+
+        printf("%s\n", mid);
+      }
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+87iqd9rn3l.fsf@vertex.dottedmag
+87ocn0qh6d.fsf@yoom.home.cworth.org
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
