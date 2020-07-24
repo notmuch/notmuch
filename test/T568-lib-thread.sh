@@ -172,4 +172,30 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "iterate over all messages with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+      notmuch_messages_t *messages;
+      for (messages = notmuch_thread_get_messages (thread);
+           notmuch_messages_valid (messages);
+           notmuch_messages_move_to_next (messages)) {
+        notmuch_message_t *message = notmuch_messages_get (messages);
+        const char *mid = notmuch_message_get_message_id (message);
+        printf("%s\n", mid);
+      }
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+20091117190054.GU3165@dottiness.seas.harvard.edu
+87iqd9rn3l.fsf@vertex.dottedmag
+20091117203301.GV3165@dottiness.seas.harvard.edu
+87fx8can9z.fsf@vertex.dottedmag
+yunaayketfm.fsf@aiko.keithp.com
+20091118005040.GA25380@dottiness.seas.harvard.edu
+87ocn0qh6d.fsf@yoom.home.cworth.org
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
