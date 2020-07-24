@@ -285,5 +285,19 @@ unread
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "destroy thread with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        time_t stamp;
+        notmuch_thread_destroy (thread);
+        printf("SUCCESS\n");
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+SUCCESS
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done
