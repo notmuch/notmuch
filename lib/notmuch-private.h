@@ -259,6 +259,9 @@ _notmuch_directory_find_or_create (notmuch_database_t *notmuch,
 unsigned int
 _notmuch_directory_get_document_id (notmuch_directory_t *directory);
 
+notmuch_database_mode_t
+_notmuch_database_mode (notmuch_database_t *notmuch);
+
 /* message.cc */
 
 notmuch_message_t *

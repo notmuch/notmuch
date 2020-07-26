@@ -114,7 +114,7 @@ _notmuch_directory_find_or_create (notmuch_database_t *notmuch,
 
     path = _notmuch_database_relative_path (notmuch, path);
 
-    if (create && notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (create && _notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable");
 
     directory = talloc (notmuch, notmuch_directory_t);

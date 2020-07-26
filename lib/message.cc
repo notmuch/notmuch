@@ -275,7 +275,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	return NULL;
     }
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable.");
 
     try {
@@ -1324,7 +1324,7 @@ _notmuch_message_sync (notmuch_message_t *message)
 {
     Xapian::WritableDatabase *db;
 
-    if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (_notmuch_database_mode (message->notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
     if (! message->modified)

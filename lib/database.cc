@@ -69,6 +69,12 @@ _log_xapian_exception (const char *where, notmuch_database_t *notmuch,  const Xa
     notmuch->exception_reported = true;
 }
 
+notmuch_database_mode_t
+_notmuch_database_mode (notmuch_database_t *notmuch)
+{
+    return notmuch->mode;
+}
+
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
  * We currently have three different types of documents (mail, ghost,
@@ -783,7 +789,7 @@ notmuch_database_create_verbose (const char *path,
 notmuch_status_t
 _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
+    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	_notmuch_database_log (notmuch, "Cannot write to a read-only database.\n");
 	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
     }
@@ -1107,7 +1113,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	     * that transaction, or may discard committed (but
 	     * unflushed) transactions.  To be certain, explicitly
 	     * cancel any outstanding transaction before closing. */
-	    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
+	    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_WRITE &&
 		notmuch->atomic_nesting)
 		(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))
 		->cancel_transaction ();
@@ -1130,7 +1136,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 notmuch_status_t
 _notmuch_database_reopen (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode != NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (_notmuch_database_mode (notmuch) != NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
 
     try {
@@ -1395,7 +1401,7 @@ notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
 {
     unsigned int version;
 
-    if (notmuch->mode != NOTMUCH_DATABASE_MODE_READ_WRITE)
+    if (_notmuch_database_mode (notmuch) != NOTMUCH_DATABASE_MODE_READ_WRITE)
 	return FALSE;
 
     if (NOTMUCH_FEATURES_CURRENT & ~notmuch->features)
@@ -1697,7 +1703,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 notmuch_status_t
 notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY ||
 	notmuch->atomic_nesting > 0)
 	goto DONE;
 
@@ -1726,7 +1732,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
     if (notmuch->atomic_nesting == 0)
 	return NOTMUCH_STATUS_UNBALANCED_ATOMIC;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY ||
 	notmuch->atomic_nesting > 1)
 	goto DONE;
 
