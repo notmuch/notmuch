@@ -994,7 +994,6 @@ notmuch_database_open_verbose (const char *path,
 				     "       has a newer database format version (%u) than supported by this\n"
 				     "       version of notmuch (%u).\n",
 				     notmuch_path, version, NOTMUCH_DATABASE_VERSION));
-	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 	    notmuch_database_destroy (notmuch);
 	    notmuch = NULL;
 	    status = NOTMUCH_STATUS_FILE_ERROR;
@@ -1013,7 +1012,6 @@ notmuch_database_open_verbose (const char *path,
 				     "       requires features (%s)\n"
 				     "       not supported by this version of notmuch.\n",
 				     notmuch_path, incompat_features));
-	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 	    notmuch_database_destroy (notmuch);
 	    notmuch = NULL;
 	    status = NOTMUCH_STATUS_FILE_ERROR;
