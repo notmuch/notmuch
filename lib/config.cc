@@ -45,15 +45,13 @@ notmuch_database_set_config (notmuch_database_t *notmuch,
 			     const char *value)
 {
     notmuch_status_t status;
-    Xapian::WritableDatabase *db;
 
     status = _notmuch_database_ensure_writable (notmuch);
     if (status)
 	return status;
 
     try {
-	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-	db->set_metadata (CONFIG_PREFIX + key, value);
+	notmuch->writable_xapian_db->set_metadata (CONFIG_PREFIX + key, value);
     } catch (const Xapian::Error &error) {
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	notmuch->exception_reported = true;

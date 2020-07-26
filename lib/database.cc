@@ -72,7 +72,10 @@ _log_xapian_exception (const char *where, notmuch_database_t *notmuch,  const Xa
 notmuch_database_mode_t
 _notmuch_database_mode (notmuch_database_t *notmuch)
 {
-    return notmuch->mode;
+    if (notmuch->writable_xapian_db)
+	return NOTMUCH_DATABASE_MODE_READ_WRITE;
+    else
+	return NOTMUCH_DATABASE_MODE_READ_ONLY;
 }
 
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
@@ -976,7 +979,7 @@ notmuch_database_open_verbose (const char *path,
 
     strip_trailing (notmuch->path, '/');
 
-    notmuch->mode = mode;
+    notmuch->writable_xapian_db = NULL;
     notmuch->atomic_nesting = 0;
     notmuch->view = 1;
     try {
@@ -984,8 +987,9 @@ notmuch_database_open_verbose (const char *path,
 	string last_mod;
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
-	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
-							       DB_ACTION);
+	    notmuch->writable_xapian_db = new Xapian::WritableDatabase (xapian_path,
+									DB_ACTION);
+	    notmuch->xapian_db = notmuch->writable_xapian_db;
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
 	}
@@ -1115,8 +1119,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	     * cancel any outstanding transaction before closing. */
 	    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_WRITE &&
 		notmuch->atomic_nesting)
-		(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))
-		->cancel_transaction ();
+		notmuch->writable_xapian_db->cancel_transaction ();
 
 	    /* Close the database.  This implicitly flushes
 	     * outstanding changes. */
@@ -1454,7 +1457,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    db = notmuch->writable_xapian_db;
 
     target_features = notmuch->features | NOTMUCH_FEATURES_CURRENT;
     new_features = NOTMUCH_FEATURES_CURRENT & ~notmuch->features;
@@ -1711,7 +1714,7 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
 
     try {
-	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
+	notmuch->writable_xapian_db->begin_transaction (false);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred beginning transaction: %s.\n",
 			       error.get_msg ().c_str ());
@@ -1736,7 +1739,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	notmuch->atomic_nesting > 1)
 	goto DONE;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    db = notmuch->writable_xapian_db;
     try {
 	db->commit_transaction ();
 

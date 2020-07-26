@@ -1322,8 +1322,6 @@ _notmuch_message_upgrade_last_mod (notmuch_message_t *message)
 void
 _notmuch_message_sync (notmuch_message_t *message)
 {
-    Xapian::WritableDatabase *db;
-
     if (_notmuch_database_mode (message->notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
@@ -1342,8 +1340,8 @@ _notmuch_message_sync (notmuch_message_t *message)
 				    _notmuch_database_new_revision (
 					message->notmuch)));
 
-    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
-    db->replace_document (message->doc_id, message->doc);
+    message->notmuch->writable_xapian_db->
+	replace_document (message->doc_id, message->doc);
     message->modified = false;
 }
 
@@ -1353,7 +1351,6 @@ notmuch_status_t
 _notmuch_message_delete (notmuch_message_t *message)
 {
     notmuch_status_t status;
-    Xapian::WritableDatabase *db;
     const char *mid, *tid, *query_string;
     notmuch_message_t *ghost;
     notmuch_private_status_t private_status;
@@ -1370,8 +1367,7 @@ _notmuch_message_delete (notmuch_message_t *message)
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-    db->delete_document (message->doc_id);
+    message->notmuch->writable_xapian_db->delete_document (message->doc_id);
 
     /* if this was a ghost to begin with, we are done */
     private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);

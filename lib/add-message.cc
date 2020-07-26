@@ -43,15 +43,12 @@ _notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
     /* 16 bytes (+ terminator) for hexadecimal representation of
      * a 64-bit integer. */
     static char thread_id[17];
-    Xapian::WritableDatabase *db;
-
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
     notmuch->last_thread_id++;
 
     sprintf (thread_id, "%016" PRIx64, notmuch->last_thread_id);
 
-    db->set_metadata ("last_thread_id", thread_id);
+    notmuch->writable_xapian_db->set_metadata ("last_thread_id", thread_id);
 
     return thread_id;
 }
@@ -161,7 +158,7 @@ _resolve_message_id_to_thread_id_old (notmuch_database_t *notmuch,
      * can return the thread ID stored in the metadata. Otherwise, we
      * generate a new thread ID and store it there.
      */
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    db = notmuch->writable_xapian_db;
     metadata_key = _get_metadata_thread_id_key (ctx, message_id);
     thread_id_string = notmuch->xapian_db->get_metadata (metadata_key);
 
@@ -370,13 +367,9 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
     if (stored_id.empty ()) {
 	return NULL;
     } else {
-	Xapian::WritableDatabase *db;
-
-	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
 	/* Clear the metadata for this message ID. We don't need it
 	 * anymore. */
-	db->set_metadata (metadata_key, "");
+	notmuch->writable_xapian_db->set_metadata (metadata_key, "");
 
 	return talloc_strdup (ctx, stored_id.c_str ());
     }

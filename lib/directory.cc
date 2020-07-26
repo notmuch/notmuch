@@ -99,7 +99,6 @@ _notmuch_directory_find_or_create (notmuch_database_t *notmuch,
 				   notmuch_find_flags_t flags,
 				   notmuch_status_t *status_ret)
 {
-    Xapian::WritableDatabase *db;
     notmuch_directory_t *directory;
     notmuch_private_status_t private_status;
     const char *db_path;
@@ -176,10 +175,10 @@ _notmuch_directory_find_or_create (notmuch_database_t *notmuch,
 	    directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 				      Xapian::sortable_serialise (0));
 
-	    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
 	    directory->document_id = _notmuch_database_generate_doc_id (notmuch);
-	    db->replace_document (directory->document_id, directory->doc);
+	    directory->notmuch->
+		writable_xapian_db
+		-> replace_document (directory->document_id, directory->doc);
 	    talloc_free (local);
 	}
 
@@ -213,20 +212,18 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 			     time_t mtime)
 {
     notmuch_database_t *notmuch = directory->notmuch;
-    Xapian::WritableDatabase *db;
     notmuch_status_t status;
 
     status = _notmuch_database_ensure_writable (notmuch);
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
     try {
 	directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 				  Xapian::sortable_serialise (mtime));
 
-	db->replace_document (directory->document_id, directory->doc);
+	directory->notmuch
+	    ->writable_xapian_db->replace_document (directory->document_id, directory->doc);
 
 	directory->mtime = mtime;
 
@@ -288,15 +285,14 @@ notmuch_status_t
 notmuch_directory_delete (notmuch_directory_t *directory)
 {
     notmuch_status_t status;
-    Xapian::WritableDatabase *db;
 
     status = _notmuch_database_ensure_writable (directory->notmuch);
     if (status)
 	return status;
 
     try {
-	db = static_cast <Xapian::WritableDatabase *> (directory->notmuch->xapian_db);
-	db->delete_document (directory->document_id);
+	directory->notmuch->
+	    writable_xapian_db->delete_document (directory->document_id);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (directory->notmuch,
 			       "A Xapian exception occurred deleting directory entry: %s.\n",
