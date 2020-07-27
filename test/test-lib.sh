@@ -414,7 +414,9 @@ emacs_fcc_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $*
-	   (notmuch-mua-send-and-exit))" || return 1
+	   (let ((mml-secure-smime-sign-with-sender t)
+		 (mml-secure-openpgp-sign-with-sender t))
+	     (notmuch-mua-send-and-exit)))" || return 1
     notmuch new $nmn_args >/dev/null
 }
 
