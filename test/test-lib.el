@@ -22,6 +22,12 @@
 
 (require 'cl-lib)
 
+;; Ensure that the dynamic variables that are defined by this library
+;; are defined by the time that we let-bind them.  This is needed
+;; because starting with Emacs 27 undeclared variables in evaluated
+;; interactive code (such as our tests) use lexical scope.
+(require 'smtpmail)
+
 ;; `read-file-name' by default uses `completing-read' function to read
 ;; user input.  It does not respect `standard-input' variable which we
 ;; use in tests to provide user input.  So replace it with a plain
@@ -112,6 +118,12 @@ nothing."
 
 (add-hook-counter 'notmuch-hello-mode-hook)
 (add-hook-counter 'notmuch-hello-refresh-hook)
+
+(defvar notmuch-hello-mode-hook-counter -100
+  "Tests that care about this counter must let-bind it to 0.")
+
+(defvar notmuch-hello-refresh-hook-counter -100
+  "Tests that care about this counter must let-bind it to 0.")
 
 (defadvice notmuch-search-process-filter (around pessimal activate disable)
   "Feed notmuch-search-process-filter one character at a time."
