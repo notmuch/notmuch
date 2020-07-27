@@ -104,26 +104,15 @@ running, quit if it terminated."
   "Initiate orphan watchdog check."
   (run-at-time 60 60 'orphan-watchdog-check pid))
 
-(defun hook-counter (hook)
-  "Count how many times a hook is called.  Increments
-`hook'-counter variable value if it is bound, otherwise does
-nothing."
-  (let ((counter (intern (concat (symbol-name hook) "-counter"))))
-    (if (boundp counter)
-	(set counter (1+ (symbol-value counter))))))
-
-(defun add-hook-counter (hook)
-  "Add hook to count how many times `hook' is called."
-  (add-hook hook (apply-partially 'hook-counter hook)))
-
-(add-hook-counter 'notmuch-hello-mode-hook)
-(add-hook-counter 'notmuch-hello-refresh-hook)
-
 (defvar notmuch-hello-mode-hook-counter -100
   "Tests that care about this counter must let-bind it to 0.")
+(add-hook 'notmuch-hello-mode-hook
+	  (lambda () (cl-incf notmuch-hello-mode-hook-counter)))
 
 (defvar notmuch-hello-refresh-hook-counter -100
   "Tests that care about this counter must let-bind it to 0.")
+(add-hook 'notmuch-hello-refresh-hook
+	  (lambda () (cl-incf notmuch-hello-refresh-hook-counter)))
 
 (defadvice notmuch-search-process-filter (around pessimal activate disable)
   "Feed notmuch-search-process-filter one character at a time."
