@@ -17,3 +17,4 @@ tags
 /.stamps
 *.stamp
 /bindings/python-cffi/build/
+/sphinx.config
