@@ -2291,6 +2291,7 @@ notmuch_config_list_key (notmuch_config_list_t *config_list);
  * next call to notmuch_config_list_value or notmuch config_list_destroy
  *
  * @since libnotmuch 4.4 (notmuch 0.23)
+ * @retval NULL for errors
  */
 const char *
 notmuch_config_list_value (notmuch_config_list_t *config_list);
