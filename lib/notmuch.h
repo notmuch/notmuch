@@ -2320,6 +2320,7 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
  * added to the index.  At the moment it is a featureless stub.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
+ * @retval NULL in case of error
  */
 notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db);

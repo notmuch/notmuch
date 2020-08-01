@@ -32,7 +32,7 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
     char *decrypt_policy;
     notmuch_status_t err = notmuch_database_get_config (db, "index.decrypt", &decrypt_policy);
     if (err)
-	return ret;
+	return NULL;
 
     if (decrypt_policy) {
 	if ((! (strcasecmp (decrypt_policy, "true"))) ||
