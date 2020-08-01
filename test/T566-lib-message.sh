@@ -18,7 +18,7 @@ cat <<'EOF' > c_tail
 }
 EOF
 
-cat <<EOF > c_head
+cat <<EOF > c_head0
 #include <stdio.h>
 #include <notmuch.h>
 #include <notmuch-test.h>
@@ -36,8 +36,10 @@ int main (int argc, char** argv)
      exit (1);
    }
    EXPECT0(notmuch_database_find_message (db, id, &message));
-   EXPECT0(notmuch_database_close (db));
 EOF
+
+cp c_head0 c_head
+echo "   EXPECT0(notmuch_database_close (db));" >> c_head
 
 test_begin_subtest "Handle getting message-id from closed database"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
