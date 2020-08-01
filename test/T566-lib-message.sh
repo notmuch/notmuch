@@ -138,6 +138,29 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "iterate over all message filenames from closed database"
+cat c_head0 - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_filenames_t *filenames;
+        filenames = notmuch_message_get_filenames (message);
+        EXPECT0(notmuch_database_close (db));
+        for (; notmuch_filenames_valid (filenames);
+               notmuch_filenames_move_to_next (filenames)) {
+            const char *filename = notmuch_filenames_get (filenames);
+            printf("%s\n", filename);
+        }
+        notmuch_filenames_destroy (filenames);
+        printf("SUCCESS\n");
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+MAIL_DIR/01:2,
+SUCCESS
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Handle getting ghost flag from closed database"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
