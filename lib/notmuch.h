@@ -2148,6 +2148,8 @@ notmuch_directory_get_mtime (notmuch_directory_t *directory);
  *
  * The returned filenames will be the basename-entries only (not
  * complete paths).
+ *
+ * Returns NULL if it triggers a Xapian exception
  */
 notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory);

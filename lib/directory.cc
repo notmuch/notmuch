@@ -261,15 +261,19 @@ notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory)
 {
     char *term;
-    notmuch_filenames_t *child_files;
+    notmuch_filenames_t *child_files = NULL;
 
     term = talloc_asprintf (directory, "%s%u:",
 			    _find_prefix ("file-direntry"),
 			    directory->document_id);
 
-    child_files = _create_filenames_for_terms_with_prefix (directory,
-							   directory->notmuch,
-							   term);
+    try {
+	child_files = _create_filenames_for_terms_with_prefix (directory,
+							       directory->notmuch,
+							       term);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (directory, error);
+    }
 
     talloc_free (term);
 
