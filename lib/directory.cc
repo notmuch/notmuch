@@ -323,7 +323,7 @@ notmuch_directory_delete (notmuch_directory_t *directory)
     }
     notmuch_directory_destroy (directory);
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 void

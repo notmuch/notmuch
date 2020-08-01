@@ -76,7 +76,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 backup_database
 test_begin_subtest "delete directory document for a closed db"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         stat = notmuch_directory_delete (dir);
