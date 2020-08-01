@@ -49,6 +49,19 @@ struct _notmuch_directory {
     time_t mtime;
 };
 
+#define LOG_XAPIAN_EXCEPTION(directory, error) _log_xapian_exception (__location__, directory, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_directory_t *dir,  const Xapian::Error error) {
+    notmuch_database_t *notmuch = dir->notmuch;
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred at %s: %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
+}
+
+
 /* We end up having to call the destructor explicitly because we had
  * to use "placement new" in order to initialize C++ objects within a
  * block that we allocated with talloc. So C++ is making talloc
@@ -267,14 +280,18 @@ notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory)
 {
     char *term;
-    notmuch_filenames_t *child_directories;
+    notmuch_filenames_t *child_directories = NULL;
 
     term = talloc_asprintf (directory, "%s%u:",
 			    _find_prefix ("directory-direntry"),
 			    directory->document_id);
 
-    child_directories = _create_filenames_for_terms_with_prefix (directory,
-								 directory->notmuch, term);
+    try {
+	child_directories = _create_filenames_for_terms_with_prefix (directory,
+								     directory->notmuch, term);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (directory, error);
+    }
 
     talloc_free (term);
 

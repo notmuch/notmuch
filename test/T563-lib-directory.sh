@@ -41,7 +41,6 @@ cat <<'EOF' > c_tail
 EOF
 
 test_begin_subtest "get child directories for a closed db"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_filenames_t *children;
