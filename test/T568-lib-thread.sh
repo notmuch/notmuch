@@ -285,6 +285,37 @@ unread
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "collect tags with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+      notmuch_messages_t *messages = notmuch_thread_get_messages (thread);
+
+      notmuch_tags_t *tags = notmuch_messages_collect_tags (messages);
+
+      const char *tag;
+      for (tags = notmuch_thread_get_tags (thread);
+           notmuch_tags_valid (tags);
+           notmuch_tags_move_to_next (tags))
+        {
+          tag = notmuch_tags_get (tags);
+          printf ("%s\n", tag);
+        }
+      notmuch_tags_destroy (tags);
+      notmuch_messages_destroy (messages);
+
+      printf("SUCCESS\n");
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+inbox
+signed
+unread
+SUCCESS
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "destroy thread with closed database"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
