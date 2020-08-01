@@ -388,4 +388,43 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get decryption policy from closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_indexopts_t *result;
+        result = notmuch_database_get_default_indexopts (db);
+        EXPECT0(notmuch_database_close (db));
+        notmuch_decryption_policy_t policy = notmuch_indexopts_get_decrypt_policy (result);
+        printf ("%d\n",  policy == NOTMUCH_DECRYPT_AUTO);
+        notmuch_indexopts_destroy (result);
+        printf ("SUCCESS\n");
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+SUCCESS
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "set decryption policy with closed database"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_indexopts_t *result;
+        result = notmuch_database_get_default_indexopts (db);
+        EXPECT0(notmuch_database_close (db));
+        notmuch_decryption_policy_t policy = notmuch_indexopts_get_decrypt_policy (result);
+        stat = notmuch_indexopts_set_decrypt_policy (result, policy);
+        printf("%d\n%d\n",  policy == NOTMUCH_DECRYPT_AUTO, stat == NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
