@@ -57,4 +57,22 @@ A Xapian exception occurred at lib/directory.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "get child filenames for a closed db"
+test_subtest_known_broken
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+        notmuch_filenames_t *children;
+        children = notmuch_directory_get_child_files (dir);
+        printf ("%d\n", children == NULL);
+        stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred at lib/directory.cc:XXX: Database has been closed
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
