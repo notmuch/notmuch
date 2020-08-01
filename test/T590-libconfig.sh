@@ -61,6 +61,21 @@ valid = 0
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "notmuch_database_get_config_list: closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+   notmuch_config_list_t *list;
+   EXPECT0(notmuch_database_close (db));
+   stat = notmuch_database_get_config_list (db, "nonexistent", &list);
+   printf("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch_database_get_config_list: all pairs"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
