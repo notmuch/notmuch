@@ -455,26 +455,6 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-if [ ${have_xapian} = "1" ]; then
-    default_xapian_backend=""
-    printf "Testing default Xapian backend... "
-    cat >_default_backend.cc <<EOF
-#include <xapian.h>
-int main(int argc, char** argv) {
-   Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
-}
-EOF
-    ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
-    ./_default_backend
-    if [ -f test.db/iamglass ]; then
-	default_xapian_backend=glass
-    else
-	default_xapian_backend=chert
-    fi
-    printf "%s\n" "${default_xapian_backend}";
-    rm -rf test.db _default_backend _default_backend.cc
-fi
-
 GMIME_MINVER=3.0.3
 
 printf "Checking for GMime development files (>= $GMIME_MINVER)... "
@@ -1507,9 +1487,6 @@ NOTMUCH_SRCDIR='${NOTMUCH_SRCDIR}'
 
 # Whether to have Xapian retry lock
 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${WITH_RETRY_LOCK}
-
-# Which backend will Xapian use by default?
-NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
 
 # Whether GMime can verify X.509 certificate validity
 NOTMUCH_GMIME_X509_CERT_VALIDITY=${gmime_x509_cert_validity}
