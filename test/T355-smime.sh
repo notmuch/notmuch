@@ -6,7 +6,7 @@ test_description='S/MIME signature verification and decryption'
 test_require_external_prereq openssl
 test_require_external_prereq gpgsm
 
-FINGERPRINT=$(openssl x509 -fingerprint -in "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" -noout | sed -e 's/^.*=//' -e s/://g)
+FINGERPRINT=$(openssl x509 -sha1 -fingerprint -in "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" -noout | sed -e 's/^.*=//' -e s/://g)
 
 add_gpgsm_home
 
