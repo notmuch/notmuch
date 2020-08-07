@@ -466,10 +466,16 @@ unchanged ADDRESS if parsing fails."
 (defun notmuch-show-insert-headerline (headers date tags depth)
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
-  (let ((start (point)))
+  (let ((start (point))
+	(from (notmuch-sanitize
+	       (notmuch-show-clean-address (plist-get headers :From)))))
+    (when (string-match "\\cR" from)
+      ;; If the From header has a right-to-left character add
+      ;; invisible U+200E LEFT-TO-RIGHT MARK character which forces
+      ;; the header paragraph as left-to-right text.
+      (insert (propertize (string ?\x200e) 'invisible t)))
     (insert (notmuch-show-spaces-n (* notmuch-show-indent-messages-width depth))
-	    (notmuch-sanitize
-	     (notmuch-show-clean-address (plist-get headers :From)))
+	    from
 	    " ("
 	    date
 	    ") ("
