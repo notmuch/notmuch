@@ -73,6 +73,7 @@ please customize shortcut keys in notmuch-saved-searches."))))
 
 (defvar notmuch-jump--action nil)
 
+;;;###autoload
 (defun notmuch-jump (action-map prompt)
   "Interactively prompt for one of the keys in ACTION-MAP.
 

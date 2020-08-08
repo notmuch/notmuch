@@ -36,8 +36,7 @@
 		  (tag-changes &optional beg end only-matched))
 (declare-function notmuch-show-tag "notmuch-show" (tag-changes))
 (declare-function notmuch-tree-tag "notmuch-tree" (tag-changes))
-
-(autoload 'notmuch-jump "notmuch-jump")
+(declare-function notmuch-jump "notmuch-jump" (action-map prompt))
 
 (define-widget 'notmuch-tag-key-type 'list
   "A single key tagging binding."
