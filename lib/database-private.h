@@ -32,6 +32,8 @@
 
 #include "notmuch-private.h"
 
+#define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
+
 #ifdef SILENCE_XAPIAN_DEPRECATION_WARNINGS
 #define XAPIAN_DEPRECATED(D) D
 #endif
@@ -263,4 +265,16 @@ _notmuch_database_find_doc_ids (notmuch_database_t *notmuch,
 				const char *value,
 				Xapian::PostingIterator *begin,
 				Xapian::PostingIterator *end);
+
+#define NOTMUCH_DATABASE_VERSION 3
+
+/* features.cc */
+
+_notmuch_features
+_notmuch_database_parse_features (const void *ctx, const char *features, unsigned int version,
+				  char mode, char **incompat_out);
+
+char *
+_notmuch_database_print_features (const void *ctx, unsigned int features);
+
 #endif
