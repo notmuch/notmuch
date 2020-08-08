@@ -245,3 +245,37 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 
     return status;
 }
+
+notmuch_status_t
+_notmuch_config_load_from_file (notmuch_database_t *notmuch,
+				GKeyFile *file)
+{
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    gchar **groups,**keys, *val;
+
+    if (notmuch->config == NULL)
+	notmuch->config = _notmuch_string_map_create (notmuch);
+
+    if (unlikely(notmuch->config == NULL)) {
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    for (groups = g_key_file_get_groups (file, NULL); *groups; groups++) {
+	for (keys = g_key_file_get_keys (file, *groups, NULL, NULL); *keys; keys++) {
+	    char *absolute_key = talloc_asprintf(notmuch, "%s.%s", *groups,  *keys);
+	    val = g_key_file_get_value (file, *groups, *keys, NULL);
+	    if (! val) {
+		status = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
+	    }
+	    _notmuch_string_map_set (notmuch->config, absolute_key, val);
+	    talloc_free (absolute_key);
+	    if (status)
+		goto DONE;
+	}
+    }
+
+ DONE:
+    return status;
+}

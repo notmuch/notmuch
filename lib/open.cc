@@ -33,29 +33,56 @@ notmuch_database_open_verbose (const char *path,
 			       notmuch_database_t **database,
 			       char **status_string)
 {
+    return notmuch_database_open_with_config (path, mode, "", NULL,
+					      database, status_string);
+}
+
+notmuch_status_t
+notmuch_database_open_with_config (const char *database_path,
+				   notmuch_database_mode_t mode,
+				   const char *config_path,
+				   unused(const char *profile),
+				   notmuch_database_t **database,
+				   char **status_string)
+{
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path, *xapian_path, *incompat_features;
+    char *configured_database_path = NULL;
     char *message = NULL;
     struct stat st;
     int err;
     unsigned int version;
+    GKeyFile *key_file = NULL;
     static int initialized = 0;
 
-    if (path == NULL) {
+    /* XXX TODO: default locations for NULL case, handle profiles */
+    if (config_path != NULL && ! EMPTY_STRING (config_path)) {
+	key_file = g_key_file_new ();
+	if (! g_key_file_load_from_file (key_file, config_path, G_KEY_FILE_NONE, NULL)) {
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+	configured_database_path = g_key_file_get_value (key_file, "database", "path", NULL);
+    }
+
+    if (database_path == NULL)
+	database_path = configured_database_path;
+
+    if (database_path == NULL) {
 	message = strdup ("Error: Cannot open a database for a NULL path.\n");
 	status = NOTMUCH_STATUS_NULL_POINTER;
 	goto DONE;
     }
 
-    if (path[0] != '/') {
+    if (database_path[0] != '/') {
 	message = strdup ("Error: Database path must be absolute.\n");
 	status = NOTMUCH_STATUS_PATH_ERROR;
 	goto DONE;
     }
 
-    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
+    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
 	message = strdup ("Out of memory\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
@@ -89,8 +116,8 @@ notmuch_database_open_verbose (const char *path,
     notmuch = talloc_zero (NULL, notmuch_database_t);
     notmuch->exception_reported = false;
     notmuch->status_string = NULL;
-    notmuch->path = talloc_strdup (notmuch, path);
-    notmuch->config = NULL;
+    notmuch->path = talloc_strdup (notmuch, database_path);
+
     strip_trailing (notmuch->path, '/');
 
     notmuch->writable_xapian_db = NULL;
@@ -182,6 +209,11 @@ notmuch_database_open_verbose (const char *path,
 
 	/* Configuration information is needed to set up query parser */
 	status = _notmuch_config_load_from_database (notmuch);
+	if (status)
+	    goto DONE;
+
+	if (key_file)
+	    status = _notmuch_config_load_from_file (notmuch, key_file);
 	if (status)
 	    goto DONE;
 

@@ -707,6 +707,9 @@ struct _notmuch_indexopts {
 /* config.cc */
 notmuch_status_t
 _notmuch_config_load_from_database (notmuch_database_t * db);
+
+notmuch_status_t
+_notmuch_config_load_from_file (notmuch_database_t * db, GKeyFile *file);
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus

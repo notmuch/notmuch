@@ -343,12 +343,12 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         char *result;
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_get_config (db, "foo", &result);
-        printf("%d\n",  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n",  stat == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-0
+1
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT

@@ -16,7 +16,12 @@ int main (int argc, char** argv)
    char *val;
    notmuch_status_t stat;
 
-   EXPECT0(notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db));
+   EXPECT0(notmuch_database_open_with_config (argv[1],
+                                              NOTMUCH_DATABASE_MODE_READ_WRITE,
+                                              argv[2],
+                                              NULL,
+                                              &db,
+                                              NULL));
 
 EOF
 
@@ -26,7 +31,7 @@ cat <<EOF > c_tail
 EOF
 
 test_begin_subtest "notmuch_database_{set,get}_config"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
    EXPECT0(notmuch_database_set_config (db, "test.key1", "testvalue1"));
    EXPECT0(notmuch_database_set_config (db, "test.key2", "testvalue2"));
@@ -46,7 +51,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 
 test_begin_subtest "notmuch_database_get_config_list: empty list"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
    notmuch_config_list_t *list;
    EXPECT0(notmuch_database_get_config_list (db, "nonexistent", &list));
@@ -78,7 +83,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch_database_get_config_list: all pairs"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
    notmuch_config_list_t *list;
    EXPECT0(notmuch_database_set_config (db, "zzzafter", "afterval"));
@@ -123,7 +128,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch_database_get_config_list: one prefix"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
    notmuch_config_list_t *list;
    EXPECT0(notmuch_database_get_config_list (db, "test.key", &list));
@@ -142,7 +147,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "dump config"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
     EXPECT0(notmuch_database_set_config (db, "key with spaces", "value, with, spaces!"));
 }
@@ -160,7 +165,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "restore config"
 notmuch dump --include=config >EXPECTED
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
     EXPECT0(notmuch_database_set_config (db, "test.key1", "mutatedvalue"));
 }
@@ -168,5 +173,25 @@ EOF
 notmuch restore --include=config <EXPECTED
 notmuch dump --include=config >OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+
+backup_database
+test_begin_subtest "override config from file"
+notmuch config set test.key1 overridden
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
+{
+   EXPECT0(notmuch_database_get_config (db, "test.key1", &val));
+   printf("test.key1 = %s\n", val);
+   EXPECT0(notmuch_database_get_config (db, "test.key2", &val));
+   printf("test.key2 = %s\n", val);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+test.key1 = overridden
+test.key2 = testvalue2
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
 
 test_done
