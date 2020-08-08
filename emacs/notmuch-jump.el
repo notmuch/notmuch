@@ -169,37 +169,37 @@ buffer."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-jump-minibuffer-map)
     (pcase-dolist (`(,key ,name ,fn) action-map)
-      (if (= (length key) 1)
-	  (define-key map key
-	    `(lambda () (interactive)
-	       (setq notmuch-jump--action ',fn)
-	       (exit-minibuffer)))))
+      (when (= (length key) 1)
+	(define-key map key
+	  `(lambda () (interactive)
+	     (setq notmuch-jump--action ',fn)
+	     (exit-minibuffer)))))
     ;; By doing this in two passes (and checking if we already have a
     ;; binding) we avoid problems if the user specifies a binding which
     ;; is a prefix of another binding.
     (pcase-dolist (`(,key ,name ,fn) action-map)
-      (if (> (length key) 1)
-	  (let* ((key (elt key 0))
-		 (keystr (string key))
-		 (new-prompt (concat prompt (format-kbd-macro keystr) " "))
-		 (action-submap nil))
-	    (unless (lookup-key map keystr)
-	      (pcase-dolist (`(,k ,n ,f) action-map)
-		(when (= key (elt k 0))
-		  (push (list (substring k 1) n f) action-submap)))
-	      ;; We deal with backspace specially
-	      (push (list (kbd "DEL")
-			  "Backup"
-			  (apply-partially #'notmuch-jump action-map prompt))
-		    action-submap)
-	      (setq action-submap (nreverse action-submap))
-	      (define-key map keystr
-		`(lambda () (interactive)
-		   (setq notmuch-jump--action
-			 ',(apply-partially #'notmuch-jump
-					    action-submap
-					    new-prompt))
-		   (exit-minibuffer)))))))
+      (when (> (length key) 1)
+	(let* ((key (elt key 0))
+	       (keystr (string key))
+	       (new-prompt (concat prompt (format-kbd-macro keystr) " "))
+	       (action-submap nil))
+	  (unless (lookup-key map keystr)
+	    (pcase-dolist (`(,k ,n ,f) action-map)
+	      (when (= key (elt k 0))
+		(push (list (substring k 1) n f) action-submap)))
+	    ;; We deal with backspace specially
+	    (push (list (kbd "DEL")
+			"Backup"
+			(apply-partially #'notmuch-jump action-map prompt))
+		  action-submap)
+	    (setq action-submap (nreverse action-submap))
+	    (define-key map keystr
+	      `(lambda () (interactive)
+		 (setq notmuch-jump--action
+		       ',(apply-partially #'notmuch-jump
+					  action-submap
+					  new-prompt))
+		 (exit-minibuffer)))))))
     map))
 
 ;;

@@ -967,19 +967,19 @@ Complete list of currently available key bindings:
 	(never-found-target-thread nil))
     (when (memq status '(exit signal))
       (kill-buffer (process-get proc 'parse-buf))
-      (if (buffer-live-p buffer)
-	  (with-current-buffer buffer
-	    (save-excursion
-	      (let ((inhibit-read-only t)
-		    (atbob (bobp)))
-		(goto-char (point-max))
-		(if (eq status 'signal)
-		    (insert "Incomplete search results (tree view process was killed).\n"))
-		(when (eq status 'exit)
-		  (insert "End of search results.")
-		  (unless (= exit-status 0)
-		    (insert (format " (process returned %d)" exit-status)))
-		  (insert "\n")))))))))
+      (when (buffer-live-p buffer)
+	(with-current-buffer buffer
+	  (save-excursion
+	    (let ((inhibit-read-only t)
+		  (atbob (bobp)))
+	      (goto-char (point-max))
+	      (when (eq status 'signal)
+		(insert "Incomplete search results (tree view process was killed).\n"))
+	      (when (eq status 'exit)
+		(insert "End of search results.")
+		(unless (= exit-status 0)
+		  (insert (format " (process returned %d)" exit-status)))
+		(insert "\n")))))))))
 
 (defun notmuch-tree-process-filter (proc string)
   "Process and filter the output of \"notmuch show\" for tree view."
@@ -1023,8 +1023,8 @@ the same as for the function notmuch-tree."
 			      (and query-context
 				   (concat " and (" query-context ")"))))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
-    (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
-	(setq search-args basic-query))
+    (when (equal (car (process-lines notmuch-command "count" search-args)) "0")
+      (setq search-args basic-query))
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel

@@ -30,8 +30,8 @@ A thread is a forest or list of trees. A tree is a two element
 list where the first element is a message, and the second element
 is a possibly empty forest of replies."
   (let ((args '("show" "--format=sexp" "--format-version=4")))
-    (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt=true"))))
+    (when notmuch-show-process-crypto
+      (setq args (append args '("--decrypt=true"))))
     (setq args (append args search-terms))
     (apply #'notmuch-call-notmuch-sexp args)))
 

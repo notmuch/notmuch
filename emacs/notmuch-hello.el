@@ -589,8 +589,8 @@ with `notmuch-hello-query-counts'."
     (mapc (lambda (elem)
 	    ;; (not elem) indicates an empty slot in the matrix.
 	    (when elem
-	      (if (> column-indent 0)
-		  (widget-insert (make-string column-indent ? )))
+	      (when (> column-indent 0)
+		(widget-insert (make-string column-indent ? )))
 	      (let* ((name (plist-get elem :name))
 		     (query (plist-get elem :query))
 		     (oldest-first (cl-case (plist-get elem :sort-order)
@@ -890,8 +890,8 @@ Supports the following entries in OPTIONS as a plist:
    the same values as :filter. If :filter and :filter-count are specified, this
    will be used instead of :filter, not in conjunction with it."
   (widget-insert title ": ")
-  (if (and notmuch-hello-first-run (plist-get options :initially-hidden))
-      (add-to-list 'notmuch-hello-hidden-sections title))
+  (when (and notmuch-hello-first-run (plist-get options :initially-hidden))
+    (add-to-list 'notmuch-hello-hidden-sections title))
   (let ((is-hidden (member title notmuch-hello-hidden-sections))
 	(start (point)))
     (if is-hidden

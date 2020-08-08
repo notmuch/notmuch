@@ -346,10 +346,10 @@ operation on the contents of the current buffer."
 	 (indenting notmuch-show-indent-content))
     (with-temp-buffer
       (insert all)
-      (if indenting
-	  (indent-rigidly (point-min)
-			  (point-max)
-			  (- (* notmuch-show-indent-messages-width depth))))
+      (when indenting
+	(indent-rigidly (point-min)
+			(point-max)
+			(- (* notmuch-show-indent-messages-width depth))))
       ;; Remove the original header.
       (goto-char (point-min))
       (re-search-forward "^$" (point-max) nil)
@@ -392,13 +392,13 @@ operation on the contents of the current buffer."
   "Update the displayed tags of the current message."
   (save-excursion
     (goto-char (notmuch-show-message-top))
-    (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
-	(let ((inhibit-read-only t))
-	  (replace-match (concat "("
-				 (notmuch-tag-format-tags
-				  tags
-				  (notmuch-show-get-prop :orig-tags))
-				 ")"))))))
+    (when (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
+      (let ((inhibit-read-only t))
+	(replace-match (concat "("
+			       (notmuch-tag-format-tags
+				tags
+				(notmuch-show-get-prop :orig-tags))
+			       ")"))))))
 
 (defun notmuch-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return a cons
@@ -488,9 +488,9 @@ message at DEPTH in the current thread."
     (mapc (lambda (header)
 	    (let* ((header-symbol (intern (concat ":" header)))
 		   (header-value (plist-get headers header-symbol)))
-	      (if (and header-value
-		       (not (string-equal "" header-value)))
-		  (notmuch-show-insert-header header header-value))))
+	      (when (and header-value
+			 (not (string-equal "" header-value)))
+		(notmuch-show-insert-header header header-value))))
 	  notmuch-message-headers)
     (save-excursion
       (save-restriction
@@ -606,10 +606,10 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-setup-w3m ()
   "Instruct w3m how to retrieve content from a \"related\" part of a message."
   (interactive)
-  (if (boundp 'w3m-cid-retrieve-function-alist)
-      (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
-	(push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
-	      w3m-cid-retrieve-function-alist)))
+  (when (and (boundp 'w3m-cid-retrieve-function-alist)
+	     (not (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)))
+    (push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
+	  w3m-cid-retrieve-function-alist))
   (setq mm-html-inhibit-images nil))
 
 (defvar w3m-current-buffer) ;; From `w3m.el'.
@@ -767,22 +767,22 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
   (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
 
-(if (version< emacs-version "25.3")
-    ;; https://bugs.gnu.org/28350
-    ;;
-    ;; For newer emacs, we fall back to notmuch-show-insert-part-*/*
-    ;; (see notmuch-show-handlers-for)
-    (defun notmuch-show-insert-part-text/enriched
-	(msg part content-type nth depth button)
-      ;; By requiring enriched below, we ensure that the function
-      ;; enriched-decode-display-prop is defined before it will be
-      ;; shadowed by the letf below. Otherwise the version in
-      ;; enriched.el may be loaded a bit later and used instead (for
-      ;; the first time).
-      (require 'enriched)
-      (cl-letf (((symbol-function 'enriched-decode-display-prop)
-		 (lambda (start end &optional param) (list start end))))
-	(notmuch-show-insert-part-*/* msg part content-type nth depth button))))
+(when (version< emacs-version "25.3")
+  ;; https://bugs.gnu.org/28350
+  ;;
+  ;; For newer emacs, we fall back to notmuch-show-insert-part-*/*
+  ;; (see notmuch-show-handlers-for)
+  (defun notmuch-show-insert-part-text/enriched
+      (msg part content-type nth depth button)
+    ;; By requiring enriched below, we ensure that the function
+    ;; enriched-decode-display-prop is defined before it will be
+    ;; shadowed by the letf below. Otherwise the version in
+    ;; enriched.el may be loaded a bit later and used instead (for
+    ;; the first time).
+    (require 'enriched)
+    (cl-letf (((symbol-function 'enriched-decode-display-prop)
+	       (lambda (start end &optional param) (list start end))))
+      (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
@@ -849,8 +849,8 @@ will return nil if the CID is unknown or cannot be retrieved."
   "Return a list of content handlers for a part of type CONTENT-TYPE."
   (let (result)
     (mapc (lambda (func)
-	    (if (functionp func)
-		(push func result)))
+	    (when (functionp func)
+	      (push func result)))
 	  ;; Reverse order of prefrence.
 	  (list (intern (concat "notmuch-show-insert-part-*/*"))
 		(intern (concat
@@ -1080,10 +1080,10 @@ is t, hide the part initially and show the button."
       (insert "\n"))
     (setq content-end (point-marker))
     ;; Indent according to the depth in the thread.
-    (if notmuch-show-indent-content
-	(indent-rigidly content-start
-			content-end
-			(* notmuch-show-indent-messages-width depth)))
+    (when notmuch-show-indent-content
+      (indent-rigidly content-start
+		      content-end
+		      (* notmuch-show-indent-messages-width depth)))
     (setq message-end (point-max-marker))
     ;; Save the extents of this message over the whole text of the
     ;; message.
@@ -1288,7 +1288,8 @@ and THREAD.  The next query is THREAD alone, and serves as a
 fallback if the prior matches no messages."
   (let (queries)
     (push (list thread) queries)
-    (if context (push (list thread "and (" context ")") queries))
+    (when context
+      (push (list thread "and (" context ")") queries))
     queries))
 
 (defun notmuch-show--build-buffer (&optional state)
@@ -1785,9 +1786,9 @@ Reshows the current thread with matches defined by the new query-string."
     (let (message-ids done)
       (goto-char (point-min))
       (while (not done)
-	(if (notmuch-show-message-visible-p)
-	    (setq message-ids
-		  (append message-ids (list (notmuch-show-get-message-id)))))
+	(when (notmuch-show-message-visible-p)
+	  (setq message-ids
+		(append message-ids (list (notmuch-show-get-message-id)))))
 	(setq done (not (notmuch-show-goto-message-next))))
       message-ids)))
 
@@ -1842,8 +1843,8 @@ archives the entire current thread, (apply changes in
 thread from the search from which this thread was originally
 shown."
   (interactive)
-  (if (notmuch-show-advance)
-      (notmuch-show-archive-thread-then-next)))
+  (when (notmuch-show-advance)
+    (notmuch-show-archive-thread-then-next)))
 
 (defun notmuch-show-rewind ()
   "Backup through the thread (reverse scrolling compared to \

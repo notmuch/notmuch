@@ -275,8 +275,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 	(narrow-to-region (point) (point-max))
 	(goto-char (point-max))
 	(if (re-search-backward message-signature-separator nil t)
-	    (if message-signature-insert-empty-line
-		(forward-line -1))
+	    (when message-signature-insert-empty-line
+	      (forward-line -1))
 	  (goto-char (point-max))))
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
@@ -388,7 +388,8 @@ modified. This function is notmuch addaptation of
 	  ;; https://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
-	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
+	    (when (stringp (car h))
+	      (setcar h (intern (capitalize (car h))))))))
 	(args (list yank-action send-actions))
 	;; Cause `message-setup-1' to do things relevant for mail,
 	;; such as observe `message-default-mail-headers'.
@@ -428,14 +429,15 @@ the From: header is already filled in by notmuch."
 ;; without some explicit initialization fill freeze the operation.
 ;; Hence, we advice `ido-completing-read' to ensure required initialization
 ;; is done.
-(if (and (= emacs-major-version 23) (< emacs-minor-version 4))
-    (defadvice ido-completing-read (before notmuch-ido-mode-init activate)
-      (ido-init-completion-maps)
-      (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
-      (add-hook 'choose-completion-string-functions
-		'ido-choose-completion-string)
-      (ad-disable-advice 'ido-completing-read 'before 'notmuch-ido-mode-init)
-      (ad-activate 'ido-completing-read)))
+(when (and (= emacs-major-version 23)
+	   (< emacs-minor-version 4))
+  (defadvice ido-completing-read (before notmuch-ido-mode-init activate)
+    (ido-init-completion-maps)
+    (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
+    (add-hook 'choose-completion-string-functions
+	      'ido-choose-completion-string)
+    (ad-disable-advice 'ido-completing-read 'before 'notmuch-ido-mode-init)
+    (ad-activate 'ido-completing-read)))
 
 (defun notmuch-mua-prompt-for-sender ()
   "Prompt for a sender from the user's configured identities."

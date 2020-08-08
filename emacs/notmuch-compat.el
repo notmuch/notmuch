@@ -68,9 +68,9 @@ inlined."
 		   ;; This is an inlined copy of help-form-show as that
 		   ;; was introduced in emacs 24 too.
 		   (let ((msg (eval help-form)))
-		     (if (stringp msg)
-			 (with-output-to-temp-buffer " *Char Help*"
-			   (princ msg))))))
+		     (when (stringp msg)
+		       (with-output-to-temp-buffer " *Char Help*"
+			 (princ msg))))))
 	     ((memq char chars)
 	      (setq done t))
 	     ((and executing-kbd-macro (= char -1))

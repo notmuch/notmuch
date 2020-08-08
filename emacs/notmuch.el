@@ -674,28 +674,28 @@ of the result."
     (when (memq status '(exit signal))
       (catch 'return
 	(kill-buffer (process-get proc 'parse-buf))
-	(if (buffer-live-p buffer)
-	    (with-current-buffer buffer
-	      (save-excursion
-		(let ((inhibit-read-only t)
-		      (atbob (bobp)))
-		  (goto-char (point-max))
-		  (if (eq status 'signal)
-		      (insert "Incomplete search results (search process was killed).\n"))
-		  (when (eq status 'exit)
-		    (insert "End of search results.\n")
-		    ;; For version mismatch, there's no point in
-		    ;; showing the search buffer
-		    (when (or (= exit-status 20) (= exit-status 21))
-		      (kill-buffer)
-		      (throw 'return nil))
-		    (if (and atbob
+	(when (buffer-live-p buffer)
+	  (with-current-buffer buffer
+	    (save-excursion
+	      (let ((inhibit-read-only t)
+		    (atbob (bobp)))
+		(goto-char (point-max))
+		(when (eq status 'signal)
+		  (insert "Incomplete search results (search process was killed).\n"))
+		(when (eq status 'exit)
+		  (insert "End of search results.\n")
+		  ;; For version mismatch, there's no point in
+		  ;; showing the search buffer
+		  (when (or (= exit-status 20) (= exit-status 21))
+		    (kill-buffer)
+		    (throw 'return nil))
+		  (when (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
-			(set 'never-found-target-thread t)))))
-	      (when (and never-found-target-thread
-			 notmuch-search-target-line)
-		(goto-char (point-min))
-		(forward-line (1- notmuch-search-target-line)))))))))
+		    (set 'never-found-target-thread t)))))
+	    (when (and never-found-target-thread
+		       notmuch-search-target-line)
+	      (goto-char (point-min))
+	      (forward-line (1- notmuch-search-target-line)))))))))
 
 (define-widget 'notmuch--custom-face-edit 'lazy
   "Custom face edit with a tag Edit Face"
@@ -760,31 +760,31 @@ non-authors is found, assume that all of the authors match."
 	   (invisible-string "")
 	   (padding ""))
       ;; Truncate the author string to fit the specification.
-      (if (> (length formatted-authors)
-	     (length formatted-sample))
-	  (let ((visible-length (- (length formatted-sample)
-				   (length "... "))))
-	    ;; Truncate the visible string according to the width of
-	    ;; the display string.
-	    (setq visible-string (substring formatted-authors 0 visible-length))
-	    (setq invisible-string (substring formatted-authors visible-length))
-	    ;; If possible, truncate the visible string at a natural
-	    ;; break (comma or pipe), as incremental search doesn't
-	    ;; match across the visible/invisible border.
-	    (when (string-match "\\(.*\\)\\([,|] \\)\\([^,|]*\\)" visible-string)
-	      ;; Second clause is destructive on `visible-string', so
-	      ;; order is important.
-	      (setq invisible-string (concat (match-string 3 visible-string)
-					     invisible-string))
-	      (setq visible-string (concat (match-string 1 visible-string)
-					   (match-string 2 visible-string))))
-	    ;; `visible-string' may be shorter than the space allowed
-	    ;; by `format-string'. If so we must insert some padding
-	    ;; after `invisible-string'.
-	    (setq padding (make-string (- (length formatted-sample)
-					  (length visible-string)
-					  (length "..."))
-				       ? ))))
+      (when (> (length formatted-authors)
+	       (length formatted-sample))
+	(let ((visible-length (- (length formatted-sample)
+				 (length "... "))))
+	  ;; Truncate the visible string according to the width of
+	  ;; the display string.
+	  (setq visible-string (substring formatted-authors 0 visible-length))
+	  (setq invisible-string (substring formatted-authors visible-length))
+	  ;; If possible, truncate the visible string at a natural
+	  ;; break (comma or pipe), as incremental search doesn't
+	  ;; match across the visible/invisible border.
+	  (when (string-match "\\(.*\\)\\([,|] \\)\\([^,|]*\\)" visible-string)
+	    ;; Second clause is destructive on `visible-string', so
+	    ;; order is important.
+	    (setq invisible-string (concat (match-string 3 visible-string)
+					   invisible-string))
+	    (setq visible-string (concat (match-string 1 visible-string)
+					 (match-string 2 visible-string))))
+	  ;; `visible-string' may be shorter than the space allowed
+	  ;; by `format-string'. If so we must insert some padding
+	  ;; after `invisible-string'.
+	  (setq padding (make-string (- (length formatted-sample)
+					(length visible-string)
+					(length "..."))
+				     ? ))))
       ;; Use different faces to show matching and non-matching authors.
       (if (string-match "\\(.*\\)|\\(.*\\)" visible-string)
 	  ;; The visible string contains both matching and
@@ -1006,8 +1006,8 @@ the configured default sort order."
     (notmuch-tag-clear-cache)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
-      (if proc
-	  (error "notmuch search process already running for query `%s'" query))
+      (when proc
+	(error "notmuch search process already running for query `%s'" query))
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
@@ -1156,7 +1156,7 @@ beginning of the line."
 (provide 'notmuch)
 
 ;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.
-(if init-file-user ; don't load init file if the -q option was used.
-    (load notmuch-init-file t t nil t))
+(when init-file-user ; don't load init file if the -q option was used.
+  (load notmuch-init-file t t nil t))
 
 ;;; notmuch.el ends here
