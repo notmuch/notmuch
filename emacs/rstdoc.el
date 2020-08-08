@@ -32,8 +32,6 @@
 
 ;;; Code:
 
-(provide 'rstdoc)
-
 (defun rstdoc-batch-extract ()
   "Extract docstrings to and from the files on the command line."
   (apply #'rstdoc-extract command-line-args-left))
@@ -81,5 +79,7 @@
       (while (re-search-forward (car pair) nil t)
 	(replace-match (cdr pair))))
     (buffer-substring (point-min) (point-max))))
+
+(provide 'rstdoc)
 
 ;;; rstdoc.el ends here
