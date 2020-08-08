@@ -370,10 +370,10 @@ filename, before trimming any trailing . and - characters."
 
 Return the patch sequence number N from the last \"[PATCH N/M]\"
 style prefix in SUBJECT, or nil if such a prefix can't be found."
-  (when (string-match
-	 "^ *\\(\\[[^]]*\\] *\\)*\\[[^]]*?\\([0-9]+\\)/[0-9]+[^]]*\\].*"
-	 subject)
-    (string-to-number (substring subject (match-beginning 2) (match-end 2)))))
+  (and (string-match
+	"^ *\\(\\[[^]]*\\] *\\)*\\[[^]]*?\\([0-9]+\\)/[0-9]+[^]]*\\].*"
+	subject)
+       (string-to-number (substring subject (match-beginning 2) (match-end 2)))))
 
 (defun notmuch-wash-subject-to-patch-filename (subject)
   "Convert a patch mail SUBJECT into a filename.

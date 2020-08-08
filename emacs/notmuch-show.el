@@ -506,10 +506,10 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-part-header (nth content-type declared-type
 					    &optional name comment)
   (let ((button)
-	(base-label (concat (when name (concat name ": "))
+	(base-label (concat (and name (concat name ": "))
 			    declared-type
-			    (unless (string-equal declared-type content-type)
-			      (concat " (as " content-type ")"))
+			    (and (not (string-equal declared-type content-type))
+				 (concat " (as " content-type ")"))
 			    comment)))
     (setq button
 	  (insert-button
@@ -787,18 +787,15 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
   ;; we return that.
-  (if (plist-get part :filename)
-      (let ((extension (file-name-extension (plist-get part :filename)))
-	    mime-type)
-	(if extension
-	    (progn
-	      (mailcap-parse-mimetypes)
-	      (setq mime-type (mailcap-extension-to-mime extension))
-	      (if (and mime-type
-		       (not (string-equal mime-type "application/octet-stream")))
-		  mime-type
-		nil))
-	  nil))))
+  (and (plist-get part :filename)
+       (let ((extension (file-name-extension (plist-get part :filename))))
+	 (and extension
+	      (progn
+		(mailcap-parse-mimetypes)
+		(let ((mime-type (mailcap-extension-to-mime extension)))
+		  (and mime-type
+		       (not (string-equal mime-type "application/octet-stream"))
+		       mime-type)))))))
 
 (defun notmuch-show-insert-part-text/html (msg part content-type nth depth button)
   (if (eq mm-text-html-renderer 'shr)
@@ -997,9 +994,10 @@ is t, hide the part initially and show the button."
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (when (funcall notmuch-show-insert-header-p-function part hide)
-		   (notmuch-show-insert-part-header nth mime-type content-type
-						    (plist-get part :filename))))
+	 (button (and (funcall notmuch-show-insert-header-p-function part hide)
+		      (notmuch-show-insert-part-header
+		       nth mime-type content-type
+		       (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
 	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
@@ -1054,9 +1052,8 @@ is t, hide the part initially and show the button."
 	 (bare-subject (notmuch-show-strip-re (plist-get headers :Subject))))
     (setq message-start (point-marker))
     (notmuch-show-insert-headerline headers
-				    (or (if notmuch-show-relative-dates
-					    (plist-get msg :date_relative)
-					  nil)
+				    (or (and notmuch-show-relative-dates
+					     (plist-get msg :date_relative))
 					(plist-get headers :Date))
 				    (plist-get msg :tags) depth)
     (setq content-start (point-marker))
@@ -1303,8 +1300,8 @@ first relevant message.
 
 If no messages match the query return NIL."
   (let* ((cli-args (cons "--exclude=false"
-			 (when notmuch-show-elide-non-matching-messages
-			   (list "--entire-thread=false"))))
+			 (and notmuch-show-elide-non-matching-messages
+			      (list "--entire-thread=false"))))
 	 (queries (notmuch-show--build-queries
 		   notmuch-show-thread-id notmuch-show-query-context))
 	 (forest nil)
@@ -2412,7 +2409,7 @@ MIME-TYPE is given then set the handle's mime-type to MIME-TYPE."
 	 (buf (notmuch-show-generate-part-buffer msg part))
 	 (computed-type (or mime-type (plist-get part :computed-type)))
 	 (filename (plist-get part :filename))
-	 (disposition (if filename `(attachment (filename . ,filename)))))
+	 (disposition (and filename `(attachment (filename . ,filename)))))
     (mm-make-handle buf (list computed-type) nil nil disposition)))
 
 (defun notmuch-show-apply-to-current-part-handle (fn &optional mime-type)

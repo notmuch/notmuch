@@ -215,7 +215,7 @@ This inserts the current buffer as a message into the notmuch
 database in folder FOLDER. If CREATE is non-nil it will supply
 the --create-folder flag to create the folder if necessary. TAGS
 should be a list of tag changes to apply to the inserted message."
-  (let* ((args (append (when create (list "--create-folder"))
+  (let* ((args (append (and create (list "--create-folder"))
 		       (list (concat "--folder=" folder))
 		       tags)))
     (apply 'notmuch-call-notmuch-process
@@ -315,7 +315,7 @@ if successful, nil if not."
 (defun notmuch-maildir-fcc-move-tmp-to-cur (destdir msg-id &optional mark-seen)
   (add-name-to-file
    (concat destdir "/tmp/" msg-id)
-   (concat destdir "/cur/" msg-id ":2," (when mark-seen "S"))))
+   (concat destdir "/cur/" msg-id ":2," (and mark-seen "S"))))
 
 (defun notmuch-maildir-fcc-file-fcc (fcc-header)
   "Write the message to the file specified by FCC-HEADER.

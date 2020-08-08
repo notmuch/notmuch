@@ -252,20 +252,20 @@ external commands."
 (defun notmuch-address-locate-command (command)
   "Return non-nil if `command' is an executable either on
 `exec-path' or an absolute pathname."
-  (when (stringp command)
-    (if (and (file-name-absolute-p command)
-	     (file-executable-p command))
-	command
-      (setq command (file-name-nondirectory command))
-      (catch 'found-command
-	(let (bin)
-	  (dolist (dir exec-path)
-	    (setq bin (expand-file-name command dir))
-	    (when (or (and (file-executable-p bin)
-			   (not (file-directory-p bin)))
-		      (and (file-executable-p (setq bin (concat bin ".exe")))
-			   (not (file-directory-p bin))))
-	      (throw 'found-command bin))))))))
+  (and (stringp command)
+       (if (and (file-name-absolute-p command)
+		(file-executable-p command))
+	   command
+	 (setq command (file-name-nondirectory command))
+	 (catch 'found-command
+	   (let (bin)
+	     (dolist (dir exec-path)
+	       (setq bin (expand-file-name command dir))
+	       (when (or (and (file-executable-p bin)
+			      (not (file-directory-p bin)))
+			 (and (file-executable-p (setq bin (concat bin ".exe")))
+			      (not (file-directory-p bin))))
+		 (throw 'found-command bin))))))))
 
 (defun notmuch-address-harvest-addr (result)
   (let ((name-addr (plist-get result :name-addr)))
@@ -304,18 +304,20 @@ asynchronously unless SYNCHRONOUS is t. In case of asynchronous
 execution, CALLBACK is called when harvesting finishes."
   (let* ((sent (eq (car notmuch-address-internal-completion) 'sent))
 	 (config-query (cadr notmuch-address-internal-completion))
-	 (prefix-query (when addr-prefix
-			 (format "%s:%s*" (if sent "to" "from") addr-prefix)))
+	 (prefix-query (and addr-prefix
+			    (format "%s:%s*"
+				    (if sent "to" "from")
+				    addr-prefix)))
 	 (from-or-to-me-query
 	  (mapconcat (lambda (x)
 		       (concat (if sent "from:" "to:") x))
 		     (notmuch-user-emails) " or "))
 	 (query (if (or prefix-query config-query)
 		    (concat (format "(%s)" from-or-to-me-query)
-			    (when prefix-query
-			      (format " and (%s)" prefix-query))
-			    (when config-query
-			      (format " and (%s)" config-query)))
+			    (and prefix-query
+				 (format " and (%s)" prefix-query))
+			    (and config-query
+				 (format " and (%s)" config-query)))
 		  from-or-to-me-query))
 	 (args `("address" "--format=sexp" "--format-version=4"
 		 ,(if sent "--output=recipients" "--output=sender")
@@ -354,21 +356,21 @@ execution, CALLBACK is called when harvesting finishes."
 
 Returns nil if the save file does not exist, or it does not seem
 to be a saved address hash."
-  (when notmuch-address-save-filename
-    (condition-case nil
-	(with-temp-buffer
-	  (insert-file-contents notmuch-address-save-filename)
-	  (let ((name (read (current-buffer)))
-		(plist (read (current-buffer))))
-	    ;; We do two simple sanity checks on the loaded file. We just
-	    ;; check a version is specified, not that it is the current
-	    ;; version, as we are allowed to over-write and a save-file with
-	    ;; an older version.
-	    (when (and (string= name "notmuch-address-hash")
-		       (plist-get plist :version))
-	      plist)))
-      ;; The error case catches any of the reads failing.
-      (error nil))))
+  (and notmuch-address-save-filename
+       (condition-case nil
+	   (with-temp-buffer
+	     (insert-file-contents notmuch-address-save-filename)
+	     (let ((name (read (current-buffer)))
+		   (plist (read (current-buffer))))
+	       ;; We do two simple sanity checks on the loaded file.
+	       ;; We just check a version is specified, not that
+	       ;; it is the current version, as we are allowed to
+	       ;; over-write and a save-file with an older version.
+	       (and (string= name "notmuch-address-hash")
+		    (plist-get plist :version)
+		    plist)))
+	 ;; The error case catches any of the reads failing.
+	 (error nil))))
 
 (defun notmuch-address--load-address-hash ()
   "Read the saved address hash and set the corresponding variables."

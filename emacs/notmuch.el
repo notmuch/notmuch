@@ -264,7 +264,8 @@ there will be called at other points of notmuch execution."
   (goto-char (point-max))
   (forward-line -2)
   (let ((beg (notmuch-search-result-beginning)))
-    (when beg (goto-char beg))))
+    (when beg
+      (goto-char beg))))
 
 (defun notmuch-search-first-thread ()
   "Select the first thread in the search results."
@@ -406,11 +407,12 @@ If there is no thread at POS (or point), returns nil."
   "Return the point at the beginning of the thread at POS (or point).
 
 If there is no thread at POS (or point), returns nil."
-  (when (notmuch-search-get-result pos)
-    ;; We pass 1+point because previous-single-property-change starts
-    ;; searching one before the position we give it.
-    (previous-single-property-change (1+ (or pos (point)))
-				     'notmuch-search-result nil (point-min))))
+  (and (notmuch-search-get-result pos)
+       ;; We pass 1+point because previous-single-property-change starts
+       ;; searching one before the position we give it.
+       (previous-single-property-change (1+ (or pos (point)))
+					'notmuch-search-result nil
+					(point-min))))
 
 (defun notmuch-search-result-end (&optional pos)
   "Return the point at the end of the thread at POS (or point).
@@ -418,9 +420,10 @@ If there is no thread at POS (or point), returns nil."
 The returned point will be just after the newline character that
 ends the result line.  If there is no thread at POS (or point),
 returns nil."
-  (when (notmuch-search-get-result pos)
-    (next-single-property-change (or pos (point)) 'notmuch-search-result
-				 nil (point-max))))
+  (and (notmuch-search-get-result pos)
+       (next-single-property-change (or pos (point))
+				    'notmuch-search-result nil
+				    (point-max))))
 
 (defun notmuch-search-foreach-result (beg end fn)
   "Invoke FN for each result between BEG and END.
@@ -461,7 +464,8 @@ BEG."
 
 If BARE is set then do not prefix with \"thread:\"."
   (let ((thread (plist-get (notmuch-search-get-result) :thread)))
-    (when thread (concat (unless bare "thread:") thread))))
+    (when thread
+      (concat (and (not bare) "thread:") thread))))
 
 (defun notmuch-search-find-stable-query ()
   "Return the stable queries for the current thread.
@@ -482,8 +486,8 @@ no messages in the region then return nil."
 	(push (car queries) query-list))
       (when (and all (cadr queries))
 	(push (cadr queries) query-list)))
-    (when query-list
-      (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
+    (and query-list
+	 (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread."

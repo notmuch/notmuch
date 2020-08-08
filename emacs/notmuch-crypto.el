@@ -253,7 +253,7 @@ corresponding key when the status button is pressed."
 	       "Decryption error")
 	      (t
 	       (concat "Unknown encryption status"
-		       (if status (concat ": " status))))))
+		       (and status (concat ": " status))))))
 	   " ]")
    :type 'notmuch-crypto-status-button-type
    'face 'notmuch-crypto-decryption

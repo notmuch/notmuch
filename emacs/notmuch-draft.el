@@ -263,7 +263,7 @@ applied to newly inserted messages)."
       ;; If the resumed message was a draft then set the draft
       ;; message-id so that we can delete the current saved draft if the
       ;; message is resaved or sent.
-      (setq notmuch-draft-id (when draft id)))))
+      (setq notmuch-draft-id (and draft id)))))
 
 
 (add-hook 'message-send-hook 'notmuch-draft--mark-deleted)

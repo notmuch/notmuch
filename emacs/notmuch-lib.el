@@ -608,7 +608,7 @@ the given type."
 		       (set-buffer-multibyte nil))
 		     (let ((args `("show" "--format=raw"
 				   ,(format "--part=%s" (plist-get part :id))
-				   ,@(when process-crypto '("--decrypt=true"))
+				   ,@(and process-crypto '("--decrypt=true"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
 			    (if binaryp 'no-conversion
@@ -781,8 +781,8 @@ signaled error.  This function does not return."
 	(insert extra)
 	(unless (bolp)
 	  (newline)))))
-  (error "%s" (concat msg (when extra
-			    " (see *Notmuch errors* for more details)"))))
+  (error "%s"
+	 (concat msg (and extra " (see *Notmuch errors* for more details)"))))
 
 (defun notmuch-check-async-exit-status (proc msg &optional command err)
   "If PROC exited abnormally, pop up an error buffer and signal an error.
@@ -836,10 +836,8 @@ You may need to restart Emacs or upgrade your notmuch package."))
 		    (if (integerp exit-status)
 			(format "exit status: %s\n" exit-status)
 		      (format "exit signal: %s\n" exit-status))
-		    (when err
-		      (concat "stderr:\n" err))
-		    (when output
-		      (concat "stdout:\n" output)))))
+		    (and err    (concat "stderr:\n" err))
+		    (and output (concat "stdout:\n" output)))))
       (if err
 	  ;; We have an error message straight from the CLI.
 	  (notmuch-logged-error
@@ -968,8 +966,8 @@ status."
   (let* ((err-file (process-get proc 'err-file))
 	 (err-buffer (or (process-get proc 'err-buffer)
 			 (find-file-noselect err-file)))
-	 (err (when (not (zerop (buffer-size err-buffer)))
-		(with-current-buffer err-buffer (buffer-string))))
+	 (err (and (not (zerop (buffer-size err-buffer)))
+		   (with-current-buffer err-buffer (buffer-string))))
 	 (sub-sentinel (process-get proc 'sub-sentinel))
 	 (real-command (process-get proc 'real-command)))
     (condition-case err
@@ -987,16 +985,17 @@ status."
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
-		 (when err
-		   (with-current-buffer err-buffer
-		     (goto-char (point-min))
-		     (end-of-line)
-		     ;; Show first line; stuff remaining lines in the
-		     ;; errors buffer.
-		     (let ((l1 (buffer-substring (point-min) (point))))
-		       (skip-chars-forward "\n")
-		       (cons l1 (unless (eobp)
-				  (buffer-substring (point) (point-max)))))))))
+		 (and err
+		      (with-current-buffer err-buffer
+			(goto-char (point-min))
+			(end-of-line)
+			;; Show first line; stuff remaining lines in the
+			;; errors buffer.
+			(let ((l1 (buffer-substring (point-min) (point))))
+			  (skip-chars-forward "\n")
+			  (cons l1 (and (not (eobp))
+					(buffer-substring (point)
+							  (point-max)))))))))
 	    (when warnings
 	      (notmuch-logged-error (car warnings) (cdr warnings)))))
       (error

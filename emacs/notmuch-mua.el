@@ -460,8 +460,8 @@ If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
   (interactive "P")
   (let ((other-headers
-	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
+	 (and (or prompt-for-sender notmuch-always-prompt-for-sender)
+	      (list (cons 'From (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
 (defun notmuch-mua-new-forward-messages (messages &optional prompt-for-sender)
@@ -470,8 +470,8 @@ the From: address first."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompteed for
 the From: address."
   (let* ((other-headers
-	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
+	  (and (or prompt-for-sender notmuch-always-prompt-for-sender)
+	       (list (cons 'From (notmuch-mua-prompt-for-sender)))))
 	 ;; Comes from the first message and is applied later.
 	 forward-subject
 	 ;; List of accumulated message-references of forwarded messages.
@@ -542,9 +542,8 @@ will be addressed to all recipients of the source message."
   ;; primary selection was previously in a non-emacs window but not if
   ;; it was in an emacs window. To avoid the problem in the latter case
   ;; we deactivate mark.
-  (let ((sender
-	 (when prompt-for-sender
-	   (notmuch-mua-prompt-for-sender)))
+  (let ((sender (and prompt-for-sender
+		     (notmuch-mua-prompt-for-sender)))
 	(select-active-regions nil))
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
