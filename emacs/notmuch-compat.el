@@ -40,14 +40,6 @@
 (unless (fboundp 'message--fold-long-headers)
   (add-hook 'message-header-hook 'notmuch-message--fold-long-headers))
 
-(if (fboundp 'setq-local)
-    (defalias 'notmuch-setq-local 'setq-local)
-  (defmacro notmuch-setq-local (var val)
-    "Set variable VAR to value VAL in current buffer.
-
-Backport of setq-local for emacs without setq-local (pre 24.3)."
-    `(set (make-local-variable ',var) ,val)))
-
 (if (fboundp 'read-char-choice)
     (defalias 'notmuch-read-char-choice 'read-char-choice)
   (defun notmuch-read-char-choice (prompt chars &optional inhibit-keyboard-quit)

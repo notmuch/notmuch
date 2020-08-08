@@ -62,7 +62,7 @@
   ;; internal completion) can still be accessed via standard company
   ;; functions, e.g., company-complete.
   (unless (eq notmuch-address-command 'internal)
-    (notmuch-setq-local company-idle-delay nil)))
+    (setq-local company-idle-delay nil)))
 
 ;;;###autoload
 (defun notmuch-company (command &optional arg &rest _ignore)
