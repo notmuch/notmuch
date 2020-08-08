@@ -661,11 +661,9 @@ MSG (if it isn't already)."
 ;; first loading gnus-art, which defines it, resulting in a
 ;; void-variable error.  Hence, we advise `mm-shr' to ensure gnus-art
 ;; is loaded.
-(when (>= emacs-major-version 24)
-  (defadvice mm-shr (before load-gnus-arts activate)
-    (require 'gnus-art nil t)
-    (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)
-    (ad-activate 'mm-shr)))
+(define-advice mm-shr (:before (_handle) notmuch--load-gnus-args)
+  "Require `gnus-art' since we use its variables."
+  (require 'gnus-art nil t))
 
 (defun notmuch-mm-display-part-inline (msg part content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
