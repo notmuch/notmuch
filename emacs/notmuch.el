@@ -273,8 +273,12 @@ there will be called at other points of notmuch execution."
   (goto-char (point-min)))
 
 (defface notmuch-message-summary-face
-  '((((class color) (background light)) (:background "#f0f0f0"))
-    (((class color) (background dark)) (:background "#303030")))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     (:background "#f0f0f0"))
+    (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     (:background "#303030")))
   "Face for the single-line message summary in notmuch-show-mode."
   :group 'notmuch-show
   :group 'notmuch-faces)
