@@ -704,6 +704,9 @@ struct _notmuch_indexopts {
 
 #define EMPTY_STRING(s) ((s)[0] == '\0')
 
+/* config.cc */
+notmuch_status_t
+_notmuch_config_load_from_database (notmuch_database_t * db);
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus

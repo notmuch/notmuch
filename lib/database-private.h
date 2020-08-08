@@ -228,6 +228,9 @@ struct _notmuch_database {
      * here, but at least they are small */
     notmuch_string_map_t *user_prefix;
     notmuch_string_map_t *user_header;
+
+    /* Cached and possibly overridden configuration */
+    notmuch_string_map_t *config;
 };
 
 /* Prior to database version 3, features were implied by the database

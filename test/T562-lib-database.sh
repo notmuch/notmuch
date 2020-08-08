@@ -340,7 +340,7 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "get config from closed database"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        const char *result;
+        char *result;
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_get_config (db, "foo", &result);
         printf("%d\n",  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
@@ -348,9 +348,8 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-1
+0
 == stderr ==
-Error: A Xapian exception occurred getting metadata: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -376,7 +375,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_indexopts_t *result;
         EXPECT0(notmuch_database_close (db));
         result = notmuch_database_get_default_indexopts (db);
-        printf("%d\n",  result == NULL);
+        printf("%d\n", result != NULL);
     }
 EOF
 cat <<EOF > EXPECTED

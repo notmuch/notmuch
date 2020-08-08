@@ -50,6 +50,11 @@ notmuch_database_set_config (notmuch_database_t *notmuch,
     if (status)
 	return status;
 
+    if (! notmuch->config) {
+	if ((status = _notmuch_config_load_from_database (notmuch)))
+	    return status;
+    }
+
     try {
 	notmuch->writable_xapian_db->set_metadata (CONFIG_PREFIX + key, value);
     } catch (const Xapian::Error &error) {
@@ -58,7 +63,13 @@ notmuch_database_set_config (notmuch_database_t *notmuch,
 	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred setting metadata: %s\n",
 			       error.get_msg ().c_str ());
     }
-    return status;
+
+    if (status)
+	return status;
+
+    _notmuch_string_map_set (notmuch->config, key, value);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static notmuch_status_t
@@ -84,17 +95,25 @@ notmuch_database_get_config (notmuch_database_t *notmuch,
 			     const char *key,
 			     char **value)
 {
-    std::string strval;
+    const char* stored_val;
     notmuch_status_t status;
+
+    if (! notmuch->config) {
+	if ((status = _notmuch_config_load_from_database (notmuch)))
+	    return status;
+    }
 
     if (! value)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
-    status = _metadata_value (notmuch, key, strval);
-    if (status)
-	return status;
-
-    *value = strdup (strval.c_str ());
+    stored_val = _notmuch_string_map_get (notmuch->config, key);
+    if (! stored_val) {
+	/* XXX in principle this API should be fixed so empty string
+	 * is distinguished from not found */
+	*value = strdup("");
+    } else {
+	*value = strdup (stored_val);
+    }
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -200,4 +219,29 @@ void
 notmuch_config_list_destroy (notmuch_config_list_t *list)
 {
     talloc_free (list);
+}
+
+notmuch_status_t
+_notmuch_config_load_from_database (notmuch_database_t *notmuch)
+{
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    notmuch_config_list_t *list;
+
+    if (notmuch->config == NULL)
+	notmuch->config = _notmuch_string_map_create (notmuch);
+
+    if (unlikely(notmuch->config == NULL))
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    status = notmuch_database_get_config_list (notmuch, "", &list);
+    if (status)
+	return status;
+
+    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+	_notmuch_string_map_append (notmuch->config,
+				    notmuch_config_list_key (list),
+				    notmuch_config_list_value (list));
+    }
+
+    return status;
 }

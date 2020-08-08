@@ -166,8 +166,7 @@ _notmuch_database_setup_standard_query_fields (notmuch_database_t *notmuch)
 notmuch_status_t
 _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch)
 {
-    notmuch_config_list_t *list;
-    notmuch_status_t status;
+    notmuch_string_map_iterator_t *list;
 
     notmuch->user_prefix = _notmuch_string_map_create (notmuch);
     if (notmuch->user_prefix == NULL)
@@ -177,15 +176,16 @@ _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch)
     if (notmuch->user_header == NULL)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
-    status = notmuch_database_get_config_list (notmuch, CONFIG_HEADER_PREFIX, &list);
-    if (status)
-	return status;
+    list = _notmuch_string_map_iterator_create (notmuch->config, CONFIG_HEADER_PREFIX, FALSE);
+    if (! list)
+	INTERNAL_ERROR ("unable to read headers from configuration");
 
-    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+    for (; _notmuch_string_map_iterator_valid (list);
+	 _notmuch_string_map_iterator_move_to_next (list)) {
 
 	prefix_t query_field;
 
-	const char *key = notmuch_config_list_key (list)
+	const char *key = _notmuch_string_map_iterator_key (list)
 			  + sizeof (CONFIG_HEADER_PREFIX) - 1;
 
 	_notmuch_string_map_append (notmuch->user_prefix,
@@ -194,7 +194,7 @@ _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch)
 
 	_notmuch_string_map_append (notmuch->user_header,
 				    key,
-				    notmuch_config_list_value (list));
+				    _notmuch_string_map_iterator_value (list));
 
 	query_field.name = talloc_strdup (notmuch, key);
 	query_field.prefix = _user_prefix (notmuch, key);
@@ -204,7 +204,7 @@ _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch)
 	_setup_query_field_default (&query_field, notmuch);
     }
 
-    notmuch_config_list_destroy (list);
+    _notmuch_string_map_iterator_destroy (list);
 
     return NOTMUCH_STATUS_SUCCESS;
 }

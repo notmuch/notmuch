@@ -90,7 +90,7 @@ notmuch_database_open_verbose (const char *path,
     notmuch->exception_reported = false;
     notmuch->status_string = NULL;
     notmuch->path = talloc_strdup (notmuch, path);
-
+    notmuch->config = NULL;
     strip_trailing (notmuch->path, '/');
 
     notmuch->writable_xapian_db = NULL;
@@ -179,6 +179,11 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->query_parser->add_rangeprocessor (notmuch->value_range_processor);
 	notmuch->query_parser->add_rangeprocessor (notmuch->date_range_processor);
 	notmuch->query_parser->add_rangeprocessor (notmuch->last_mod_range_processor);
+
+	/* Configuration information is needed to set up query parser */
+	status = _notmuch_config_load_from_database (notmuch);
+	if (status)
+	    goto DONE;
 
 	status = _notmuch_database_setup_standard_query_fields (notmuch);
 	if (status)
