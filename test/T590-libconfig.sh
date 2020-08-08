@@ -28,18 +28,18 @@ EOF
 test_begin_subtest "notmuch_database_{set,get}_config"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {
-   EXPECT0(notmuch_database_set_config (db, "testkey1", "testvalue1"));
-   EXPECT0(notmuch_database_set_config (db, "testkey2", "testvalue2"));
-   EXPECT0(notmuch_database_get_config (db, "testkey1", &val));
-   printf("testkey1 = %s\n", val);
-   EXPECT0(notmuch_database_get_config (db, "testkey2", &val));
-   printf("testkey2 = %s\n", val);
+   EXPECT0(notmuch_database_set_config (db, "test.key1", "testvalue1"));
+   EXPECT0(notmuch_database_set_config (db, "test.key2", "testvalue2"));
+   EXPECT0(notmuch_database_get_config (db, "test.key1", &val));
+   printf("test.key1 = %s\n", val);
+   EXPECT0(notmuch_database_get_config (db, "test.key2", &val));
+   printf("test.key2 = %s\n", val);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-testkey1 = testvalue1
-testkey2 = testvalue2
+test.key1 = testvalue1
+test.key2 = testvalue2
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -93,8 +93,8 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 aaabefore beforeval
-testkey1 testvalue1
-testkey2 testvalue2
+test.key1 testvalue1
+test.key2 testvalue2
 zzzafter afterval
 == stderr ==
 EOF
@@ -115,8 +115,8 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 aaabefore 1
-testkey1 1
-testkey2 1
+test.key1 1
+test.key2 1
 zzzafter 1
 == stderr ==
 EOF
@@ -126,7 +126,7 @@ test_begin_subtest "notmuch_database_get_config_list: one prefix"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {
    notmuch_config_list_t *list;
-   EXPECT0(notmuch_database_get_config_list (db, "testkey", &list));
+   EXPECT0(notmuch_database_get_config_list (db, "test.key", &list));
    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
       printf("%s %s\n", notmuch_config_list_key (list), notmuch_config_list_value(list));
    }
@@ -135,8 +135,8 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-testkey1 testvalue1
-testkey2 testvalue2
+test.key1 testvalue1
+test.key2 testvalue2
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -152,8 +152,8 @@ cat <<'EOF' >EXPECTED
 #notmuch-dump batch-tag:3 config
 #@ aaabefore beforeval
 #@ key%20with%20spaces value,%20with,%20spaces%21
-#@ testkey1 testvalue1
-#@ testkey2 testvalue2
+#@ test.key1 testvalue1
+#@ test.key2 testvalue2
 #@ zzzafter afterval
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -162,7 +162,7 @@ test_begin_subtest "restore config"
 notmuch dump --include=config >EXPECTED
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {
-    EXPECT0(notmuch_database_set_config (db, "testkey1", "mutatedvalue"));
+    EXPECT0(notmuch_database_set_config (db, "test.key1", "mutatedvalue"));
 }
 EOF
 notmuch restore --include=config <EXPECTED
