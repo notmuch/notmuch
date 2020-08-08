@@ -37,6 +37,83 @@ notmuch_database_open_verbose (const char *path,
 					      database, status_string);
 }
 
+static const char *
+_xdg_dir (void *ctx,
+	  const char *xdg_root_variable,
+	  const char *xdg_prefix,
+	  const char *profile_name)
+{
+    const char *xdg_root = getenv (xdg_root_variable);
+
+    if (! xdg_root) {
+	const char *home = getenv ("HOME");
+
+	if (! home) return NULL;
+
+	xdg_root = talloc_asprintf (ctx,
+				    "%s/%s",
+				    home,
+				    xdg_prefix);
+    }
+
+    if (! profile_name)
+	profile_name = getenv ("NOTMUCH_PROFILE");
+
+    if (! profile_name)
+	profile_name = "default";
+
+    return talloc_asprintf (ctx,
+			    "%s/notmuch/%s",
+			    xdg_root,
+			    profile_name);
+}
+
+static notmuch_status_t
+_load_key_file (const char *path,
+		const char *profile,
+		GKeyFile **key_file)
+{
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    void *local = talloc_new (NULL);
+
+    if (path && EMPTY_STRING (path))
+	goto DONE;
+
+    if (! path)
+	path = getenv ("NOTMUCH_CONFIG");
+
+    if (! path) {
+	const char *dir = _xdg_dir (local, "XDG_CONFIG_HOME", ".config", profile);
+
+	if (dir) {
+	    path = talloc_asprintf (local, "%s/config", dir);
+	    if (access (path, R_OK) !=0)
+		path = NULL;
+	}
+    }
+
+    if (! path) {
+	const char *home = getenv ("HOME");
+
+	path = talloc_asprintf (local, "%s/.notmuch-config", home);
+
+	if (! profile)
+	    profile = getenv ("NOTMUCH_PROFILE");
+
+	if (profile)
+	    path = talloc_asprintf (local, "%s.%s", path, profile);
+    }
+
+    *key_file = g_key_file_new ();
+    if (! g_key_file_load_from_file (*key_file, path, G_KEY_FILE_NONE, NULL)) {
+	status = NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+DONE:
+    talloc_free (local);
+    return status;
+}
+
 notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
@@ -49,7 +126,6 @@ notmuch_database_open_with_config (const char *database_path,
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path, *xapian_path, *incompat_features;
-    char *configured_database_path = NULL;
     char *message = NULL;
     struct stat st;
     int err;
@@ -57,18 +133,14 @@ notmuch_database_open_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     static int initialized = 0;
 
-    /* XXX TODO: default locations for NULL case, handle profiles */
-    if (config_path != NULL && ! EMPTY_STRING (config_path)) {
-	key_file = g_key_file_new ();
-	if (! g_key_file_load_from_file (key_file, config_path, G_KEY_FILE_NONE, NULL)) {
-	    status = NOTMUCH_STATUS_FILE_ERROR;
-	    goto DONE;
-	}
-	configured_database_path = g_key_file_get_value (key_file, "database", "path", NULL);
+    status = _load_key_file (config_path, profile, &key_file);
+    if (status) {
+	message = strdup ("Error: cannot load config file");
+	goto DONE;
     }
-
-    if (database_path == NULL)
-	database_path = configured_database_path;
+	
+    if (! database_path && key_file)
+	database_path = g_key_file_get_value (key_file, "database", "path", NULL);
 
     if (database_path == NULL) {
 	message = strdup ("Error: Cannot open a database for a NULL path.\n");

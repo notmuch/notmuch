@@ -251,7 +251,7 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 				GKeyFile *file)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-    gchar **groups,**keys, *val;
+    gchar **groups, **keys, *val;
 
     if (notmuch->config == NULL)
 	notmuch->config = _notmuch_string_map_create (notmuch);
