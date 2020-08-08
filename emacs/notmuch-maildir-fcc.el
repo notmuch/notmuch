@@ -242,7 +242,7 @@ If CREATE is non-nil then create the folder if necessary."
       ;; typo, or just the user want a new folder, let the user decide
       ;; how to deal with it.
       (error
-       (let ((response (notmuch-read-char-choice "Insert failed: \
+       (let ((response (read-char-choice "Insert failed: \
 \(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " '(?r ?c ?i ?e))))
 	 (cl-case response
 	   (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
@@ -327,7 +327,7 @@ if needed."
     ;; fix it in some way.
     (let* ((prompt (format "Fcc %s is not a maildir: \
 \(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " fcc-header))
-	   (response (notmuch-read-char-choice prompt '(?r ?c ?i ?e))))
+	   (response (read-char-choice prompt '(?r ?c ?i ?e))))
       (cl-case response
 	(?r (notmuch-maildir-fcc-file-fcc fcc-header))
 	(?c (if (file-writable-p fcc-header)
