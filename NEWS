@@ -1,6 +1,11 @@
 Notmuch 0.31 (UNRELEASED)
 =========================
 
+Emacs
+-----
+
+The minimum supported major version of GNU Emacs is now 25.1.
+
 Notmuch 0.30 (2020-07-10)
 =========================
 
