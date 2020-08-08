@@ -136,16 +136,16 @@ add_gpgsm_home ()
     at_exit_function _gnupg_exit
     mkdir -p -m 0700 "$GNUPGHOME"
     openssl pkcs12 -export -passout pass: -inkey "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" \
-        < "$NOTMUCH_SRCDIR/test/smime/test.crt" | \
-        gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
-              --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<''
+	< "$NOTMUCH_SRCDIR/test/smime/test.crt" | \
+	gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
+	      --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<''
     fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
     echo "$fpr S relax" >> "$GNUPGHOME/trustlist.txt"
     gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
     echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
     printf '%s::1\n' include-certs disable-crl-checks | gpgconf --output /dev/null --change-options gpgsm
     gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
-              --disable-dirmngr --import "$NOTMUCH_SRCDIR/test/smime/bob.p12" >>"$GNUPGHOME"/import.log 2>&1 3<<<''
+	      --disable-dirmngr --import "$NOTMUCH_SRCDIR/test/smime/bob.p12" >>"$GNUPGHOME"/import.log 2>&1 3<<<''
     test_debug "cat $GNUPGHOME/import.log"
 }
 
@@ -394,8 +394,8 @@ emacs_fcc_message ()
     local nmn_args subject body
     nmn_args=''
     while [[ "$1" =~ ^-- ]]; do
-        nmn_args="$nmn_args $1"
-        shift
+	nmn_args="$nmn_args $1"
+	shift
     done
     subject="$1"
     body="$2"
@@ -405,7 +405,7 @@ emacs_fcc_message ()
 
     test_emacs \
 	"(let ((message-send-mail-function (lambda () t))
-               (mail-host-address \"example.com\"))
+	       (mail-host-address \"example.com\"))
 	   (notmuch-mua-mail)
 	   (message-goto-to)
 	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
@@ -524,9 +524,9 @@ test_expect_equal_json () {
     # override Python's stdio encoding defaults.
     script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
     output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
-        || echo "$1")
+	|| echo "$1")
     expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
-        || echo "$2")
+	|| echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
 }
@@ -540,15 +540,15 @@ test_valid_json () {
 # Sort the top-level list of JSON data from stdin.
 test_sort_json () {
     PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c \
-        "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
+	"import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
 }
 
 # test for json objects:
 # read the source of test/json_check_nodes.py (or the output when
 # invoking it without arguments) for an explanation of the syntax.
 test_json_nodes () {
-        local output
-        exec 1>&6 2>&7		# Restore stdout and stderr
+	local output
+	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_json_eval without test_begin_subtest"
 	fi
@@ -662,7 +662,7 @@ notmuch_json_show_sanitize ()
 	-e 's|"filename": "signature.asc",||g' \
 	-e 's|"filename": \["/[^"]*"\],|"filename": \["YYYYY"\],|g' \
 	-e 's|"timestamp": 97.......|"timestamp": 42|g' \
-        -e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
+	-e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
 }
 
 notmuch_emacs_error_sanitize ()
@@ -673,7 +673,7 @@ notmuch_emacs_error_sanitize ()
     for file in "$@"; do
 	echo "=== $file ==="
 	cat "$file"
-    done | sed  \
+    done | sed \
 	-e 's/^\[.*\]$/[XXX]/' \
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
 }
@@ -929,8 +929,8 @@ test_expect_code () {
 # but is a prefix that can be used in the test script, like:
 #
 #	test_expect_success 'complain and die' '
-#           do something &&
-#           do something else &&
+#	    do something &&
+#	    do something else &&
 #	    test_must_fail git checkout ../outerspace
 #	'
 #
@@ -1020,8 +1020,8 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
 # Here's what we are using here:
 #
-# --quick              Use minimal customization. This implies --no-init-file,
-#		       --no-site-file and (emacs 24) --no-site-lisp
+# --quick		Use minimal customization. This implies --no-init-file,
+#			--no-site-file and (emacs 24) --no-site-lisp
 #
 # --directory		Ensure that the local elisp sources are found
 #
