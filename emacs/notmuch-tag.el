@@ -532,7 +532,8 @@ and vice versa."
 		       (and (symbolp name)
 			    (symbol-name name))))
 	     (name-string (if name
-			      (if reverse (concat "Reverse " name)
+			      (if reverse
+				  (concat "Reverse " name)
 				name)
 			    (mapconcat #'identity tag-change " "))))
 	(push (list key name-string

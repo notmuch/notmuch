@@ -611,7 +611,8 @@ the given type."
 				   ,@(and process-crypto '("--decrypt=true"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
-			    (if binaryp 'no-conversion
+			    (if binaryp
+				'no-conversion
 			      (let ((coding-system
 				     (mm-charset-to-coding-system
 				      (plist-get part :content-charset))))
@@ -680,7 +681,8 @@ current buffer, if possible."
       ;; `gnus-decoded' charset.  Otherwise, we'll fetch the binary
       ;; part content and let mm-* decode it.
       (let* ((have-content (plist-member part :content))
-	     (charset (if have-content 'gnus-decoded
+	     (charset (if have-content
+			  'gnus-decoded
 			(plist-get part :content-charset)))
 	     (handle (mm-make-handle (current-buffer)
 				     `(,content-type (charset . ,charset)))))
