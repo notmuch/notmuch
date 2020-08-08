@@ -26,6 +26,20 @@ char *strtok_len (char *s, const char *delim, size_t *len);
 /* Const version of strtok_len. */
 const char *strtok_len_c (const char *s, const char *delim, size_t *len);
 
+/* Simplified version of strtok_len, with a single delimiter.
+ * Handles escaping delimiters with \
+ * Usage pattern:
+ *
+ * const char *tok = input;
+ * const char *delim = ';';
+ * size_t tok_len = 0;
+ *
+ * while ((tok = strsplit_len (tok + tok_len, delim, &tok_len)) != NULL) {
+ *     // do stuff with string tok of length tok_len
+ * }
+ */
+const char *strsplit_len (const char *s, char delim, size_t *len);
+
 /* Return a talloced string with str sanitized.
  *
  * Whitespace characters (tabs and newlines) are replaced with spaces,
