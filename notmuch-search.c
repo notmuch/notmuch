@@ -52,6 +52,7 @@ typedef enum {
 
 typedef struct {
     notmuch_database_t *notmuch;
+    void *talloc_ctx;
     int format_sel;
     sprinter_t *format;
     int exclude;
@@ -677,28 +678,29 @@ do_search_tags (const search_context_t *ctx)
 }
 
 static int
-_notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int argc, char *argv[])
+_notmuch_search_prepare (search_context_t *ctx, int argc, char *argv[])
 {
     char *query_str;
-    unsigned int i;
-    char *status_string = NULL;
+
+    if (! ctx->talloc_ctx)
+	ctx->talloc_ctx = talloc_new (NULL);
 
     switch (ctx->format_sel) {
     case NOTMUCH_FORMAT_TEXT:
-	ctx->format = sprinter_text_create (config, stdout);
+	ctx->format = sprinter_text_create (ctx->talloc_ctx, stdout);
 	break;
     case NOTMUCH_FORMAT_TEXT0:
 	if (ctx->output == OUTPUT_SUMMARY) {
 	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
 	    return EXIT_FAILURE;
 	}
-	ctx->format = sprinter_text0_create (config, stdout);
+	ctx->format = sprinter_text0_create (ctx->talloc_ctx, stdout);
 	break;
     case NOTMUCH_FORMAT_JSON:
-	ctx->format = sprinter_json_create (config, stdout);
+	ctx->format = sprinter_json_create (ctx->talloc_ctx, stdout);
 	break;
     case NOTMUCH_FORMAT_SEXP:
-	ctx->format = sprinter_sexp_create (config, stdout);
+	ctx->format = sprinter_sexp_create (ctx->talloc_ctx, stdout);
 	break;
     default:
 	/* this should never happen */
@@ -706,18 +708,6 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
     }
 
     notmuch_exit_if_unsupported_format ();
-
-    if (notmuch_database_open_verbose (
-	    notmuch_config_get_database_path (config),
-	    NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx->notmuch, &status_string)) {
-
-	if (status_string) {
-	    fputs (status_string, stderr);
-	    free (status_string);
-	}
-
-	return EXIT_FAILURE;
-    }
 
     notmuch_exit_if_unmatched_db_uuid (ctx->notmuch);
 
@@ -748,21 +738,20 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
     }
 
     if (ctx->exclude != NOTMUCH_EXCLUDE_FALSE) {
-	const char **search_exclude_tags;
-	size_t search_exclude_tags_length;
+	notmuch_config_values_t *exclude_tags;
 	notmuch_status_t status;
 
-	search_exclude_tags = notmuch_config_get_search_exclude_tags (
-	    config, &search_exclude_tags_length);
+	for (exclude_tags = notmuch_config_get_values (ctx->notmuch, NOTMUCH_CONFIG_EXCLUDE_TAGS);
+	     notmuch_config_values_valid (exclude_tags);
+	     notmuch_config_values_move_to_next (exclude_tags)) {
 
-	for (i = 0; i < search_exclude_tags_length; i++) {
-	    status = notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
+	    status = notmuch_query_add_tag_exclude (ctx->query,
+						    notmuch_config_values_get (exclude_tags));
 	    if (status && status != NOTMUCH_STATUS_IGNORED) {
 		print_status_query ("notmuch search", ctx->query, status);
 		return EXIT_FAILURE;
 	    }
 	}
-
 	notmuch_query_set_omit_excluded (ctx->query, ctx->exclude);
     }
 
@@ -805,7 +794,7 @@ static const notmuch_opt_desc_t common_options[] = {
 };
 
 int
-notmuch_search_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_search_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
     search_context_t *ctx = &search_context;
     int opt_index, ret;
@@ -832,6 +821,7 @@ notmuch_search_command (notmuch_config_t *config, unused(notmuch_database_t *not
 	{ }
     };
 
+    ctx->notmuch = notmuch;
     ctx->output = OUTPUT_SUMMARY;
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
@@ -845,8 +835,7 @@ notmuch_search_command (notmuch_config_t *config, unused(notmuch_database_t *not
 	return EXIT_FAILURE;
     }
 
-    if (_notmuch_search_prepare (ctx, config,
-				 argc - opt_index, argv + opt_index))
+    if (_notmuch_search_prepare (ctx, argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
     switch (ctx->output) {
@@ -871,7 +860,7 @@ notmuch_search_command (notmuch_config_t *config, unused(notmuch_database_t *not
 }
 
 int
-notmuch_address_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_address_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
     search_context_t *ctx = &search_context;
     int opt_index, ret;
@@ -897,6 +886,8 @@ notmuch_address_command (notmuch_config_t *config, unused(notmuch_database_t *no
 	{ }
     };
 
+    ctx->notmuch = notmuch;
+
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
@@ -911,8 +902,7 @@ notmuch_address_command (notmuch_config_t *config, unused(notmuch_database_t *no
 	return EXIT_FAILURE;
     }
 
-    if (_notmuch_search_prepare (ctx, config,
-				 argc - opt_index, argv + opt_index))
+    if (_notmuch_search_prepare (ctx, argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
     ctx->addresses = g_hash_table_new_full (strcase_hash, strcase_equal,

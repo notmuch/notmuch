@@ -268,4 +268,104 @@ notmuch reply query:$query_name >> OUTPUT
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+backup_database
+test_begin_subtest "search with alternate config"
+notmuch tag -- +foobar17 '*'
+cp notmuch-config alt-config
+notmuch --config=alt-config config set search.exclude_tags foobar17
+output=$(notmuch --config=alt-config count '*')
+test_expect_equal "$output" "0"
+restore_database
+
+cat <<EOF > EXPECTED
+Before:
+After:
+thread:XXX   2009-11-18 [1/2] Carl Worth| Alex Botero-Lowry; [notmuch] [PATCH] Error out if no query is supplied to search instead of going into an infinite loop (attachment inbox unread)
+thread:XXX   2009-11-18 [1/2] Carl Worth| Ingmar Vanhassel; [notmuch] [PATCH] Typsos (inbox unread)
+thread:XXX   2009-11-18 [1/3] Carl Worth| Adrian Perez de Castro, Keith Packard; [notmuch] Introducing myself (inbox signed unread)
+thread:XXX   2009-11-18 [1/3] Carl Worth| Israel Herraiz, Keith Packard; [notmuch] New to the list (inbox unread)
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+thread:XXX   2009-11-18 [1/2] Carl Worth| Jan Janak; [notmuch] [PATCH] Older versions of install do not support -C. (inbox unread)
+thread:XXX   2009-11-18 [1/3(4)] Carl Worth| Aron Griffis, Keith Packard; [notmuch] archive (inbox unread)
+thread:XXX   2009-11-18 [1/2] Carl Worth| Keith Packard; [notmuch] [PATCH] Make notmuch-show 'X' (and 'x') commands remove inbox (and unread) tags (inbox unread)
+thread:XXX   2009-11-18 [1/7] Carl Worth| Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard; [notmuch] Working with Maildir storage? (inbox signed unread)
+thread:XXX   2009-11-18 [2/5] Carl Worth| Mikhail Gusarov, Keith Packard; [notmuch] [PATCH 1/2] Close message file after parsing message headers (inbox unread)
+thread:XXX   2009-11-17 [1/2] Carl Worth| Alex Botero-Lowry; [notmuch] preliminary FreeBSD support (attachment inbox unread)
+EOF
+
+test_begin_subtest "search with saved query from config file"
+query_name="test${RANDOM}"
+backup_config
+printf "Before:\n" > OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+printf "\n[query]\n${query_name} = from:cworth\n" >> notmuch-config
+printf "After:\n" >> OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search with saved query from config file (xdg)"
+query_name="test${RANDOM}"
+xdg_config
+printf "Before:\n" > OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+printf "\n[query]\n${query_name} = from:cworth\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search with saved query from config file (xdg + profile)"
+query_name="test${RANDOM}"
+xdg_config $query_name
+printf "Before:\n" > OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+printf "\n[query]\n${query_name} = from:cworth\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch search query:$query_name 2>&1 | notmuch_search_sanitize >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+cat <<EOF > EXPECTED
+Before:
+After:
+Alex Botero-Lowry <alex.boterolowry@gmail.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+François Boulogne <boulogne.f@gmail.com>
+Jjgod Jiang <gzjjgod@gmail.com>
+EOF
+
+test_begin_subtest "address: saved query from config file"
+backup_config
+query_name="test${RANDOM}"
+printf "Before:\n" > OUTPUT
+notmuch address --deduplicate=no --output=sender query:$query_name 2>&1 | sort >> OUTPUT
+printf "\n[query]\n${query_name} = from:gmail.com\n" >> notmuch-config
+printf "After:\n" >> OUTPUT
+notmuch address --output=sender query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "address: saved query from config file (xdg)"
+query_name="test${RANDOM}"
+xdg_config
+printf "Before:\n" > OUTPUT
+notmuch address --deduplicate=no --output=sender query:$query_name 2>&1 | sort >> OUTPUT
+printf "\n[query]\n${query_name} = from:gmail.com\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch address --output=sender query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "address: saved query from config file (xdg+profile)"
+query_name="test${RANDOM}"
+xdg_config $query_name
+printf "Before:\n" > OUTPUT
+notmuch address --deduplicate=no --output=sender query:$query_name 2>&1 | sort >> OUTPUT
+printf "\n[query]\n${query_name} = from:gmail.com\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch address --output=sender query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
