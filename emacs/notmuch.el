@@ -443,8 +443,8 @@ BEG."
     (while (and pos (or (< pos end) first))
       (when (notmuch-search-get-result pos)
 	(funcall fn pos))
-      (setq pos (notmuch-search-result-end pos)
-	    first nil))))
+      (setq pos (notmuch-search-result-end pos))
+      (setq first nil))))
 ;; Unindent the function argument of notmuch-search-foreach-result so
 ;; the indentation of callers doesn't get out of hand.
 (put 'notmuch-search-foreach-result 'lisp-indent-function 2)
@@ -589,8 +589,8 @@ is inactive this applies to the thread at point.
 If ONLY-MATCHED is non-nil, only tag matched messages."
   (interactive (notmuch-search-interactive-tag-changes))
   (unless (and beg end)
-    (setq beg (car (notmuch-interactive-region))
-	  end (cadr (notmuch-interactive-region))))
+    (setq beg (car (notmuch-interactive-region)))
+    (setq end (cadr (notmuch-interactive-region))))
   (let ((search-string (notmuch-search-find-stable-query-region
 			beg end only-matched)))
     (notmuch-tag search-string tag-changes)
@@ -762,8 +762,8 @@ non-authors is found, assume that all of the authors match."
 				   (length "... "))))
 	    ;; Truncate the visible string according to the width of
 	    ;; the display string.
-	    (setq visible-string (substring formatted-authors 0 visible-length)
-		  invisible-string (substring formatted-authors visible-length))
+	    (setq visible-string (substring formatted-authors 0 visible-length))
+	    (setq invisible-string (substring formatted-authors visible-length))
 	    ;; If possible, truncate the visible string at a natural
 	    ;; break (comma or pipe), as incremental search doesn't
 	    ;; match across the visible/invisible border.
@@ -771,8 +771,8 @@ non-authors is found, assume that all of the authors match."
 	      ;; Second clause is destructive on `visible-string', so
 	      ;; order is important.
 	      (setq invisible-string (concat (match-string 3 visible-string)
-					     invisible-string)
-		    visible-string (concat (match-string 1 visible-string)
+					     invisible-string))
+	      (setq visible-string (concat (match-string 1 visible-string)
 					   (match-string 2 visible-string))))
 	    ;; `visible-string' may be shorter than the space allowed
 	    ;; by `format-string'. If so we must insert some padding
@@ -785,17 +785,18 @@ non-authors is found, assume that all of the authors match."
       (if (string-match "\\(.*\\)|\\(.*\\)" visible-string)
 	  ;; The visible string contains both matching and
 	  ;; non-matching authors.
-	  (setq visible-string (notmuch-search-author-propertize visible-string)
-		;; The invisible string must contain only non-matching
-		;; authors, as the visible-string contains both.
-		invisible-string (propertize invisible-string
-					     'face 'notmuch-search-non-matching-authors))
+	  (progn
+	    (setq visible-string (notmuch-search-author-propertize visible-string))
+	    ;; The invisible string must contain only non-matching
+	    ;; authors, as the visible-string contains both.
+	    (setq invisible-string (propertize invisible-string
+					       'face 'notmuch-search-non-matching-authors)))
 	;; The visible string contains only matching authors.
 	(setq visible-string (propertize visible-string
-					 'face 'notmuch-search-matching-authors)
-	      ;; The invisible string may contain both matching and
-	      ;; non-matching authors.
-	      invisible-string (notmuch-search-author-propertize invisible-string)))
+					 'face 'notmuch-search-matching-authors))
+	;; The invisible string may contain both matching and
+	;; non-matching authors.
+	(setq invisible-string (notmuch-search-author-propertize invisible-string)))
       ;; If there is any invisible text, add it as a tooltip to the
       ;; visible text.
       (when (not (string= invisible-string ""))

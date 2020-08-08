@@ -861,8 +861,8 @@ for `call-process'.  ARGS is as described for
   (let (stdin-string)
     (while (keywordp (car args))
       (cl-case (car args)
-	(:stdin-string (setq stdin-string (cadr args)
-			     args (cddr args)))
+	(:stdin-string (setq stdin-string (cadr args))
+		       (setq args (cddr args)))
 	(otherwise
 	 (error "Unknown keyword argument: %s" (car args)))))
     (if (null stdin-string)
@@ -939,8 +939,8 @@ status."
 		      :buffer buffer
 		      :command (cons command args)
 		      :connection-type 'pipe
-		      :stderr err-buffer)
-		err-proc (get-buffer-process err-buffer))
+		      :stderr err-buffer))
+	  (setq err-proc (get-buffer-process err-buffer))
 	  (process-put proc 'err-buffer err-buffer)
 
 	  (process-put err-proc 'err-file err-file)

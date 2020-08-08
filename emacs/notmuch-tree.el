@@ -956,8 +956,8 @@ Complete list of currently available key bindings:
 \\{notmuch-tree-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
   (hl-line-mode 1)
-  (setq buffer-read-only t
-	truncate-lines t))
+  (setq buffer-read-only t)
+  (setq truncate-lines t))
 
 (defun notmuch-tree-process-sentinel (proc msg)
   "Add a message to let user know when \"notmuch tree\" exits."

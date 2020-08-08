@@ -415,8 +415,8 @@ parsing fails."
 	(cond
 	 ;; "User <user@dom.ain>" style.
 	 ((string-match "\\(.*\\) <\\(.*\\)>" address)
-	  (setq p-name (match-string 1 address)
-		p-address (match-string 2 address)))
+	  (setq p-name (match-string 1 address))
+	  (setq p-address (match-string 2 address)))
 
 	 ;; "<user@dom.ain>" style.
 	 ((string-match "<\\(.*\\)>" address)
@@ -1256,14 +1256,16 @@ matched."
     ;; Set various buffer local variables to their appropriate initial
     ;; state. Do this after enabling `notmuch-show-mode' so that they
     ;; aren't wiped out.
-    (setq notmuch-show-thread-id thread-id
-	  notmuch-show-parent-buffer parent-buffer
-	  notmuch-show-query-context (if (or (string= query-context "")
-					     (string= query-context "*"))
-					 nil query-context)
-	  notmuch-show-process-crypto notmuch-crypto-process-mime
-	  ;; If `elide-toggle', invert the default value.
-	  notmuch-show-elide-non-matching-messages
+    (setq notmuch-show-thread-id thread-id)
+    (setq notmuch-show-parent-buffer parent-buffer)
+    (setq notmuch-show-query-context
+	  (if (or (string= query-context "")
+		  (string= query-context "*"))
+	      nil
+	    query-context))
+    (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
+    ;; If `elide-toggle', invert the default value.
+    (setq notmuch-show-elide-non-matching-messages
 	  (if elide-toggle
 	      (not notmuch-show-only-matching-messages)
 	    notmuch-show-only-matching-messages))
@@ -1518,8 +1520,8 @@ All currently available key bindings:
 
 \\{notmuch-show-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
-  (setq buffer-read-only t
-	truncate-lines t)
+  (setq buffer-read-only t)
+  (setq truncate-lines t)
   (setq imenu-prev-index-position-function
 	#'notmuch-show-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function

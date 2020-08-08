@@ -117,20 +117,21 @@ by user FROM."
 	    (userid (plist-get sigstatus :userid)))
 	;; If userid is present it has full or greater validity.
 	(if userid
-	    (setq label (concat "Good signature by: " userid)
-		  face 'notmuch-crypto-signature-good)
-	  (setq label (concat "Good signature by key: " fingerprint)
-		face 'notmuch-crypto-signature-good-key))
-	(setq button-action 'notmuch-crypto-sigstatus-good-callback
-	      help-msg (concat "Click to list key ID 0x" fingerprint "."))))
+	    (progn
+	      (setq label (concat "Good signature by: " userid))
+	      (setq face 'notmuch-crypto-signature-good))
+	  (setq label (concat "Good signature by key: " fingerprint))
+	  (setq face 'notmuch-crypto-signature-good-key))
+	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
+	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
      ((string= status "error")
-      (setq label (concat "Unknown key ID " keyid " or unsupported algorithm")
-	    button-action 'notmuch-crypto-sigstatus-error-callback
-	    help-msg (concat "Click to retrieve key ID " keyid
+      (setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
+      (setq button-action 'notmuch-crypto-sigstatus-error-callback)
+      (setq help-msg (concat "Click to retrieve key ID " keyid
 			     " from keyserver.")))
      ((string= status "bad")
-      (setq label (concat "Bad signature (claimed key ID " keyid ")")
-	    face 'notmuch-crypto-signature-bad))
+      (setq label (concat "Bad signature (claimed key ID " keyid ")"))
+      (setq face 'notmuch-crypto-signature-bad))
      (status
       (setq label (concat "Unknown signature status: " status)))
      (t

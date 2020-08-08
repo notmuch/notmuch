@@ -381,9 +381,9 @@ to be a saved address hash."
 		      notmuch-address-internal-completion)
 	       (equal (plist-get load-plist :version)
 		      notmuch-address--save-hash-version))
-      (setq notmuch-address-last-harvest (plist-get load-plist :last-harvest)
-	    notmuch-address-completions (plist-get load-plist :completions)
-	    notmuch-address-full-harvest-finished t)
+      (setq notmuch-address-last-harvest (plist-get load-plist :last-harvest))
+      (setq notmuch-address-completions (plist-get load-plist :completions))
+      (setq notmuch-address-full-harvest-finished t)
       ;; Return t to say load was successful.
       t)))
 
