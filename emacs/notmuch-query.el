@@ -47,22 +47,21 @@ is a possibly empty forest of replies."
 	  seq)))
 
 (defun notmuch-query-map-threads (fn threads)
-  "Apply FN to every thread in THREADS. Flatten results to a list.
-
-See the function notmuch-query-get-threads for more information."
+  "Apply function FN to every thread in THREADS.
+Flatten results to a list.  See the function
+`notmuch-query-get-threads' for more information."
   (notmuch-query-map-aux 'notmuch-query-map-forest fn threads))
 
 (defun notmuch-query-map-forest (fn forest)
-  "Apply function to every message in a forest. Flatten results to a list.
-
-See the function notmuch-query-get-threads for more information.
-"
+  "Apply function FN to every message in FOREST.
+Flatten results to a list.  See the function
+`notmuch-query-get-threads' for more information."
   (notmuch-query-map-aux 'notmuch-query-map-tree fn forest))
 
 (defun notmuch-query-map-tree (fn tree)
-  "Apply function FN to every message in TREE. Flatten results to a list.
-
-See the function notmuch-query-get-threads for more information."
+  "Apply function FN to every message in TREE.
+Flatten results to a list.  See the function
+`notmuch-query-get-threads' for more information."
   (cons (funcall fn (car tree)) (notmuch-query-map-forest fn (cadr tree))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

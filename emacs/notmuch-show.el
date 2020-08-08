@@ -446,8 +446,8 @@ parsing fails."
     (error (cons address nil))))
 
 (defun notmuch-show-clean-address (address)
-  "Try to clean a single email ADDRESS for display.  Return
-unchanged ADDRESS if parsing fails."
+  "Try to clean a single email ADDRESS for display.
+Return unchanged ADDRESS if parsing fails."
   (let* ((clean-address (notmuch-clean-address address))
 	 (p-address (car clean-address))
 	 (p-name (cdr clean-address)))

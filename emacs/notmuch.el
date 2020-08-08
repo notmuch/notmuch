@@ -432,11 +432,10 @@ returns nil."
 (defun notmuch-search-foreach-result (beg end fn)
   "Invoke FN for each result between BEG and END.
 
-FN should take one argument.  It will be applied to the
-character position of the beginning of each result that overlaps
-the region between points BEG and END.  As a special case, if (=
-BEG END), FN will be applied to the result containing point
-BEG."
+FN should take one argument.  It will be applied to the character
+position of the beginning of each result that overlaps the region
+between points BEG and END.  As a special case, if (= BEG END),
+FN will be applied to the result containing point BEG."
   (let ((pos (notmuch-search-result-beginning beg))
 	;; End must be a marker in case fn changes the
 	;; text.

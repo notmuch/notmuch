@@ -36,11 +36,11 @@
 (provide 'rstdoc)
 
 (defun rstdoc-batch-extract ()
-  "Extract docstrings to and from the files on the command line"
+  "Extract docstrings to and from the files on the command line."
   (apply #'rstdoc-extract command-line-args-left))
 
 (defun rstdoc-extract (in-file out-file)
-  "Write docstrings from IN-FILE to OUT-FILE"
+  "Write docstrings from IN-FILE to OUT-FILE."
   (load-file in-file)
   (let* ((definitions (cdr (assoc (expand-file-name in-file) load-history)))
 	 (doc-hash (make-hash-table :test 'eq)))
@@ -72,7 +72,7 @@
      ("\\([^\\]\\)'" . "\\1`")
      ("^[[:space:]\t]*$" . "|br|")
      ("^[[:space:]\t]" . "|indent| "))
-    "list of (regex . replacement) pairs")
+  "List of (regex . replacement) pairs.")
 
 (defun rstdoc--rst-quote-string (str)
   (with-temp-buffer

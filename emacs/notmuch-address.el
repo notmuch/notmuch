@@ -36,9 +36,9 @@
 This variable is set by calling `notmuch-address-harvest'.")
 
 (defvar notmuch-address-full-harvest-finished nil
-  "t indicates that full completion address harvesting has been
-finished. Use notmuch-address--harvest-ready to access as that
-will load a saved hash if necessary (and available).")
+  "t indicates that full completion address harvesting has been finished.
+Use notmuch-address--harvest-ready to access as that will load a
+saved hash if necessary (and available).")
 
 (defun notmuch-address--harvest-ready ()
   "Return t if there is a full address hash available.
@@ -54,9 +54,9 @@ If it is a string then that string should be an external program
 which must take a single argument (searched string) and output a
 list of completion candidates, one per line.
 
-Alternatively, it can be the symbol 'internal, in which case
+Alternatively, it can be the symbol `internal', in which case
 internal completion is used; the variable
-`notmuch-address-internal-completion` can be used to customize
+`notmuch-address-internal-completion' can be used to customize
 this case.
 
 Finally, if this variable is nil then address completion is
@@ -72,12 +72,12 @@ disabled."
 (defcustom notmuch-address-internal-completion '(sent nil)
   "Determines how internal address completion generates candidates.
 
-This should be a list of the form '(DIRECTION FILTER), where
+This should be a list of the form (DIRECTION FILTER), where
 DIRECTION is either sent or received and specifies whether the
 candidates are searched in messages sent by the user or received
 by the user (note received by is much faster), and FILTER is
-either nil or a filter-string, such as \"date:1y..\" to append
-to the query."
+either nil or a filter-string, such as \"date:1y..\" to append to
+the query."
   :type '(list :tag "Use internal address completion"
 	       (radio
 		:tag "Base completion on messages you have"
@@ -101,8 +101,8 @@ to the query."
   "Filename to save the cached completion addresses.
 
 All the addresses notmuch uses for address completion will be
-cached in this file. This has obvious privacy implications so you
-should make sure it is not somewhere publicly readable."
+cached in this file.  This has obvious privacy implications so
+you should make sure it is not somewhere publicly readable."
   :type '(choice (const :tag "Off" nil)
 		 (file :tag "Filename"))
   :group 'notmuch-send
@@ -110,12 +110,14 @@ should make sure it is not somewhere publicly readable."
   :group 'notmuch-external)
 
 (defcustom notmuch-address-selection-function 'notmuch-address-selection-function
-  "The function to select address from given list. The function is
-called with PROMPT, COLLECTION, and INITIAL-INPUT as arguments
-(subset of what `completing-read' can be called with).
-While executed the value of `completion-ignore-case' is t.
-See documentation of function `notmuch-address-selection-function'
-to know how address selection is made by default."
+  "The function to select address from given list.
+
+The function is called with PROMPT, COLLECTION, and INITIAL-INPUT
+as arguments (subset of what `completing-read' can be called
+with).  While executed the value of `completion-ignore-case'
+is t.  See documentation of function
+`notmuch-address-selection-function' to know how address
+selection is made by default."
   :type 'function
   :group 'notmuch-send
   :group 'notmuch-address
@@ -188,9 +190,9 @@ The candidates are taken from `notmuch-address-completions'."
     candidates))
 
 (defun notmuch-address-options (original)
-  "Returns a list of completion candidates. Uses either
-elisp-based implementation or older implementation requiring
-external commands."
+  "Return a list of completion candidates.
+Use either elisp-based implementation or older implementation
+requiring external commands."
   (cond
    ((eq notmuch-address-command 'internal)
     (unless (notmuch-address--harvest-ready)
@@ -352,7 +354,7 @@ execution, CALLBACK is called when harvesting finishes."
   "Version format of the save hash.")
 
 (defun notmuch-address--get-address-hash ()
-  "Returns the saved address hash as a plist.
+  "Return the saved address hash as a plist.
 
 Returns nil if the save file does not exist, or it does not seem
 to be a saved address hash."

@@ -587,7 +587,7 @@ Shows in split pane or whole window according to value of
 	(scroll-up)))))
 
 (defun notmuch-tree-scroll-message-window-back ()
-  "Scroll the message window back(if it exists)."
+  "Scroll the message window back (if it exists)."
   (interactive)
   (when (window-live-p notmuch-tree-message-window)
     (with-selected-window notmuch-tree-message-window
@@ -596,7 +596,8 @@ Shows in split pane or whole window according to value of
 	(scroll-down)))))
 
 (defun notmuch-tree-scroll-or-next ()
-  "Scroll the message window. If it at end go to next message."
+  "Scroll the message window.
+If it at end go to next message."
   (interactive)
   (when (notmuch-tree-scroll-message-window)
     (notmuch-tree-next-matching-message)))
