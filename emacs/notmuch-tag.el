@@ -550,3 +550,5 @@ and vice versa."
 ;;
 
 (provide 'notmuch-tag)
+
+;;; notmuch-tag.el ends here

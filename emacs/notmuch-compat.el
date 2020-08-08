@@ -107,3 +107,5 @@ inlined."
 ;; End of compatibility functions
 
 (provide 'notmuch-compat)
+
+;;; notmuch-compat.el ends here
