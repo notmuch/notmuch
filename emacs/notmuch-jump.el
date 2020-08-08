@@ -43,7 +43,6 @@ keys configured in the :key property of `notmuch-saved-searches'.
 Typically these shortcuts are a single key long, so this is a
 fast way to jump to a saved search from anywhere in Notmuch."
   (interactive)
-
   ;; Build the action map
   (let (action-map)
     (dolist (saved-search notmuch-saved-searches)
@@ -67,7 +66,6 @@ fast way to jump to a saved search from anywhere in Notmuch."
 			  `(lambda () (notmuch-search ',query ',oldest-first)))))
 		  action-map)))))
     (setq action-map (nreverse action-map))
-
     (if action-map
 	(notmuch-jump action-map "Search: ")
       (error "To use notmuch-jump, \
@@ -90,7 +88,6 @@ where KEY is a key binding, LABEL is a string label to display in
 the buffer, and ACTION is a nullary function to call.  LABEL may
 be null, in which case the action will still be bound, but will
 not appear in the pop-up buffer."
-
   (let* ((items (notmuch-jump--format-actions action-map))
 	 ;; Format the table of bindings and the full prompt
 	 (table
@@ -115,7 +112,6 @@ not appear in the pop-up buffer."
 	 (notmuch-jump--action nil))
     ;; Read the action
     (read-from-minibuffer full-prompt nil minibuffer-map)
-
     ;; If we got an action, do it
     (when notmuch-jump--action
       (funcall notmuch-jump--action))))
@@ -126,7 +122,6 @@ not appear in the pop-up buffer."
 Returns a list of strings, one for each item with a label in
 ACTION-MAP.  These strings can be inserted into a tabular
 buffer."
-
   ;; Compute the maximum key description width
   (let ((key-width 1))
     (pcase-dolist (`(,key ,desc) action-map)

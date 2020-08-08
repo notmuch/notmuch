@@ -891,7 +891,6 @@ A message tree is another name for a single sub-thread: i.e., a
 message together with all its descendents."
   (let ((msg (car tree))
 	(replies (cadr tree)))
-
       (cond
        ((and (< 0 depth) (not last))
 	(push "├" tree-status))
@@ -907,7 +906,6 @@ message together with all its descendents."
 	(push "╰" tree-status))
        ((and (eq 0 depth) (not first) (not last))
 	(push "├" tree-status)))
-
       (push (concat (if replies "┬" "─") "►") tree-status)
       (setq msg (plist-put msg :first (and first (eq 0 depth))))
       (setq msg (plist-put msg :tree-status tree-status))
@@ -915,11 +913,9 @@ message together with all its descendents."
       (notmuch-tree-goto-and-insert-msg msg)
       (pop tree-status)
       (pop tree-status)
-
       (if last
 	  (push " " tree-status)
 	(push "│" tree-status))
-
     (notmuch-tree-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-tree-insert-thread (thread depth tree-status)
@@ -958,7 +954,6 @@ Pressing \\[notmuch-tree-show-message] on any line displays that message.
 Complete list of currently available key bindings:
 
 \\{notmuch-tree-mode-map}"
-
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
   (hl-line-mode 1)
   (setq buffer-read-only t
@@ -1022,7 +1017,6 @@ the same as for the function notmuch-tree."
   ;; (such as reply) do. It is a buffer local variable so setting it
   ;; will not affect genuine show buffers.
   (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
-
   (erase-buffer)
   (goto-char (point-min))
   (let* ((search-args (concat basic-query
@@ -1079,13 +1073,10 @@ The arguments are:
 						(if unthreaded "unthreaded-" "tree-")
 						query "*")))))
 	(inhibit-read-only t))
-
     (switch-to-buffer buffer))
   ;; Don't track undo information for this buffer
   (set 'buffer-undo-list t)
-
   (notmuch-tree-worker query query-context target open-target unthreaded)
-
   (setq truncate-lines t))
 
 (defun notmuch-unthreaded (&optional query query-context target buffer-name open-target)

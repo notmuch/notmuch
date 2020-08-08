@@ -228,22 +228,17 @@ Typically this is added to `notmuch-mua-send-hook'."
 	original)
     (when process-crypto
       (setq args (append args '("--decrypt=true"))))
-
     (if reply-all
 	(setq args (append args '("--reply-to=all")))
       (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
-
     ;; Get the reply object as SEXP, and parse it into an elisp object.
     (setq reply (apply #'notmuch-call-notmuch-sexp args))
-
     ;; Extract the original message to simplify the following code.
     (setq original (plist-get reply :original))
-
     ;; Extract the headers of both the reply and the original message.
     (let* ((original-headers (plist-get original :headers))
 	   (reply-headers (plist-get reply :reply-headers)))
-
       ;; If sender is non-nil, set the From: header to its value.
       (when sender
 	(plist-put reply-headers :From sender))
@@ -251,7 +246,6 @@ Typically this is added to `notmuch-mua-send-hook'."
 	  ;; Overlay the composition window on that being used to read
 	  ;; the original message.
 	  ((same-window-regexps '("\\*mail .*")))
-
 	;; We modify message-header-format-alist to get around
 	;; a bug in message.el.  See the comment above on
 	;; notmuch-mua-insert-references.
@@ -268,13 +262,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 			    (notmuch-sanitize (plist-get reply-headers :Subject))
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
-
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the reply.
       (when notmuch-message-replied-tags
 	(setq-local notmuch-message-queued-tag-changes
 		    (list (cons query-string notmuch-message-replied-tags))))
-
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
       ;; message*setup-hooks may have added to the message body already.
@@ -286,17 +278,14 @@ Typically this is added to `notmuch-mua-send-hook'."
 	    (if message-signature-insert-empty-line
 		(forward-line -1))
 	  (goto-char (point-max))))
-
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
 	    (start (point)))
-
 	;; notmuch-mua-cite-function constructs a citation line based
 	;; on the From and Date headers of the original message, which
 	;; are assumed to be in the buffer.
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
-
 	(insert
 	 (with-temp-buffer
 	   (let
@@ -320,22 +309,18 @@ Typically this is added to `notmuch-mua-send-hook'."
 		       ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
 	       (notmuch-show-insert-body original (plist-get original :body) 0)
 	       (buffer-substring-no-properties (point-min) (point-max))))))
-
 	(set-mark (point))
 	(goto-char start)
 	;; Quote the original message according to the user's configured style.
 	(funcall notmuch-mua-cite-function)))
-
     ;; Crypto processing based crypto content of the original message
     (when process-crypto
       (notmuch-mua-reply-crypto (plist-get original :body))))
-
   ;; Push mark right before signature, if any.
   (message-goto-signature)
   (unless (eobp)
     (end-of-line -1))
   (push-mark)
-
   (message-goto-body)
   (set-buffer-modified-p nil))
 
@@ -381,18 +366,15 @@ modified. This function is notmuch addaptation of
 				   return-action &rest ignored)
   "Invoke the notmuch mail composition window."
   (interactive)
-
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
       (when (not (string= "" user-agent))
 	(push (cons 'User-Agent user-agent) other-headers))))
-
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from
 		       (notmuch-user-name)
 		       (notmuch-user-primary-email)))
 	  other-headers))
-
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
 			     (or switch-function
 				 (notmuch-mua-get-switch-function)))
@@ -422,7 +404,6 @@ modified. This function is notmuch addaptation of
   (message-hide-headers)
   (set-buffer-modified-p nil)
   (notmuch-mua-maybe-set-window-dedicated)
-
   (message-goto-to))
 
 (defcustom notmuch-identities nil
@@ -495,10 +476,8 @@ the From: address."
 			  ;; applied later.
 	 forward-references ;; List of accumulated message-references of forwarded messages
 	 forward-queries) ;; List of corresponding message-query
-
     ;; Generate the template for the outgoing message.
     (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
-
     (save-excursion
       ;; Insert all of the forwarded messages.
       (mapc (lambda (id)
@@ -524,7 +503,6 @@ the From: address."
 	    ;; `message-forward-make-body' always puts the message at
 	    ;; the top, so do them in reverse order.
 	    (reverse messages))
-
       ;; Add in the appropriate subject.
       (save-restriction
 	(message-narrow-to-headers)
@@ -533,7 +511,6 @@ the From: address."
 	(message-remove-header "References")
 	(message-add-header (concat "References: "
 				    (mapconcat 'identity forward-references " "))))
-
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the message.
       (when notmuch-message-forwarded-tags
@@ -541,7 +518,6 @@ the From: address."
 		    (cl-loop for id in forward-queries
 			     collect
 			     (cons id notmuch-message-forwarded-tags))))
-
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.
       (message-hide-headers)
@@ -553,7 +529,6 @@ the From: address."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
-
 ;; In current emacs (24.3) select-active-regions is set to t by
 ;; default. The reply insertion code sets the region to the quoted
 ;; message to make it easy to delete (kill-region or C-w). These two
@@ -565,7 +540,6 @@ will be addressed to all recipients of the source message."
 ;; primary selection was previously in a non-emacs window but not if
 ;; it was in an emacs window. To avoid the problem in the latter case
 ;; we deactivate mark.
-
   (let ((sender
 	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender)))

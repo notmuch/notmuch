@@ -203,12 +203,10 @@ BEG and END are buffer locations. TYPE should a string, either
 \"citation\" or \"signature\". Optional PREFIX is some arbitrary
 text to insert before the button, probably for indentation.  Note
 that PREFIX should not include a newline."
-
   ;; This uses some slightly tricky conversions between strings and
   ;; symbols because of the way the button code works. Note that
   ;; replacing intern-soft with make-symbol will cause this to fail,
   ;; since the newly created symbol has no plist.
-
   (let ((overlay (make-overlay beg end))
 	(button-type (intern-soft (concat "notmuch-wash-button-"
 					  type "-toggle-type"))))
@@ -276,25 +274,20 @@ that PREFIX should not include a newline."
 
 (defun notmuch-wash-elide-blank-lines (msg depth)
   "Elide leading, trailing and successive blank lines."
-
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
   ;; `gnus-art.el'.
-
   ;; Make all blank lines empty.
   (goto-char (point-min))
   (while (re-search-forward "^[[:space:]\t]+$" nil t)
     (replace-match "" nil t))
-
   ;; Replace multiple empty lines with a single empty line.
   (goto-char (point-min))
   (while (re-search-forward "^\n\\(\n+\\)" nil t)
     (delete-region (match-beginning 1) (match-end 1)))
-
   ;; Remove a leading blank line.
   (goto-char (point-min))
   (if (looking-at "\n")
       (delete-region (match-beginning 0) (match-end 0)))
-
   ;; Remove a trailing blank line.
   (goto-char (point-max))
   (if (looking-at "\n")
@@ -313,20 +306,15 @@ Perform several transformations on the message body:
   text,
 - Remove citation trailers standing alone after a block of cited
   text."
-
   ;; Remove lines of repeated citation leaders with no other content.
   (goto-char (point-min))
   (while (re-search-forward "\\(^>[> ]*\n\\)\\{2,\\}" nil t)
     (replace-match "\\1"))
-
-  ;; Remove citation leaders standing alone before a block of cited
-  ;; text.
+  ;; Remove citation leaders standing alone before a block of cited text.
   (goto-char (point-min))
   (while (re-search-forward "\\(\n\\|^[^>].*\\)\n\\(^>[> ]*\n\\)" nil t)
     (replace-match "\\1\n"))
-
-  ;; Remove citation trailers standing alone after a block of cited
-  ;; text.
+  ;; Remove citation trailers standing alone after a block of cited text.
   (goto-char (point-min))
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
     (replace-match "\\2")))
@@ -341,7 +329,6 @@ the message lines to the minimum of the width of the window or
 its value. Otherwise, this function will wrap long lines in the
 message at the window width. When doing so, citation leaders in
 the wrapped text are maintained."
-
   (let* ((coolj-wrap-follows-window-size nil)
 	 (indent (* depth notmuch-show-indent-messages-width))
 	 (limit (if (numberp notmuch-wash-wrap-lines-length)
@@ -405,7 +392,6 @@ original filename the sender had."
 Given that this function guesses whether a buffer includes a
 patch and then guesses the extent of the patch, there is scope
 for error."
-
   (goto-char (point-min))
   (when (re-search-forward diff-file-header-re nil t)
     (beginning-of-line -1)

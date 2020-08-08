@@ -302,7 +302,6 @@ matching ADDR-PREFIX*' are queried.
 Address harvesting may take some time so the address collection runs
 asynchronously unless SYNCHRONOUS is t. In case of asynchronous
 execution, CALLBACK is called when harvesting finishes."
-
   (let* ((sent (eq (car notmuch-address-internal-completion) 'sent))
 	 (config-query (cadr notmuch-address-internal-completion))
 	 (prefix-query (when addr-prefix
@@ -335,7 +334,6 @@ execution, CALLBACK is called when harvesting finishes."
 	;; Kill any existing process
 	(when current-proc
 	  (kill-buffer (process-buffer current-proc))) ; this also kills the process
-
 	(setq current-proc
 	      (apply 'notmuch-start-notmuch proc-name proc-buf
 		     callback				; process sentinel

@@ -755,7 +755,6 @@ non-authors is found, assume that all of the authors match."
 	   (visible-string formatted-authors)
 	   (invisible-string "")
 	   (padding ""))
-
       ;; Truncate the author string to fit the specification.
       (if (> (length formatted-authors)
 	     (length formatted-sample))
@@ -782,7 +781,6 @@ non-authors is found, assume that all of the authors match."
 					  (length visible-string)
 					  (length "..."))
 				       ? ))))
-
       ;; Use different faces to show matching and non-matching authors.
       (if (string-match "\\(.*\\)|\\(.*\\)" visible-string)
 	  ;; The visible string contains both matching and
@@ -798,14 +796,12 @@ non-authors is found, assume that all of the authors match."
 	      ;; The invisible string may contain both matching and
 	      ;; non-matching authors.
 	      invisible-string (notmuch-search-author-propertize invisible-string)))
-
       ;; If there is any invisible text, add it as a tooltip to the
       ;; visible text.
       (when (not (string= invisible-string ""))
 	(setq visible-string
 	      (propertize visible-string
 			  'help-echo (concat "..." invisible-string))))
-
       ;; Insert the visible and, if present, invisible author strings.
       (insert visible-string)
       (when (not (string= invisible-string ""))
@@ -831,11 +827,9 @@ non-authors is found, assume that all of the authors match."
     (insert (propertize (format format-string
 				(notmuch-sanitize (plist-get result :subject)))
 			'face 'notmuch-search-subject)))
-
    ((string-equal field "authors")
     (notmuch-search-insert-authors
      format-string (notmuch-sanitize (plist-get result :authors))))
-
    ((string-equal field "tags")
     (let ((tags (plist-get result :tags))
 	  (orig-tags (plist-get result :orig-tags)))
@@ -1118,7 +1112,6 @@ current search results AND that are tagged with the given tag."
 If the current buffer is the only notmuch buffer, bury it. If no
 notmuch buffers exist, run `notmuch'."
   (interactive)
-
   (let (start first)
     ;; If the current buffer is a notmuch buffer, remember it and then
     ;; bury it.

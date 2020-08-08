@@ -331,7 +331,6 @@ changed (the normal case) are shown using formats from
 		    (otherwise nil))))
 	(setq formatted-tag (notmuch-tag--do-format tag tag base))
 	(setq formatted-tag (notmuch-tag--do-format tag formatted-tag over))
-
 	(puthash (cons tag tag-state) formatted-tag notmuch-tag--format-cache)))
     formatted-tag))
 
@@ -356,7 +355,6 @@ changed (the normal case) are shown using formats from
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
 the messages that are about to be tagged."
-
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
@@ -406,7 +404,6 @@ completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
 non-nil, is the query string to present in the minibuffer.  It
 defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the
 initial input in the minibuffer."
-
   (let* ((all-tag-list (notmuch-tag-completions))
 	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
 	 (remove-tag-list (mapcar (apply-partially 'concat "-") current-tags))

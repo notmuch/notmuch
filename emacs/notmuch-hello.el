@@ -150,7 +150,6 @@ or a list of the form (NAME QUERY COUNT-QUERY)."
 ;; The saved-search format is also used by the all-tags notmuch-hello
 ;; section. This section generates its own saved-search list in one of
 ;; the latter two forms.
-
   :get 'notmuch-hello--saved-searches-to-plist
   :type '(repeat notmuch-saved-search-plist)
   :tag "List of Saved Searches"
@@ -482,20 +481,17 @@ should be. Returns a cons cell `(tags-per-line width)'."
 		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
 		   (+ 9 1 (max notmuch-column-control widest)))))
-
 	  ((floatp notmuch-column-control)
 	   (let* ((available-width (- (window-width) notmuch-hello-indent))
 		  (proposed-width (max (* available-width notmuch-column-control)
 				       widest)))
 	     (floor available-width proposed-width)))
-
 	  (t
 	   (max 1
 		(/ (- (window-width) notmuch-hello-indent)
 		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
 		   (+ 9 1 widest)))))))
-
     (cons tags-per-line (/ (max 1
 				(- (window-width) notmuch-hello-indent
 				   ;; Count is 9 wide (8 digits plus
@@ -545,7 +541,6 @@ options will be handled as specified for
 					(or (plist-get options :filter-count)
 					    (plist-get options :filter))))
 	  "\n")))
-
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
       (notmuch-logged-error
@@ -553,9 +548,7 @@ options will be handled as specified for
        "Please check that the notmuch CLI is new enough to support `count
 --batch'. In general we recommend running matching versions of
 the CLI and emacs interface."))
-
     (goto-char (point-min))
-
     (notmuch-remove-if-not
      #'identity
      (mapcar
@@ -621,7 +614,6 @@ with `notmuch-hello-query-counts'."
 	      (setq column-indent 0)
 	      (widget-insert "\n")))
 	  reordered-list)
-
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
     (unless (eq (% count tags-per-line) 0)
@@ -779,7 +771,6 @@ Complete list of currently available key bindings:
 		    (string-to-number
 		     (car (process-lines notmuch-command "count")))))
     (widget-insert " messages.\n")))
-
 
 (defun notmuch-hello-insert-saved-searches ()
   "Insert the saved-searches section."
@@ -977,7 +968,6 @@ following:
 (defun notmuch-hello (&optional no-display)
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
-
   (notmuch-assert-cli-sane)
   ;; This may cause a window configuration change, so if the
   ;; auto-refresh hook is already installed, avoid recursive refresh.
@@ -985,32 +975,25 @@ following:
     (if no-display
 	(set-buffer "*notmuch-hello*")
       (switch-to-buffer "*notmuch-hello*")))
-
   ;; Install auto-refresh hook
   (when notmuch-hello-auto-refresh
     (add-hook 'window-configuration-change-hook
 	      #'notmuch-hello-window-configuration-change))
-
   (let ((target-line (line-number-at-pos))
 	(target-column (current-column))
 	(inhibit-read-only t))
-
     ;; Delete all editable widget fields.  Editable widget fields are
     ;; tracked in a buffer local variable `widget-field-list' (and
     ;; others).  If we do `erase-buffer' without properly deleting the
     ;; widgets, some widget-related functions are confused later.
     (mapc 'widget-delete widget-field-list)
-
     (erase-buffer)
-
     (unless (eq major-mode 'notmuch-hello-mode)
       (notmuch-hello-mode))
-
     (let ((all (overlay-lists)))
       ;; Delete all the overlays.
       (mapc 'delete-overlay (car all))
       (mapc 'delete-overlay (cdr all)))
-
     (mapc
      (lambda (section)
        (let ((point-before (point)))
@@ -1023,7 +1006,6 @@ following:
 	   (widget-insert "\n"))))
      notmuch-hello-sections)
     (widget-setup)
-
     ;; Move point back to where it was before refresh. Use line and
     ;; column instead of point directly to be insensitive to additions
     ;; and removals of text within earlier lines.

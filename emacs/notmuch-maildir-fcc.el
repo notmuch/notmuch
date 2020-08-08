@@ -94,22 +94,18 @@ Sets the Fcc header based on the values of `notmuch-fcc-dirs'.
 
 Originally intended to be use a hook function, but now called directly
 by notmuch-mua-mail."
-
   (let ((subdir
 	 (cond
 	  ((or (not notmuch-fcc-dirs)
 	       (message-field-value "Fcc"))
 	   ;; Nothing set or an existing header.
 	   nil)
-
 	  ((stringp notmuch-fcc-dirs)
 	   notmuch-fcc-dirs)
-
 	  ((and (listp notmuch-fcc-dirs)
 		(stringp (car notmuch-fcc-dirs)))
 	   ;; Old style - no longer works.
 	   (error "Invalid `notmuch-fcc-dirs' setting (old style)"))
-
 	  ((listp notmuch-fcc-dirs)
 	   (let* ((from (message-field-value "From"))
 		  (match
@@ -121,10 +117,8 @@ by notmuch-mua-mail."
 		 (cdr match)
 	       (message "No Fcc header added.")
 	       nil)))
-
 	  (t
 	   (error "Invalid `notmuch-fcc-dirs' setting (neither string nor list)")))))
-
     (when subdir
       (if notmuch-maildir-use-notmuch-insert
 	  (notmuch-maildir-add-notmuch-insert-style-fcc-header subdir)
@@ -133,7 +127,6 @@ by notmuch-mua-mail."
 (defun notmuch-maildir-add-notmuch-insert-style-fcc-header (subdir)
   ;; Notmuch insert does not accept absolute paths, so check the user
   ;; really want this header inserted.
-
   (when (or (not (= (elt subdir 0) ?/))
 	    (y-or-n-p
 	     (format "Fcc header %s is an absolute path and notmuch insert is requested.

@@ -38,7 +38,6 @@ can return 'retry to indicate that not enough input is available.
 The parser always consumes input from point in the current
 buffer.  Hence, the caller is allowed to delete any data before
 point and may resynchronize after an error by moving point."
-
   (vector 'notmuch-sexp-parser
 	  ;; List depth
 	  0
@@ -60,7 +59,6 @@ parser is currently inside a list and the next token ends the
 list, this moves point just past the terminator and returns 'end.
 Otherwise, this moves point to just past the end of the value and
 returns the value."
-
   (skip-chars-forward " \n\r\t")
   (cond ((eobp) 'retry)
 	((= (char-after) ?\))
@@ -134,7 +132,6 @@ a list, it moves point past the token that opens the list and
 returns t.  Later calls to `notmuch-sexp-read' will return the
 elements inside the list.  If the input in buffer is not the
 beginning of a list, throw invalid-read-syntax."
-
   (skip-chars-forward " \n\r\t")
   (cond ((eobp) 'retry)
 	((= (char-after) ?\()
@@ -151,7 +148,6 @@ beginning of a list, throw invalid-read-syntax."
 
 Moves point to the beginning of any trailing data or to the end
 of the buffer if there is only trailing whitespace."
-
   (skip-chars-forward " \n\r\t")
   (unless (eobp)
     (error "Trailing garbage following expression")))
@@ -173,7 +169,6 @@ complete value in the list.  It operates incrementally and should
 be called whenever the input buffer has been extended with
 additional data.  The caller just needs to ensure it does not
 move point in the input buffer."
-
   ;; Set up the initial state
   (unless (local-variable-p 'notmuch-sexp--parser)
     (set (make-local-variable 'notmuch-sexp--parser)

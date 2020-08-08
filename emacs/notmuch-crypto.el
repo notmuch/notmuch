@@ -123,17 +123,14 @@ by user FROM."
 		face 'notmuch-crypto-signature-good-key))
 	(setq button-action 'notmuch-crypto-sigstatus-good-callback
 	      help-msg (concat "Click to list key ID 0x" fingerprint "."))))
-
      ((string= status "error")
       (setq label (concat "Unknown key ID " keyid " or unsupported algorithm")
 	    button-action 'notmuch-crypto-sigstatus-error-callback
 	    help-msg (concat "Click to retrieve key ID " keyid
 			     " from keyserver.")))
-
      ((string= status "bad")
       (setq label (concat "Bad signature (claimed key ID " keyid ")")
 	    face 'notmuch-crypto-signature-bad))
-
      (status
       (setq label (concat "Unknown signature status: " status)))
      (t
@@ -232,7 +229,6 @@ corresponding key when the status button is pressed."
 	    (process-put p :notmuch-show-buffer (current-buffer))
 	    (process-put p :notmuch-show-point (point))
 	    (message "Getting the GPG key %s asynchronously..." keyid)))
-
       (let ((window (display-buffer buffer)))
 	(with-selected-window window
 	  (with-current-buffer buffer

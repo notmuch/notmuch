@@ -418,7 +418,6 @@ of its command symbol."
     (while (< i (length prefix))
       (aset prefix i (aref key i))
       (setq i (1+ i)))
-
     (let* ((subkeymap (key-binding prefix))
 	   (ua-keys (where-is-internal 'universal-argument nil t))
 	   (prefix-string (notmuch-prefix-key-description prefix))
@@ -486,7 +485,6 @@ This includes newlines, tabs, and other funny characters."
 The caller is responsible for prepending the term prefix and a
 colon.  This performs minimal escaping in order to produce
 user-friendly queries."
-
   (save-match-data
     (if (or (equal term "")
 	    ;; To be pessimistic, only pass through terms composed
@@ -731,7 +729,6 @@ must be a face name (a symbol or string), a property list of face
 attributes, or a list of these.  If START and/or END are omitted,
 they default to the beginning/end of OBJECT.  For convenience
 when applied to strings, this returns OBJECT."
-
   ;; A face property can have three forms: a face name (a string or
   ;; symbol), a property list, or a list of these two forms.  In the
   ;; list case, the faces will be combined, with the earlier faces
@@ -774,7 +771,6 @@ This logs MSG and EXTRA to the *Notmuch errors* buffer and
 signals MSG as an error.  If EXTRA is non-nil, text referring the
 user to the *Notmuch errors* buffer will be appended to the
 signaled error.  This function does not return."
-
   (with-current-buffer (get-buffer-create "*Notmuch errors*")
     (goto-char (point-max))
     (unless (bobp)
@@ -819,7 +815,6 @@ command and its arguments.  OUTPUT, if provided, is a string
 giving the output of command.  ERR, if provided, is the error
 output of command.  OUTPUT and ERR will be included in the error
 message."
-
   (cond
    ((eq exit-status 0) t)
    ((eq exit-status 20)
@@ -865,7 +860,6 @@ You may need to restart Emacs or upgrade your notmuch package."))
 This wraps `call-process'.  DESTINATION has the same meaning as
 for `call-process'.  ARGS is as described for
 `notmuch-call-notmuch-process'."
-
   (let (stdin-string)
     (while (keywordp (car args))
       (cl-case (car args)
@@ -903,7 +897,6 @@ notmuch's output as an S-expression and returns the parsed value.
 Like `notmuch-call-notmuch-process', if notmuch exits with a
 non-zero status, this will report its output and signal an
 error."
-
   (with-temp-buffer
     (let ((err-file (make-temp-file "nmerr")))
       (unwind-protect
@@ -931,7 +924,6 @@ when the process exits, or nil for none.  The caller must *not*
 invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
-
   (let (err-file err-buffer proc err-proc
 	;; Find notmuch using Emacs' `exec-path'
 	(command (or (executable-find notmuch-command)
@@ -956,7 +948,6 @@ status."
 	  (process-put err-proc 'err-file err-file)
 	  (process-put err-proc 'err-buffer err-buffer)
 	  (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel))
-
       ;; On Emacs versions before 25, there is no way to capture
       ;; stdout and stderr separately for asynchronous processes, or
       ;; even to redirect stderr to a file, so we use a trivial shell
@@ -969,7 +960,6 @@ status."
 			  "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
 			  command err-file args)))
       (process-put proc 'err-file err-file))
-
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
