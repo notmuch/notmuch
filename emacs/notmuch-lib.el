@@ -316,8 +316,10 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 		tail)))
       ;; Documentation for command
       (push (cons key-string
-		  (or (and (symbolp binding) (get binding 'notmuch-doc))
-		      (and (functionp binding) (notmuch-documentation-first-line binding))))
+		  (or (and (symbolp binding)
+			   (get binding 'notmuch-doc))
+		      (and (functionp binding)
+			   (notmuch-documentation-first-line binding))))
 	    tail)))
     tail)
 
@@ -327,13 +329,13 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
   ;; binding whose "key" is 'remap, and whose "binding" is itself a
   ;; keymap that maps not from keys to commands, but from old (remapped)
   ;; functions to the commands to use in their stead.
-  (map-keymap
-   (lambda (command binding)
-     (mapc
-      (lambda (actual-key)
-	(setq tail (notmuch-describe-key actual-key binding prefix ua-keys tail)))
-      (where-is-internal command base-keymap)))
-   remap-keymap)
+  (map-keymap (lambda (command binding)
+		(mapc (lambda (actual-key)
+			(setq tail
+			      (notmuch-describe-key actual-key binding
+						    prefix ua-keys tail)))
+		      (where-is-internal command base-keymap)))
+	      remap-keymap)
   tail)
 
 (defun notmuch-describe-keymap (keymap ua-keys base-keymap &optional prefix tail)
@@ -356,9 +358,13 @@ prefix argument.  PREFIX and TAIL are used internally."
 		      (notmuch-describe-remaps
 		       binding ua-keys base-keymap prefix tail)
 		    (notmuch-describe-keymap
-		     binding ua-keys base-keymap (notmuch-prefix-key-description key) tail))))
+		     binding ua-keys base-keymap
+		     (notmuch-prefix-key-description key)
+		     tail))))
 	   (binding
-	    (setq tail (notmuch-describe-key (vector key) binding prefix ua-keys tail)))))
+	    (setq tail
+		  (notmuch-describe-key (vector key)
+					binding prefix ua-keys tail)))))
    keymap)
   tail)
 
@@ -368,11 +374,15 @@ prefix argument.  PREFIX and TAIL are used internally."
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
       (let ((desc
 	     (save-match-data
-	       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
+	       (let* ((keymap-name (substring doc
+					      (match-beginning 1)
+					      (match-end 1)))
 		      (keymap (symbol-value (intern keymap-name)))
 		      (ua-keys (where-is-internal 'universal-argument keymap t))
 		      (desc-alist (notmuch-describe-keymap keymap ua-keys keymap))
-		      (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist)))
+		      (desc-list (mapcar (lambda (arg)
+					   (concat (car arg) "\t" (cdr arg)))
+					 desc-alist)))
 		 (mapconcat #'identity desc-list "\n")))))
 	(setq doc (replace-match desc 1 1 doc)))
       (setq beg (match-end 0)))
@@ -391,7 +401,8 @@ its prefixed behavior by setting the 'notmuch-prefix-doc property
 of its command symbol."
   (interactive)
   (let* ((mode major-mode)
-	 (doc (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))
+	 (doc (substitute-command-keys
+	       (notmuch-substitute-command-keys (documentation mode t)))))
     (with-current-buffer (generate-new-buffer "*notmuch-help*")
       (insert doc)
       (goto-char (point-min))
@@ -411,8 +422,10 @@ of its command symbol."
     (let* ((subkeymap (key-binding prefix))
 	   (ua-keys (where-is-internal 'universal-argument nil t))
 	   (prefix-string (notmuch-prefix-key-description prefix))
-	   (desc-alist (notmuch-describe-keymap subkeymap ua-keys subkeymap prefix-string))
-	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist))
+	   (desc-alist (notmuch-describe-keymap
+			subkeymap ua-keys subkeymap prefix-string))
+	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg)))
+			      desc-alist))
 	   (desc (mapconcat #'identity desc-list "\n")))
       (with-help-window (help-buffer)
 	(with-current-buffer standard-output
@@ -547,7 +560,8 @@ This replaces spaces, percents, and double quotes in STR with
   '(
     ;; Avoid HTML parts.
     "text/html"
-    ;; multipart/related usually contain a text/html part and some associated graphics.
+    ;; multipart/related usually contain a text/html part and some
+    ;; associated graphics.
     "multipart/related"
     ))
 
@@ -602,8 +616,9 @@ the given type."
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
 			    (if binaryp 'no-conversion
-			      (let ((coding-system (mm-charset-to-coding-system
-						    (plist-get part :content-charset))))
+			      (let ((coding-system
+				     (mm-charset-to-coding-system
+				      (plist-get part :content-charset))))
 				;; Sadly,
 				;; `mm-charset-to-coding-system' seems
 				;; to return things that are not
@@ -615,7 +630,8 @@ the given type."
 				  ;; charset is US-ASCII. RFC6657
 				  ;; complicates this somewhat.
 				  'us-ascii)))))
-		       (apply #'call-process notmuch-command nil '(t nil) nil args)
+		       (apply #'call-process
+			      notmuch-command nil '(t nil) nil args)
 		       (buffer-string))))))
     (when (and cache data)
       (plist-put part plist-elem data))
@@ -670,7 +686,8 @@ current buffer, if possible."
       (let* ((have-content (plist-member part :content))
 	     (charset (if have-content 'gnus-decoded
 			(plist-get part :content-charset)))
-	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
+	     (handle (mm-make-handle (current-buffer)
+				     `(,content-type (charset . ,charset)))))
 	;; If the user wants the part inlined, insert the content and
 	;; test whether we are able to inline it (which includes both
 	;; capability and suitability tests).
@@ -786,7 +803,8 @@ provided, it is taken from `process-command'."
 	   ((exit) (process-exit-status proc))
 	   ((signal) msg))))
     (when exit-status
-      (notmuch-check-exit-status exit-status (or command (process-command proc))
+      (notmuch-check-exit-status exit-status
+				 (or command (process-command proc))
 				 nil err))))
 
 (defun notmuch-check-exit-status (exit-status command &optional output err)

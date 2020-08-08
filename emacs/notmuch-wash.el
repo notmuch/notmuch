@@ -25,7 +25,9 @@
 
 (require 'coolj)
 (require 'notmuch-lib)
-(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+
+(declare-function notmuch-show-insert-bodypart "notmuch-show"
+		  (msg part depth &optional hide))
 (defvar notmuch-show-indent-messages-width)
 
 ;;
@@ -186,9 +188,12 @@ message parts."
   (let* ((type (overlay-get overlay 'type))
 	 (invis-spec (overlay-get overlay 'invisible))
 	 (state (if (invisible-p invis-spec) "hidden" "visible"))
-	 (label-format (symbol-value (intern-soft (concat "notmuch-wash-button-"
-							  type "-" state "-format"))))
-	 (lines-count (count-lines (overlay-start overlay) (overlay-end overlay))))
+	 (label-format (symbol-value
+			(intern-soft
+			 (format "notmuch-wash-button-%s-%s-format"
+				 type state))))
+	 (lines-count (count-lines (overlay-start overlay)
+				   (overlay-end overlay))))
     (format label-format lines-count)))
 
 (defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
@@ -238,7 +243,8 @@ that PREFIX should not include a newline."
     (let* ((cite-start (match-beginning 0))
 	   (cite-end (match-end 0))
 	   (cite-lines (count-lines cite-start cite-end)))
-      (overlay-put (make-overlay cite-start cite-end) 'face 'notmuch-wash-cited-text)
+      (overlay-put (make-overlay cite-start cite-end)
+		   'face 'notmuch-wash-cited-text)
       (when (> cite-lines (+ notmuch-wash-citation-lines-prefix
 			     notmuch-wash-citation-lines-suffix
 			     1))
@@ -260,7 +266,8 @@ that PREFIX should not include a newline."
 		  (sig-end-marker (make-marker)))
 	      (set-marker sig-start-marker sig-start)
 	      (set-marker sig-end-marker (point-max))
-	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text)
+	      (overlay-put (make-overlay sig-start-marker sig-end-marker)
+			   'face 'message-cited-text)
 	      (notmuch-wash-region-to-button
 	       msg sig-start-marker sig-end-marker
 	       "signature"))))))

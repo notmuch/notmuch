@@ -69,9 +69,11 @@
     (cl-case command
       (interactive (company-begin-backend 'notmuch-company))
       (prefix (and (derived-mode-p 'message-mode)
-		   (looking-back (concat notmuch-address-completion-headers-regexp ".*")
-				 (line-beginning-position))
-		   (setq notmuch-company-last-prefix (company-grab "[:,][ \t]*\\(.*\\)" 1 (point-at-bol)))))
+		   (looking-back
+		    (concat notmuch-address-completion-headers-regexp ".*")
+		    (line-beginning-position))
+		   (setq notmuch-company-last-prefix
+			 (company-grab "[:,][ \t]*\\(.*\\)" 1 (point-at-bol)))))
       (candidates (cond
 		   ((notmuch-address--harvest-ready)
 		    ;; Update harvested addressed from time to time
@@ -80,17 +82,20 @@
 		   (t
 		    (cons :async
 			  (lambda (callback)
-			    ;; First run quick asynchronous harvest based on what the user entered so far
+			    ;; First run quick asynchronous harvest
+			    ;; based on what the user entered so far
 			    (notmuch-address-harvest
 			     arg nil
 			     (lambda (_proc _event)
 			       (funcall callback (notmuch-address-matching arg))
-			       ;; Then start the (potentially long-running) full asynchronous harvest if necessary
+			       ;; Then start the (potentially long-running)
+			       ;; full asynchronous harvest if necessary
 			       (notmuch-address-harvest-trigger))))))))
       (match (if (string-match notmuch-company-last-prefix arg)
 		 (match-end 0)
 	       0))
-      (post-completion (run-hook-with-args 'notmuch-address-post-completion-functions arg))
+      (post-completion
+       (run-hook-with-args 'notmuch-address-post-completion-functions arg))
       (no-cache t))))
 
 

@@ -195,10 +195,11 @@ external commands."
    ((eq notmuch-address-command 'internal)
     (unless (notmuch-address--harvest-ready)
       ;; First, run quick synchronous harvest based on what the user
-      ;; entered so far
+      ;; entered so far.
       (notmuch-address-harvest original t))
     (prog1 (notmuch-address-matching original)
-      ;; Then start the (potentially long-running) full asynchronous harvest if necessary
+      ;; Then start the (potentially long-running) full asynchronous
+      ;; harvest if necessary.
       (notmuch-address-harvest-trigger)))
    (t
     (process-lines notmuch-address-command original))))
@@ -241,7 +242,8 @@ external commands."
 	    (push chosen notmuch-address-history)
 	    (delete-region beg end)
 	    (insert chosen)
-	    (run-hook-with-args 'notmuch-address-post-completion-functions chosen))
+	    (run-hook-with-args 'notmuch-address-post-completion-functions
+				chosen))
 	(message "No matches.")
 	(ding))))
    (t nil)))
@@ -393,10 +395,11 @@ to be a saved address hash."
 	      ;; The file exists, check it is a file we saved
 	    (notmuch-address--get-address-hash))
 	(with-temp-file notmuch-address-save-filename
-	  (let ((save-plist (list :version notmuch-address--save-hash-version
-				  :completion-settings notmuch-address-internal-completion
-				  :last-harvest notmuch-address-last-harvest
-				  :completions notmuch-address-completions)))
+	  (let ((save-plist
+		 (list :version notmuch-address--save-hash-version
+		       :completion-settings notmuch-address-internal-completion
+		       :last-harvest notmuch-address-last-harvest
+		       :completions notmuch-address-completions)))
 	    (print "notmuch-address-hash" (current-buffer))
 	    (print save-plist (current-buffer))))
       (message "\
@@ -408,16 +411,17 @@ appear to be an address savefile.  Not overwriting."
   (let ((now (float-time)))
     (when (> (- now notmuch-address-last-harvest) 86400)
       (setq notmuch-address-last-harvest now)
-      (notmuch-address-harvest nil nil
-			       (lambda (proc event)
-				 ;; If harvest fails, we want to try
-				 ;; again when the trigger is next
-				 ;; called
-				 (if (string= event "finished\n")
-				     (progn
-				       (notmuch-address--save-address-hash)
-				       (setq notmuch-address-full-harvest-finished t))
-				   (setq notmuch-address-last-harvest 0)))))))
+      (notmuch-address-harvest
+       nil nil
+       (lambda (proc event)
+	 ;; If harvest fails, we want to try
+	 ;; again when the trigger is next
+	 ;; called
+	 (if (string= event "finished\n")
+	     (progn
+	       (notmuch-address--save-address-hash)
+	       (setq notmuch-address-full-harvest-finished t))
+	   (setq notmuch-address-last-harvest 0)))))))
 
 ;;
 

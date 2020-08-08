@@ -29,7 +29,8 @@
 (require 'notmuch-lib)
 (require 'notmuch-mua)
 
-(declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
+(declare-function notmuch-search "notmuch"
+		  (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name open-target unthreaded))
@@ -91,18 +92,28 @@ searches so they still work in customize."
   :tag "Saved Search"
   :args '((list :inline t
 		:format "%v"
-		(group :format "%v" :inline t (const :format "   Name: " :name) (string :format "%v"))
-		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
+		(group :format "%v" :inline t
+		       (const :format "   Name: " :name)
+		       (string :format "%v"))
+		(group :format "%v" :inline t
+		       (const :format "  Query: " :query)
+		       (string :format "%v")))
 	  (checklist :inline t
 		     :format "%v"
-		     (group :format "%v" :inline t (const :format "Shortcut key: " :key) (key-sequence :format "%v"))
-		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
-		     (group :format "%v" :inline t (const :format "" :sort-order)
+		     (group :format "%v" :inline t
+			    (const :format "Shortcut key: " :key)
+			    (key-sequence :format "%v"))
+		     (group :format "%v" :inline t
+			    (const :format "Count-Query: " :count-query)
+			    (string :format "%v"))
+		     (group :format "%v" :inline t
+			    (const :format "" :sort-order)
 			    (choice :tag " Sort Order"
 				    (const :tag "Default" nil)
 				    (const :tag "Oldest-first" oldest-first)
 				    (const :tag "Newest-first" newest-first)))
-		     (group :format "%v" :inline t (const :format "" :search-type)
+		     (group :format "%v" :inline t
+			    (const :format "" :search-type)
 			    (choice :tag " Search Type"
 				    (const :tag "Search mode" nil)
 				    (const :tag "Tree mode" tree)
@@ -474,7 +485,8 @@ should be. Returns a cons cell `(tags-per-line width)'."
 
 	  ((floatp notmuch-column-control)
 	   (let* ((available-width (- (window-width) notmuch-hello-indent))
-		  (proposed-width (max (* available-width notmuch-column-control) widest)))
+		  (proposed-width (max (* available-width notmuch-column-control)
+				       widest)))
 	     (floor available-width proposed-width)))
 
 	  (t
@@ -536,8 +548,9 @@ options will be handled as specified for
 
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
-      (notmuch-logged-error "notmuch count --batch failed"
-			    "Please check that the notmuch CLI is new enough to support `count
+      (notmuch-logged-error
+       "notmuch count --batch failed"
+       "Please check that the notmuch CLI is new enough to support `count
 --batch'. In general we recommend running matching versions of
 the CLI and emacs interface."))
 
@@ -553,7 +566,8 @@ the CLI and emacs interface."))
 				search-query (plist-get options :filter)))
 	       (message-count (prog1 (read (current-buffer))
 				(forward-line 1))))
-	  (when (and filtered-query (or (plist-get options :show-empty-searches) (> message-count 0)))
+	  (when (and filtered-query (or (plist-get options :show-empty-searches)
+					(> message-count 0)))
 	    (setq elem-plist (plist-put elem-plist :query filtered-query))
 	    (plist-put elem-plist :count message-count))))
       query-list))))
@@ -740,7 +754,9 @@ Complete list of currently available key bindings:
       ;; dark background.
       (setq image (cons 'image
 			(append (cdr image)
-				(list :background (face-background 'notmuch-hello-logo-background)))))
+				(list :background
+				      (face-background
+				       'notmuch-hello-logo-background)))))
       (insert-image image))
     (widget-insert "  "))
 
@@ -760,7 +776,8 @@ Complete list of currently available key bindings:
 			     (notmuch-hello-update))
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
-		    (string-to-number (car (process-lines notmuch-command "count")))))
+		    (string-to-number
+		     (car (process-lines notmuch-command "count")))))
     (widget-insert " messages.\n")))
 
 

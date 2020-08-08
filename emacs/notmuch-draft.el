@@ -154,12 +154,14 @@ Used when a new version is saved, or the message is sent."
 `notmuch-draft-save-plaintext' controls the behaviour."
   (cl-case notmuch-draft-save-plaintext
 	((ask)
-	 (unless (yes-or-no-p "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
+	 (unless (yes-or-no-p
+		  "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
 This message contains mml tags that suggest it is intended to be encrypted.
 Really save and index an unencrypted copy? ")
 	   (error "Save aborted")))
 	((nil)
-	 (error "Refusing to save draft with encryption tags (see `notmuch-draft-save-plaintext')"))
+	 (error "Refusing to save draft with encryption tags (see `%s')"
+		'notmuch-draft-save-plaintext))
 	((t)
 	 (ignore))))
 
@@ -192,14 +194,16 @@ applied to newly inserted messages)."
        (message-remove-header "Message-ID")
        (message-add-header (concat "Message-ID: <" id ">")))
       (t
-       (message "You have customized emacs so Message-ID is not a deletable header, so not changing it")
+       (message "You have customized emacs so Message-ID is not a %s"
+		"deletable header, so not changing it")
        (setq id nil)))
      (cond
       ((member 'Date message-deletable-headers)
        (message-remove-header "Date")
        (message-add-header (concat "Date: " (message-make-date))))
       (t
-       (message "You have customized emacs so Date is not a deletable header, so not changing it")))
+       (message "You have customized emacs so Date is not a deletable %s"
+		"header, so not changing it")))
      (message-add-header "X-Notmuch-Emacs-Draft: True")
      (notmuch-draft-quote-some-mml)
      (notmuch-maildir-setup-message-for-saving)

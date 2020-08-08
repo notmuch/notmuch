@@ -205,10 +205,12 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-reply-crypto (parts)
   "Add mml sign-encrypt flag if any part of original message is encrypted."
   (cl-loop for part in parts
-	   if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
-	     do (mml-secure-message-sign-encrypt)
-	   else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
-	     do (notmuch-mua-reply-crypto (plist-get part :content))))
+	   if (notmuch-match-content-type (plist-get part :content-type)
+					  "multipart/encrypted")
+	   do (mml-secure-message-sign-encrypt)
+	   else if (notmuch-match-content-type (plist-get part :content-type)
+					       "multipart/*")
+	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -250,8 +252,9 @@ Typically this is added to `notmuch-mua-send-hook'."
 	  ;; the original message.
 	  ((same-window-regexps '("\\*mail .*")))
 
-	;; We modify message-header-format-alist to get around a bug in message.el.
-	;; See the comment above on notmuch-mua-insert-references.
+	;; We modify message-header-format-alist to get around
+	;; a bug in message.el.  See the comment above on
+	;; notmuch-mua-insert-references.
 	(let ((message-header-format-alist
 	       (cl-loop for pair in message-header-format-alist
 			if (eq (car pair) 'References)
@@ -266,7 +269,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
 
-      ;; Create a buffer-local queue for tag changes triggered when sending the reply
+      ;; Create a buffer-local queue for tag changes triggered when
+      ;; sending the reply.
       (when notmuch-message-replied-tags
 	(setq-local notmuch-message-queued-tag-changes
 		    (list (cons query-string notmuch-message-replied-tags))))
@@ -293,27 +297,29 @@ Typically this is added to `notmuch-mua-send-hook'."
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
 
-	(insert (with-temp-buffer
-		  (let
-		      ;; Don't attempt to clean up messages, excerpt
-		      ;; citations, etc. in the original message before
-		      ;; quoting.
-		      ((notmuch-show-insert-text/plain-hook nil)
-		       ;; Don't omit long parts.
-		       (notmuch-show-max-text-part-size 0)
-		       ;; Insert headers for parts as appropriate for replying.
-		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
-		       ;; Ensure that any encrypted parts are
-		       ;; decrypted during the generation of the reply
-		       ;; text.
-		       (notmuch-show-process-crypto process-crypto)
-		       ;; Don't indent multipart sub-parts.
-		       (notmuch-show-indent-multipart nil))
-		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
-		    (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
-			      ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
-		      (notmuch-show-insert-body original (plist-get original :body) 0)
-		      (buffer-substring-no-properties (point-min) (point-max))))))
+	(insert
+	 (with-temp-buffer
+	   (let
+	       ;; Don't attempt to clean up messages, excerpt
+	       ;; citations, etc. in the original message before
+	       ;; quoting.
+	       ((notmuch-show-insert-text/plain-hook nil)
+		;; Don't omit long parts.
+		(notmuch-show-max-text-part-size 0)
+		;; Insert headers for parts as appropriate for replying.
+		(notmuch-show-insert-header-p-function
+		 notmuch-mua-reply-insert-header-p-function)
+		;; Ensure that any encrypted parts are
+		;; decrypted during the generation of the reply
+		;; text.
+		(notmuch-show-process-crypto process-crypto)
+		;; Don't indent multipart sub-parts.
+		(notmuch-show-indent-multipart nil))
+	     ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
+	     (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+		       ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+	       (notmuch-show-insert-body original (plist-get original :body) 0)
+	       (buffer-substring-no-properties (point-min) (point-max))))))
 
 	(set-mark (point))
 	(goto-char start)
@@ -383,10 +389,13 @@ modified. This function is notmuch addaptation of
 
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from
-		       (notmuch-user-name) (notmuch-user-primary-email))) other-headers))
+		       (notmuch-user-name)
+		       (notmuch-user-primary-email)))
+	  other-headers))
 
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
-			     (or switch-function (notmuch-mua-get-switch-function)))
+			     (or switch-function
+				 (notmuch-mua-get-switch-function)))
   (let ((headers
 	 (append
 	  ;; The following is copied from `message-mail'
@@ -499,7 +508,8 @@ the From: address."
 		(with-current-buffer temp-buffer
 		  (erase-buffer)
 		  (let ((coding-system-for-read 'no-conversion))
-		    (call-process notmuch-command nil t nil "show" "--format=raw" id))
+		    (call-process notmuch-command nil t nil
+				  "show" "--format=raw" id))
 		  ;; Because we process the messages in reverse order,
 		  ;; always generate a forwarded subject, then use the
 		  ;; last (i.e. first) one.
@@ -524,7 +534,8 @@ the From: address."
 	(message-add-header (concat "References: "
 				    (mapconcat 'identity forward-references " "))))
 
-      ;; Create a buffer-local queue for tag changes triggered when sending the message
+      ;; Create a buffer-local queue for tag changes triggered when
+      ;; sending the message.
       (when notmuch-message-forwarded-tags
 	(setq-local notmuch-message-queued-tag-changes
 		    (cl-loop for id in forward-queries
@@ -609,7 +620,8 @@ unencrypted.  Really send? "))))
   (run-hooks 'notmuch-mua-send-hook)
   (when (and (notmuch-mua-check-no-misplaced-secure-tag)
 	     (notmuch-mua-check-secure-tag-has-newline))
-    (cl-letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+    (cl-letf (((symbol-function 'message-do-fcc)
+	       #'notmuch-maildir-message-do-fcc))
       (if exit
 	  (message-send-and-exit arg)
 	(message-send arg)))))

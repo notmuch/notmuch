@@ -34,7 +34,8 @@
 (require 'notmuch-tag)
 (require 'notmuch-parser)
 
-(declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line))
+(declare-function notmuch-search "notmuch"
+		  (&optional query oldest-first target-thread target-line))
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-search-find-thread-id "notmuch" (&optional bare))
@@ -284,15 +285,18 @@ FUNC."
     (set-keymap-parent map notmuch-common-keymap)
     ;; The following override the global keymap.
     ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-help] (notmuch-tree-close-message-pane-and #'notmuch-help))
+    (define-key map [remap notmuch-help]
+      (notmuch-tree-close-message-pane-and #'notmuch-help))
     ;; Override because we first close message pane and then close tree buffer.
     (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
     ;; Override because we close message pane after the search query is entered.
     (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
+    (define-key map [remap notmuch-mua-new-mail]
+      (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
     ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
+    (define-key map [remap notmuch-jump-search]
+      (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
     (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
@@ -306,16 +310,24 @@ FUNC."
     (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
-    (define-key map (kbd "M-TAB") (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "<backtab>")  (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "TAB") (notmuch-tree-to-message-pane #'notmuch-show-next-button))
-    (define-key map "$" (notmuch-tree-to-message-pane #'notmuch-show-toggle-process-crypto))
+    (define-key map (kbd "M-TAB")
+      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
+    (define-key map (kbd "<backtab>")
+      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
+    (define-key map (kbd "TAB")
+      (notmuch-tree-to-message-pane #'notmuch-show-next-button))
+    (define-key map "$"
+      (notmuch-tree-to-message-pane #'notmuch-show-toggle-process-crypto))
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
-    (define-key map "f" (notmuch-tree-close-message-pane-and #'notmuch-show-forward-message))
-    (define-key map "r" (notmuch-tree-close-message-pane-and #'notmuch-show-reply-sender))
-    (define-key map "R" (notmuch-tree-close-message-pane-and #'notmuch-show-reply))
-    (define-key map "V" (notmuch-tree-close-message-pane-and #'notmuch-show-view-raw-message))
+    (define-key map "f"
+      (notmuch-tree-close-message-pane-and #'notmuch-show-forward-message))
+    (define-key map "r"
+      (notmuch-tree-close-message-pane-and #'notmuch-show-reply-sender))
+    (define-key map "R"
+      (notmuch-tree-close-message-pane-and #'notmuch-show-reply))
+    (define-key map "V"
+      (notmuch-tree-close-message-pane-and #'notmuch-show-view-raw-message))
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -354,7 +366,9 @@ Some useful entries are:
 (defun notmuch-tree-set-message-properties (props)
   (save-excursion
     (beginning-of-line)
-    (put-text-property (point) (+ (point) 1) :notmuch-message-properties props)))
+    (put-text-property (point)
+		       (+ (point) 1)
+		       :notmuch-message-properties props)))
 
 (defun notmuch-tree-set-prop (prop val &optional props)
   (let ((inhibit-read-only t)
@@ -407,7 +421,8 @@ updated."
     ;; from overwriting the buffer local copy of
     ;; notmuch-tree-previous-subject if this is called while the
     ;; buffer is displaying.
-    (let ((notmuch-tree-previous-subject (notmuch-tree-get-prop :previous-subject)))
+    (let ((notmuch-tree-previous-subject
+	   (notmuch-tree-get-prop :previous-subject)))
       (delete-region (point) (1+ (line-end-position)))
       (notmuch-tree-insert-msg msg))
     (let ((new-end (line-end-position)))
@@ -596,7 +611,8 @@ Shows in split pane or whole window according to value of
   "Close the message-window. Return t if close succeeds."
   (interactive)
   (when (and (window-live-p notmuch-tree-message-window)
-	     (eq (window-buffer notmuch-tree-message-window) notmuch-tree-message-buffer))
+	     (eq (window-buffer notmuch-tree-message-window)
+		 notmuch-tree-message-buffer))
     (delete-window notmuch-tree-message-window)
     (unless (get-buffer-window-list notmuch-tree-message-buffer)
       (kill-buffer notmuch-tree-message-buffer))
@@ -611,7 +627,8 @@ message will be \"unarchived\", i.e. the tag changes in
 `notmuch-archive-tags' will be reversed."
   (interactive "P")
   (when notmuch-archive-tags
-    (notmuch-tree-tag (notmuch-tag-change-list notmuch-archive-tags unarchive))))
+    (notmuch-tree-tag
+     (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 (defun notmuch-tree-archive-message-then-next (&optional unarchive)
   "Archive the current message and move to next matching message."
@@ -786,7 +803,8 @@ unchanged ADDRESS if parsing fails."
       (let ((face (if match
 		      'notmuch-tree-match-date-face
 		    'notmuch-tree-no-match-date-face)))
-	(propertize (format format-string (plist-get msg :date_relative)) 'face face)))
+	(propertize (format format-string (plist-get msg :date_relative))
+		    'face face)))
 
      ((string-equal field "tree")
       (let ((tree-status (plist-get msg :tree-status))
@@ -880,7 +898,8 @@ message together with all its descendents."
        ((and (< 0 depth) last)
 	(push "╰" tree-status))
        ((and (eq 0 depth) first last)
-;;	  (push "─" tree-status)) choice between this and next line is matter of taste.
+	;; Choice between these two variants is a matter of taste.
+	;; (push "─" tree-status))
 	(push " " tree-status))
        ((and (eq 0 depth) first (not last))
 	  (push "┬" tree-status))

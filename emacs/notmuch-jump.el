@@ -70,7 +70,8 @@ fast way to jump to a saved search from anywhere in Notmuch."
 
     (if action-map
 	(notmuch-jump action-map "Search: ")
-      (error "To use notmuch-jump, please customize shortcut keys in notmuch-saved-searches."))))
+      (error "To use notmuch-jump, \
+please customize shortcut keys in notmuch-saved-searches."))))
 
 (defvar notmuch-jump--action nil)
 
@@ -200,7 +201,9 @@ buffer."
 	      (define-key map keystr
 		`(lambda () (interactive)
 		   (setq notmuch-jump--action
-			 ',(apply-partially #'notmuch-jump action-submap new-prompt))
+			 ',(apply-partially #'notmuch-jump
+					    action-submap
+					    new-prompt))
 		   (exit-minibuffer)))))))
     map))
 

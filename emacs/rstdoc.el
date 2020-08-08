@@ -63,7 +63,8 @@
 
 (defun rstdoc--insert-docstring (symbol docstring)
   (insert (format "\n.. |docstring::%s| replace::\n" symbol))
-  (insert (replace-regexp-in-string "^" "    " (rstdoc--rst-quote-string docstring)))
+  (insert (replace-regexp-in-string "^" "    "
+				    (rstdoc--rst-quote-string docstring)))
   (insert "\n"))
 
 (defvar rst--escape-alist

@@ -44,7 +44,9 @@
   :args '((list :inline t
 		:format "%v"
 		(key-sequence :tag "Key")
-		(radio :tag "Tag operations" (repeat :tag "Tag list" (string :format "%v" :tag "change"))
+		(radio :tag "Tag operations"
+		       (repeat :tag "Tag list"
+			       (string :format "%v" :tag "change"))
 		       (variable :tag "Tag variable"))
 		(string :tag "Name"))))
 
@@ -316,7 +318,9 @@ changed (the normal case) are shown using formats from
 `notmuch-tag-formats'."
   (let* ((tag-state (cond ((not (member tag tags)) 'deleted)
 			  ((not (member tag orig-tags)) 'added)))
-	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
+	 (formatted-tag (gethash (cons tag tag-state)
+				 notmuch-tag--format-cache
+				 'missing)))
     (when (eq formatted-tag 'missing)
       (let ((base (notmuch-tag--get-formats tag notmuch-tag-formats))
 	    (over (cl-case tag-state
@@ -338,9 +342,9 @@ changed (the normal case) are shown using formats from
     (notmuch-apply-face
      (mapconcat #'identity
 		;; nil indicated that the tag was deliberately hidden
-		(delq nil (mapcar
-			   (apply-partially #'notmuch-tag-format-tag tags orig-tags)
-			   all-tags))
+		(delq nil (mapcar (apply-partially #'notmuch-tag-format-tag
+						   tags orig-tags)
+				  all-tags))
 		" ")
      face
      t)))

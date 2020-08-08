@@ -516,7 +516,9 @@ thread."
 		      (current-buffer)
 		      notmuch-search-query-string
 		      ;; Name the buffer based on the subject.
-		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*"))
+		      (concat "*"
+			      (truncate-string-to-width subject 30 nil nil t)
+			      "*"))
       (message "End of search results."))))
 
 (defun notmuch-tree-from-search-current-query ()
@@ -800,7 +802,9 @@ non-authors is found, assume that all of the authors match."
       ;; If there is any invisible text, add it as a tooltip to the
       ;; visible text.
       (when (not (string= invisible-string ""))
-	(setq visible-string (propertize visible-string 'help-echo (concat "..." invisible-string))))
+	(setq visible-string
+	      (propertize visible-string
+			  'help-echo (concat "..." invisible-string))))
 
       ;; Insert the visible and, if present, invisible author strings.
       (insert visible-string)
@@ -892,7 +896,8 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 		(longest-length 0))
 	    (cl-loop for tuple in notmuch-saved-searches
 		     if (let ((quoted-query
-			       (regexp-quote (notmuch-saved-search-get tuple :query))))
+			       (regexp-quote
+				(notmuch-saved-search-get tuple :query))))
 			  (and (string-match (concat "^" quoted-query) query)
 			       (> (length (match-string 0 query))
 				  longest-length)))
@@ -905,9 +910,10 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	   (concat "*notmuch-saved-search-" saved-search-name "*"))
 	  (saved-search
 	   (concat "*notmuch-search-"
-		   (replace-regexp-in-string (concat "^" (regexp-quote saved-search-query))
-					     (concat "[ " saved-search-name " ]")
-					     query)
+		   (replace-regexp-in-string
+		    (concat "^" (regexp-quote saved-search-query))
+		    (concat "[ " saved-search-name " ]")
+		    query)
 		   "*"))
 	  (t
 	   (concat "*notmuch-search-" query "*"))
@@ -926,7 +932,8 @@ PROMPT is the string to prompt with."
 		       "subject:" "attachment:")
 		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
 		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
-		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype)) (mailcap-mime-types)))))
+		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
+			 (mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (cl-case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
@@ -1078,8 +1085,10 @@ current search results AND the additional query string provided."
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
   (interactive
-   (list (notmuch-select-tag-with-completion "Filter by tag: " notmuch-search-query-string)))
-  (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
+   (list (notmuch-select-tag-with-completion "Filter by tag: "
+					     notmuch-search-query-string)))
+  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)
+		  notmuch-search-oldest-first))
 
 (defun notmuch-search-by-tag (tag)
   "Display threads matching TAG in a notmuch-search buffer."

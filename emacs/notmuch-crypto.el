@@ -161,7 +161,8 @@ by user FROM."
 	(goto-char (point-max))
 	(insert (format "-- Key %s in message %s:\n"
 			fingerprint id))
-	(call-process notmuch-crypto-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
+	(call-process notmuch-crypto-gpg-program nil t t
+		      "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
@@ -220,12 +221,13 @@ corresponding key when the status button is pressed."
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
 	    (insert (format "--- Retrieving key %s:\n" keyid)))
-	  (let ((p (make-process :name "notmuch GPG key retrieval"
-				 :connection-type 'pipe
-				 :buffer buffer
-				 :stderr buffer
-				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
-				 :sentinel #'notmuch-crypto--async-key-sentinel)))
+	  (let ((p (make-process
+		    :name "notmuch GPG key retrieval"
+		    :connection-type 'pipe
+		    :buffer buffer
+		    :stderr buffer
+		    :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
+		    :sentinel #'notmuch-crypto--async-key-sentinel)))
 	    (process-put p :gpg-key-id keyid)
 	    (process-put p :notmuch-show-buffer (current-buffer))
 	    (process-put p :notmuch-show-point (point))

@@ -135,8 +135,9 @@ by notmuch-mua-mail."
   ;; really want this header inserted.
 
   (when (or (not (= (elt subdir 0) ?/))
-	    (y-or-n-p (format "Fcc header %s is an absolute path and notmuch insert is requested.\nInsert header anyway? "
-			      subdir)))
+	    (y-or-n-p
+	     (format "Fcc header %s is an absolute path and notmuch insert is requested.
+Insert header anyway? " subdir)))
     (message-add-header (concat "Fcc: " subdir))))
 
 (defun notmuch-maildir-add-file-style-fcc-header (subdir)
@@ -249,9 +250,8 @@ If CREATE is non-nil then create the folder if necessary."
       ;; typo, or just the user want a new folder, let the user decide
       ;; how to deal with it.
       (error
-       (let ((response (notmuch-read-char-choice
-			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or (e)dit the header? "
-			'(?r ?c ?i ?e))))
+       (let ((response (notmuch-read-char-choice "Insert failed: \
+\(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " '(?r ?c ?i ?e))))
 	 (cl-case response
 	   (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
 	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
@@ -333,8 +333,8 @@ if needed."
       (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header 't)
     ;; The fcc-header is not a valid maildir see if the user wants to
     ;; fix it in some way.
-    (let* ((prompt (format "Fcc %s is not a maildir: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
-			   fcc-header))
+    (let* ((prompt (format "Fcc %s is not a maildir: \
+\(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " fcc-header))
 	    (response (notmuch-read-char-choice prompt '(?r ?c ?i ?e))))
 	 (cl-case response
 	   (?r (notmuch-maildir-fcc-file-fcc fcc-header))
