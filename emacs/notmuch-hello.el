@@ -687,7 +687,6 @@ with `notmuch-hello-query-counts'."
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
-(fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
 
 (define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
   "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
