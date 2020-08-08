@@ -277,4 +277,11 @@ _notmuch_database_parse_features (const void *ctx, const char *features, unsigne
 char *
 _notmuch_database_print_features (const void *ctx, unsigned int features);
 
+/* prefix.cc */
+notmuch_status_t
+_notmuch_database_setup_standard_query_fields (notmuch_database_t *notmuch);
+
+notmuch_status_t
+_notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch);
+
 #endif
