@@ -259,11 +259,13 @@ on the command line, and then retry your notmuch command")))
 Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
 depending on the value of `notmuch-poll-script'."
   (interactive)
+  (message "Polling mail...")
   (if (stringp notmuch-poll-script)
       (unless (string= notmuch-poll-script "")
 	(unless (equal (call-process notmuch-poll-script nil nil) 0)
 	  (error "Notmuch: poll script `%s' failed!" notmuch-poll-script)))
-    (notmuch-call-notmuch-process "new")))
+    (notmuch-call-notmuch-process "new"))
+  (message "Polling mail...done"))
 
 (defun notmuch-bury-or-kill-this-buffer ()
   "Undisplay the current buffer.
