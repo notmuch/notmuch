@@ -39,6 +39,16 @@ deleted_id=$gen_msg_id
 output=$(notmuch search subject:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)"
 
+test_begin_subtest "Search, exclude \"deleted\" messages; alternate config file"
+cp ${NOTMUCH_CONFIG} alt-config
+notmuch config set search.exclude_tags
+notmuch --config=alt-config search subject:deleted | notmuch_search_sanitize > OUTPUT
+cp alt-config ${NOTMUCH_CONFIG}
+cat <<EOF > EXPECTED
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Search, exclude \"deleted\" messages from message search"
 output=$(notmuch search --output=messages subject:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "id:$not_deleted_id"
