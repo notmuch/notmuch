@@ -413,7 +413,7 @@ of its command symbol."
 	 (i 0))
     (while (< i (length prefix))
       (aset prefix i (aref key i))
-      (setq i (1+ i)))
+      (cl-incf i))
     (let* ((subkeymap (key-binding prefix))
 	   (ua-keys (where-is-internal 'universal-argument nil t))
 	   (prefix-string (notmuch-prefix-key-description prefix))

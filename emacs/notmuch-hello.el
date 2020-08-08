@@ -609,7 +609,7 @@ with `notmuch-hello-query-counts'."
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
-	    (setq count (1+ count))
+	    (cl-incf count)
 	    (when (eq (% count tags-per-line) 0)
 	      (setq column-indent 0)
 	      (widget-insert "\n")))
