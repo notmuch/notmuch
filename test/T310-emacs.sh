@@ -40,12 +40,14 @@ test_emacs '(notmuch-search "tag:inbox")
 test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox OUTPUT
 
 test_begin_subtest "Incremental parsing of search results"
-test_emacs "(ad-enable-advice 'notmuch-search-process-filter 'around 'pessimal)
-	    (ad-activate 'notmuch-search-process-filter)
-	    (notmuch-search \"tag:inbox\")
-	    (notmuch-test-wait)
-	    (ad-disable-advice 'notmuch-search-process-filter 'around 'pessimal)
-	    (ad-activate 'notmuch-search-process-filter)
+test_emacs "(cl-letf* (((symbol-function 'orig)
+			(symbol-function 'notmuch-search-process-filter))
+		       ((symbol-function 'notmuch-search-process-filter)
+			(lambda (proc string)
+			  (cl-loop for char across string
+				   do (orig proc (char-to-string char))))))
+	      (notmuch-search \"tag:inbox\")
+	      (notmuch-test-wait))
 	    (test-output)"
 test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox OUTPUT
 

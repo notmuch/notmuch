@@ -97,14 +97,6 @@ running, quit if it terminated."
 (add-hook 'notmuch-hello-refresh-hook
 	  (lambda () (cl-incf notmuch-hello-refresh-hook-counter)))
 
-(defadvice notmuch-search-process-filter (around pessimal activate disable)
-  "Feed notmuch-search-process-filter one character at a time."
-  (let ((string (ad-get-arg 1)))
-    (cl-loop for char across string
-	     do (progn
-		  (ad-set-arg 1 (char-to-string char))
-		  ad-do-it))))
-
 (defun notmuch-test-mark-links ()
   "Enclose links in the current buffer with << and >>."
   ;; Links are often created by jit-lock functions
