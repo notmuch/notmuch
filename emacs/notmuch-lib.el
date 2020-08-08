@@ -19,8 +19,6 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 
-;; This is an part of an emacs-based interface to the notmuch mail system.
-
 ;;; Code:
 
 (require 'cl-lib)

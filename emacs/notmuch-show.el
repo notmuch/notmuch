@@ -1,4 +1,4 @@
-;;; notmuch-show.el --- displaying notmuch forests.
+;;; notmuch-show.el --- displaying notmuch forests
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson

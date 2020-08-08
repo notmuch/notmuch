@@ -1,4 +1,4 @@
-;;; notmuch-print.el --- printing messages from notmuch.
+;;; notmuch-print.el --- printing messages from notmuch
 ;;
 ;; Copyright © David Edmondson
 ;;

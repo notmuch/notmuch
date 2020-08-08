@@ -18,7 +18,7 @@
 ;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
-;; Homepage: https://notmuchmail.org/
+;; Homepage: https://notmuchmail.org
 
 ;;; Commentary:
 
@@ -62,7 +62,7 @@
 ;;
 ;; TL;DR: notmuch-emacs from MELPA and notmuch from distro packages is
 ;; NOT SUPPORTED.
-;;
+
 ;;; Code:
 
 (eval-when-compile (require 'cl-lib))

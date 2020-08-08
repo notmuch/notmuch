@@ -1,4 +1,4 @@
-;; make-deps.el --- compute make dependencies for Elisp sources
+;;; make-deps.el --- compute make dependencies for Elisp sources
 ;;
 ;; Copyright © Austin Clements
 ;;

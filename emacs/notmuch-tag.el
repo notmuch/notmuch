@@ -20,9 +20,8 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          Damien Cassou <damien.cassou@gmail.com>
-;;
+
 ;;; Code:
-;;
 
 (require 'cl-lib)
 (eval-when-compile

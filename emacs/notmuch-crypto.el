@@ -1,4 +1,4 @@
-;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
+;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata
 ;;
 ;; Copyright © Jameson Rollins
 ;;
