@@ -272,7 +272,7 @@ position of the message in the thread."
   `(save-excursion
      (let ((id (notmuch-show-get-message-id)))
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
-         (with-current-buffer buf
+	 (with-current-buffer buf
 	   (let ((coding-system-for-read 'no-conversion))
 	     (call-process notmuch-command nil t nil "show" "--format=raw" id))
 	   ,@body)
@@ -303,7 +303,7 @@ position of the message in the thread."
 				  ("multipart/alternative" ignore identity)
 				  ("multipart/mixed" ignore identity)
 				  ("multipart/related" ignore identity)
-				 )))
+				  )))
      (mm-display-parts (mm-dissect-buffer)))))
 
 (defun notmuch-show-save-attachments ()
@@ -406,43 +406,44 @@ operation on the contents of the current buffer."
 cell of (AUTHOR_EMAIL AUTHOR_NAME). Return (ADDRESS nil) if
 parsing fails."
   (condition-case nil
-    (let (p-name p-address)
-      ;; It would be convenient to use `mail-header-parse-address',
-      ;; but that expects un-decoded mailbox parts, whereas our
-      ;; mailbox parts are already decoded (and hence may contain
-      ;; UTF-8). Given that notmuch should handle most of the awkward
-      ;; cases, some simple string deconstruction should be sufficient
-      ;; here.
-      (cond
-       ;; "User <user@dom.ain>" style.
-       ((string-match "\\(.*\\) <\\(.*\\)>" address)
-	(setq p-name (match-string 1 address)
-	      p-address (match-string 2 address)))
-       ;; "<user@dom.ain>" style.
-       ((string-match "<\\(.*\\)>" address)
-	(setq p-address (match-string 1 address)))
-       ;; Everything else.
-       (t
-	(setq p-address address)))
-      (when p-name
-	;; Remove elements of the mailbox part that are not relevant for
-	;; display, even if they are required during transport:
-	;;
-	;; Backslashes.
-	(setq p-name (replace-regexp-in-string "\\\\" "" p-name))
-	;; Outer single and double quotes, which might be nested.
-	(cl-loop with start-of-loop
-		 do   (setq start-of-loop p-name)
-		 when (string-match "^\"\\(.*\\)\"$" p-name)
-		 do   (setq p-name (match-string 1 p-name))
-		 when (string-match "^'\\(.*\\)'$" p-name)
-		 do   (setq p-name (match-string 1 p-name))
-		 until (string= start-of-loop p-name)))
-      ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
-      ;; 'foo@bar.com'.
-      (when (string= p-name p-address)
-	(setq p-name nil))
-      (cons p-address p-name))
+      (let (p-name p-address)
+	;; It would be convenient to use `mail-header-parse-address',
+	;; but that expects un-decoded mailbox parts, whereas our
+	;; mailbox parts are already decoded (and hence may contain
+	;; UTF-8). Given that notmuch should handle most of the awkward
+	;; cases, some simple string deconstruction should be sufficient
+	;; here.
+	(cond
+	 ;; "User <user@dom.ain>" style.
+	 ((string-match "\\(.*\\) <\\(.*\\)>" address)
+	  (setq p-name (match-string 1 address)
+		p-address (match-string 2 address)))
+
+	 ;; "<user@dom.ain>" style.
+	 ((string-match "<\\(.*\\)>" address)
+	  (setq p-address (match-string 1 address)))
+	 ;; Everything else.
+	 (t
+	  (setq p-address address)))
+	(when p-name
+	  ;; Remove elements of the mailbox part that are not relevant for
+	  ;; display, even if they are required during transport:
+	  ;;
+	  ;; Backslashes.
+	  (setq p-name (replace-regexp-in-string "\\\\" "" p-name))
+	  ;; Outer single and double quotes, which might be nested.
+	  (cl-loop with start-of-loop
+		   do   (setq start-of-loop p-name)
+		   when (string-match "^\"\\(.*\\)\"$" p-name)
+		   do   (setq p-name (match-string 1 p-name))
+		   when (string-match "^'\\(.*\\)'$" p-name)
+		   do   (setq p-name (match-string 1 p-name))
+		   until (string= start-of-loop p-name)))
+	;; If the address is 'foo@bar.com <foo@bar.com>' then show just
+	;; 'foo@bar.com'.
+	(when (string= p-name p-address)
+	  (setq p-name nil))
+	(cons p-address p-name))
     (error (cons address nil))))
 
 (defun notmuch-show-clean-address (address)
@@ -607,9 +608,9 @@ will return nil if the CID is unknown or cannot be retrieved."
   "Instruct w3m how to retrieve content from a \"related\" part of a message."
   (interactive)
   (if (boundp 'w3m-cid-retrieve-function-alist)
-    (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
-      (push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
-	    w3m-cid-retrieve-function-alist)))
+      (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
+	(push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
+	      w3m-cid-retrieve-function-alist)))
   (setq mm-html-inhibit-images nil))
 
 (defvar w3m-current-buffer) ;; From `w3m.el'.
@@ -639,8 +640,8 @@ will return nil if the CID is unknown or cannot be retrieved."
     ;; should be chosen if there are more than one that match?
     (mapc (lambda (inner-part)
 	    (let* ((inner-type (plist-get inner-part :content-type))
-		  (hide (not (or notmuch-show-all-multipart/alternative-parts
-			   (string= chosen-type inner-type)))))
+		   (hide (not (or notmuch-show-all-multipart/alternative-parts
+				  (string= chosen-type inner-type)))))
 	      (notmuch-show-insert-bodypart msg inner-part depth hide)))
 	  inner-parts)
 
@@ -1008,7 +1009,7 @@ is t, hide the part initially and show the button."
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
     (plist-put part :computed-type mime-type)
     (if show-part
-        (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
+	(notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
       (when button
 	(button-put button :notmuch-lazy-part
 		    (list msg part mime-type nth depth button))))
@@ -1521,9 +1522,9 @@ All currently available key bindings:
   (setq buffer-read-only t
 	truncate-lines t)
   (setq imenu-prev-index-position-function
-        #'notmuch-show-imenu-prev-index-position-function)
+	#'notmuch-show-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function
-        #'notmuch-show-imenu-extract-index-name-function))
+	#'notmuch-show-imenu-extract-index-name-function))
 
 (defun notmuch-tree-from-show-current-query ()
   "Call notmuch tree with the current query."
@@ -1746,8 +1747,8 @@ We only mark it read once: if it is changed back then that is a
 user decision and we should not override it."
   (when (and (notmuch-show-message-visible-p)
 	     (not (notmuch-show-get-prop :seen)))
-	(notmuch-show-mark-read)
-	(notmuch-show-set-prop :seen t)))
+    (notmuch-show-mark-read)
+    (notmuch-show-set-prop :seen t)))
 
 (defvar notmuch-show--seen-has-errored nil)
 (make-variable-buffer-local 'notmuch-show--seen-has-errored)
@@ -1866,9 +1867,9 @@ any effects from previous calls to
   (let ((start-of-message (notmuch-show-message-top))
 	(start-of-window (window-start)))
     (cond
-      ;; Either this message is properly aligned with the start of the
-      ;; window or the start of this message is not visible on the
-      ;; screen - scroll.
+     ;; Either this message is properly aligned with the start of the
+     ;; window or the start of this message is not visible on the
+     ;; screen - scroll.
      ((or (= start-of-message start-of-window)
 	  (< start-of-message start-of-window))
       (scroll-down)
@@ -2512,9 +2513,9 @@ beginning of the line."
 message."
   `(save-excursion
      (save-restriction
-      (let ((extent (notmuch-show-message-extent)))
-	(narrow-to-region (car extent) (cdr extent))
-	,@body))))
+       (let ((extent (notmuch-show-message-extent)))
+	 (narrow-to-region (car extent) (cdr extent))
+	 ,@body))))
 
 (defun notmuch-show--gather-urls ()
   "Gather any URLs in the current message."

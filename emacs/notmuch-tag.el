@@ -236,7 +236,7 @@ DATA is the content of an SVG picture (e.g., as returned by
 (defun notmuch-tag-star-icon ()
   "Return SVG data representing a star icon.
 This can be used with `notmuch-tag-format-image-data'."
-"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
 <svg version=\"1.1\" width=\"16\" height=\"16\">
   <g transform=\"translate(-242.81601,-315.59635)\">
     <path
@@ -536,7 +536,7 @@ and vice versa."
 				name)
 			    (mapconcat #'identity tag-change " "))))
 	(push (list key name-string
-		     `(lambda () (,tag-function ',tag-change)))
+		    `(lambda () (,tag-function ',tag-change)))
 	      action-map)))
     (push (list notmuch-tag-jump-reverse-key
 		(if reverse

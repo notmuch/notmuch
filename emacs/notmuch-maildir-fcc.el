@@ -31,7 +31,7 @@
 (defvar notmuch-maildir-fcc-count 0)
 
 (defcustom notmuch-fcc-dirs "sent"
- "Determines the Fcc Header which says where to save outgoing mail.
+  "Determines the Fcc Header which says where to save outgoing mail.
 
 Three types of values are permitted:
 
@@ -69,13 +69,13 @@ database.path option in the notmuch configuration file).
 In all cases you will be prompted to create the folder or
 directory if it does not exist yet when sending a mail."
 
- :type '(choice
-	 (const :tag "No FCC header" nil)
-	 (string :tag "A single folder")
-	 (repeat :tag "A folder based on the From header"
-		 (cons regexp (string :tag "Folder"))))
- :require 'notmuch-fcc-initialization
- :group 'notmuch-send)
+  :type '(choice
+	  (const :tag "No FCC header" nil)
+	  (string :tag "A single folder")
+	  (repeat :tag "A folder based on the From header"
+		  (cons regexp (string :tag "Folder"))))
+  :require 'notmuch-fcc-initialization
+  :group 'notmuch-send)
 
 (defcustom notmuch-maildir-use-notmuch-insert 't
   "Should fcc use notmuch insert instead of simple fcc."
@@ -267,16 +267,16 @@ If CREATE is non-nil then create the folder if necessary."
 			    t))
 
 (defun notmuch-maildir-fcc-make-uniq-maildir-id ()
-   (let* ((ftime (float-time))
-	  (microseconds (mod (* 1000000 ftime) 1000000))
-	  (hostname (notmuch-maildir-fcc-host-fixer (system-name))))
-     (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
-     (format "%d.%d_%d_%d.%s"
-	     ftime
-	     (emacs-pid)
-	     microseconds
-	     notmuch-maildir-fcc-count
-	     hostname)))
+  (let* ((ftime (float-time))
+	 (microseconds (mod (* 1000000 ftime) 1000000))
+	 (hostname (notmuch-maildir-fcc-host-fixer (system-name))))
+    (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
+    (format "%d.%d_%d_%d.%s"
+	    ftime
+	    (emacs-pid)
+	    microseconds
+	    notmuch-maildir-fcc-count
+	    hostname)))
 
 (defun notmuch-maildir-fcc-dir-is-maildir-p (dir)
   (and (file-exists-p (concat dir "/cur/"))
@@ -328,17 +328,17 @@ if needed."
     ;; fix it in some way.
     (let* ((prompt (format "Fcc %s is not a maildir: \
 \(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " fcc-header))
-	    (response (notmuch-read-char-choice prompt '(?r ?c ?i ?e))))
-	 (cl-case response
-	   (?r (notmuch-maildir-fcc-file-fcc fcc-header))
-	   (?c (if (file-writable-p fcc-header)
-		   (notmuch-maildir-fcc-create-maildir fcc-header)
-		 (message "No permission to create %s." fcc-header)
-		 (sit-for 2))
-	       (notmuch-maildir-fcc-file-fcc fcc-header))
-	   (?i 't)
-	   (?e (notmuch-maildir-fcc-file-fcc
-		(read-from-minibuffer "Fcc header: " fcc-header)))))))
+	   (response (notmuch-read-char-choice prompt '(?r ?c ?i ?e))))
+      (cl-case response
+	(?r (notmuch-maildir-fcc-file-fcc fcc-header))
+	(?c (if (file-writable-p fcc-header)
+		(notmuch-maildir-fcc-create-maildir fcc-header)
+	      (message "No permission to create %s." fcc-header)
+	      (sit-for 2))
+	    (notmuch-maildir-fcc-file-fcc fcc-header))
+	(?i 't)
+	(?e (notmuch-maildir-fcc-file-fcc
+	     (read-from-minibuffer "Fcc header: " fcc-header)))))))
 
 (defun notmuch-maildir-fcc-write-buffer-to-maildir (destdir &optional mark-seen)
   "Writes the current buffer to maildir destdir. If mark-seen is

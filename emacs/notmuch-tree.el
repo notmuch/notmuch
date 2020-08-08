@@ -245,7 +245,7 @@ This function returns a function (so can be used as a keybinding)
 which executes function FUNC in the message pane if it is
 open (if the message pane is closed it does nothing)."
   `(lambda ()
-      ,(concat "(In message pane) " (documentation func t))
+     ,(concat "(In message pane) " (documentation func t))
      (interactive)
      (when (window-live-p notmuch-tree-message-window)
        (with-selected-window notmuch-tree-message-window
@@ -273,7 +273,7 @@ This function returns a function (so can be used as a keybinding)
 which closes the message pane if open and then executes function
 FUNC."
   `(lambda ()
-      ,(concat "(Close message pane and) " (documentation func t))
+     ,(concat "(Close message pane and) " (documentation func t))
      (interactive)
      (let ((notmuch-show-process-crypto
 	    (notmuch-tree-inherit-from-message-pane 'notmuch-show-process-crypto)))
@@ -891,31 +891,31 @@ A message tree is another name for a single sub-thread: i.e., a
 message together with all its descendents."
   (let ((msg (car tree))
 	(replies (cadr tree)))
-      (cond
-       ((and (< 0 depth) (not last))
-	(push "├" tree-status))
-       ((and (< 0 depth) last)
-	(push "╰" tree-status))
-       ((and (eq 0 depth) first last)
-	;; Choice between these two variants is a matter of taste.
-	;; (push "─" tree-status))
-	(push " " tree-status))
-       ((and (eq 0 depth) first (not last))
-	  (push "┬" tree-status))
-       ((and (eq 0 depth) (not first) last)
-	(push "╰" tree-status))
-       ((and (eq 0 depth) (not first) (not last))
-	(push "├" tree-status)))
-      (push (concat (if replies "┬" "─") "►") tree-status)
-      (setq msg (plist-put msg :first (and first (eq 0 depth))))
-      (setq msg (plist-put msg :tree-status tree-status))
-      (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
-      (notmuch-tree-goto-and-insert-msg msg)
-      (pop tree-status)
-      (pop tree-status)
-      (if last
-	  (push " " tree-status)
-	(push "│" tree-status))
+    (cond
+     ((and (< 0 depth) (not last))
+      (push "├" tree-status))
+     ((and (< 0 depth) last)
+      (push "╰" tree-status))
+     ((and (eq 0 depth) first last)
+      ;; Choice between these two variants is a matter of taste.
+      ;; (push "─" tree-status))
+      (push " " tree-status))
+     ((and (eq 0 depth) first (not last))
+      (push "┬" tree-status))
+     ((and (eq 0 depth) (not first) last)
+      (push "╰" tree-status))
+     ((and (eq 0 depth) (not first) (not last))
+      (push "├" tree-status)))
+    (push (concat (if replies "┬" "─") "►") tree-status)
+    (setq msg (plist-put msg :first (and first (eq 0 depth))))
+    (setq msg (plist-put msg :tree-status tree-status))
+    (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
+    (notmuch-tree-goto-and-insert-msg msg)
+    (pop tree-status)
+    (pop tree-status)
+    (if last
+	(push " " tree-status)
+      (push "│" tree-status))
     (notmuch-tree-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-tree-insert-thread (thread depth tree-status)
@@ -966,34 +966,34 @@ Complete list of currently available key bindings:
 	(exit-status (process-exit-status proc))
 	(never-found-target-thread nil))
     (when (memq status '(exit signal))
-        (kill-buffer (process-get proc 'parse-buf))
-	(if (buffer-live-p buffer)
-	    (with-current-buffer buffer
-	      (save-excursion
-		(let ((inhibit-read-only t)
-		      (atbob (bobp)))
-		  (goto-char (point-max))
-		  (if (eq status 'signal)
-		      (insert "Incomplete search results (tree view process was killed).\n"))
-		  (when (eq status 'exit)
-		    (insert "End of search results.")
-		    (unless (= exit-status 0)
-		      (insert (format " (process returned %d)" exit-status)))
-		    (insert "\n")))))))))
+      (kill-buffer (process-get proc 'parse-buf))
+      (if (buffer-live-p buffer)
+	  (with-current-buffer buffer
+	    (save-excursion
+	      (let ((inhibit-read-only t)
+		    (atbob (bobp)))
+		(goto-char (point-max))
+		(if (eq status 'signal)
+		    (insert "Incomplete search results (tree view process was killed).\n"))
+		(when (eq status 'exit)
+		  (insert "End of search results.")
+		  (unless (= exit-status 0)
+		    (insert (format " (process returned %d)" exit-status)))
+		  (insert "\n")))))))))
 
 (defun notmuch-tree-process-filter (proc string)
   "Process and filter the output of \"notmuch show\" for tree view."
   (let ((results-buf (process-buffer proc))
-        (parse-buf (process-get proc 'parse-buf))
-        (inhibit-read-only t)
-        done)
+	(parse-buf (process-get proc 'parse-buf))
+	(inhibit-read-only t)
+	done)
     (if (not (buffer-live-p results-buf))
-        (delete-process proc)
+	(delete-process proc)
       (with-current-buffer parse-buf
-        ;; Insert new data
-        (save-excursion
-          (goto-char (point-max))
-          (insert string))
+	;; Insert new data
+	(save-excursion
+	  (goto-char (point-max))
+	  (insert string))
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
 					 results-buf)))))
 
@@ -1020,8 +1020,8 @@ the same as for the function notmuch-tree."
   (erase-buffer)
   (goto-char (point-min))
   (let* ((search-args (concat basic-query
-		       (if query-context (concat " and (" query-context ")"))
-		       ))
+			      (if query-context (concat " and (" query-context ")"))
+			      ))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))

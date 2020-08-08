@@ -58,7 +58,7 @@ window/frame that will be destroyed when the buffer is killed.
 You may want to customize `message-kill-buffer-on-exit'
 accordingly."
    (when (< emacs-major-version 24)
-	   " Due to a known bug in Emacs 23, you should not set
+     " Due to a known bug in Emacs 23, you should not set
 this to `new-window' if `message-kill-buffer-on-exit' is
 disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send
@@ -106,13 +106,13 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 This function specifies which parts of a mime message with
 multiple parts get a header."
   :type '(radio (const :tag "No part headers"
-		               notmuch-show-reply-insert-header-p-never)
+		       notmuch-show-reply-insert-header-p-never)
 		(const :tag "All except multipart/* and hidden parts"
-		               notmuch-show-reply-insert-header-p-trimmed)
+		       notmuch-show-reply-insert-header-p-trimmed)
 		(const :tag "Only for included text parts"
-			       notmuch-show-reply-insert-header-p-minimal)
+		       notmuch-show-reply-insert-header-p-minimal)
 		(const :tag "Exactly as in show view"
-			       notmuch-show-insert-header-p)
+		       notmuch-show-insert-header-p)
 		(function :tag "Other"))
   :group 'notmuch-reply)
 
@@ -472,10 +472,12 @@ the From: address."
   (let* ((other-headers
 	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
 	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
-	 forward-subject  ;; Comes from the first message and is
-			  ;; applied later.
-	 forward-references ;; List of accumulated message-references of forwarded messages
-	 forward-queries) ;; List of corresponding message-query
+	 ;; Comes from the first message and is applied later.
+	 forward-subject
+	 ;; List of accumulated message-references of forwarded messages.
+	 forward-references
+	 ;; List of corresponding message-query.
+	 forward-queries)
     ;; Generate the template for the outgoing message.
     (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
     (save-excursion
@@ -529,17 +531,17 @@ the From: address."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
-;; In current emacs (24.3) select-active-regions is set to t by
-;; default. The reply insertion code sets the region to the quoted
-;; message to make it easy to delete (kill-region or C-w). These two
-;; things combine to put the quoted message in the primary selection.
-;;
-;; This is not what the user wanted and is a privacy risk (accidental
-;; pasting of the quoted message). We can avoid some of the problems
-;; by let-binding select-active-regions to nil. This fixes if the
-;; primary selection was previously in a non-emacs window but not if
-;; it was in an emacs window. To avoid the problem in the latter case
-;; we deactivate mark.
+  ;; In current emacs (24.3) select-active-regions is set to t by
+  ;; default. The reply insertion code sets the region to the quoted
+  ;; message to make it easy to delete (kill-region or C-w). These two
+  ;; things combine to put the quoted message in the primary selection.
+  ;;
+  ;; This is not what the user wanted and is a privacy risk (accidental
+  ;; pasting of the quoted message). We can avoid some of the problems
+  ;; by let-binding select-active-regions to nil. This fixes if the
+  ;; primary selection was previously in a non-emacs window but not if
+  ;; it was in an emacs window. To avoid the problem in the latter case
+  ;; we deactivate mark.
   (let ((sender
 	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender)))

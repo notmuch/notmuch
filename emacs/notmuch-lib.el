@@ -211,7 +211,7 @@ Otherwise the output will be returned."
   (unless (notmuch-cli-sane-p)
     (notmuch-logged-error
      "notmuch cli seems misconfigured or unconfigured."
-"Perhaps you haven't run \"notmuch setup\" yet? Try running this
+     "Perhaps you haven't run \"notmuch setup\" yet? Try running this
 on the command line, and then retry your notmuch command")))
 
 (defun notmuch-cli-version ()
@@ -321,7 +321,7 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 		      (and (functionp binding)
 			   (notmuch-documentation-first-line binding))))
 	    tail)))
-    tail)
+  tail)
 
 (defun notmuch-describe-remaps (remap-keymap ua-keys base-keymap prefix tail)
   ;; Remappings are represented as a binding whose first "event" is
@@ -413,8 +413,8 @@ of its command symbol."
   "Show help for a subkeymap."
   (interactive)
   (let* ((key (this-command-keys-vector))
-	(prefix (make-vector (1- (length key)) nil))
-	(i 0))
+	 (prefix (make-vector (1- (length key)) nil))
+	 (i 0))
     (while (< i (length prefix))
       (aset prefix i (aref key i))
       (setq i (1+ i)))
@@ -527,7 +527,7 @@ This replaces spaces, percents, and double quotes in STR with
   (let (out)
     (while list
       (when (funcall predicate (car list))
-        (push (car list) out))
+	(push (car list) out))
       (setq list (cdr list)))
     (nreverse out)))
 
@@ -835,24 +835,24 @@ You may need to restart Emacs or upgrade your notmuch package."))
 		       command " "))
 	   (extra
 	    (concat "command: " command-string "\n"
-	     (if (integerp exit-status)
-		 (format "exit status: %s\n" exit-status)
-	       (format "exit signal: %s\n" exit-status))
-	     (when err
-	       (concat "stderr:\n" err))
-	     (when output
-	       (concat "stdout:\n" output)))))
-	(if err
-	    ;; We have an error message straight from the CLI.
-	    (notmuch-logged-error
-	     (replace-regexp-in-string "[ \n\r\t\f]*\\'" "" err) extra)
-	  ;; We only have combined output from the CLI; don't inundate
-	  ;; the user with it.  Mimic `process-lines'.
-	  (notmuch-logged-error (format "%s exited with status %s"
-					(car command) exit-status)
-				extra))
-	;; `notmuch-logged-error' does not return.
-	))))
+		    (if (integerp exit-status)
+			(format "exit status: %s\n" exit-status)
+		      (format "exit signal: %s\n" exit-status))
+		    (when err
+		      (concat "stderr:\n" err))
+		    (when output
+		      (concat "stdout:\n" output)))))
+      (if err
+	  ;; We have an error message straight from the CLI.
+	  (notmuch-logged-error
+	   (replace-regexp-in-string "[ \n\r\t\f]*\\'" "" err) extra)
+	;; We only have combined output from the CLI; don't inundate
+	;; the user with it.  Mimic `process-lines'.
+	(notmuch-logged-error (format "%s exited with status %s"
+				      (car command) exit-status)
+			      extra))
+      ;; `notmuch-logged-error' does not return.
+      ))))
 
 (defun notmuch-call-notmuch--helper (destination args)
   "Helper for synchronous notmuch invocation commands.
@@ -925,9 +925,9 @@ invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
   (let (err-file err-buffer proc err-proc
-	;; Find notmuch using Emacs' `exec-path'
-	(command (or (executable-find notmuch-command)
-		     (error "Command not found: %s" notmuch-command))))
+		 ;; Find notmuch using Emacs' `exec-path'
+		 (command (or (executable-find notmuch-command)
+			      (error "Command not found: %s" notmuch-command))))
     (if (fboundp 'make-process)
 	(progn
 	  (setq err-buffer (generate-new-buffer " *notmuch-stderr*"))
@@ -1030,8 +1030,8 @@ region if the region is active, or both `point' otherwise."
     (list (point) (point))))
 
 (define-obsolete-function-alias
-    'notmuch-search-interactive-region
-    'notmuch-interactive-region
+  'notmuch-search-interactive-region
+  'notmuch-interactive-region
   "notmuch 0.29")
 
 (provide 'notmuch-lib)

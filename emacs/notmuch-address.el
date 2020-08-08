@@ -153,14 +153,14 @@ matching `notmuch-address-completion-headers-regexp'."
 
 (defun notmuch-address-setup ()
   (let* ((setup-company (and notmuch-address-use-company
-			   (require 'company nil t)))
+			     (require 'company nil t)))
 	 (pair (cons notmuch-address-completion-headers-regexp
-		       #'notmuch-address-expand-name)))
-      (when setup-company
-	(notmuch-company-setup))
-      (unless (member pair message-completion-alist)
-	(setq message-completion-alist
-	      (push pair message-completion-alist)))))
+		     #'notmuch-address-expand-name)))
+    (when setup-company
+      (notmuch-company-setup))
+    (unless (member pair message-completion-alist)
+      (setq message-completion-alist
+	    (push pair message-completion-alist)))))
 
 (defun notmuch-address-toggle-internal-completion ()
   "Toggle use of internal completion for current buffer.
@@ -323,7 +323,7 @@ execution, CALLBACK is called when harvesting finishes."
 		 ,query)))
     (if synchronous
 	(mapc #'notmuch-address-harvest-addr
-				   (apply 'notmuch-call-notmuch-sexp args))
+	      (apply 'notmuch-call-notmuch-sexp args))
       ;; Asynchronous
       (let* ((current-proc (if addr-prefix
 			       (car notmuch-address-harvest-procs)
@@ -390,7 +390,7 @@ to be a saved address hash."
 (defun notmuch-address--save-address-hash ()
   (when notmuch-address-save-filename
     (if (or (not (file-exists-p notmuch-address-save-filename))
-	      ;; The file exists, check it is a file we saved
+	    ;; The file exists, check it is a file we saved
 	    (notmuch-address--get-address-hash))
 	(with-temp-file notmuch-address-save-filename
 	  (let ((save-plist

@@ -108,11 +108,11 @@ If the line should not be broken, return nil; point remains on the
 line."
   (move-to-column fill-column)
   (if (and (re-search-forward "[^ ]" (line-end-position) 1)
-           (> (current-column) fill-column))
+	   (> (current-column) fill-column))
       ;; This line is too long.  Can we break it?
       (or (coolj-find-break-backward prefix)
-          (progn (move-to-column fill-column)
-                 (coolj-find-break-forward)))))
+	  (progn (move-to-column fill-column)
+		 (coolj-find-break-forward)))))
 
 (defun coolj-find-break-backward (prefix)
   "Move point backward to the first available breakpoint and return t.
@@ -135,12 +135,12 @@ If no breakpoint is found, return nil."
 If no break point is found, return nil."
   (and (search-forward " " (line-end-position) 1)
        (progn (skip-chars-forward " " (line-end-position))
-              (null (eolp)))
+	      (null (eolp)))
        (if (and fill-nobreak-predicate
-                (run-hook-with-args-until-success
-                 'fill-nobreak-predicate))
-           (coolj-find-break-forward)
-         t)))
+		(run-hook-with-args-until-success
+		 'fill-nobreak-predicate))
+	   (coolj-find-break-forward)
+	 t)))
 
 (provide 'coolj)
 

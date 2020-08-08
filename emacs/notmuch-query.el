@@ -42,9 +42,9 @@ is a possibly empty forest of replies."
   "Private function to do the actual mapping and flattening."
   (apply 'append
 	 (mapcar
-	   (lambda (tree)
-	     (funcall mapper function tree))
-	   seq)))
+	  (lambda (tree)
+	    (funcall mapper function tree))
+	  seq)))
 
 (defun notmuch-query-map-threads (fn threads)
   "Apply FN to every thread in THREADS. Flatten results to a list.

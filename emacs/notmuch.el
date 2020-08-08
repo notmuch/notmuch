@@ -117,23 +117,23 @@ there will be called at other points of notmuch execution."
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
-         (dolist (part (cdr mm-handle))
-           (notmuch-foreach-mime-part function part)))
-        ((bufferp (car mm-handle))
-         (funcall function mm-handle))
-        (t (dolist (part mm-handle)
-             (notmuch-foreach-mime-part function part)))))
+	 (dolist (part (cdr mm-handle))
+	   (notmuch-foreach-mime-part function part)))
+	((bufferp (car mm-handle))
+	 (funcall function mm-handle))
+	(t (dolist (part mm-handle)
+	     (notmuch-foreach-mime-part function part)))))
 
 (defun notmuch-count-attachments (mm-handle)
   (let ((count 0))
     (notmuch-foreach-mime-part
      (lambda (p)
        (let ((disposition (mm-handle-disposition p)))
-         (and (listp disposition)
-              (or (equal (car disposition) "attachment")
-                  (and (equal (car disposition) "inline")
-                       (assq 'filename disposition)))
-              (cl-incf count))))
+	 (and (listp disposition)
+	      (or (equal (car disposition) "attachment")
+		  (and (equal (car disposition) "inline")
+		       (assq 'filename disposition)))
+	      (cl-incf count))))
      mm-handle)
     count))
 
@@ -142,13 +142,13 @@ there will be called at other points of notmuch execution."
    (lambda (p)
      (let ((disposition (mm-handle-disposition p)))
        (and (listp disposition)
-            (or (equal (car disposition) "attachment")
-                (and (equal (car disposition) "inline")
-                     (assq 'filename disposition)))
-            (or (not queryp)
-                (y-or-n-p
-                 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
-            (mm-save-part p))))
+	    (or (equal (car disposition) "attachment")
+		(and (equal (car disposition) "inline")
+		     (assq 'filename disposition)))
+	    (or (not queryp)
+		(y-or-n-p
+		 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
+	    (mm-save-part p))))
    mm-handle))
 
 (require 'hl-line)
@@ -272,11 +272,11 @@ there will be called at other points of notmuch execution."
   (goto-char (point-min)))
 
 (defface notmuch-message-summary-face
- '((((class color) (background light)) (:background "#f0f0f0"))
-   (((class color) (background dark)) (:background "#303030")))
- "Face for the single-line message summary in notmuch-show-mode."
- :group 'notmuch-show
- :group 'notmuch-faces)
+  '((((class color) (background light)) (:background "#f0f0f0"))
+    (((class color) (background dark)) (:background "#303030")))
+  "Face for the single-line message summary in notmuch-show-mode."
+  :group 'notmuch-show
+  :group 'notmuch-faces)
 
 (defface notmuch-search-date
   '((t :inherit default))
@@ -392,9 +392,9 @@ Complete list of currently available key bindings:
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq imenu-prev-index-position-function
-        #'notmuch-search-imenu-prev-index-position-function)
+	#'notmuch-search-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function
-        #'notmuch-search-imenu-extract-index-name-function))
+	#'notmuch-search-imenu-extract-index-name-function))
 
 (defun notmuch-search-get-result (&optional pos)
   "Return the result object for the thread at POS (or point).
@@ -689,9 +689,9 @@ of the result."
 			     (not (string= notmuch-search-target-thread "found")))
 			(set 'never-found-target-thread t)))))
 	      (when (and never-found-target-thread
-		       notmuch-search-target-line)
-		  (goto-char (point-min))
-		  (forward-line (1- notmuch-search-target-line)))))))))
+			 notmuch-search-target-line)
+		(goto-char (point-min))
+		(forward-line (1- notmuch-search-target-line)))))))))
 
 (define-widget 'notmuch--custom-face-edit 'lazy
   "Custom face edit with a tag Edit Face"
@@ -711,7 +711,7 @@ Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
  (setq notmuch-search-line-faces \\='((\"unread\" . (:foreground \"green\"))
-                                   (\"deleted\" . (:foreground \"red\"
+				   (\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))))
 
 The FACE must be a face name (a symbol or string), a property
@@ -722,7 +722,7 @@ the above settings would have a green foreground and blue
 background."
   :type '(alist :key-type (string)
 		:value-type (radio (face :tag "Face name")
-				    (notmuch--custom-face-edit)))
+				   (notmuch--custom-face-edit)))
   :group 'notmuch-search
   :group 'notmuch-faces)
 
@@ -919,15 +919,15 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (let*
       ((all-tags
-        (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
-                (process-lines notmuch-command "search" "--output=tags" "*")))
+	(mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
+		(process-lines notmuch-command "search" "--output=tags" "*")))
        (completions
-	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		       "subject:" "attachment:")
-		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
-		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
-		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
-			 (mailcap-mime-types)))))
+	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
+		      "subject:" "attachment:")
+		(mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
+		(mapcar (lambda (tag) (concat "is:" tag)) all-tags)
+		(mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
+			(mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (cl-case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))

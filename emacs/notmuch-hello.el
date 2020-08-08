@@ -147,9 +147,9 @@ a plist. Supported properties are
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
-;; The saved-search format is also used by the all-tags notmuch-hello
-;; section. This section generates its own saved-search list in one of
-;; the latter two forms.
+  ;; The saved-search format is also used by the all-tags notmuch-hello
+  ;; section. This section generates its own saved-search list in one of
+  ;; the latter two forms.
   :get 'notmuch-hello--saved-searches-to-plist
   :type '(repeat notmuch-saved-search-plist)
   :tag "List of Saved Searches"
@@ -382,10 +382,10 @@ afterwards.")
       (setq n (/ n 1000)))
     (setq result (or result '(0)))
     (apply #'concat
-     (number-to-string (car result))
-     (mapcar (lambda (elem)
-	      (format "%s%03d" notmuch-hello-thousands-separator elem))
-	     (cdr result)))))
+	   (number-to-string (car result))
+	   (mapcar (lambda (elem)
+		     (format "%s%03d" notmuch-hello-thousands-separator elem))
+		   (cdr result)))))
 
 (defun notmuch-hello-trim (search)
   "Trim whitespace."
@@ -540,7 +540,7 @@ options will be handled as specified for
 	  (notmuch-hello-filtered-query count-query
 					(or (plist-get options :filter-count)
 					    (plist-get options :filter))))
-	  "\n")))
+	 "\n")))
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
       (notmuch-logged-error
@@ -690,7 +690,7 @@ with `notmuch-hello-query-counts'."
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
 
 (define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
- "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
 
 Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
 or click on a saved search to view matching threads. Edit saved
@@ -720,9 +720,9 @@ The screen may be customized via `\\[customize]'.
 Complete list of currently available key bindings:
 
 \\{notmuch-hello-mode-map}"
- (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
- ;;(setq buffer-read-only t)
-)
+  (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
+  ;;(setq buffer-read-only t)
+  )
 
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
