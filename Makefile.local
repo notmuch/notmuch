@@ -1,4 +1,4 @@
-# -*- makefile -*-
+# -*- makefile-gmake -*-
 
 .PHONY: all
 all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings

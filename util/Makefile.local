@@ -1,4 +1,4 @@
-# -*- makefile -*-
+# -*- makefile-gmake -*-
 
 dir := util
 extra_cflags += -I$(srcdir)/$(dir)
