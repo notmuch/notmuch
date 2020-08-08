@@ -334,6 +334,8 @@ void
 notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
 					const char *list[],
 					size_t length);
+const char *
+_notmuch_config_get_path (notmuch_config_t *config);
 
 int
 notmuch_run_hook (const char *db_path, const char *hook);

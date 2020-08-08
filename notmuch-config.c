@@ -510,6 +510,9 @@ notmuch_config_close (notmuch_config_t *config)
     talloc_free (config);
 }
 
+const char *_notmuch_config_get_path (notmuch_config_t *config) {
+    return config->filename;
+}
 /* Save any changes made to the notmuch configuration.
  *
  * Any comments originally in the file will be preserved.
