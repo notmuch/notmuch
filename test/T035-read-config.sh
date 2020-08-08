@@ -368,4 +368,35 @@ notmuch address --output=sender query:$query_name | sort >> OUTPUT
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "show with alternate config"
+backup_database
+cp notmuch-config alt-config
+notmuch --config=alt-config config set search.exclude_tags foobar17
+notmuch tag -- +foobar17 '*'
+output=$(notmuch --config=alt-config show '*' && echo OK)
+restore_database
+test_expect_equal "$output" "OK"
+
+test_begin_subtest "show with alternate config (xdg)"
+test_subtest_known_broken
+backup_database
+notmuch tag -- +foobar17 '*'
+xdg_config
+notmuch --config=${CONFIG_PATH} config set search.exclude_tags foobar17
+output=$(notmuch show '*' && echo OK)
+restore_database
+restore_config
+test_expect_equal "$output" "OK"
+
+test_begin_subtest "show with alternate config (xdg+profile)"
+test_subtest_known_broken
+backup_database
+notmuch tag -- +foobar17 '*'
+xdg_config foobar17
+notmuch --config=${CONFIG_PATH} config set search.exclude_tags foobar17
+output=$(notmuch show '*' && echo OK)
+restore_database
+restore_config
+test_expect_equal "$output" "OK"
+
 test_done

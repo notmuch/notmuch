@@ -1234,6 +1234,7 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
     bool entire_thread_set = false;
     bool single_message;
     bool unthreaded = FALSE;
+    char *status_string = NULL;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1323,7 +1324,28 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 	fprintf (stderr, "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
     }
 
-    query_string = query_string_from_args (config, argc - opt_index, argv + opt_index);
+    notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
+	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
+    if (notmuch_database_open_with_config (NULL,
+					   mode,
+					   _notmuch_config_get_path (config),
+					   NULL,
+					   &notmuch,
+					   &status_string)) {
+	if (status_string) {
+	    fputs (status_string, stderr);
+	    free (status_string);
+	}
+
+	return EXIT_FAILURE;
+    }
+
+    config = NULL;
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
+    query_string = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
@@ -1334,15 +1356,6 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 	return EXIT_FAILURE;
     }
 
-    notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
-	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       mode, &notmuch))
-	return EXIT_FAILURE;
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
-
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
@@ -1351,27 +1364,26 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 
     /* Create structure printer. */
     formatter = formatters[format];
-    sprinter = formatter->new_sprinter (config, stdout);
+    sprinter = formatter->new_sprinter (notmuch, stdout);
 
     params.out_stream = g_mime_stream_stdout_new ();
 
     /* If a single message is requested we do not use search_excludes. */
     if (single_message) {
-	ret = do_show_single (config, query, formatter, sprinter, &params);
+	ret = do_show_single (notmuch, query, formatter, sprinter, &params);
     } else {
 	/* We always apply set the exclude flag. The
 	 * exclude=true|false option controls whether or not we return
 	 * threads that only match in an excluded message */
-	const char **search_exclude_tags;
-	size_t search_exclude_tags_length;
-	unsigned int i;
+	notmuch_config_values_t *exclude_tags;
 	notmuch_status_t status;
 
-	search_exclude_tags = notmuch_config_get_search_exclude_tags
-				  (config, &search_exclude_tags_length);
+	for (exclude_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_EXCLUDE_TAGS);
+	     notmuch_config_values_valid (exclude_tags);
+	     notmuch_config_values_move_to_next (exclude_tags)) {
 
-	for (i = 0; i < search_exclude_tags_length; i++) {
-	    status = notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+	    status = notmuch_query_add_tag_exclude (query,
+						    notmuch_config_values_get (exclude_tags));
 	    if (status && status != NOTMUCH_STATUS_IGNORED) {
 		print_status_query ("notmuch show", query, status);
 		ret = -1;
@@ -1385,9 +1397,9 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 	}
 
 	if (unthreaded)
-	    ret = do_show_unthreaded (config, query, formatter, sprinter, &params);
+	    ret = do_show_unthreaded (notmuch, query, formatter, sprinter, &params);
 	else
-	    ret = do_show_threaded (config, query, formatter, sprinter, &params);
+	    ret = do_show_threaded (notmuch, query, formatter, sprinter, &params);
     }
 
   DONE:
