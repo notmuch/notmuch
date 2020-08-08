@@ -505,21 +505,17 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-part-header (nth content-type declared-type
 					    &optional name comment)
-  (let ((button)
-	(base-label (concat (and name (concat name ": "))
+  (let ((base-label (concat (and name (concat name ": "))
 			    declared-type
 			    (and (not (string-equal declared-type content-type))
 				 (concat " (as " content-type ")"))
 			    comment)))
-    (setq button
-	  (insert-button
-	   (concat "[ " base-label " ]")
-	   :base-label base-label
-	   :type 'notmuch-show-part-button-type
-	   :notmuch-part-hidden nil))
-    (insert "\n")
-    ;; return button
-    button))
+    (prog1 (insert-button
+	    (concat "[ " base-label " ]")
+	    :base-label base-label
+	    :type 'notmuch-show-part-button-type
+	    :notmuch-part-hidden nil)
+      (insert "\n"))))
 
 (defun notmuch-show-toggle-part-invisibility (&optional button)
   (interactive)

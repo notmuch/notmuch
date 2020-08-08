@@ -39,12 +39,9 @@ The parser always consumes input from point in the current
 buffer.  Hence, the caller is allowed to delete any data before
 point and may resynchronize after an error by moving point."
   (vector 'notmuch-sexp-parser
-	  ;; List depth
-	  0
-	  ;; Partial parse position marker
-	  nil
-	  ;; Partial parse state
-	  nil))
+	  0     ; List depth
+	  nil   ; Partial parse position marker
+	  nil)) ; Partial parse state
 
 (defmacro notmuch-sexp--depth (sp)         `(aref ,sp 1))
 (defmacro notmuch-sexp--partial-pos (sp)   `(aref ,sp 2))

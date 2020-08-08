@@ -36,7 +36,8 @@
 This prints make dependencies to `standard-output' based on the
 top-level `require' expressions in the current buffer.  Paths in
 rules will be given relative to DIR, or `default-directory'."
-  (setq dir (or dir default-directory))
+  (unless dir
+    (setq dir default-directory))
   (save-excursion
     (goto-char (point-min))
     (condition-case nil

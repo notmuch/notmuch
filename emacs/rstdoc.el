@@ -24,7 +24,6 @@
 ;;
 
 ;;; Commentary:
-;;
 
 ;; Rstdoc provides a facility to extract all of the docstrings defined in
 ;; an elisp source file. Usage:
@@ -68,10 +67,10 @@
   (insert "\n"))
 
 (defvar rst--escape-alist
-  '( ("\\\\='" . "\\\\'")
-     ("\\([^\\]\\)'" . "\\1`")
-     ("^[[:space:]\t]*$" . "|br|")
-     ("^[[:space:]\t]" . "|indent| "))
+  '(("\\\\='" . "\\\\'")
+    ("\\([^\\]\\)'" . "\\1`")
+    ("^[[:space:]\t]*$" . "|br|")
+    ("^[[:space:]\t]" . "|indent| "))
   "List of (regex . replacement) pairs.")
 
 (defun rstdoc--rst-quote-string (str)

@@ -53,9 +53,8 @@
 
 (defgroup notmuch-send nil
   "Sending messages from Notmuch."
-  :group 'notmuch)
-
-(custom-add-to-group 'notmuch-send 'message 'custom-group)
+  :group 'notmuch
+  :group 'message)
 
 (defgroup notmuch-tag nil
   "Tags and tagging in Notmuch."
@@ -782,8 +781,7 @@ signaled error.  This function does not return."
 	(insert extra)
 	(unless (bolp)
 	  (newline)))))
-  (error "%s"
-	 (concat msg (and extra " (see *Notmuch errors* for more details)"))))
+  (error "%s%s" msg (if extra " (see *Notmuch errors* for more details)" "")))
 
 (defun notmuch-check-async-exit-status (proc msg &optional command err)
   "If PROC exited abnormally, pop up an error buffer and signal an error.

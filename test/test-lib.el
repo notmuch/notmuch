@@ -154,22 +154,21 @@ running, quit if it terminated."
 
 (defun notmuch-test-expect-equal (output expected)
   "Compare OUTPUT with EXPECTED. Report any discrepencies."
-  (if (equal output expected)
-      t
-    (cond
-     ((and (listp output)
-	   (listp expected))
-      ;; Reporting the difference between two lists is done by
-      ;; reporting differing elements of OUTPUT and EXPECTED
-      ;; pairwise. This is expected to make analysis of failures
-      ;; simpler.
-      (apply #'concat (cl-loop for o in output
-			       for e in expected
-			       if (not (equal o e))
-			       collect (notmuch-test-report-unexpected o e))))
-
-     (t
-      (notmuch-test-report-unexpected output expected)))))
+  (cond
+   ((equal output expected)
+    t)
+   ((and (listp output)
+	 (listp expected))
+    ;; Reporting the difference between two lists is done by
+    ;; reporting differing elements of OUTPUT and EXPECTED
+    ;; pairwise. This is expected to make analysis of failures
+    ;; simpler.
+    (apply #'concat (cl-loop for o in output
+			     for e in expected
+			     if (not (equal o e))
+			     collect (notmuch-test-report-unexpected o e))))
+   (t
+    (notmuch-test-report-unexpected output expected))))
 
 (defun notmuch-post-command ()
   (run-hooks 'post-command-hook))
