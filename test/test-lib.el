@@ -34,23 +34,6 @@
 ;; `read' call.
 (setq read-file-name-function (lambda (&rest _) (read)))
 
-;; Work around a bug in emacs 23.1 and emacs 23.2 which prevents
-;; noninteractive (kill-emacs) from emacsclient.
-(when (and (= emacs-major-version 23) (< emacs-minor-version 3))
-  (defadvice kill-emacs (before disable-yes-or-no-p activate)
-    "Disable yes-or-no-p before executing kill-emacs"
-    (defun yes-or-no-p (prompt) t)))
-
-;; Emacs bug #2930:
-;;	23.0.92; `accept-process-output' and `sleep-for' do not run sentinels
-;; seems to be present in Emacs 23.1.
-;; Running `list-processes' after `accept-process-output' seems to work
-;; around this problem.
-(when (and (= emacs-major-version 23) (= emacs-minor-version 1))
-  (defadvice accept-process-output (after run-list-processes activate)
-    "run list-processes after executing accept-process-output"
-    (list-processes)))
-
 (defun notmuch-test-wait ()
   "Wait for process completion."
   (while (get-buffer-process (current-buffer))
