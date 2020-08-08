@@ -33,6 +33,7 @@
 (require 'notmuch-show)
 (require 'notmuch-tag)
 (require 'notmuch-parser)
+(require 'notmuch-jump)
 
 (declare-function notmuch-search "notmuch"
 		  (&optional query oldest-first target-thread target-line))

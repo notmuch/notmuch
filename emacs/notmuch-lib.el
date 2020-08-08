@@ -35,9 +35,6 @@
   (defconst notmuch-emacs-version "unknown"
     "Placeholder variable when notmuch-version.el[c] is not available."))
 
-(autoload 'notmuch-jump-search "notmuch-jump"
-  "Jump to a saved search by shortcut key." t)
-
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
   :group 'mail)
