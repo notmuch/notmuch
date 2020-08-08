@@ -44,28 +44,10 @@ while looking at: " pdir "emacs\n\nexit emacs (y or n)? ")
 	try-notmuch-emacs-directory (concat pdir "emacs/")
 	load-path (cons try-notmuch-emacs-directory load-path)))
 
-;; they say advice doesn't work for primitives (functions from c source)
-;; well, these 'before' advice works for emacs 23.1 - 24.5 (at least)
-;; ...and for our purposes 24.3 is enough (there is no load-prefer-newer there)
-;; note also that the old, "obsolete" defadvice mechanism was used, but that
-;; is the only one available for emacs 23 and 24 up to 24.3.
-
-(if (boundp 'load-prefer-newer)
-    (defadvice require (before before-require activate)
-      (unless (featurep feature)
-	(message "require: %s" feature)))
-  ;; else: special require "short-circuit"; after load feature is provided...
-  ;; ... in notmuch sources we always use require and there are no loops
-  (defadvice require (before before-require activate)
-    (unless (featurep feature)
-      (message "require: %s" feature)
-      (let ((name (symbol-name feature)))
-	(if (and (string-match "^notmuch" name)
-		 (file-newer-than-file-p
-		  (concat try-notmuch-emacs-directory name ".el")
-		  (concat try-notmuch-emacs-directory name ".elc")))
-	    (load (concat try-notmuch-emacs-directory name ".el") nil nil t t)
-	  )))))
+(define-advice require
+    (:before (feature &optional _filename _noerror) notmuch)
+  (unless (featurep feature)
+    (message "require: %s" feature)))
 
 (insert "Found notmuch emacs client in " try-notmuch-emacs-directory "\n")
 
