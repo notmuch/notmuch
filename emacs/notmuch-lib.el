@@ -555,13 +555,11 @@ This replaces spaces, percents, and double quotes in STR with
       (string= (downcase t1) (downcase t2)))))
 
 (defvar notmuch-multipart/alternative-discouraged
-  '(
-    ;; Avoid HTML parts.
+  '(;; Avoid HTML parts.
     "text/html"
     ;; multipart/related usually contain a text/html part and some
     ;; associated graphics.
-    "multipart/related"
-    ))
+    "multipart/related"))
 
 (defun notmuch-multipart/alternative-determine-discouraged (msg)
   "Return the discouraged alternatives for the specified message."

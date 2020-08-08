@@ -910,8 +910,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 		    query)
 		   "*"))
 	  (t
-	   (concat "*notmuch-search-" query "*"))
-	  )))
+	   (concat "*notmuch-search-" query "*")))))
 
 (defun notmuch-read-query (prompt)
   "Read a notmuch-query from the minibuffer with completion.
@@ -1003,8 +1002,7 @@ the configured default sort order."
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
-	  (error "notmuch search process already running for query `%s'" query)
-	)
+	  (error "notmuch search process already running for query `%s'" query))
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion

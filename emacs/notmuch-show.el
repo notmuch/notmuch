@@ -297,13 +297,12 @@ position of the message in the thread."
    ;;
    ;; Any MIME part not explicitly mentioned here will be handled by an
    ;; external viewer as configured in the various mailcap files.
-   (let ((mm-inline-media-tests '(
-				  ("text/.*" ignore identity)
-				  ("application/pgp-signature" ignore identity)
-				  ("multipart/alternative" ignore identity)
-				  ("multipart/mixed" ignore identity)
-				  ("multipart/related" ignore identity)
-				  )))
+   (let ((mm-inline-media-tests
+	  '(("text/.*" ignore identity)
+	    ("application/pgp-signature" ignore identity)
+	    ("multipart/alternative" ignore identity)
+	    ("multipart/mixed" ignore identity)
+	    ("multipart/related" ignore identity))))
      (mm-display-parts (mm-dissect-buffer)))))
 
 (defun notmuch-show-save-attachments ()
@@ -1791,10 +1790,8 @@ Reshows the current thread with matches defined by the new query-string."
 	(if (notmuch-show-message-visible-p)
 	    (setq message-ids
 		  (append message-ids (list (notmuch-show-get-message-id)))))
-	(setq done (not (notmuch-show-goto-message-next)))
-	)
-      message-ids
-      )))
+	(setq done (not (notmuch-show-goto-message-next))))
+      message-ids)))
 
 ;; Commands typically bound to keys.
 
