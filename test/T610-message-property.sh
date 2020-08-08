@@ -65,7 +65,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    EXPECT0(notmuch_message_get_property (message, "testkey2", &val));
    printf("testkey2 = %s\n", val);
 
-   /* remove non-existant value for key */
+   /* remove non-existent value for key */
    EXPECT0(notmuch_message_remove_property (message, "testkey2", "this value has spaces and = sign"));
    EXPECT0(notmuch_message_get_property (message, "testkey2", &val));
    printf("testkey2 = %s\n", val);

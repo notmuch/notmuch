@@ -1642,7 +1642,7 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  *
  * @retval #NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
  *	read-only mode so message cannot be modified.
- * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION: an execption was thrown
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION: an exception was thrown
  *      accessing the database.
  */
 notmuch_status_t
@@ -1874,7 +1874,7 @@ notmuch_message_add_property (notmuch_message_t *message, const char *key, const
 /**
  * Remove a (key,value) pair from a message.
  *
- * It is not an error to remove a non-existant (key,value) pair
+ * It is not an error to remove a non-existent (key,value) pair
  *
  * @returns
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.

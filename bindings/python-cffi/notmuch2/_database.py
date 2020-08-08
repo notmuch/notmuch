@@ -422,7 +422,7 @@ class Database(base.NotmuchObject):
            of it as ``dup = db.remove_message(name); if dup: ...``.
         :rtype: bool
 
-        :raises XapianError: A Xapian exception ocurred.
+        :raises XapianError: A Xapian exception occurred.
         :raises ReadOnlyDatabaseError: The database is opened in
            READ_ONLY mode.
         :raises UpgradeRequiredError: The database must be upgraded
@@ -458,7 +458,7 @@ class Database(base.NotmuchObject):
         :raises LookupError: If no message was found.
         :raises OutOfMemoryError: When there is no memory to allocate
            the message instance.
-        :raises XapianError: A Xapian exception ocurred.
+        :raises XapianError: A Xapian exception occurred.
         :raises ObjectDestroyedError: if used after destroyed.
         """
         msg_pp = capi.ffi.new('notmuch_message_t **')
@@ -489,7 +489,7 @@ class Database(base.NotmuchObject):
            a subclass of :exc:`KeyError`.
         :raises OutOfMemoryError: When there is no memory to allocate
            the message instance.
-        :raises XapianError: A Xapian exception ocurred.
+        :raises XapianError: A Xapian exception occurred.
         :raises ObjectDestroyedError: if used after destroyed.
         """
         if not hasattr(os, 'PathLike') and isinstance(filename, pathlib.Path):
@@ -695,7 +695,7 @@ class AtomicContext:
         """Force ending the atomic section.
 
         This can only be called once __exit__ has been called.  It
-        will attept to close the atomic section (again).  This is
+        will attempt to close the atomic section (again).  This is
         useful if the original exit raised an exception and the atomic
         section is still open.  But things are pretty ugly by now.
 

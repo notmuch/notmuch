@@ -29,7 +29,7 @@ GOOD: 1258787708-21121-2-git-send-email-keithp@keithp.com
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "<> delimeters are required"
+test_begin_subtest "<> delimiters are required"
 ${TEST_DIRECTORY}/message-id-parse <<EOF >OUTPUT
 018b1a8f2d1df62e804ce88b65401304832dfbbf.1346614915.git.jani@nikula.org>
 <1530507300.raoomurnbf.astroid@strange.none

@@ -10,7 +10,7 @@ should consider their signatures implementation details.
 Errors
 ======
 
-All errors occuring due to errors from the underlying notmuch database
+All errors occurring due to errors from the underlying notmuch database
 are subclasses of the :exc:`NotmuchError`.  Due to memory management
 it is possible to try and use an object after it has been freed.  In
 this case a :exc:`ObjectDestroyedError` will be raised.

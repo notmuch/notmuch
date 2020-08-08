@@ -95,7 +95,7 @@ class Query(object):
             :exc:`NullPointerError` if the query creation failed
                 (e.g. too little memory).
             :exc:`NotInitializedError` if the underlying db was not
-                intitialized.
+                initialized.
         """
         db._assert_db_is_initialized()
         # create reference to parent db to keep it alive

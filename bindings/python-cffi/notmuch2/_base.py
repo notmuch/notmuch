@@ -29,7 +29,7 @@ class NotmuchObject(metaclass=abc.ABCMeta):
     However during some peculiar situations, e.g. interpreter
     shutdown, it is possible for the :meth:`__del__` method to have
     been called, whele there are still references to an object.  This
-    could result in child objects asking their memeory to be freed
+    could result in child objects asking their memory to be freed
     after the parent has already freed the memory, making things
     rather unhappy as double frees are not taken lightly in C.  To
     handle this case all objects need to follow the same protocol to
@@ -73,7 +73,7 @@ class NotmuchObject(metaclass=abc.ABCMeta):
     def _destroy(self):
         """Destroy the object, freeing all memory.
 
-        This method needs to destory the object on the
+        This method needs to destroy the object on the
         libnotmuch-level.  It must ensure it's not been destroyed by
         it's parent object yet before doing so.  It also must be
         idempotent.
@@ -134,7 +134,7 @@ class BinString(str):
 
     Most data in libnotmuch should be valid ASCII or valid UTF-8.
     However since it is a C library these are represented as
-    bytestrings intead which means on an API level we can not
+    bytestrings instead which means on an API level we can not
     guarantee that decoding this to UTF-8 will both succeed and be
     lossless.  This string type converts bytes to unicode in a lossy
     way, but also makes the raw bytes available.

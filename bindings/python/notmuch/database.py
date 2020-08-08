@@ -65,7 +65,7 @@ class Database(object):
     .. note::
 
         Any function in this class can and will throw an
-        :exc:`NotInitializedError` if the database was not intitialized
+        :exc:`NotInitializedError` if the database was not initialized
         properly.
     """
     _std_db_path = None
@@ -273,9 +273,9 @@ class Database(object):
         return Database._get_version(self._db)
 
     def get_revision (self):
-        """Returns the committed database revison and UUID
+        """Returns the committed database revision and UUID
 
-        :returns: (revison, uuid) The database revision as a positive integer
+        :returns: (revision, uuid) The database revision as a positive integer
         and the UUID of the database.
         """
         self._assert_db_is_initialized()
@@ -574,7 +574,7 @@ class Database(object):
                   in the meantime. In this case, you should close and
                   reopen the database and retry.
             :exc:`NotInitializedError` if
-                    the database was not intitialized.
+                    the database was not initialized.
         """
         self._assert_db_is_initialized()
         msg_p = NotmuchMessageP()
@@ -600,7 +600,7 @@ class Database(object):
                  case, you should close and reopen the database and
                  retry.
         :raises: :exc:`NotInitializedError` if the database was not
-                 intitialized.
+                 initialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
@@ -616,7 +616,7 @@ class Database(object):
         """Returns :class:`Tags` with a list of all tags found in the database
 
         :returns: :class:`Tags`
-        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER
+        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER
                     on error
         """
         self._assert_db_is_initialized()

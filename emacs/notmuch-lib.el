@@ -656,7 +656,7 @@ MSG (if it isn't already)."
 ;; Workaround: The call to `mm-display-part' below triggers a bug in
 ;; Emacs 24 if it attempts to use the shr renderer to display an HTML
 ;; part with images in it (demonstrated in 24.1 and 24.2 on Debian and
-;; Fedora 17, though unreproducable in other configurations).
+;; Fedora 17, though unreproducible in other configurations).
 ;; `mm-shr' references the variable `gnus-inhibit-images' without
 ;; first loading gnus-art, which defines it, resulting in a
 ;; void-variable error.  Hence, we advise `mm-shr' to ensure gnus-art

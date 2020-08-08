@@ -123,7 +123,7 @@ tag_op_list_append (tag_op_list_t *list,
 /*
  * Apply a list of tag operations, in order, to a given message.
  *
- * Flags can be bitwise ORed; see enum above for possibilies.
+ * Flags can be bitwise ORed; see enum above for possibilities.
  */
 
 notmuch_status_t

@@ -161,7 +161,7 @@ class MutableTagSet(ImmutableTagSet, collections.abc.MutableSet):
     """
 
     # Since we subclass ImmutableTagSet we inherit a __hash__.  But we
-    # are mutable, setting it to None will make the Python machinary
+    # are mutable, setting it to None will make the Python machinery
     # recognise us as unhashable.
     __hash__ = None
 
@@ -179,7 +179,7 @@ class MutableTagSet(ImmutableTagSet, collections.abc.MutableSet):
 
         :raises TypeError: If the tag is not a valid type.
         :raises TagTooLongError: If the added tag exceeds the maximum
-           lenght, see ``notmuch_cffi.NOTMUCH_TAG_MAX``.
+           length, see ``notmuch_cffi.NOTMUCH_TAG_MAX``.
         :raises ReadOnlyDatabaseError: If the database is opened in
            read-only mode.
         """
@@ -204,7 +204,7 @@ class MutableTagSet(ImmutableTagSet, collections.abc.MutableSet):
 
         :raises TypeError: If the tag is not a valid type.
         :raises TagTooLongError: If the tag exceeds the maximum
-           lenght, see ``notmuch_cffi.NOTMUCH_TAG_MAX``.
+           length, see ``notmuch_cffi.NOTMUCH_TAG_MAX``.
         :raises ReadOnlyDatabaseError: If the database is opened in
            read-only mode.
         """
@@ -286,7 +286,7 @@ class MutableTagSet(ImmutableTagSet, collections.abc.MutableSet):
 class TagsIter(base.NotmuchObject, collections.abc.Iterator):
     """Iterator over tags.
 
-    This is only an interator, not a container so calling
+    This is only an iterator, not a container so calling
     :meth:`__iter__` does not return a new, replenished iterator but
     only itself.
 

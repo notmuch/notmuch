@@ -31,7 +31,7 @@ def notmuch(maildir):
     fixture.
     """
     def run(*args):
-        """Run a notmuch comand.
+        """Run a notmuch command.
 
         This function runs with a timeout error as many notmuch
         commands may block if multiple processes are trying to open

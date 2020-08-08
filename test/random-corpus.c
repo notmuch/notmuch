@@ -50,7 +50,7 @@ typedef struct {
 
 /*
  *  Choose about half ascii as test characters, as ascii
- *  punctation and whitespace is the main cause of problems for
+ *  punctuation and whitespace is the main cause of problems for
  *  the (old) restore parser.
  *
  *  We then favour code points with 2 byte encodings. Note that

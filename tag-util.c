@@ -323,7 +323,7 @@ tag_op_list_apply (notmuch_message_t *message,
     if (flags & TAG_FLAG_MAILDIR_SYNC) {
 	status = notmuch_message_tags_to_maildir_flags (message);
 	if (status) {
-	    message_error (message, status, "synching tags to maildir");
+	    message_error (message, status, "syncing tags to maildir");
 	    return status;
 	}
     }

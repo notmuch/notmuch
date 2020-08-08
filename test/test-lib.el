@@ -153,7 +153,7 @@ running, quit if it terminated."
 	  "Output:\t" (prin1-to-string output) "\n"))
 
 (defun notmuch-test-expect-equal (output expected)
-  "Compare OUTPUT with EXPECTED. Report any discrepencies."
+  "Compare OUTPUT with EXPECTED. Report any discrepancies."
   (cond
    ((equal output expected)
     t)

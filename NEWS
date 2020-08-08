@@ -116,7 +116,7 @@ information about cryptographic protections for the Subject header.
 Emacs
 -----
 
-Optionally check for missing attachements in outgoing messages (see
+Optionally check for missing attachments in outgoing messages (see
 function `notmuch-mua-attachment-check`).
 
 Bind `B` to browse URLs in current message.

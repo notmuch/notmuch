@@ -128,7 +128,7 @@ by user FROM."
       (setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
       (setq button-action 'notmuch-crypto-sigstatus-error-callback)
       (setq help-msg (concat "Click to retrieve key ID " keyid
-			     " from keyserver.")))
+			     " from key server.")))
      ((string= status "bad")
       (setq label (concat "Bad signature (claimed key ID " keyid ")"))
       (setq face 'notmuch-crypto-signature-bad))

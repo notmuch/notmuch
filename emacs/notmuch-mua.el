@@ -337,7 +337,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is
-modified. This function is notmuch addaptation of
+modified. This function is notmuch adaptation of
 `message-pop-to-buffer'."
   (let ((buffer (get-buffer name)))
     (if (and buffer
