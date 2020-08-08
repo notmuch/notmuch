@@ -78,7 +78,7 @@ returns the value."
 	 ;; parse, extend the partial parse to figure out when we
 	 ;; have a complete list.
 	 (catch 'return
-	   (when (null (notmuch-sexp--partial-state sp))
+	   (unless (notmuch-sexp--partial-state sp)
 	     (let ((start (point)))
 	       (condition-case nil
 		   (throw 'return (read (current-buffer)))

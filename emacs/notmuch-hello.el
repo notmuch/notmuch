@@ -638,7 +638,7 @@ with `notmuch-hello-query-counts'."
     (dolist (window (window-list))
       (let ((last-buf (window-parameter window 'notmuch-hello-last-buffer))
 	    (cur-buf (window-buffer window)))
-	(when (not (eq last-buf cur-buf))
+	(unless (eq last-buf cur-buf)
 	  ;; This window changed or is new.  Update recorded buffer
 	  ;; for next time.
 	  (set-window-parameter window 'notmuch-hello-last-buffer cur-buf)
@@ -652,7 +652,7 @@ with `notmuch-hello-query-counts'."
       ;; 24, we can't do it right here because something in this
       ;; hook's call stack overrides hello's point placement.
       (run-at-time nil nil #'notmuch-hello t))
-    (when (null hello-buf)
+    (unless hello-buf
       ;; Clean up hook
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
@@ -908,7 +908,7 @@ Supports the following entries in OPTIONS as a plist:
 				(notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
-    (when (not is-hidden)
+    (unless is-hidden
       (let ((searches (apply 'notmuch-hello-query-counts query-list options)))
 	(when (or (not (plist-get options :hide-if-empty))
 		  searches)

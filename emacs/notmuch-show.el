@@ -1066,8 +1066,7 @@ is t, hide the part initially and show the button."
       ;; If the subject of this message is the same as that of the
       ;; previous message, don't display it when this message is
       ;; collapsed.
-      (when (not (string= notmuch-show-previous-subject
-			  bare-subject))
+      (unless (string= notmuch-show-previous-subject bare-subject)
 	(forward-line 1))
       (setq headers-start (point-marker)))
     (setq headers-end (point-marker))

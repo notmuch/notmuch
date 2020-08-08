@@ -382,8 +382,8 @@ the messages that were tagged."
   "Return a list of tags for messages matching SEARCH-TERMS.
 
 Returns all tags if no search terms are given."
-  (if (null search-terms)
-      (setq search-terms (list "*")))
+  (unless search-terms
+    (setq search-terms (list "*")))
   (split-string
    (with-output-to-string
      (with-current-buffer standard-output

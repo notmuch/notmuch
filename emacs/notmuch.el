@@ -803,13 +803,13 @@ non-authors is found, assume that all of the authors match."
 	(setq invisible-string (notmuch-search-author-propertize invisible-string)))
       ;; If there is any invisible text, add it as a tooltip to the
       ;; visible text.
-      (when (not (string= invisible-string ""))
+      (unless (string= invisible-string "")
 	(setq visible-string
 	      (propertize visible-string
 			  'help-echo (concat "..." invisible-string))))
       ;; Insert the visible and, if present, invisible author strings.
       (insert visible-string)
-      (when (not (string= invisible-string ""))
+      (unless (string= invisible-string "")
 	(let ((start (point))
 	      overlay)
 	  (insert invisible-string)

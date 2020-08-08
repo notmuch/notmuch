@@ -1063,10 +1063,10 @@ The arguments are:
   OPEN-TARGET: If TRUE open the target message in the message pane.
   UNTHREADED: If TRUE only show matching messages in an unthreaded view."
   (interactive)
-  (if (null query)
-      (setq query (notmuch-read-query (concat "Notmuch "
-					      (if unthreaded "unthreaded " "tree ")
-					      "view search: "))))
+  (unless query
+    (setq query (notmuch-read-query (concat "Notmuch "
+					    (if unthreaded "unthreaded " "tree ")
+					    "view search: "))))
   (let ((buffer (get-buffer-create (generate-new-buffer-name
 				    (or buffer-name
 					(concat "*notmuch-"

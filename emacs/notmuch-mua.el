@@ -198,7 +198,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-add-more-hidden-headers ()
   "Add some headers to the list that are hidden by default."
   (mapc (lambda (header)
-	  (when (not (member header message-hidden-headers))
+	  (unless (member header message-hidden-headers)
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
@@ -368,7 +368,7 @@ modified. This function is notmuch addaptation of
   (interactive)
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (when (not (string= "" user-agent))
+      (unless (string= "" user-agent)
 	(push (cons 'User-Agent user-agent) other-headers))))
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from

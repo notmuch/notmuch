@@ -81,7 +81,7 @@ invisible text."
   (let (str)
     (while (< start end)
       (let ((next-pos (next-char-property-change start end)))
-	(when (not (invisible-p start))
+	(unless (invisible-p start)
 	  (setq str (concat str (buffer-substring-no-properties
 				 start next-pos))))
 	(setq start next-pos)))
@@ -97,8 +97,8 @@ invisible text."
 (defun orphan-watchdog-check (pid)
   "Periodically check that the process with id PID is still
 running, quit if it terminated."
-  (if (not (test-process-running pid))
-      (kill-emacs)))
+  (unless (test-process-running pid)
+    (kill-emacs)))
 
 (defun orphan-watchdog (pid)
   "Initiate orphan watchdog check."
