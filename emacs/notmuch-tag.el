@@ -32,9 +32,10 @@
 
 (require 'notmuch-lib)
 
-(declare-function notmuch-search-tag "notmuch" tag-changes)
-(declare-function notmuch-show-tag "notmuch-show" tag-changes)
-(declare-function notmuch-tree-tag "notmuch-tree" tag-changes)
+(declare-function notmuch-search-tag "notmuch"
+		  (tag-changes &optional beg end only-matched))
+(declare-function notmuch-show-tag "notmuch-show" (tag-changes))
+(declare-function notmuch-tree-tag "notmuch-tree" (tag-changes))
 
 (autoload 'notmuch-jump "notmuch-jump")
 
