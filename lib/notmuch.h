@@ -236,6 +236,7 @@ typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
 typedef struct _notmuch_config_list notmuch_config_list_t;
+typedef struct _notmuch_config_values notmuch_config_values_t;
 typedef struct _notmuch_indexopts notmuch_indexopts_t;
 #endif /* __DOXYGEN__ */
 
@@ -2455,6 +2456,69 @@ notmuch_config_get (notmuch_database_t *notmuch, notmuch_config_key_t key);
  */
 notmuch_status_t
 notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const char *val);
+
+/**
+ * Returns an iterator for a ';'-delimited list of configuration values
+ *
+ * These values reflect all configuration information given at the
+ * time the database was opened.
+ *
+ * @param[in] notmuch database
+ * @param[in] key configuration key
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval NULL in case of error.
+ */
+notmuch_config_values_t *
+notmuch_config_get_values (notmuch_database_t *notmuch, notmuch_config_key_t key);
+
+/**
+ * Is the given 'config_values' iterator pointing at a valid element.
+ *
+ * @param[in] values iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval FALSE if passed a NULL pointer, or the iterator is exhausted.
+ *
+ */
+notmuch_bool_t
+notmuch_config_values_valid (notmuch_config_values_t *values);
+
+/**
+ * Get the current value from the 'values' iterator
+ *
+ * @param[in] values iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval a string with the same lifetime as the iterator
+ */
+const char *
+notmuch_config_values_get (notmuch_config_values_t *values);
+
+/**
+ * Move the 'values' iterator to the next element
+ *
+ * @param[in,out] values iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ */
+void
+notmuch_config_values_move_to_next (notmuch_config_values_t *values);
+
+/**
+ * Destroy a config values iterator, along with any associated
+ * resources.
+ *
+ * @param[in,out] values iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ */
+void
+notmuch_config_values_destroy (notmuch_config_values_t *values);
 
 /**
  * get the current default indexing options for a given database.

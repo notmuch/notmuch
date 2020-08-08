@@ -457,6 +457,7 @@ main (int argc, char *argv[])
     command_t *command;
     const char *config_file_name = NULL;
     notmuch_config_t *config = NULL;
+    notmuch_database_t *notmuch = NULL;
     int opt_index;
     int ret;
 
@@ -500,13 +501,35 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    config = notmuch_config_open (local, config_file_name, command->mode);
-    if (! config) {
-	ret = EXIT_FAILURE;
-	goto DONE;
-    }
+    if (command->mode & NOTMUCH_COMMAND_DATABASE_EARLY) {
+	char *status_string = NULL;
+	notmuch_database_mode_t mode;
+	if (command->mode & NOTMUCH_COMMAND_DATABASE_WRITE)
+	    mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
+	else
+	    mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 
-    ret = (command->function)(config, NULL, argc - opt_index, argv + opt_index);
+	if (notmuch_database_open_with_config (NULL,
+					       mode,
+					       config_file_name,
+					       NULL,
+					       &notmuch,
+					       &status_string)) {
+	    if (status_string) {
+		fputs (status_string, stderr);
+		free (status_string);
+	    }
+
+	    return EXIT_FAILURE;
+	}
+    } else {
+	config = notmuch_config_open (local, config_file_name, command->mode);
+	if (! config) {
+	    ret = EXIT_FAILURE;
+	    goto DONE;
+	}
+    }
+    ret = (command->function)(config, notmuch, argc - opt_index, argv + opt_index);
 
   DONE:
     if (config)

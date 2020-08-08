@@ -201,9 +201,55 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "notmuch_config_get_values"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+    notmuch_config_values_t *values;
+    EXPECT0(notmuch_config_set (db, NOTMUCH_CONFIG_NEW_TAGS, "a;b;c"));
+    for (values = notmuch_config_get_values (db, NOTMUCH_CONFIG_NEW_TAGS);
+	 notmuch_config_values_valid (values);
+	 notmuch_config_values_move_to_next (values))
+    {
+	  puts (notmuch_config_values_get (values));
+    }
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+a
+b
+c
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
+backup_database
+test_begin_subtest "notmuch_config_get_values, trailing ;"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+    notmuch_config_values_t *values;
+    EXPECT0(notmuch_config_set (db, NOTMUCH_CONFIG_NEW_TAGS, "a;b;c"));
+    for (values = notmuch_config_get_values (db, NOTMUCH_CONFIG_NEW_TAGS);
+	 notmuch_config_values_valid (values);
+	 notmuch_config_values_move_to_next (values))
+    {
+	  puts (notmuch_config_values_get (values));
+    }
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+a
+b
+c
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
 backup_database
 test_begin_subtest "get config by key"
-notmuch config set test.key1 overridden
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
 {
    printf("before = %s\n", notmuch_config_get (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS));
