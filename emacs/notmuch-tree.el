@@ -725,12 +725,14 @@ nil otherwise."
     (while (not (or (notmuch-tree-get-prop :first) (eobp)))
       (forward-line -1))))
 
-(defun notmuch-tree-prev-thread ()
+(defun notmuch-tree-prev-thread-in-tree ()
+  "Move to the previous thread in the current tree"
   (interactive)
   (forward-line -1)
-  (notmuch-tree-thread-top))
+  (notmuch-tree-thread-top)
+  (not (bobp)))
 
-(defun notmuch-tree-next-thread ()
+(defun notmuch-tree-next-thread-in-tree ()
   "Get the next thread in the current tree. Returns t if a thread was
 found or nil if not."
   (interactive)
@@ -738,6 +740,38 @@ found or nil if not."
   (while (not (or (notmuch-tree-get-prop :first) (eobp)))
     (forward-line 1))
   (not (eobp)))
+
+(defun notmuch-tree-next-thread-from-search (&optional previous)
+  "Move to the next thread in the parent search results, if any.
+
+If PREVIOUS is non-nil, move to the previous item in the
+search results instead."
+  (interactive "P")
+  (let ((parent-buffer notmuch-tree-parent-buffer))
+    (notmuch-tree-quit t)
+    (when (buffer-live-p parent-buffer)
+      (switch-to-buffer parent-buffer)
+      (if previous
+	  (notmuch-search-previous-thread)
+	(notmuch-search-next-thread))
+      (notmuch-tree-from-search-thread))))
+
+(defun notmuch-tree-next-thread (&optional previous)
+  "Move to the next thread in the current tree or parent search
+results
+
+If PREVIOUS is non-nil, move to the previous thread in the tree or
+search results instead."
+  (interactive)
+  (unless (if previous (notmuch-tree-prev-thread-in-tree)
+	    (notmuch-tree-next-thread-in-tree))
+    (notmuch-tree-next-thread-from-search previous)))
+
+(defun notmuch-tree-prev-thread ()
+  "Move to the previous thread in the current tree or parent search
+results"
+  (interactive)
+  (notmuch-tree-next-thread t))
 
 (defun notmuch-tree-thread-mapcar (function)
   "Iterate through all messages in the current thread
