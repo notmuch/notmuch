@@ -545,7 +545,7 @@ thread."
 		notmuch-search-query-string
 		nil
 		(notmuch-prettify-subject (notmuch-search-find-subject))
-		t))
+		t nil (current-buffer)))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply-all to the entire current thread in a new buffer."

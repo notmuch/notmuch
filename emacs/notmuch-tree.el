@@ -222,6 +222,9 @@ For example:
   "A buffer local copy of argument open-target to the function notmuch-tree.")
 (make-variable-buffer-local 'notmuch-tree-open-target)
 
+(defvar notmuch-tree-parent-buffer nil)
+(make-variable-buffer-local 'notmuch-tree-parent-buffer)
+
 (defvar notmuch-tree-message-window nil
   "The window of the message pane.
 
@@ -1050,7 +1053,7 @@ the same as for the function notmuch-tree."
 	      ")")
     notmuch-tree-basic-query))
 
-(defun notmuch-tree (&optional query query-context target buffer-name open-target unthreaded)
+(defun notmuch-tree (&optional query query-context target buffer-name open-target unthreaded parent-buffer)
   "Display threads matching QUERY in tree view.
 
 The arguments are:
@@ -1080,6 +1083,7 @@ The arguments are:
   ;; Don't track undo information for this buffer
   (set 'buffer-undo-list t)
   (notmuch-tree-worker query query-context target open-target unthreaded)
+  (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))
 
 (defun notmuch-unthreaded (&optional query query-context target buffer-name open-target)
