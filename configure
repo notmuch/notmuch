@@ -829,8 +829,8 @@ if [ -z "${EMACSETCDIR-}" ]; then
 fi
 
 if [ $WITH_EMACS = "1" ]; then
-    printf "Checking if emacs (>= 24) is available... "
-    if emacs --quick --batch --eval '(if (< emacs-major-version 24) (kill-emacs 1))' > /dev/null 2>&1; then
+    printf "Checking if emacs (>= 25) is available... "
+    if emacs --quick --batch --eval '(if (< emacs-major-version 25) (kill-emacs 1))' > /dev/null 2>&1; then
         printf "Yes.\n"
     else
         printf "No (disabling emacs related parts of build)\n"
