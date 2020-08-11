@@ -552,9 +552,14 @@ NOT change the database."
       (setq notmuch-tree-message-window
 	    (split-window-vertically (/ (window-height) 4)))
       (with-selected-window notmuch-tree-message-window
-	;; Since we are only displaying one message do not indent.
-	(let ((notmuch-show-indent-messages-width 0)
-	      (notmuch-show-only-matching-messages t))
+	(let (;; Since we are only displaying one message do not indent.
+	      (notmuch-show-indent-messages-width 0)
+	      (notmuch-show-only-matching-messages t)
+	      ;; Ensure that `pop-to-buffer-same-window' uses the
+	      ;; window we want it to use.
+	      (display-buffer-overriding-action
+		 '((display-buffer-same-window)
+		   (inhibit-same-window . nil))))
 	  (setq buffer (notmuch-show id))))
       ;; We need the `let' as notmuch-tree-message-window is buffer local.
       (let ((window notmuch-tree-message-window))
@@ -1119,7 +1124,7 @@ The arguments are:
 						(if unthreaded "unthreaded-" "tree-")
 						query "*")))))
 	(inhibit-read-only t))
-    (switch-to-buffer buffer))
+    (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
   (set 'buffer-undo-list t)
   (notmuch-tree-worker query query-context target open-target unthreaded)

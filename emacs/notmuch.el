@@ -994,7 +994,7 @@ the configured default sort order."
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (if no-display
 	(set-buffer buffer)
-      (switch-to-buffer buffer))
+      (pop-to-buffer-same-window buffer))
     ;; avoid wiping out third party buffer-local variables in the case
     ;; where we're just refreshing or changing the sort order of an
     ;; existing search results buffer
@@ -1134,7 +1134,7 @@ notmuch buffers exist, run `notmuch'."
 	;; If the first one we found is any other than the starting
 	;; buffer, switch to it.
 	(unless (eq first start)
-	  (switch-to-buffer first))
+	  (pop-to-buffer-same-window first))
       (notmuch))))
 
 ;;;; Imenu Support

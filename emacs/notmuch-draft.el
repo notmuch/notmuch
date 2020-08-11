@@ -232,7 +232,8 @@ applied to newly inserted messages)."
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
     (when (or draft
 	      (yes-or-no-p "Message does not appear to be a draft: edit as new? "))
-      (switch-to-buffer (get-buffer-create (concat "*notmuch-draft-" id "*")))
+      (pop-to-buffer-same-window
+       (get-buffer-create (concat "*notmuch-draft-" id "*")))
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((coding-system-for-read 'no-conversion))

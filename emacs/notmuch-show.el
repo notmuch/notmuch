@@ -1244,7 +1244,7 @@ matched."
 		    (eval (car (get 'mm-inline-override-types 'standard-value))))
 	     (cons "application/*" mm-inline-override-types)
 	   mm-inline-override-types)))
-    (switch-to-buffer (get-buffer-create buffer-name))
+    (pop-to-buffer-same-window (get-buffer-create buffer-name))
     ;; No need to track undo information for this buffer.
     (setq buffer-undo-list t)
     (notmuch-show-mode)
@@ -2001,7 +2001,7 @@ to show, nil otherwise."
   (let* ((id (notmuch-show-get-message-id))
 	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*")))
 	 (inhibit-read-only t))
-    (switch-to-buffer buf)
+    (pop-to-buffer-same-window buf)
     (erase-buffer)
     (let ((coding-system-for-read 'no-conversion))
       (call-process notmuch-command nil t nil "show" "--format=raw" id))
@@ -2060,7 +2060,7 @@ message."
 	  (set-buffer-modified-p nil)
 	  (setq buffer-read-only t)
 	  (unless (zerop exit-code)
-	    (switch-to-buffer-other-window buf)
+	    (pop-to-buffer buf)
 	    (message (format "Command '%s' exited abnormally with code %d"
 			     shell-command exit-code))))))))
 
@@ -2468,7 +2468,7 @@ If the part is displayed in an external application then close
 the new buffer."
   (let ((buf (get-buffer-create (generate-new-buffer-name
 				 (concat " *notmuch-internal-part*")))))
-    (switch-to-buffer buf)
+    (pop-to-buffer-same-window buf)
     (if (eq (mm-display-part handle) 'external)
 	(kill-buffer buf)
       (goto-char (point-min))

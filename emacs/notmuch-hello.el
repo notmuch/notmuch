@@ -973,7 +973,7 @@ following:
   (let ((notmuch-hello-auto-refresh nil))
     (if no-display
 	(set-buffer "*notmuch-hello*")
-      (switch-to-buffer "*notmuch-hello*")))
+      (pop-to-buffer-same-window "*notmuch-hello*")))
   ;; Install auto-refresh hook
   (when notmuch-hello-auto-refresh
     (add-hook 'window-configuration-change-hook
