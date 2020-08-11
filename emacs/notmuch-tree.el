@@ -338,7 +338,7 @@ FUNC."
     (define-key map [mouse-1] 'notmuch-tree-show-message)
     (define-key map "x" 'notmuch-tree-archive-message-then-next-or-exit)
     (define-key map "X" 'notmuch-tree-archive-thread-then-exit)
-    (define-key map "A" 'notmuch-tree-archive-thread)
+    (define-key map "A" 'notmuch-tree-archive-thread-then-next)
     (define-key map "a" 'notmuch-tree-archive-message-then-next)
     (define-key map "z" 'notmuch-tree-to-tree)
     (define-key map "n" 'notmuch-tree-next-matching-message)
@@ -496,6 +496,12 @@ NOT change the database."
   (let ((query (notmuch-read-query "Notmuch tree view search: ")))
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
+
+(defun notmuch-tree-archive-thread-then-next ()
+  "Archive all messages in the current buffer, then show next thread from search."
+  (interactive)
+  (notmuch-tree-archive-thread)
+  (notmuch-tree-next-thread))
 
 (defun notmuch-unthreaded-from-tree-current-query ()
   "Switch from tree view to unthreaded view."
