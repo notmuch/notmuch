@@ -468,7 +468,10 @@ message at DEPTH in the current thread."
       ;; invisible U+200E LEFT-TO-RIGHT MARK character which forces
       ;; the header paragraph as left-to-right text.
       (insert (propertize (string ?\x200e) 'invisible t)))
-    (insert (notmuch-show-spaces-n (* notmuch-show-indent-messages-width depth))
+    (insert (if notmuch-show-indent-content
+		(notmuch-show-spaces-n (* notmuch-show-indent-messages-width
+					  depth))
+	      "")
 	    from
 	    " ("
 	    date
