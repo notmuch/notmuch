@@ -178,10 +178,7 @@ esac
 year=`exec date +%Y`
 echo -n "Checking that copyright in documentation contains 2009-$year... "
 # Read the value of variable `copyright' defined in 'doc/conf.py'.
-# As __file__ is not defined when python command is given from command line,
-# it is defined before contents of 'doc/conf.py' (which dereferences __file__)
-# is executed.
-copyrightline=`exec python -c "with open('doc/conf.py') as cf: __file__ = ''; exec(cf.read()); print(copyright)"`
+copyrightline=$(grep ^copyright doc/conf.py)
 case $copyrightline in
 	*2009-$year*)
 		echo Yes. ;;
