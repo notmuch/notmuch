@@ -56,6 +56,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_message_get_filename@Base 0.3
  notmuch_message_get_filenames@Base 0.5
  notmuch_message_get_flag@Base 0.3
+ notmuch_message_get_flag_st@Base 0.31~rc0
  notmuch_message_get_header@Base 0.3
  notmuch_message_get_message_id@Base 0.3
  notmuch_message_get_properties@Base 0.23~rc0
@@ -64,6 +65,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_message_get_tags@Base 0.3
  notmuch_message_get_thread_id@Base 0.3
  notmuch_message_has_maildir_flag@Base 0.26~rc0
+ notmuch_message_has_maildir_flag_st@Base 0.31~rc0
  notmuch_message_maildir_flags_to_tags@Base 0.5
  notmuch_message_properties_destroy@Base 0.23~rc0
  notmuch_message_properties_key@Base 0.23~rc0
