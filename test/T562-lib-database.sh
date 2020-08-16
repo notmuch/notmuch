@@ -154,11 +154,9 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "upgrade a closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
-        notmuch_bool_t ret;
-
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_upgrade (db, NULL, NULL);
-        printf ("%d\n", ret == NOTMUCH_STATUS_SUCCESS);
+        printf ("%d\n", stat == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED
