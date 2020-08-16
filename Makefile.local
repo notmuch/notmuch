@@ -294,7 +294,7 @@ CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
 CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
 CLEAN := $(CLEAN) .deps
 
-DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config
+DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config sphinx.config
 
 CPPCHECK_STAMPS := $(SRCS:%=.stamps/cppcheck/%)
 .PHONY: cppcheck
