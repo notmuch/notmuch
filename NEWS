@@ -6,6 +6,14 @@ Emacs
 
 The minimum supported major version of GNU Emacs is now 25.1.
 
+Notmuch-Mutt
+------------
+
+The shell pipeline executed by notmuch-mutt, which symlinked matched
+files to a maildir for mutt to access is replaced with internal perl
+processing. This search operation is now more portable, and somewhat
+faster.
+
 Notmuch 0.30 (2020-07-10)
 =========================
 
