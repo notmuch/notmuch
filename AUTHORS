@@ -23,7 +23,7 @@ system libraries, compilers, and the kernel that make it all work
 (thanks GNU, thanks Linux). Thanks to everyone who has played a part!
 
 The following list of people have at least 15 lines of code in the
-Notmuch 0.30 release (calculated by devel/author-scan.sh).
+Notmuch 0.31 release (calculated by devel/author-scan.sh).
 
  David Bremner
  Carl Worth
@@ -42,12 +42,13 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  W. Trevor King
  Jameson Graef Rollins
  Felipe Contreras
+ Jonas Bernoulli
  Pieter Praet
  Peter Feigl
  Dmitry Kurochkin
  Peter Wang
- Daniel Schoepe
  Gregor Zattler
+ Daniel Schoepe
  Keith Packard
  Adam Wolfe Gordon
  Stefano Zacchiroli
@@ -55,27 +56,26 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  laochailan
  Ben Gamari
  Aaron Ecay
- Jesse Rosenthal
  l-m-h@web.de
  Thomas Jost
+ Jesse Rosenthal
  Dirk Hohndel
  Blake Jones
- Jonas Bernoulli
  Damien Cassou
- Vladimir Panteleev
  Anton Khirnov
  Matt Armstrong
+ Vladimir Panteleev
+ William Casarin
  Örjan Ekeberg
  Jan Janak
  Patrick Totzke
- Chunyang Xu
- rhn
  Ruben Pollan
+ rhn
  Ioan-Adrian Ratiu
  Ethan Glasser-Camp
+ Chunyang Xu
  Todd
  Chris Wilson
- William Casarin
  Yuri Volchkov
  Cédric Cabessa
  Mark Anderson
@@ -84,17 +84,17 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  Ludovic LANGE
  Sebastian Poeplau
  Mikhail
- Gaute Hope
  Keith Amidon
+ Gaute Hope
  martin f. krafft
  Jeffrey C. Ollie
- Bart Trojanowski
  Jameson Rollins
  Scott Henson
+ Bart Trojanowski
  Vladimir Marek
  Servilio Afre Puentes
- Kevin McCarthy
  Tomas Carnecky
+ Kevin McCarthy
  Kevin J. McCarthy
  Scott Robinson
  Wael M. Nasreddine
@@ -111,9 +111,9 @@ Notmuch 0.30 release (calculated by devel/author-scan.sh).
  Luis Ressel
  Sergei Shilovsky
  Trevor Jim
- Jinwoo Lee
  Uli Scholler
  Matthew Lear
+ Jinwoo Lee
  Amadeusz Żołnowski
 
 Here is an incomplete list of other people that have made
