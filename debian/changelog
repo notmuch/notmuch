@@ -1,3 +1,10 @@
+notmuch (0.31~rc1-1) experimental; urgency=medium
+
+  * Fix buggy test in T590-config
+  * Clean up generated file in source package.
+
+ -- David Bremner <bremner@debian.org>  Mon, 17 Aug 2020 21:05:46 -0300
+
 notmuch (0.31~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate.
