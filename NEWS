@@ -6,6 +6,8 @@ Emacs
 
 The minimum supported major version of GNU Emacs is now 25.1.
 
+Add support for moving between threads after notmuch-tree-from-search-thread.
+
 Notmuch-Mutt
 ------------
 
