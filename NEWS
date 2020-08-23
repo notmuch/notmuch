@@ -16,6 +16,14 @@ files to a maildir for mutt to access is replaced with internal perl
 processing. This search operation is now more portable, and somewhat
 faster.
 
+Library
+-------
+
+Improve exception handling in the library. This should
+largely eliminate terminations inside the library due to uncaught
+exceptions or internal errors.  No doubt there are a few uncovered
+code paths still; please report them as bugs.
+
 Python Bindings
 ---------------
 
