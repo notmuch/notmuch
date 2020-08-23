@@ -28,6 +28,12 @@ Add `notmuch_message_get_flag_st` and
 `notmuch_message_has_maildir_flag_st`, and deprecate the existing
 non-status providing versions.
 
+Move memory de-allocation from `notmuch_database_close` to
+`notmuch_database_destroy`.
+
+Handle relative filenames in `notmuch_database_index_file`, as
+promised in the documentation.
+
 Python Bindings
 ---------------
 
