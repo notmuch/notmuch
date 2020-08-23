@@ -16,6 +16,13 @@ files to a maildir for mutt to access is replaced with internal perl
 processing. This search operation is now more portable, and somewhat
 faster.
 
+Python Bindings
+---------------
+
+Documentation for the python bindings is merged into the main
+sphinx-doc documentation tree. The merged documentation can be built
+with e.g. `make sphinx-html`
+
 Notmuch 0.30 (2020-07-10)
 =========================
 
