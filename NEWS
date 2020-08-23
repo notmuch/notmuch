@@ -24,6 +24,10 @@ largely eliminate terminations inside the library due to uncaught
 exceptions or internal errors.  No doubt there are a few uncovered
 code paths still; please report them as bugs.
 
+Add `notmuch_message_get_flag_st` and
+`notmuch_message_has_maildir_flag_st`, and deprecate the existing
+non-status providing versions.
+
 Python Bindings
 ---------------
 
