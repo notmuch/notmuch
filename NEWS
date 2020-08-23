@@ -31,6 +31,12 @@ Documentation for the python bindings is merged into the main
 sphinx-doc documentation tree. The merged documentation can be built
 with e.g. `make sphinx-html`
 
+Dependencies
+------------
+
+We now support building notmuch against Xapian 1.5 (the current
+development version).
+
 Notmuch 0.30 (2020-07-10)
 =========================
 
