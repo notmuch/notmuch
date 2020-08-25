@@ -148,15 +148,6 @@ Description: Ruby interface to the notmuch mail search and index library
  This package provides a Ruby interface to the notmuch
  functionality, directly interfacing with a shared notmuch library.
 
-Package: notmuch-emacs
-Section: oldlibs
-Architecture: all
-Depends:
- elpa-notmuch,
- ${misc:Depends},
-Description: thread-based email index, search and tagging (transitional package)
- This dummy package help ease transition to the new package elpa-notmuch
-
 Package: elpa-notmuch
 Architecture: all
 Depends:

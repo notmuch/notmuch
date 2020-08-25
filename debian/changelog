@@ -5,8 +5,10 @@ notmuch (0.31~rc2-1) experimental; urgency=medium
     #944269).
   * Bug fix: "suggest mailscripts", thanks to Sean Whitton (Closes:
     #944270).
+  * Bug fix: "please drop transitional package notmuch-emacs from
+    src:notmuch", thanks to Holger Levsen (Closes: #940738).
 
- -- David Bremner <bremner@debian.org>  Tue, 25 Aug 2020 07:37:30 -0300
+ -- David Bremner <bremner@debian.org>  Tue, 25 Aug 2020 07:51:33 -0300
 
 notmuch (0.31~rc1-1) experimental; urgency=medium
 
