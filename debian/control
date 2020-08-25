@@ -160,6 +160,7 @@ Architecture: all
 Depends:
  ${elpa:Depends},
  ${misc:Depends},
+Suggests: elpa-mailscripts
 Description: thread-based email index, search and tagging (emacs interface)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
