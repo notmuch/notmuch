@@ -3,8 +3,10 @@ notmuch (0.31~rc2-1) experimental; urgency=medium
   * New upstream release candidate
   * Bug fix: "suggest elpa-mailscripts", thanks to Sean Whitton (Closes:
     #944269).
+  * Bug fix: "suggest mailscripts", thanks to Sean Whitton (Closes:
+    #944270).
 
- -- David Bremner <bremner@debian.org>  Tue, 25 Aug 2020 07:36:00 -0300
+ -- David Bremner <bremner@debian.org>  Tue, 25 Aug 2020 07:37:30 -0300
 
 notmuch (0.31~rc1-1) experimental; urgency=medium
 

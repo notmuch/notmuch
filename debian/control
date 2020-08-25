@@ -53,6 +53,8 @@ Recommends:
  elpa-notmuch | notmuch-vim | notmuch-mutt | alot,
  gnupg-agent,
  gpgsm,
+Suggests:
+ mailscripts
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
