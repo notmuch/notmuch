@@ -159,7 +159,7 @@ static command_t commands[] = {
       "Construct a reply template for a set of messages." },
     { "tag", notmuch_tag_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Add/remove tags for all messages matching the search terms." },
-    { "dump", notmuch_dump_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "dump", notmuch_dump_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Create a plain-text dump of the tags for each message." },
     { "restore", notmuch_restore_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Restore the tags from the given dump file (see 'dump')." },

@@ -71,5 +71,55 @@ EOF
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+cat <<EOF > EXPECTED
+Before:
+#notmuch-dump batch-tag:3 tags
+
+After:
+#notmuch-dump batch-tag:3 tags
++attachment +inbox +signed +unread -- id:20091118005829.GB25380@dottiness.seas.harvard.edu
++attachment +inbox +signed +unread -- id:20091118010116.GC25380@dottiness.seas.harvard.edu
++inbox +signed +unread -- id:20091117190054.GU3165@dottiness.seas.harvard.edu
++inbox +signed +unread -- id:20091117203301.GV3165@dottiness.seas.harvard.edu
++inbox +signed +unread -- id:20091118002059.067214ed@hikari
++inbox +signed +unread -- id:20091118005040.GA25380@dottiness.seas.harvard.edu
++inbox +signed +unread -- id:87iqd9rn3l.fsf@vertex.dottedmag
+EOF
+
+test_begin_subtest "dump with saved query from config file"
+backup_config
+query_name="test${RANDOM}"
+CONFIG_PATH=notmuch-config
+printf "Before:\n" > OUTPUT
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+printf "\nAfter:\n" >> OUTPUT
+printf "\n[query]\n${query_name} = tag:signed\n" >> ${CONFIG_PATH}
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "dump with saved query from config file (xdg)"
+backup_config
+query_name="test${RANDOM}"
+xdg_config
+printf "Before:\n" > OUTPUT
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+printf "\nAfter:\n" >> OUTPUT
+printf "\n[query]\n${query_name} = tag:signed\n" >> ${CONFIG_PATH}
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "dump with saved query from config file (xdg+profile)"
+backup_config
+query_name="test${RANDOM}"
+xdg_config work
+printf "Before:\n" > OUTPUT
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+printf "\nAfter:\n" >> OUTPUT
+printf "\n[query]\n${query_name} = tag:signed\n" >> ${CONFIG_PATH}
+notmuch dump --include=tags query:$query_name | sort >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

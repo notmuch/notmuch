@@ -322,6 +322,7 @@ EOF
 
 test_expect_equal_file EXPECTED OUTPUT
 
+backup_database
 test_begin_subtest 'roundtripping random message-ids and tags'
 
     ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
@@ -338,7 +339,7 @@ test_begin_subtest 'roundtripping random message-ids and tags'
 	 sort > OUTPUT.$test_count
 
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+restore_database
 
 test_done
 
-# Note the database is "poisoned" for sup format at this point.
