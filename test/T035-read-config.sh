@@ -142,4 +142,42 @@ notmuch dump > OUTPUT
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Insert message with custom new.tags (xdg)"
+backup_config
+xdg_config
+tag=test${RANDOM}
+notmuch --config=${CONFIG_PATH} config set new.tags $tag
+generate_message \
+    "[subject]=\"insert-subject\"" \
+    "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \
+    "[body]=\"insert-message\""
+mkdir -p ${MAIL_DIR}/{cur,new,tmp}
+notmuch insert < "$gen_msg_filename"
+notmuch dump id:$gen_msg_id > OUTPUT
+cat <<EOF > EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
++$tag -- id:$gen_msg_id
+EOF
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Insert message with custom new.tags (xdg+profile)"
+backup_config
+tag=test${RANDOM}
+xdg_config $tag
+notmuch --config=${CONFIG_PATH} config set new.tags $tag
+generate_message \
+    "[subject]=\"insert-subject\"" \
+    "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \
+    "[body]=\"insert-message\""
+mkdir -p ${MAIL_DIR}/{cur,new,tmp}
+notmuch insert < "$gen_msg_filename"
+notmuch dump id:$gen_msg_id > OUTPUT
+cat <<EOF > EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
++$tag -- id:$gen_msg_id
+EOF
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

@@ -226,11 +226,13 @@ test_expect_code 1 "notmuch insert --folder=../G --create-folder < $gen_msg_file
 
 OLDCONFIG=$(notmuch config get new.tags)
 
-test_begin_subtest "Empty tags in new.tags are forbidden"
+test_begin_subtest "Empty tags in new.tags are ignored"
 notmuch config set new.tags "foo;;bar"
 gen_insert_msg
-output=$(notmuch insert < $gen_msg_filename 2>&1)
-test_expect_equal "$output" "Error: tag '' in new.tags: empty tag forbidden"
+notmuch insert < $gen_msg_filename
+output=$(notmuch show --format=json id:$gen_msg_id)
+test_json_nodes <<<"$output" \
+		'new_tags:[0][0][0]["tags"] = ["bar", "foo"]'
 
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"

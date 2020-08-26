@@ -145,7 +145,7 @@ static command_t commands[] = {
       "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Find and import new messages to the notmuch database." },
-    { "insert", notmuch_insert_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "insert", notmuch_insert_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Add a new message into the maildir and notmuch database." },
     { "search", notmuch_search_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Search for messages matching the given search terms." },
