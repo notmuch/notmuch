@@ -359,6 +359,32 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
     return status;
 }
 
+notmuch_status_t
+notmuch_config_get_bool (notmuch_database_t *notmuch, notmuch_config_key_t key, notmuch_bool_t *val)
+{
+    const char *key_string, *val_string;
+
+    key_string = _notmuch_config_key_to_string (key);
+    if (! key_string) {
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+    }
+
+    val_string = _notmuch_string_map_get (notmuch->config, key_string);
+    if (! val_string) {
+	*val = FALSE;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    if (strcase_equal (val_string, "false") || strcase_equal (val_string, "no"))
+	*val = FALSE;
+    else if (strcase_equal (val_string, "true") || strcase_equal (val_string, "yes"))
+	*val = TRUE;
+    else
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static const char *
 _notmuch_config_key_to_string (notmuch_config_key_t key) {
     switch (key) {

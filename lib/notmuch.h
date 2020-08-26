@@ -2533,6 +2533,25 @@ void
 notmuch_config_values_destroy (notmuch_config_values_t *values);
 
 /**
+ * get a configuration value from an open database as Boolean
+ *
+ * This value reflects all configuration information given at the time
+ * the database was opened.
+ *
+ * @param[in] notmuch database
+ * @param[in] key configuration key
+ * @param[out] val configuration value, converted to Boolean
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval #NOTMUCH_STATUS_ILLEGAL_ARGUMENT if either key is unknown
+ * or the corresponding value does not convert to Boolean.
+ */
+notmuch_status_t
+notmuch_config_get_bool (notmuch_database_t *notmuch,
+			 notmuch_config_key_t key,
+			 notmuch_bool_t *val);
+/**
  * get the current default indexing options for a given database.
  *
  * This object will survive until the database itself is destroyed,
