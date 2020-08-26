@@ -279,3 +279,37 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
  DONE:
     return status;
 }
+
+const char *
+_notmuch_config_key_to_string (notmuch_config_key_t key) {
+    switch (key) {
+    case NOTMUCH_CONFIG_DATABASE_PATH:
+	return "database.path";
+    case NOTMUCH_CONFIG_EXCLUDE_TAGS:
+	return "search.exclude_tags";
+    case NOTMUCH_CONFIG_NEW_TAGS:
+	return "new.tags";
+    case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
+	return "maildir.synchronize_flags";
+    case NOTMUCH_CONFIG_PRIMARY_EMAIL:
+	return "user.primary_email";
+    case NOTMUCH_CONFIG_OTHER_EMAIL:
+	return "user.other_email";
+    case NOTMUCH_CONFIG_USER_NAME:
+	return "user.name";
+    default:
+	return NULL;
+    }
+}
+
+const char *
+notmuch_config_get (notmuch_database_t *notmuch, notmuch_config_key_t key) {
+
+    return _notmuch_string_map_get (notmuch->config, _notmuch_config_key_to_string (key));
+}
+
+notmuch_status_t
+notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const char *val) {
+
+    return notmuch_database_set_config (notmuch, _notmuch_config_key_to_string (key), val);
+}

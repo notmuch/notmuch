@@ -2325,6 +2325,11 @@ notmuch_filenames_destroy (notmuch_filenames_t *filenames);
  * set config 'key' to 'value'
  *
  * @since libnotmuch 4.4 (notmuch 0.23)
+ * @retval #NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *	read-only mode so message cannot be modified.
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION: an exception was thrown
+ *      accessing the database.
+ * @retval #NOTMUCH_STATUS_SUCCESS
  */
 notmuch_status_t
 notmuch_database_set_config (notmuch_database_t *db, const char *key, const char *value);
@@ -2339,6 +2344,7 @@ notmuch_database_set_config (notmuch_database_t *db, const char *key, const char
  * caller.
  *
  * @since libnotmuch 4.4 (notmuch 0.23)
+ *
  */
 notmuch_status_t
 notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
@@ -2399,6 +2405,56 @@ notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
 void
 notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 
+
+/**
+ * Configuration keys known to libnotmuch
+ */
+typedef enum _notmuch_config_key {
+    NOTMUCH_CONFIG_FIRST,
+    NOTMUCH_CONFIG_DATABASE_PATH = NOTMUCH_CONFIG_FIRST,
+    NOTMUCH_CONFIG_EXCLUDE_TAGS,
+    NOTMUCH_CONFIG_NEW_TAGS,
+    NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS,
+    NOTMUCH_CONFIG_PRIMARY_EMAIL,
+    NOTMUCH_CONFIG_OTHER_EMAIL,
+    NOTMUCH_CONFIG_USER_NAME,
+    NOTMUCH_CONFIG_LAST
+} notmuch_config_key_t;
+
+/**
+ * get a configuration value from an open database.
+ *
+ * This value reflects all configuration information given at the time
+ * the database was opened.
+ *
+ * @param[in] notmuch database
+ * @param[in] key configuration key
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval NULL if 'key' unknown or if no value is known for
+ *         'key'.  Otherwise returns a string owned by notmuch which should
+ *         not be modified nor freed by the caller.
+ */
+const char *
+notmuch_config_get (notmuch_database_t *notmuch, notmuch_config_key_t key);
+
+/**
+ * set a configuration value from in an open database.
+ *
+ * This value reflects all configuration information given at the time
+ * the database was opened.
+ *
+ * @param[in,out] notmuch database open read/write
+ * @param[in] key configuration key
+ * @param[in] val configuration value
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval returns any return value for notmuch_database_set_config.
+ */
+notmuch_status_t
+notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const char *val);
 
 /**
  * get the current default indexing options for a given database.

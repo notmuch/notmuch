@@ -202,6 +202,44 @@ test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
 backup_database
+test_begin_subtest "get config by key"
+notmuch config set test.key1 overridden
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
+{
+   printf("before = %s\n", notmuch_config_get (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS));
+   EXPECT0(notmuch_database_set_config (db, "maildir.synchronize_flags", "false"));
+   printf("after = %s\n", notmuch_config_get (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS));
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+before = true
+after = false
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
+backup_database
+test_begin_subtest "set config by key"
+notmuch config set test.key1 overridden
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG}
+{
+   printf("before = %s\n", notmuch_config_get (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS));
+   EXPECT0(notmuch_config_set (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS, "false"));
+   printf("after = %s\n", notmuch_config_get (db, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS));
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+before = true
+after = false
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
+backup_database
 test_begin_subtest "override config from \${NOTMUCH_CONFIG}"
 notmuch config set test.key1 overridden
 # second argument omitted to make argv[2] == NULL
