@@ -4,6 +4,10 @@ Notmuch 0.31 (UNRELEASED)
 Emacs
 -----
 
+Notmuch now supports Emacs 27.1. You may need to set
+`mml-secure-openpgp-sign-with-sender` and/or
+`mml-secure-smime-sign-with-sender` to continue signing messages.
+
 The minimum supported major version of GNU Emacs is now 25.1.
 
 Add support for moving between threads after notmuch-tree-from-search-thread.
@@ -46,6 +50,11 @@ Dependencies
 
 We now support building notmuch against Xapian 1.5 (the current
 development version).
+
+Test Suite
+----------
+
+Test suite fixes for compatibility with Emacs 27.1.
 
 Notmuch 0.30 (2020-07-10)
 =========================
