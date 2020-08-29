@@ -56,6 +56,11 @@ Test Suite
 
 Test suite fixes for compatibility with Emacs 27.1.
 
+Build System
+------------
+
+Man pages are now compressed reproducibly.
+
 Notmuch 0.30 (2020-07-10)
 =========================
 
