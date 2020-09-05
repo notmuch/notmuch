@@ -12,6 +12,25 @@ The minimum supported major version of GNU Emacs is now 25.1.
 
 Add support for moving between threads after notmuch-tree-from-search-thread.
 
+New `notmuch-unthreaded` mode (added in Notmuch 0.30)
+
+  Unthreaded view is a mode where each matching message is shown on a
+  separate line.
+
+  The main key entries to unthreaded view are
+
+  'u' enter a query to view in unthreaded mode (works in hello,
+      search, show and tree mode)
+
+  'U' view the current query in unthreaded mode (works from search,
+      show and tree)
+
+  Saved searches can also specify that they should open in unthreaded
+  view.
+
+  Currently it is not possible to specify the sort order: it will
+  always be newest first.
+
 Notmuch-Mutt
 ------------
 
