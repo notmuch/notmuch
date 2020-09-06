@@ -1,3 +1,10 @@
+notmuch (0.31-1) unstable; urgency=medium
+
+  * New upstream release
+  * Compatibility fixes for Emacs 27.1
+
+ -- David Bremner <bremner@debian.org>  Sat, 05 Sep 2020 21:47:42 -0300
+
 notmuch (0.31~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate
