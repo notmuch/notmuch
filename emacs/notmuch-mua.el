@@ -40,7 +40,7 @@
 
 ;;
 
-(defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
+(defcustom notmuch-mua-send-hook nil
   "Hook run before sending messages."
   :type 'hook
   :group 'notmuch-send
@@ -600,11 +600,6 @@ unencrypted.  Really send? "))))
 (defun notmuch-mua-kill-buffer ()
   (interactive)
   (message-kill-buffer))
-
-(defun notmuch-mua-message-send-hook ()
-  "The default function used for `notmuch-mua-send-hook', this
-simply runs the corresponding `message-mode' hook functions."
-  (run-hooks 'message-send-hook))
 
 ;;
 
