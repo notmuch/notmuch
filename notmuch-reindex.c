@@ -83,10 +83,9 @@ reindex_query (notmuch_database_t *notmuch, const char *query_string,
 }
 
 int
-notmuch_reindex_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_reindex_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
     char *query_string = NULL;
-    notmuch_database_t *notmuch;
     struct sigaction action;
     int opt_index;
     int ret;
@@ -111,10 +110,6 @@ notmuch_reindex_command (notmuch_config_t *config, unused(notmuch_database_t *no
 
     notmuch_process_shared_options (argv[0]);
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return EXIT_FAILURE;
-
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     status = notmuch_process_shared_indexing_options (notmuch);
@@ -124,7 +119,7 @@ notmuch_reindex_command (notmuch_config_t *config, unused(notmuch_database_t *no
 	return EXIT_FAILURE;
     }
 
-    query_string = query_string_from_args (config, argc - opt_index, argv + opt_index);
+    query_string = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;

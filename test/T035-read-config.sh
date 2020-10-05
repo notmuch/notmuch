@@ -180,4 +180,34 @@ EOF
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "reindex with saved query from config file"
+backup_config
+query_name="test${RANDOM}"
+count1=$(notmuch count --lastmod '*' | cut -f3)
+printf "\n[query]\n${query_name} = tag:inbox\n" >> notmuch-config
+notmuch reindex query:$query_name
+count2=$(notmuch count --lastmod '*' | cut -f3)
+restore_config
+test_expect_success "test '$count2 -gt $count1'"
+
+test_begin_subtest "reindex with saved query from config file (xdg)"
+query_name="test${RANDOM}"
+count1=$(notmuch count --lastmod '*' | cut -f3)
+xdg_config
+printf "\n[query]\n${query_name} = tag:inbox\n" >> ${CONFIG_PATH}
+notmuch reindex query:$query_name
+count2=$(notmuch count --lastmod '*' | cut -f3)
+restore_config
+test_expect_success "test '$count2 -gt $count1'"
+
+test_begin_subtest "reindex with saved query from config file (xdg+profile)"
+query_name="test${RANDOM}"
+count1=$(notmuch count --lastmod '*' | cut -f3)
+xdg_config $query_name
+printf "\n[query]\n${query_name} = tag:inbox\n" >> ${CONFIG_PATH}
+notmuch reindex query:$query_name
+count2=$(notmuch count --lastmod '*' | cut -f3)
+restore_config
+test_expect_success "test '$count2 -gt $count1'"
+
 test_done
