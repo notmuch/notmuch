@@ -219,9 +219,8 @@ parse_sup_line (void *ctx, char *line,
 }
 
 int
-notmuch_restore_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
     bool accumulate = false;
     tag_op_flag_t flags = 0;
     tag_op_list_t *tag_ops;
@@ -238,12 +237,16 @@ notmuch_restore_command (notmuch_config_t *config, unused(notmuch_database_t *no
     int include = 0;
     int input_format = DUMP_FORMAT_AUTO;
     int errnum;
+    notmuch_bool_t synchronize_flags;
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
+    if (print_status_database (
+	    "notmuch restore",
+	    notmuch,
+	    notmuch_config_get_bool (notmuch, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS,
+				     &synchronize_flags)))
 	return EXIT_FAILURE;
 
-    if (notmuch_config_get_maildir_synchronize_flags (config))
+    if (synchronize_flags)
 	flags |= TAG_FLAG_MAILDIR_SYNC;
 
     notmuch_opt_desc_t options[] = {
@@ -310,7 +313,7 @@ notmuch_restore_command (notmuch_config_t *config, unused(notmuch_database_t *no
 	goto DONE;
     }
 
-    tag_ops = tag_op_list_create (config);
+    tag_ops = tag_op_list_create (notmuch);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	ret = EXIT_FAILURE;
@@ -377,7 +380,7 @@ notmuch_restore_command (notmuch_config_t *config, unused(notmuch_database_t *no
 	if (line_ctx != NULL)
 	    talloc_free (line_ctx);
 
-	line_ctx = talloc_new (config);
+	line_ctx = talloc_new (notmuch);
 
 	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] == '=') {
 	    ret = process_properties_line (notmuch, line + 2);

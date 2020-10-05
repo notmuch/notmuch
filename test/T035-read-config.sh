@@ -122,4 +122,24 @@ notmuch dump --include=tags query:$query_name | sort >> OUTPUT
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "restore with xdg config"
+backup_config
+notmuch dump '*' > EXPECTED
+notmuch tag -inbox '*'
+xdg_config
+notmuch restore --input=EXPECTED
+notmuch dump > OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "restore with xdg+profile config"
+backup_config
+notmuch dump '*' > EXPECTED
+notmuch tag -inbox '*'
+xdg_config work
+notmuch restore --input=EXPECTED
+notmuch dump > OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

@@ -161,7 +161,7 @@ static command_t commands[] = {
       "Add/remove tags for all messages matching the search terms." },
     { "dump", notmuch_dump_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Create a plain-text dump of the tags for each message." },
-    { "restore", notmuch_restore_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "restore", notmuch_restore_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Restore the tags from the given dump file (see 'dump')." },
     { "compact", notmuch_compact_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Compact the notmuch database." },
