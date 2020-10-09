@@ -40,6 +40,7 @@
   "Write docstrings from IN-FILE to OUT-FILE."
   (load-file in-file)
   (let* ((definitions (cdr (assoc (expand-file-name in-file) load-history)))
+	 (text-quoting-style 'grave)
 	 (doc-hash (make-hash-table :test 'eq)))
     (mapc
      (lambda (elt)
@@ -65,11 +66,14 @@
   (insert "\n"))
 
 (defvar rst--escape-alist
-  '(("\\\\='" . "\\\\'")
-    ("\\([^\\]\\)'" . "\\1`")
-    ("^[[:space:]\t]*$" . "|br|")
-    ("^[[:space:]\t]" . "|indent| "))
-  "List of (regex . replacement) pairs.")
+  '( ("\\\\='" . "\001")
+     ("`\\([^\n`']*\\)[`']" . "\002\\1\002") ;; good enough for now...
+     ("`" . "\\\\`")
+     ("\001" . "'")
+     ("\002" . "`")
+     ("^[[:space:]]*$" . "|br|")
+     ("^[[:space:]]" . "|indent| "))
+    "list of (regex . replacement) pairs")
 
 (defun rstdoc--rst-quote-string (str)
   (with-temp-buffer
