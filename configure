@@ -1536,7 +1536,7 @@ EOF
     if [ $WITH_PYTHON_DOCS = "1" ]; then
         echo "tags.add('WITH_PYTHON')"
     fi
-    printf "rsti_dir = '%s'\n" $(realpath emacs)
+    printf "rsti_dir = '%s'\n" "$(cd emacs && pwd -P)"
 } > sphinx.config
 
 # Finally, after everything configured, inform the user how to continue.
