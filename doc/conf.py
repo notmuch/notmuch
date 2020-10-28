@@ -19,7 +19,7 @@ copyright = u'2009-2020, Carl Worth and many others'
 location = os.path.dirname(__file__)
 
 for pathdir in ['.', '..']:
-    version_file = os.path.join(location,pathdir,'version')
+    version_file = os.path.join(location,pathdir,'version.txt')
     if os.path.exists(version_file):
         with open(version_file,'r') as infile:
             version=infile.read().replace('\n','')
