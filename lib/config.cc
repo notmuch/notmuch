@@ -113,7 +113,6 @@ notmuch_database_get_config_list (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    talloc_set_destructor (list, _notmuch_config_list_destroy);
     list->notmuch = notmuch;
     list->current_key = NULL;
     list->current_val = NULL;
@@ -122,6 +121,7 @@ notmuch_database_get_config_list (notmuch_database_t *notmuch,
 
 	new(&(list->iterator)) Xapian::TermIterator (notmuch->xapian_db->metadata_keys_begin
 							 (CONFIG_PREFIX + (prefix ? prefix : "")));
+	talloc_set_destructor (list, _notmuch_config_list_destroy);
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting metadata iterator: %s.\n",
