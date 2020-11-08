@@ -210,4 +210,62 @@ count2=$(notmuch count --lastmod '*' | cut -f3)
 restore_config
 test_expect_success "test '$count2 -gt $count1'"
 
+
+
+add_message '[from]="Sender <sender@example.com>"' \
+	     [to]=test_suite@notmuchmail.org \
+	    '[cc]="Other Parties <cc@example.com>"' \
+	     [subject]=notmuch-reply-test \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="reply with CC"'
+
+cat <<EOF > EXPECTED
+Before:
+After:
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+Cc: Other Parties <cc@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> reply with CC
+EOF
+
+test_begin_subtest "reply with saved query from config file"
+backup_config
+query_name="test${RANDOM}"
+printf "Before:\n" > OUTPUT
+notmuch reply query:$query_name 2>&1 >> OUTPUT
+printf "\n[query]\n${query_name} = id:${gen_msg_id}\n" >> notmuch-config
+printf "After:\n" >> OUTPUT
+notmuch reply query:$query_name >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply with saved query from config file (xdg)"
+backup_config
+query_name="test${RANDOM}"
+xdg_config
+printf "Before:\n" > OUTPUT
+notmuch reply query:$query_name 2>&1 >> OUTPUT
+printf "\n[query]\n${query_name} = id:${gen_msg_id}\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch reply query:$query_name >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reply with saved query from config file (xdg+profile)"
+backup_config
+query_name="test${RANDOM}"
+xdg_config $query_name
+printf "Before:\n" > OUTPUT
+notmuch reply query:$query_name 2>&1 >> OUTPUT
+printf "\n[query]\n${query_name} = id:${gen_msg_id}\n" >> ${CONFIG_PATH}
+printf "After:\n" >> OUTPUT
+notmuch reply query:$query_name >> OUTPUT
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
