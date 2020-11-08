@@ -42,6 +42,11 @@
 (declare-function notmuch-search-find-thread-id "notmuch" (&optional bare))
 (declare-function notmuch-search-find-subject "notmuch" ())
 
+;; For `notmuch-tree-next-thread-from-search'.
+(declare-function notmuch-search-next-thread "notmuch" ())
+(declare-function notmuch-search-previous-thread "notmuch" ())
+(declare-function notmuch-tree-from-search-thread "notmuch" ())
+
 ;; the following variable is defined in notmuch.el
 (defvar notmuch-search-query-string)
 
