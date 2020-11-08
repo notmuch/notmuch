@@ -359,7 +359,8 @@ FUNC."
     (define-key map " " 'notmuch-tree-scroll-or-next)
     (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
     (define-key map "e" 'notmuch-tree-resume-message)
-    map))
+    map)
+  "Keymap for \"notmuch tree\" buffers.")
 (fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 
 (defun notmuch-tree-get-message-properties ()
