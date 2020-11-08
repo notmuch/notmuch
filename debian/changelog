@@ -1,3 +1,11 @@
+notmuch (0.31.1-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+    - Portability / C++20 fixes
+    - Fix initialization bug in library config handling.
+
+ -- David Bremner <bremner@debian.org>  Sun, 08 Nov 2020 07:48:22 -0400
+
 notmuch (0.31-1) unstable; urgency=medium
 
   * New upstream release
