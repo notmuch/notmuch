@@ -324,16 +324,20 @@ Typically this is added to `notmuch-mua-send-hook'."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
+(defvar notmuch-message-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
+    (define-key map (kbd "C-c C-s") #'notmuch-mua-send)
+    (define-key map (kbd "C-c C-p") #'notmuch-draft-postpone)
+    (define-key map (kbd "C-x C-s") #'notmuch-draft-save)
+    map)
+  "Keymap for `notmuch-message-mode'.")
+
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'."
   (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
-
-(define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
-(define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
-(define-key notmuch-message-mode-map (kbd "C-c C-p") #'notmuch-draft-postpone)
-(define-key notmuch-message-mode-map (kbd "C-x C-s") #'notmuch-draft-save)
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is
