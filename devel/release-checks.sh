@@ -29,7 +29,7 @@ append_emsg ()
 	emsgs="${emsgs:+$emsgs\n}  $1"
 }
 
-for f in ./version debian/changelog NEWS "$PV_FILE"
+for f in ./version.txt debian/changelog NEWS "$PV_FILE"
 do
 	if   [ ! -f "$f" ]; then append_emsg "File '$f' is missing"
 	elif [ ! -r "$f" ]; then append_emsg "File '$f' is unreadable"
@@ -53,7 +53,7 @@ then
 else
 	echo "Reading './version' file failed (surprisingly!)"
 	exit 1
-fi < ./version
+fi < ./version.txt
 
 readonly VERSION
 
