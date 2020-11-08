@@ -30,12 +30,12 @@ $(TAR_FILE):
 	   echo "Warning: No signed tag for $(VERSION)"; \
 	fi ; \
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
-	echo $(VERSION) > version.tmp
+	echo $(VERSION) > version.txt.tmp
 	ct=`git --no-pager log -1 --pretty=format:%ct $$ref` ; \
 	tar --owner root --group root --append -f $(TAR_FILE).tmp \
 		--transform s_^_$(PACKAGE)-$(VERSION)/_  \
-		--transform 's_.tmp$$__' --mtime=@$$ct version.tmp
-	rm version.tmp
+		--transform 's_.tmp$$__' --mtime=@$$ct version.txt.tmp
+	rm version.txt.tmp
 	xz -C sha256 -9 < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
