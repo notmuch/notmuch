@@ -1485,7 +1485,6 @@ reset based on the original query."
     (define-key map "B" 'notmuch-show-browse-urls)
     map)
   "Keymap for \"notmuch show\" buffers.")
-(fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
 (define-derived-mode notmuch-show-mode fundamental-mode "notmuch-show"
   "Major mode for viewing a thread with notmuch.

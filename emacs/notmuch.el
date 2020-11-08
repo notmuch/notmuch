@@ -194,7 +194,6 @@ there will be called at other points of notmuch execution."
     (define-key map "U" 'notmuch-unthreaded-from-search-current-query)
     map)
   "Keymap for \"notmuch search\" buffers.")
-(fset 'notmuch-search-mode-map notmuch-search-mode-map)
 
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))

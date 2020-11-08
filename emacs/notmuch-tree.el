@@ -361,7 +361,6 @@ FUNC."
     (define-key map "e" 'notmuch-tree-resume-message)
     map)
   "Keymap for \"notmuch tree\" buffers.")
-(fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 
 (defun notmuch-tree-get-message-properties ()
   "Return the properties of the current message as a plist.
