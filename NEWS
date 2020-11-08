@@ -1,3 +1,12 @@
+Notmuch 0.31.2 (2020-11-08)
+===========================
+
+Build
+-----
+
+Catch one more occurence of "version" in the build system, which
+caused the file to be regenerated in the release tarball.
+
 Notmuch 0.31.1 (2020-11-08)
 ===========================
 
