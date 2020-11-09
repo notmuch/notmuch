@@ -1,3 +1,9 @@
+notmuch (0.31.2-2) unstable; urgency=medium
+
+  * Run tests in verbose mode
+
+ -- David Bremner <bremner@debian.org>  Mon, 09 Nov 2020 08:45:38 -0400
+
 notmuch (0.31.2-1) unstable; urgency=medium
 
   * Delete stray "version" file in upstream source
