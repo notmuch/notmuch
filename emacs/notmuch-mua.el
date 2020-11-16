@@ -73,8 +73,7 @@ If this is `nil' then no `User-Agent:' will be generated."
   :group 'notmuch-send)
 
 (defcustom notmuch-mua-hidden-headers nil
-  "Headers that are added to the `message-mode' hidden headers
-list."
+  "Headers that are added to the `message-mode' hidden headers list."
   :type '(repeat string)
   :group 'notmuch-send)
 
@@ -167,8 +166,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
 
 (defun notmuch-mua-maybe-set-window-dedicated ()
-  "Set the selected window as dedicated according to
-`notmuch-mua-compose-in'."
+  "Set the selected window as dedicated according to `notmuch-mua-compose-in'."
   (when (or (eq notmuch-mua-compose-in 'new-frame)
 	    (eq notmuch-mua-compose-in 'new-window))
     (set-window-dedicated-p (selected-window) t)))
@@ -335,9 +333,9 @@ Typically this is added to `notmuch-mua-send-hook'."
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
-  "Pop to buffer NAME, and warn if it already exists and is
-modified. This function is notmuch adaptation of
-`message-pop-to-buffer'."
+  "Pop to buffer NAME, and warn if it already exists and is modified.
+Like `message-pop-to-buffer' but enable `notmuch-message-mode'
+instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (let ((buffer (get-buffer name)))
     (if (and buffer
 	     (buffer-name buffer))

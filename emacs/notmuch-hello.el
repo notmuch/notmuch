@@ -372,8 +372,7 @@ supported for \"Customized queries section\" items."
   "List of sections titles whose contents are hidden.")
 
 (defvar notmuch-hello-first-run t
-  "True if `notmuch-hello' is run for the first time, set to nil
-afterwards.")
+  "True if `notmuch-hello' is run for the first time, set to nil afterwards.")
 
 (defun notmuch-hello-nice-number (n)
   (let (result)

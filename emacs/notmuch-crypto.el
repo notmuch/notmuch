@@ -103,8 +103,7 @@ mode."
   :supertype 'notmuch-button-type)
 
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
-  "Insert a button describing the signature status SIGSTATUS sent
-by user FROM."
+  "Insert a button describing the signature status SIGSTATUS sent by user FROM."
   (let* ((status (plist-get sigstatus :status))
 	 (show-button t)
 	 (face 'notmuch-crypto-signature-unknown)
