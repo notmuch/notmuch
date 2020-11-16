@@ -267,14 +267,6 @@ open (if the message pane is closed it does nothing)."
 	(symbol-value sym))
     (symbol-value sym)))
 
-(defun notmuch-tree-button-activate (&optional button)
-  "Activate BUTTON or button at point.
-
-This function does not give an error if there is no button."
-  (interactive)
-  (let ((button (or button (button-at (point)))))
-    (when button (button-activate button))))
-
 (defun notmuch-tree-close-message-pane-and (func)
   "Close message pane and execute FUNC.
 
