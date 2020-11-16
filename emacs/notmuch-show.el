@@ -573,12 +573,13 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (let ((ctype (notmuch-split-content-type
-		(downcase (plist-get part :content-type)))))
-    (cond ((equal (car ctype) "multipart")
+  (pcase-let ((`(,content ,type)
+	       (split-string (downcase (plist-get part :content-type)) "/")))
+    (cond ((equal content "multipart")
 	   (mapc (apply-partially #'notmuch-show--register-cids msg)
 		 (plist-get part :content)))
-	  ((equal ctype '("message" "rfc822"))
+	  ((and (equal content "message")
+		(equal type "rfc822"))
 	   (notmuch-show--register-cids
 	    msg
 	    (car (plist-get (car (plist-get part :content)) :body)))))))
@@ -851,10 +852,9 @@ will return nil if the CID is unknown or cannot be retrieved."
 	      (push func result)))
 	  ;; Reverse order of prefrence.
 	  (list (intern (concat "notmuch-show-insert-part-*/*"))
-		(intern (concat
-			 "notmuch-show-insert-part-"
-			 (car (notmuch-split-content-type content-type))
-			 "/*"))
+		(intern (concat "notmuch-show-insert-part-"
+				(car (split-string content-type "/"))
+				"/*"))
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
 
