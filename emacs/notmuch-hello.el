@@ -282,7 +282,7 @@ International Bureau of Weights and Measures."
   :group 'notmuch-hello
   :group 'notmuch-hooks)
 
-(defvar notmuch-hello-url "https://notmuchmail.org"
+(defconst notmuch-hello-url "https://notmuchmail.org"
   "The `notmuch' web site.")
 
 (defvar notmuch-hello-custom-section-options
