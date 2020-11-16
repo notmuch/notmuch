@@ -287,18 +287,6 @@ it, in which case it is killed."
       (bury-buffer)
     (kill-buffer)))
 
-(defun notmuch-documentation-first-line (symbol)
-  "Return the first line of the documentation string for SYMBOL."
-  (let ((doc (documentation symbol)))
-    (if doc
-	(with-temp-buffer
-	  (insert (documentation symbol t))
-	  (goto-char (point-min))
-	  (let ((beg (point)))
-	    (end-of-line)
-	    (buffer-substring beg (point))))
-      "")))
-
 (defun notmuch-prefix-key-description (key)
   "Given a prefix key code, return a human-readable string representation.
 
@@ -331,7 +319,10 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 		  (or (and (symbolp binding)
 			   (get binding 'notmuch-doc))
 		      (and (functionp binding)
-			   (notmuch-documentation-first-line binding))))
+			   (let ((doc (documentation binding)))
+			     (and doc
+				  (string-match "\\`.+" doc)
+				  (match-string 0 doc))))))
 	    tail)))
   tail)
 
