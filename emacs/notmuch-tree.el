@@ -238,57 +238,83 @@ This is used to try and make sure we don't close the message pane
 if the user has loaded a different buffer in that window.")
 (put 'notmuch-tree-message-buffer 'permanent-local t)
 
-(defun notmuch-tree-to-message-pane (func)
-  "Execute FUNC in message pane.
-
-This function returns a function (so can be used as a keybinding)
-which executes function FUNC in the message pane if it is
-open (if the message pane is closed it does nothing)."
-  `(lambda ()
-     ,(concat "(In message pane) " (documentation func t))
+(defmacro notmuch-tree--define-do-in-message-window (name cmd)
+  "Define NAME as a command that calls CMD interactively in the message window.
+If the message pane is closed then this command does nothing.
+Avoid using this macro in new code; it will be removed."
+  `(defun ,name ()
+     ,(concat "(In message window) " (documentation cmd t))
      (interactive)
      (when (window-live-p notmuch-tree-message-window)
        (with-selected-window notmuch-tree-message-window
-	 (call-interactively #',func)))))
+	 (call-interactively #',cmd)))))
 
-(defun notmuch-tree-inherit-from-message-pane (sym)
-  "Return value of SYM in message-pane if open, or tree-pane if not."
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-previous-message-button
+ notmuch-show-previous-button)
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-next-message-button
+ notmuch-show-next-button)
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-toggle-message-process-crypto
+ notmuch-show-toggle-process-crypto)
+
+(defun notmuch-tree--message-process-crypto ()
+  "Return value of `notmuch-show-process-crypto' in the message window.
+If that window isn't alive, then return the current value.
+Avoid using this function in new code; it will be removed."
   (if (window-live-p notmuch-tree-message-window)
       (with-selected-window notmuch-tree-message-window
-	(symbol-value sym))
-    (symbol-value sym)))
+	notmuch-show-process-crypto)
+    notmuch-show-process-crypto))
 
-(defun notmuch-tree-close-message-pane-and (func)
-  "Close message pane and execute FUNC.
+(defmacro notmuch-tree--define-close-message-window-and (name cmd)
+  "Define NAME as a variant of CMD.
 
-This function returns a function (so can be used as a keybinding)
-which closes the message pane if open and then executes function
-FUNC."
-  `(lambda ()
-     ,(concat "(Close message pane and) " (documentation func t))
+NAME determines the value of `notmuch-show-process-crypto' in the
+message window, closes the window, and then call CMD interactively
+with that value let-bound.  If the message window does not exist,
+then NAME behaves like CMD."
+  `(defun ,name ()
+     ,(concat "(Close message pane and) " (documentation cmd t))
      (interactive)
      (let ((notmuch-show-process-crypto
-	    (notmuch-tree-inherit-from-message-pane 'notmuch-show-process-crypto)))
+	    (notmuch-tree--message-process-crypto)))
        (notmuch-tree-close-message-window)
-       (call-interactively #',func))))
+       (call-interactively #',cmd))))
+
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-help
+ notmuch-help)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-new-mail
+ notmuch-mua-new-mail)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-jump-search
+ notmuch-jump-search)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-forward-message
+ notmuch-show-forward-message)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-reply-sender
+ notmuch-show-reply-sender)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-reply
+ notmuch-show-reply)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-view-raw-message
+ notmuch-show-view-raw-message)
 
 (defvar notmuch-tree-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
-    ;; The following override the global keymap.
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-help]
-      (notmuch-tree-close-message-pane-and #'notmuch-help))
-    ;; Override because we first close message pane and then close tree buffer.
+    ;; These bindings shadow common bindings with variants
+    ;; that additionally close the message window.
     (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
-    ;; Override because we close message pane after the search query is entered.
-    (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-mua-new-mail]
-      (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-jump-search]
-      (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
+    (define-key map [remap notmuch-search]       'notmuch-tree-to-search)
+    (define-key map [remap notmuch-help]         'notmuch-tree-help)
+    (define-key map [remap notmuch-mua-new-mail] 'notmuch-tree-new-mail)
+    (define-key map [remap notmuch-jump-search]  'notmuch-tree-jump-search)
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
     (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
@@ -302,24 +328,16 @@ FUNC."
     (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
-    (define-key map (kbd "M-TAB")
-      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "<backtab>")
-      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "TAB")
-      (notmuch-tree-to-message-pane #'notmuch-show-next-button))
-    (define-key map "$"
-      (notmuch-tree-to-message-pane #'notmuch-show-toggle-process-crypto))
+    (define-key map (kbd "M-TAB")     'notmuch-tree-previous-message-button)
+    (define-key map (kbd "<backtab>") 'notmuch-tree-previous-message-button)
+    (define-key map (kbd "TAB")       'notmuch-tree-next-message-button)
+    (define-key map "$" 'notmuch-tree-toggle-message-process-crypto)
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
-    (define-key map "f"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-forward-message))
-    (define-key map "r"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-reply-sender))
-    (define-key map "R"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-reply))
-    (define-key map "V"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-view-raw-message))
+    (define-key map "f" 'notmuch-tree-forward-message)
+    (define-key map "r" 'notmuch-tree-reply-sender)
+    (define-key map "R" 'notmuch-tree-reply)
+    (define-key map "V" 'notmuch-tree-view-raw-message)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
