@@ -51,9 +51,8 @@
 (defvar notmuch-search-query-string)
 
 ;; this variable distinguishes the unthreaded display from the normal tree display
-(defvar notmuch-tree-unthreaded nil
+(defvar-local notmuch-tree-unthreaded nil
   "A buffer local copy of argument unthreaded to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-unthreaded)
 
 (defgroup notmuch-tree nil
   "Showing message and thread structure."
@@ -207,44 +206,36 @@ For example:
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
-(defvar notmuch-tree-previous-subject
+(defvar-local notmuch-tree-previous-subject
   "The subject of the most recent result shown during the async display.")
-(make-variable-buffer-local 'notmuch-tree-previous-subject)
 
-(defvar notmuch-tree-basic-query nil
+(defvar-local notmuch-tree-basic-query nil
   "A buffer local copy of argument query to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-basic-query)
 
-(defvar notmuch-tree-query-context nil
+(defvar-local notmuch-tree-query-context nil
   "A buffer local copy of argument query-context to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-query-context)
 
-(defvar notmuch-tree-target-msg nil
+(defvar-local notmuch-tree-target-msg nil
   "A buffer local copy of argument target to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-target-msg)
 
-(defvar notmuch-tree-open-target nil
+(defvar-local notmuch-tree-open-target nil
   "A buffer local copy of argument open-target to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-open-target)
 
-(defvar notmuch-tree-parent-buffer nil)
-(make-variable-buffer-local 'notmuch-tree-parent-buffer)
+(defvar-local notmuch-tree-parent-buffer nil)
 
-(defvar notmuch-tree-message-window nil
+(defvar-local notmuch-tree-message-window nil
   "The window of the message pane.
 
 It is set in both the tree buffer and the child show buffer. It
 is used to try and close the message pane when quitting tree view
 or the child show buffer.")
-(make-variable-buffer-local 'notmuch-tree-message-window)
 (put 'notmuch-tree-message-window 'permanent-local t)
 
-(defvar notmuch-tree-message-buffer nil
+(defvar-local notmuch-tree-message-buffer nil
   "The buffer name of the show buffer in the message pane.
 
 This is used to try and make sure we don't close the message pane
 if the user has loaded a different buffer in that window.")
-(make-variable-buffer-local 'notmuch-tree-message-buffer)
 (put 'notmuch-tree-message-buffer 'permanent-local t)
 
 (defun notmuch-tree-to-message-pane (func)

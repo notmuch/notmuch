@@ -89,9 +89,8 @@ like they are intended to be sent encrypted
   "<#\\(part encrypt\\|secure.*mode=.*encrypt>\\)"
   "Regular expression matching mml tags indicating encryption of part or message.")
 
-(defvar notmuch-draft-id nil
+(defvar-local notmuch-draft-id nil
   "Message-id of the most recent saved draft of this message.")
-(make-variable-buffer-local 'notmuch-draft-id)
 
 (defun notmuch-draft--mark-deleted ()
   "Tag the last saved draft deleted.

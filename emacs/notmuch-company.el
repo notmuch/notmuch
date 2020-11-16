@@ -36,8 +36,8 @@
 
 (require 'notmuch-lib)
 
-(defvar notmuch-company-last-prefix nil)
-(make-variable-buffer-local 'notmuch-company-last-prefix)
+(defvar-local notmuch-company-last-prefix nil)
+
 (declare-function company-begin-backend "company")
 (declare-function company-grab "company")
 (declare-function company-mode "company")

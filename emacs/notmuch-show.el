@@ -162,23 +162,17 @@ indentation."
   :type '(choice (const nil) regexp)
   :group 'notmuch-show)
 
-(defvar notmuch-show-thread-id nil)
-(make-variable-buffer-local 'notmuch-show-thread-id)
+(defvar-local notmuch-show-thread-id nil)
 
-(defvar notmuch-show-parent-buffer nil)
-(make-variable-buffer-local 'notmuch-show-parent-buffer)
+(defvar-local notmuch-show-parent-buffer nil)
 
-(defvar notmuch-show-query-context nil)
-(make-variable-buffer-local 'notmuch-show-query-context)
+(defvar-local notmuch-show-query-context nil)
 
-(defvar notmuch-show-process-crypto nil)
-(make-variable-buffer-local 'notmuch-show-process-crypto)
+(defvar-local notmuch-show-process-crypto nil)
 
-(defvar notmuch-show-elide-non-matching-messages nil)
-(make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
+(defvar-local notmuch-show-elide-non-matching-messages nil)
 
-(defvar notmuch-show-indent-content t)
-(make-variable-buffer-local 'notmuch-show-indent-content)
+(defvar-local notmuch-show-indent-content t)
 
 (defvar notmuch-show-attachment-debug nil
   "If t log stdout and stderr from attachment handlers.

@@ -435,9 +435,8 @@ of its command symbol."
 	  (insert desc)))
       (pop-to-buffer (help-buffer)))))
 
-(defvar notmuch-buffer-refresh-function nil
+(defvar-local notmuch-buffer-refresh-function nil
   "Function to call to refresh the current buffer.")
-(make-variable-buffer-local 'notmuch-buffer-refresh-function)
 
 (defun notmuch-refresh-this-buffer ()
   "Refresh the current buffer."
@@ -989,10 +988,7 @@ status."
 			 (find-file-noselect err-file))))
     (when err-buffer (kill-buffer err-buffer))))
 
-;; This variable is used only buffer local, but it needs to be
-;; declared globally first to avoid compiler warnings.
-(defvar notmuch-show-process-crypto nil)
-(make-variable-buffer-local 'notmuch-show-process-crypto)
+(defvar-local notmuch-show-process-crypto nil)
 
 (defun notmuch-interactive-region ()
   "Return the bounds of the current interactive region.

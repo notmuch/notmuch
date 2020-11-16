@@ -50,9 +50,7 @@ Otherwise respect `fill-column'."
   :group 'coolj
   :type 'regexp)
 
-(defvar coolj-wrap-point nil)
-
-(make-variable-buffer-local 'coolj-wrap-point)
+(defvar-local coolj-wrap-point nil)
 
 (defun coolj-determine-prefix ()
   "Determine the prefix for the current line."
