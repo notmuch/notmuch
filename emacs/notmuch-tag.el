@@ -68,15 +68,15 @@ The key `notmuch-tag-jump-reverse-key' (k by default) should not
 be used (either as a key, or as the start of a key sequence) as
 it is already bound: it switches the menu to a menu of the
 reverse tagging operations. The reverse of a tagging operation is
-the same list of individual tag-ops but with `+tag` replaced by
-`-tag` and vice versa.
+the same list of individual tag-ops but with `+tag' replaced by
+`-tag' and vice versa.
 
 If setting this variable outside of customize then it should be a
 list of triples (lists of three elements). Each triple should be
 of the form (key-binding tagging-operations name). KEY-BINDING
 can be a single character or a key sequence; TAGGING-OPERATIONS
 should either be a list of individual tag operations each of the
-form `+tag` or `-tag`, or the variable name of a variable that is
+form `+tag' or `-tag', or the variable name of a variable that is
 a list of tagging operations; NAME should be a name for the
 tagging operation, if omitted or empty than then name is taken
 from TAGGING-OPERATIONS."
@@ -116,7 +116,7 @@ from TAGGING-OPERATIONS."
   '((t :foreground "red"))
   "Default face used for the unread tag.
 
-Used in the default value of `notmuch-tag-formats`."
+Used in the default value of `notmuch-tag-formats'."
   :group 'notmuch-faces)
 
 (defface notmuch-tag-flagged
@@ -128,7 +128,7 @@ Used in the default value of `notmuch-tag-formats`."
      (:foreground "blue")))
   "Face used for the flagged tag.
 
-Used in the default value of `notmuch-tag-formats`."
+Used in the default value of `notmuch-tag-formats'."
   :group 'notmuch-faces)
 
 (defcustom notmuch-tag-formats
@@ -170,7 +170,7 @@ with images."
     (t :inverse-video t))
   "Face used to display deleted tags.
 
-Used in the default value of `notmuch-tag-deleted-formats`."
+Used in the default value of `notmuch-tag-deleted-formats'."
   :group 'notmuch-faces)
 
 (defcustom notmuch-tag-deleted-formats
@@ -178,7 +178,7 @@ Used in the default value of `notmuch-tag-deleted-formats`."
     (".*" (notmuch-apply-face tag `notmuch-tag-deleted)))
   "Custom formats for tags when deleted.
 
-For deleted tags the formats in `notmuch-tag-formats` are applied
+For deleted tags the formats in `notmuch-tag-formats' are applied
 first and then these formats are applied on top; that is `tag'
 passed to the function is the tag with all these previous
 formattings applied. The formatted can access the original
@@ -199,14 +199,14 @@ See `notmuch-tag-formats' for full documentation."
   '((t :underline "green"))
   "Default face used for added tags.
 
-Used in the default value for `notmuch-tag-added-formats`."
+Used in the default value for `notmuch-tag-added-formats'."
   :group 'notmuch-faces)
 
 (defcustom notmuch-tag-added-formats
   '((".*" (notmuch-apply-face tag 'notmuch-tag-added)))
   "Custom formats for tags when added.
 
-For added tags the formats in `notmuch-tag-formats` are applied
+For added tags the formats in `notmuch-tag-formats' are applied
 first and then these formats are applied on top.
 
 To disable special formatting of added tags, set this variable to
@@ -506,7 +506,7 @@ begin with a \"+\" or a \"-\". If REVERSE is non-nil, replace all
 Creates and displays a jump menu for the tagging operations
 specified in `notmuch-tagging-keys'. If REVERSE is set then it
 offers a menu of the reverses of the operations specified in
-`notmuch-tagging-keys'; i.e. each `+tag` is replaced by `-tag`
+`notmuch-tagging-keys'; i.e. each `+tag' is replaced by `-tag'
 and vice versa."
   ;; In principle this function is simple, but it has to deal with
   ;; lots of cases: different modes (search/show/tree), whether a name

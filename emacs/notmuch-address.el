@@ -294,7 +294,7 @@ The car is a partial harvest, and the cdr is a full harvest.")
   "Collect addresses completion candidates.
 
 It queries the notmuch database for messages sent/received (as
-configured with `notmuch-address-command`) by the user, collects
+configured with `notmuch-address-command') by the user, collects
 destination/source addresses from those messages and stores them
 in `notmuch-address-completions'.
 

@@ -101,7 +101,7 @@ Used when a new version is saved, or the message is sent."
     (notmuch-tag notmuch-draft-id '("+deleted"))))
 
 (defun notmuch-draft-quote-some-mml ()
-  "Quote the mml tags in `notmuch-draft-quoted-tags`."
+  "Quote the mml tags in `notmuch-draft-quoted-tags'."
   (save-excursion
     ;; First we deal with any secure tag separately.
     (message-goto-body)
@@ -122,7 +122,7 @@ Used when a new version is saved, or the message is sent."
 	  (insert "!"))))))
 
 (defun notmuch-draft-unquote-some-mml ()
-  "Unquote the mml tags in `notmuch-draft-quoted-tags`."
+  "Unquote the mml tags in `notmuch-draft-quoted-tags'."
   (save-excursion
     (when notmuch-draft-quoted-tags
       (let ((re (concat "<#!+/?\\("
@@ -174,7 +174,7 @@ Really save and index an unencrypted copy? ")
   "Save the current draft message in the notmuch database.
 
 This saves the current message in the database with tags
-`notmuch-draft-tags` (in addition to any default tags
+`notmuch-draft-tags' (in addition to any default tags
 applied to newly inserted messages)."
   (interactive)
   (when (notmuch-draft--has-encryption-tag)
@@ -185,7 +185,7 @@ applied to newly inserted messages)."
      ;; so that it is easier to search for the message, and the
      ;; latter so we have a way of accessing the saved message (for
      ;; example to delete it at a later time). We check that the
-     ;; user has these in `message-deletable-headers` (the default)
+     ;; user has these in `message-deletable-headers' (the default)
      ;; as otherwise they are doing something strange and we
      ;; shouldn't interfere. Note, since we are doing this in a new
      ;; buffer we don't change the version in the compose buffer.

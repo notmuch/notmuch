@@ -342,7 +342,7 @@ there will be called at other points of notmuch execution."
   "Face used in search mode face for flagged threads.
 
 This face is the default value for the \"flagged\" tag in
-`notmuch-search-line-faces`."
+`notmuch-search-line-faces'."
   :group 'notmuch-search
   :group 'notmuch-faces)
 
@@ -352,7 +352,7 @@ This face is the default value for the \"flagged\" tag in
   "Face used in search mode for unread threads.
 
 This face is the default value for the \"unread\" tag in
-`notmuch-search-line-faces`."
+`notmuch-search-line-faces'."
   :group 'notmuch-search
   :group 'notmuch-faces)
 

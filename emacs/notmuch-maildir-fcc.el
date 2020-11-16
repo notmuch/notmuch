@@ -196,7 +196,7 @@ This is a rearranged version of message mode's message-do-fcc."
 (defun notmuch-fcc-handler (fcc-header)
   "Store message with notmuch insert or normal (file) fcc.
 
-If `notmuch-maildir-use-notmuch-insert` is set then store the
+If `notmuch-maildir-use-notmuch-insert' is set then store the
 message using notmuch insert. Otherwise store the message using
 normal fcc."
   (message "Doing Fcc...")
