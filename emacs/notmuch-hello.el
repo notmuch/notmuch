@@ -987,11 +987,6 @@ following:
   (run-hooks 'notmuch-hello-refresh-hook)
   (setq notmuch-hello-first-run nil))
 
-(defun notmuch-folder ()
-  "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."
-  (interactive)
-  (notmuch-hello))
-
 ;;
 
 (provide 'notmuch-hello)
