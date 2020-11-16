@@ -402,7 +402,7 @@ modified. This function is notmuch adaptation of
     ;; argument. Pass it only if it is supplied by the caller. This
     ;; will never be the case when we're called by `compose-mail' in
     ;; Emacs 23.
-    (when return-action (nconc args '(return-action)))
+    (when return-action (nconc args (list return-action)))
     (apply 'message-setup-1 headers args))
   (notmuch-fcc-header-setup)
   (message-sort-headers)
