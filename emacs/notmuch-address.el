@@ -36,9 +36,9 @@
 This variable is set by calling `notmuch-address-harvest'.")
 
 (defvar notmuch-address-full-harvest-finished nil
-  "t indicates that full completion address harvesting has been finished.
-Use notmuch-address--harvest-ready to access as that will load a
-saved hash if necessary (and available).")
+  "Whether full completion address harvesting has finished.
+Use `notmuch-address--harvest-ready' to access as that will load
+a saved hash if necessary (and available).")
 
 (defun notmuch-address--harvest-ready ()
   "Return t if there is a full address hash available.

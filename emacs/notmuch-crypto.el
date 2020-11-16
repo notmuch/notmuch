@@ -27,7 +27,7 @@
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
 (defcustom notmuch-crypto-process-mime t
-  "Should cryptographic MIME parts be processed?
+  "Whether to process cryptographic MIME parts.
 
 If this variable is non-nil signatures in multipart/signed
 messages will be verified and multipart/encrypted parts will be
@@ -46,7 +46,7 @@ mode."
   :group 'notmuch-crypto)
 
 (defcustom notmuch-crypto-get-keys-asynchronously t
-  "Retrieve gpg keys asynchronously."
+  "Whether to retrieve openpgp keys asynchronously."
   :type 'boolean
   :group 'notmuch-crypto)
 

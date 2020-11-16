@@ -82,10 +82,11 @@ If this is `nil' then no `User-Agent:' will be generated."
   :group 'notmuch)
 
 (defcustom notmuch-mua-cite-function 'message-cite-original
-  "*Function for citing an original message.
+  "Function for citing an original message.
+
 Predefined functions include `message-cite-original' and
-`message-cite-original-without-signature'.
-Note that these functions use `mail-citation-hook' if that is non-nil."
+`message-cite-original-without-signature'.  Note that these
+functions use `mail-citation-hook' if that is non-nil."
   :type '(radio (function-item message-cite-original)
 		(function-item message-cite-original-without-signature)
 		(function-item sc-cite-original)
