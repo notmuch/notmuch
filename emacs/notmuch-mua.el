@@ -62,8 +62,8 @@ accordingly."
 		 (const :tag "Compose mail in a new frame"   new-frame)))
 
 (defcustom notmuch-mua-user-agent-function nil
-  "Function used to generate a `User-Agent:' string. If this is
-`nil' then no `User-Agent:' will be generated."
+  "Function used to generate a `User-Agent:' string.
+If this is `nil' then no `User-Agent:' will be generated."
   :type '(choice (const :tag "No user agent string" nil)
 		 (const :tag "Full" notmuch-mua-user-agent-full)
 		 (const :tag "Notmuch" notmuch-mua-user-agent-notmuch)
