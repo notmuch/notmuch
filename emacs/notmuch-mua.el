@@ -47,8 +47,7 @@
   :group 'notmuch-hooks)
 
 (defcustom notmuch-mua-compose-in 'current-window
-  (concat
-   "Where to create the mail buffer used to compose a new message.
+  "Where to create the mail buffer used to compose a new message.
 Possible values are `current-window' (default), `new-window' and
 `new-frame'. If set to `current-window', the mail buffer will be
 displayed in the current window, so the old buffer will be
@@ -57,10 +56,6 @@ or `new-frame', the mail buffer will be displayed in a new
 window/frame that will be destroyed when the buffer is killed.
 You may want to customize `message-kill-buffer-on-exit'
 accordingly."
-   (when (< emacs-major-version 24)
-     " Due to a known bug in Emacs 23, you should not set
-this to `new-window' if `message-kill-buffer-on-exit' is
-disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send
   :type '(choice (const :tag "Compose in the current window" current-window)
 		 (const :tag "Compose mail in a new window"  new-window)
@@ -212,7 +207,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 					       "multipart/*")
 	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
-;; There is a bug in emacs 23's message.el that results in a newline
+;; There is a bug in Emacs' message.el that results in a newline
 ;; not being inserted after the References header, so the next header
 ;; is concatenated to the end of it. This function fixes the problem,
 ;; while guarding against the possibility that some current or future
@@ -517,10 +512,10 @@ the From: address."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
-  ;; In current emacs (24.3) select-active-regions is set to t by
-  ;; default. The reply insertion code sets the region to the quoted
-  ;; message to make it easy to delete (kill-region or C-w). These two
-  ;; things combine to put the quoted message in the primary selection.
+  ;; `select-active-regions' is t by default. The reply insertion code
+  ;; sets the region to the quoted message to make it easy to delete
+  ;; (kill-region or C-w). These two things combine to put the quoted
+  ;; message in the primary selection.
   ;;
   ;; This is not what the user wanted and is a privacy risk (accidental
   ;; pasting of the quoted message). We can avoid some of the problems

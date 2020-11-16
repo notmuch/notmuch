@@ -21,10 +21,11 @@
 
 ;;; Code:
 
-;; emacs master has a bugfix for folding long headers when sending
-;; messages. Include the fix for earlier versions of emacs. To avoid
-;; interfering with gnus we only run the hook when called from
-;; notmuch-message-mode.
+;; Before Emacs 26.1 lines that are longer than 998 octets were not.
+;; folded. Commit 77bbca8c82f6e553c42abbfafca28f55fc995d00 fixed
+;; that. Until we drop support for Emacs 25 we have to backport that
+;; fix. To avoid interfering with Gnus we only run the hook when
+;; called from notmuch-message-mode.
 
 (declare-function mail-header-fold-field "mail-parse" nil)
 

@@ -29,11 +29,6 @@
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 
-(eval-and-compile
-  (unless (fboundp 'window-body-width)
-    ;; Compatibility for Emacs pre-24
-    (defalias 'window-body-width 'window-width)))
-
 ;;;###autoload
 (defun notmuch-jump-search ()
   "Jump to a saved search by shortcut key.

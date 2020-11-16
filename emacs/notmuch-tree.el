@@ -531,9 +531,10 @@ NOT change the database."
   (let ((buffer (current-buffer)))
     (when (and (window-live-p notmuch-tree-message-window)
 	       (eq (window-buffer notmuch-tree-message-window) buffer))
-      ;; We do not want an error if this is the sole window in the
-      ;; frame and I do not know how to test for that in emacs pre
-      ;; 24. Hence we just ignore-errors.
+      ;; We could check whether this is the only window in its frame,
+      ;; but simply ignoring the error that is thrown otherwise is
+      ;; what we had to do for Emacs 24 and we stick to that because
+      ;; it is still the simplest approach.
       (ignore-errors
 	(delete-window notmuch-tree-message-window)))))
 

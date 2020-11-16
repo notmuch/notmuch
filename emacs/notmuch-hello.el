@@ -645,6 +645,7 @@ with `notmuch-hello-query-counts'."
       ;; Refresh hello as soon as we get back to redisplay.  On Emacs
       ;; 24, we can't do it right here because something in this
       ;; hook's call stack overrides hello's point placement.
+      ;; FIXME And on Emacs releases that we still support?
       (run-at-time nil nil #'notmuch-hello t))
     (unless hello-buf
       ;; Clean up hook
@@ -665,17 +666,10 @@ with `notmuch-hello-query-counts'."
 		       " (emacs mua version " notmuch-emacs-version ")")))))
 
 (defvar notmuch-hello-mode-map
-  (let ((map (if (fboundp 'make-composed-keymap)
-		 ;; Inherit both widget-keymap and
-		 ;; notmuch-common-keymap. We have to use
-		 ;; make-sparse-keymap to force this to be a new
-		 ;; keymap (so that when we modify map it does not
-		 ;; modify widget-keymap).
-		 (make-composed-keymap (list (make-sparse-keymap) widget-keymap))
-	       ;; Before Emacs 24, keymaps didn't support multiple
-	       ;; inheritance,, so just copy the widget keymap since
-	       ;; it's unlikely to change.
-	       (copy-keymap widget-keymap))))
+  ;; Inherit both widget-keymap and notmuch-common-keymap.  We have
+  ;; to use make-sparse-keymap to force this to be a new keymap (so
+  ;; that when we modify map it does not modify widget-keymap).
+  (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
     (define-key map "v" 'notmuch-hello-versions)
     (define-key map (kbd "<C-tab>") 'widget-backward)

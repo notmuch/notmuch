@@ -186,8 +186,7 @@ indentation."
 When set to nil (the default) stdout and stderr from attachment
 handlers is discarded. When set to t the stdout and stderr from
 each attachment handler is logged in buffers with names beginning
-\" *notmuch-part*\". This option requires emacs version at least
-24.3 to work.")
+\" *notmuch-part*\".")
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "https://mid.gmane.org/")
@@ -2417,10 +2416,9 @@ This ensures that the temporary buffer created for the mm-handle
 is destroyed when FN returns. If MIME-TYPE is given then force
 part to be treated as if it had that mime-type."
   (let ((handle (notmuch-show-current-part-handle mime-type)))
-    ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
-    ;; call it from a temp-buffer, unless
-    ;; notmuch-show-attachment-debug is non-nil in which case we put
-    ;; it in " *notmuch-part*".
+    ;; Emacs puts stdout/stderr into the calling buffer so we call
+    ;; it from a temp-buffer, unless notmuch-show-attachment-debug
+    ;; is non-nil, in which case we put it in " *notmuch-part*".
     (unwind-protect
 	(if notmuch-show-attachment-debug
 	    (with-current-buffer (generate-new-buffer " *notmuch-part*")

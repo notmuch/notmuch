@@ -653,18 +653,6 @@ If CACHE is non-nil, the content of this part will be saved in
 MSG (if it isn't already)."
   (notmuch--get-bodypart-raw msg part process-crypto nil cache))
 
-;; Workaround: The call to `mm-display-part' below triggers a bug in
-;; Emacs 24 if it attempts to use the shr renderer to display an HTML
-;; part with images in it (demonstrated in 24.1 and 24.2 on Debian and
-;; Fedora 17, though unreproducible in other configurations).
-;; `mm-shr' references the variable `gnus-inhibit-images' without
-;; first loading gnus-art, which defines it, resulting in a
-;; void-variable error.  Hence, we advise `mm-shr' to ensure gnus-art
-;; is loaded.
-(define-advice mm-shr (:before (_handle) notmuch--load-gnus-args)
-  "Require `gnus-art' since we use its variables."
-  (require 'gnus-art nil t))
-
 (defun notmuch-mm-display-part-inline (msg part content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
 current buffer, if possible."
