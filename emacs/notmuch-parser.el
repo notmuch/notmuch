@@ -168,9 +168,8 @@ additional data.  The caller just needs to ensure it does not
 move point in the input buffer."
   ;; Set up the initial state
   (unless (local-variable-p 'notmuch-sexp--parser)
-    (set (make-local-variable 'notmuch-sexp--parser)
-	 (notmuch-sexp-create-parser))
-    (set (make-local-variable 'notmuch-sexp--state) 'begin))
+    (setq-local notmuch-sexp--parser (notmuch-sexp-create-parser))
+    (setq-local notmuch-sexp--state 'begin))
   (let (done)
     (while (not done)
       (cl-case notmuch-sexp--state

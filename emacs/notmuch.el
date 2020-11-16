@@ -391,7 +391,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-target-thread)
   (make-local-variable 'notmuch-search-target-line)
   (setq notmuch-buffer-refresh-function #'notmuch-search-refresh-view)
-  (set (make-local-variable 'scroll-preserve-screen-position) t)
+  (setq-local scroll-preserve-screen-position t)
   (add-to-invisibility-spec (cons 'ellipsis t))
   (setq truncate-lines t)
   (setq buffer-read-only t)
