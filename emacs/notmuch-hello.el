@@ -387,15 +387,9 @@ afterwards.")
 		     (format "%s%03d" notmuch-hello-thousands-separator elem))
 		   (cdr result)))))
 
-(defun notmuch-hello-trim (search)
-  "Trim whitespace."
-  (if (string-match "^[[:space:]]*\\(.*[^[:space:]]\\)[[:space:]]*$" search)
-      (match-string 1 search)
-    search))
-
 (defun notmuch-hello-search (&optional search)
   (unless (null search)
-    (setq search (notmuch-hello-trim search))
+    (setq search (string-trim search))
     (let ((history-delete-duplicates t))
       (add-to-history 'notmuch-search-history search)))
   (notmuch-search search notmuch-search-oldest-first))
