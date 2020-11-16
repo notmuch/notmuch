@@ -21,8 +21,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
+(require 'cl-lib)
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
 
@@ -542,21 +541,19 @@ options will be handled as specified for
 --batch'. In general we recommend running matching versions of
 the CLI and emacs interface."))
     (goto-char (point-min))
-    (notmuch-remove-if-not
-     #'identity
-     (mapcar
-      (lambda (elem)
-	(let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
-	       (search-query (plist-get elem-plist :query))
-	       (filtered-query (notmuch-hello-filtered-query
-				search-query (plist-get options :filter)))
-	       (message-count (prog1 (read (current-buffer))
-				(forward-line 1))))
-	  (when (and filtered-query (or (plist-get options :show-empty-searches)
-					(> message-count 0)))
-	    (setq elem-plist (plist-put elem-plist :query filtered-query))
-	    (plist-put elem-plist :count message-count))))
-      query-list))))
+    (cl-mapcan
+     (lambda (elem)
+       (let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
+	      (search-query (plist-get elem-plist :query))
+	      (filtered-query (notmuch-hello-filtered-query
+			       search-query (plist-get options :filter)))
+	      (message-count (prog1 (read (current-buffer))
+			       (forward-line 1))))
+	 (when (and filtered-query (or (plist-get options :show-empty-searches)
+				       (> message-count 0)))
+	   (setq elem-plist (plist-put elem-plist :query filtered-query))
+	   (list (plist-put elem-plist :count message-count)))))
+     query-list)))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
@@ -698,12 +695,12 @@ Complete list of currently available key bindings:
 
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
-  (mapcar (lambda (tag)
-	    (cons tag (concat "tag:" (notmuch-escape-boolean-term tag))))
-	  (notmuch-remove-if-not
-	   (lambda (tag)
-	     (not (member tag hide-tags)))
-	   (process-lines notmuch-command "search" "--output=tags" "*"))))
+  (cl-mapcan (lambda (tag)
+	       (and (not (member tag hide-tags))
+		    (list (cons tag
+				(concat "tag:"
+					(notmuch-escape-boolean-term tag))))))
+	     (process-lines notmuch-command "search" "--output=tags" "*")))
 
 (defun notmuch-hello-insert-header ()
   "Insert the default notmuch-hello header."

@@ -534,15 +534,6 @@ This replaces spaces, percents, and double quotes in STR with
 
 ;;
 
-(defun notmuch-remove-if-not (predicate list)
-  "Return a copy of LIST with all items not satisfying PREDICATE removed."
-  (let (out)
-    (while list
-      (when (funcall predicate (car list))
-	(push (car list) out))
-      (setq list (cdr list)))
-    (nreverse out)))
-
 (defun notmuch-plist-delete (plist property)
   (let* ((xplist (cons nil plist))
 	 (pred xplist))
