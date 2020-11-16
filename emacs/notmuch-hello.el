@@ -652,26 +652,12 @@ with `notmuch-hello-query-counts'."
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
 
-;; the following variable is defined as being defconst in notmuch-version.el
-(defvar notmuch-emacs-version)
-
-(defun notmuch-hello-versions ()
-  "Display the notmuch version(s)."
-  (interactive)
-  (let ((notmuch-cli-version (notmuch-cli-version)))
-    (message "notmuch version %s"
-	     (if (string= notmuch-emacs-version notmuch-cli-version)
-		 notmuch-cli-version
-	       (concat notmuch-cli-version
-		       " (emacs mua version " notmuch-emacs-version ")")))))
-
 (defvar notmuch-hello-mode-map
   ;; Inherit both widget-keymap and notmuch-common-keymap.  We have
   ;; to use make-sparse-keymap to force this to be a new keymap (so
   ;; that when we modify map it does not modify widget-keymap).
   (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map "v" 'notmuch-hello-versions)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")

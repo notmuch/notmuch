@@ -147,6 +147,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
 (defvar notmuch-common-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
+    (define-key map "v" 'notmuch-version)
     (define-key map "q" 'notmuch-bury-or-kill-this-buffer)
     (define-key map "s" 'notmuch-search)
     (define-key map "t" 'notmuch-search-by-tag)
@@ -217,6 +218,21 @@ on the command line, and then retry your notmuch command")))
 		      long-string)
 	(match-string 2 long-string)
       "unknown")))
+
+(defvar notmuch-emacs-version)
+
+(defun notmuch-version ()
+  "Display the notmuch version.
+The versions of the Emacs package and the `notmuch' executable
+should match, but if and only if they don't, then this command
+displays both values separately."
+  (interactive)
+  (let ((cli-version (notmuch-cli-version)))
+    (message "notmuch version %s"
+	     (if (string= notmuch-emacs-version cli-version)
+		 cli-version
+	       (concat cli-version
+		       " (emacs mua version " notmuch-emacs-version ")")))))
 
 (defun notmuch-config-get (item)
   "Return a value from the notmuch configuration."
