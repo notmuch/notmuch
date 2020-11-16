@@ -539,11 +539,11 @@ tag, or the user confirms they mean it."
       (goto-char (point-max))
       (or
        ;; We are always fine if there is no secure tag.
-       (not (search-backward "<#secure" nil 't))
+       (not (search-backward "<#secure" nil t))
        ;; There is a secure tag, so it must be at the start of the
        ;; body, with no secure tag earlier (i.e., in the headers).
        (and (= (point) body-start)
-	    (not (search-backward "<#secure" nil 't)))
+	    (not (search-backward "<#secure" nil t)))
        ;; The user confirms they means it.
        (yes-or-no-p "\
 There is a <#secure> tag not at the start of the body. It is
@@ -583,7 +583,7 @@ unencrypted.  Really send? "))))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (notmuch-mua-send-common arg 't))
+  (notmuch-mua-send-common arg t))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")

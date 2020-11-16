@@ -76,7 +76,7 @@ directory if it does not exist yet when sending a mail."
   :require 'notmuch-fcc-initialization
   :group 'notmuch-send)
 
-(defcustom notmuch-maildir-use-notmuch-insert 't
+(defcustom notmuch-maildir-use-notmuch-insert t
   "Should fcc use notmuch insert instead of simple fcc."
   :type '(choice :tag "Fcc Method"
 		 (const :tag "Use notmuch insert" t)
@@ -246,8 +246,8 @@ If CREATE is non-nil then create the folder if necessary."
 \(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " '(?r ?c ?i ?e))))
 	 (cl-case response
 	   (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
-	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
-	   (?i 't)
+	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header t))
+	   (?i t)
 	   (?e (notmuch-maildir-fcc-with-notmuch-insert
 		(read-from-minibuffer "Fcc header: " fcc-header)))))))))
 
@@ -322,7 +322,7 @@ if successful, nil if not."
 It offers the user a chance to correct the header, or filesystem,
 if needed."
   (if (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
-      (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header 't)
+      (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header t)
     ;; The fcc-header is not a valid maildir see if the user wants to
     ;; fix it in some way.
     (let* ((prompt (format "Fcc %s is not a maildir: \
@@ -335,7 +335,7 @@ if needed."
 	      (message "No permission to create %s." fcc-header)
 	      (sit-for 2))
 	    (notmuch-maildir-fcc-file-fcc fcc-header))
-	(?i 't)
+	(?i t)
 	(?e (notmuch-maildir-fcc-file-fcc
 	     (read-from-minibuffer "Fcc header: " fcc-header)))))))
 

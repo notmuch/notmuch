@@ -1751,7 +1751,7 @@ user decision and we should not override it."
 	  (funcall notmuch-show-mark-read-function (window-start) (window-end))
 	((debug error)
 	 (unless notmuch-show--seen-has-errored
-	   (setq notmuch-show--seen-has-errored 't)
+	   (setq notmuch-show--seen-has-errored t)
 	   (setq header-line-format
 		 (concat header-line-format
 			 (propertize

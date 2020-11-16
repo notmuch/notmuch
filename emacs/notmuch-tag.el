@@ -524,7 +524,7 @@ and vice versa."
 		      (symbol-value tag)
 		    tag))
 	     (tag-change (if reverse
-			     (notmuch-tag-change-list tag 't)
+			     (notmuch-tag-change-list tag t)
 			   tag))
 	     (name (or (and (not (string= name ""))
 			    name)

@@ -135,7 +135,7 @@ Used when a new version is saved, or the message is sent."
     (let (secure-tag)
       (save-restriction
 	(message-narrow-to-headers)
-	(setq secure-tag (message-fetch-field "X-Notmuch-Emacs-Secure" 't))
+	(setq secure-tag (message-fetch-field "X-Notmuch-Emacs-Secure" t))
 	(message-remove-header "X-Notmuch-Emacs-Secure"))
       (message-goto-body)
       (when secure-tag
@@ -145,7 +145,7 @@ Used when a new version is saved, or the message is sent."
   "Returns t if there is an mml secure tag."
   (save-excursion
     (message-goto-body)
-    (re-search-forward notmuch-draft-encryption-tag-regex nil 't)))
+    (re-search-forward notmuch-draft-encryption-tag-regex nil t)))
 
 (defun notmuch-draft--query-encryption ()
   "Checks if we should save a message that should be encrypted.
@@ -207,7 +207,7 @@ applied to newly inserted messages)."
      (notmuch-draft-quote-some-mml)
      (notmuch-maildir-setup-message-for-saving)
      (notmuch-maildir-notmuch-insert-current-buffer
-      notmuch-draft-folder 't notmuch-draft-tags))
+      notmuch-draft-folder t notmuch-draft-tags))
     ;; We are now back in the original compose buffer. Note the
     ;; function notmuch-call-notmuch-process (called by
     ;; notmuch-maildir-notmuch-insert-current-buffer) signals an error
