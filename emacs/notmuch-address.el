@@ -250,25 +250,6 @@ requiring external commands."
 	(ding))))
    (t nil)))
 
-;; Copied from `w3m-which-command'.
-(defun notmuch-address-locate-command (command)
-  "Return non-nil if `command' is an executable either on
-`exec-path' or an absolute pathname."
-  (and (stringp command)
-       (if (and (file-name-absolute-p command)
-		(file-executable-p command))
-	   command
-	 (setq command (file-name-nondirectory command))
-	 (catch 'found-command
-	   (let (bin)
-	     (dolist (dir exec-path)
-	       (setq bin (expand-file-name command dir))
-	       (when (or (and (file-executable-p bin)
-			      (not (file-directory-p bin)))
-			 (and (file-executable-p (setq bin (concat bin ".exe")))
-			      (not (file-directory-p bin))))
-		 (throw 'found-command bin))))))))
-
 (defun notmuch-address-harvest-addr (result)
   (let ((name-addr (plist-get result :name-addr)))
     (puthash name-addr t notmuch-address-completions)))
