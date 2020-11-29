@@ -74,7 +74,7 @@ welcome_message_post_setup (void)
 {
     printf ("\n"
 	    "Notmuch is now configured, and the configuration settings are saved in\n"
-	    "a file in your home directory named .notmuch-config . If you'd like to\n"
+	    "a file in your home directory named .notmuch-config. If you'd like to\n"
 	    "change the configuration in the future, you can either edit that file\n"
 	    "directly or run \"notmuch setup\".  To choose an alternate configuration\n"
 	    "location, set ${NOTMUCH_CONFIG}.\n\n"
