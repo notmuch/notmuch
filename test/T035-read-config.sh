@@ -399,4 +399,52 @@ restore_database
 restore_config
 test_expect_equal "$output" "OK"
 
+# reset to known state
+add_email_corpus
+
+test_begin_subtest "tag with saved query from config file"
+backup_config
+query_name="test${RANDOM}"
+tag_name="tag${RANDOM}"
+notmuch count query:$query_name > OUTPUT
+printf "\n[query]\n${query_name} = tag:inbox\n" >> notmuch-config
+notmuch tag +$tag_name -- query:${query_name}
+notmuch count tag:$tag_name >> OUTPUT
+cat <<EOF > EXPECTED
+0
+52
+EOF
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "tag with saved query from config file (xdg)"
+xdg_config
+query_name="test${RANDOM}"
+tag_name="tag${RANDOM}"
+notmuch count query:$query_name > OUTPUT
+printf "\n[query]\n${query_name} = tag:inbox\n" >> ${CONFIG_PATH}
+notmuch tag +$tag_name -- query:${query_name}
+notmuch count tag:$tag_name >> OUTPUT
+cat <<EOF > EXPECTED
+0
+52
+EOF
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "tag with saved query from config file (xdg+profile)"
+query_name="test${RANDOM}"
+xdg_config ${query_name}
+tag_name="tag${RANDOM}"
+notmuch count query:$query_name > OUTPUT
+printf "\n[query]\n${query_name} = tag:inbox\n" >> ${CONFIG_PATH}
+notmuch tag +$tag_name -- query:${query_name}
+notmuch count tag:$tag_name >> OUTPUT
+cat <<EOF > EXPECTED
+0
+52
+EOF
+restore_config
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

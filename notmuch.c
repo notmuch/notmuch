@@ -157,7 +157,7 @@ static command_t commands[] = {
       "Count messages matching the search terms." },
     { "reply", notmuch_reply_command, NOTMUCH_COMMAND_DATABASE_EARLY,
       "Construct a reply template for a set of messages." },
-    { "tag", notmuch_tag_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "tag", notmuch_tag_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Add/remove tags for all messages matching the search terms." },
     { "dump", notmuch_dump_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Create a plain-text dump of the tags for each message." },
