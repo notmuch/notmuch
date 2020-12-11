@@ -1,3 +1,10 @@
+notmuch (0.31.2-4) unstable; urgency=medium
+
+  * Move prerequisite to file targets from phony ones. Thanks to
+    Lucas Nussbaum for the report. (Closes: #976934).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Dec 2020 21:02:20 -0400
+
 notmuch (0.31.2-3) unstable; urgency=medium
 
   * Switch to debhelper compat level 13
