@@ -119,7 +119,6 @@ struct _notmuch_config {
     bool is_new;
 
     char *database_path;
-    char *crypto_gpg_path;
     char *user_name;
     char *user_primary_email;
     const char **user_other_email;
@@ -151,14 +150,14 @@ get_name_from_passwd_file (void *ctx)
     char *name;
     int e;
 
-    pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
+    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
     if (pw_buf_size == -1) pw_buf_size = 64;
     pw_buf = talloc_size (ctx, pw_buf_size);
 
     while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
-                            pw_buf_size, &ignored)) == ERANGE) {
-        pw_buf_size = pw_buf_size * 2;
-        pw_buf = talloc_zero_size(ctx, pw_buf_size);
+			    pw_buf_size, &ignored)) == ERANGE) {
+	pw_buf_size = pw_buf_size * 2;
+	pw_buf = talloc_zero_size (ctx, pw_buf_size);
     }
 
     if (e == 0) {
@@ -186,14 +185,14 @@ get_username_from_passwd_file (void *ctx)
     char *name;
     int e;
 
-    pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
+    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
     if (pw_buf_size == -1) pw_buf_size = 64;
     pw_buf = talloc_zero_size (ctx, pw_buf_size);
 
     while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
-                            pw_buf_size, &ignored)) == ERANGE) {
-        pw_buf_size = pw_buf_size * 2;
-        pw_buf = talloc_zero_size(ctx, pw_buf_size);
+			    pw_buf_size, &ignored)) == ERANGE) {
+	pw_buf_size = pw_buf_size * 2;
+	pw_buf = talloc_zero_size (ctx, pw_buf_size);
     }
 
     if (e == 0)
@@ -217,7 +216,7 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
     GError *error = NULL;
     bool ret = false;
 
-    FILE *fp = fopen(config->filename, "r");
+    FILE *fp = fopen (config->filename, "r");
     if (fp == NULL) {
 	if (errno == ENOENT) {
 	    /* If create_new is true, then the caller is prepared for a
@@ -233,7 +232,7 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
 	    }
 	} else {
 	    fprintf (stderr, "Error opening config file '%s': %s\n",
-		     config->filename, strerror(errno));
+		     config->filename, strerror (errno));
 	}
 	goto out;
     }
@@ -274,12 +273,12 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
 
     g_error_free (error);
 
-out:
+  out:
     if (fp)
-	fclose(fp);
+	fclose (fp);
 
     if (config_str)
-	talloc_free(config_str);
+	talloc_free (config_str);
 
     return ret;
 }
@@ -300,20 +299,20 @@ out:
  *
  *	If is_new_ret is NULL, then a "file not found" message will be
  *	printed to stderr and NULL will be returned.
-
+ *
  *	If is_new_ret is non-NULL then a default configuration will be
  *	returned and *is_new_ret will be set to 1 on return so that
  *	the caller can recognize this case.
  *
- * 	These default configuration settings are determined as
- * 	follows:
+ *	These default configuration settings are determined as
+ *	follows:
  *
  *		database_path:		$MAILDIR, otherwise $HOME/mail
  *
  *		user_name:		$NAME variable if set, otherwise
  *					read from /etc/passwd
  *
- *		user_primary_mail: 	$EMAIL variable if set, otherwise
+ *		user_primary_mail:	$EMAIL variable if set, otherwise
  *					constructed from the username and
  *					hostname of the current machine.
  *
@@ -338,11 +337,12 @@ notmuch_config_open (void *ctx,
     int file_had_crypto_group;
 
     notmuch_config_t *config = talloc_zero (ctx, notmuch_config_t);
+
     if (config == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return NULL;
     }
-    
+
     talloc_set_destructor (config, notmuch_config_destructor);
 
     /* non-zero defaults */
@@ -438,7 +438,7 @@ notmuch_config_open (void *ctx,
     }
 
     if (notmuch_config_get_new_tags (config, &tmp) == NULL) {
-        const char *tags[] = { "unread", "inbox" };
+	const char *tags[] = { "unread", "inbox" };
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
@@ -499,11 +499,11 @@ notmuch_config_open (void *ctx,
 }
 
 /* Close the given notmuch_config_t object, freeing all resources.
- * 
+ *
  * Note: Any changes made to the configuration are *not* saved by this
  * function. To save changes, call notmuch_config_save before
  * notmuch_config_close.
-*/
+ */
 void
 notmuch_config_close (notmuch_config_t *config)
 {
@@ -605,13 +605,13 @@ _config_get_list (notmuch_config_t *config,
 		  const char *section, const char *key,
 		  const char ***outlist, size_t *list_length, size_t *ret_length)
 {
-    assert(outlist);
+    assert (outlist);
 
     /* read from config file and cache value, if not cached already */
     if (*outlist == NULL) {
 
 	char **inlist = g_key_file_get_string_list (config->key_file,
-					     section, key, list_length, NULL);
+						    section, key, list_length, NULL);
 	if (inlist) {
 	    unsigned int i;
 
@@ -648,7 +648,7 @@ _config_set_list (notmuch_config_t *config,
 const char *
 notmuch_config_get_database_path (notmuch_config_t *config)
 {
-    char *db_path = (char *)_config_get (config, &config->database_path, "database", "path");
+    char *db_path = (char *) _config_get (config, &config->database_path, "database", "path");
 
     if (db_path && *db_path != '/') {
 	/* If the path in the configuration file begins with any
@@ -726,16 +726,16 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
 				     size_t length)
 {
     _config_set_list (config, "user", "other_email", list, length,
-		     &(config->user_other_email));
+		      &(config->user_other_email));
 }
 
 void
 notmuch_config_set_new_tags (notmuch_config_t *config,
-				     const char *list[],
-				     size_t length)
+			     const char *list[],
+			     size_t length)
 {
     _config_set_list (config, "new", "tags", list, length,
-		     &(config->new_tags));
+		      &(config->new_tags));
 }
 
 void
@@ -744,7 +744,7 @@ notmuch_config_set_new_ignore (notmuch_config_t *config,
 			       size_t length)
 {
     _config_set_list (config, "new", "ignore", list, length,
-		     &(config->new_ignore));
+		      &(config->new_ignore));
 }
 
 const char **
@@ -757,8 +757,8 @@ notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length
 
 void
 notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
-				      const char *list[],
-				      size_t length)
+					const char *list[],
+					size_t length)
 {
     _config_set_list (config, "search", "exclude_tags", list, length,
 		      &(config->search_exclude_tags));
@@ -779,7 +779,7 @@ _item_split (char *item, char **group, char **key)
     *group = item;
 
     period = strchr (item, '.');
-    if (period == NULL || *(period+1) == '\0') {
+    if (period == NULL || *(period + 1) == '\0') {
 	fprintf (stderr,
 		 "Invalid configuration name: %s\n"
 		 "(Should be of the form <section>.<item>)\n", item);
@@ -793,7 +793,7 @@ _item_split (char *item, char **group, char **key)
 }
 
 /* These are more properly called Xapian fields, but the user facing
-   docs call them prefixes, so make the error message match */
+ * docs call them prefixes, so make the error message match */
 static bool
 validate_field_name (const char *str)
 {
@@ -839,10 +839,10 @@ typedef struct config_key {
 } config_key_info_t;
 
 static struct config_key
-config_key_table[] = {
-    {"index.decrypt",	true,	false,	NULL},
-    {"index.header.",	true,	true,	validate_field_name},
-    {"query.",		true,	true,	NULL},
+    config_key_table[] = {
+    { "index.decrypt",   true,   false,  NULL },
+    { "index.header.",   true,   true,   validate_field_name },
+    { "query.",          true,   true,   NULL },
 };
 
 static config_key_info_t *
@@ -851,10 +851,10 @@ _config_key_info (const char *item)
     for (size_t i = 0; i < ARRAY_SIZE (config_key_table); i++) {
 	if (config_key_table[i].prefix &&
 	    strncmp (item, config_key_table[i].name,
-		     strlen(config_key_table[i].name)) == 0)
-	    return config_key_table+i;
+		     strlen (config_key_table[i].name)) == 0)
+	    return config_key_table + i;
 	if (strcmp (item, config_key_table[i].name) == 0)
-	    return config_key_table+i;
+	    return config_key_table + i;
     }
     return NULL;
 }
@@ -863,13 +863,14 @@ static bool
 _stored_in_db (const char *item)
 {
     config_key_info_t *info;
+
     info = _config_key_info (item);
 
     return (info && info->in_db);
 }
 
 static int
-_print_db_config(notmuch_config_t *config, const char *name)
+_print_db_config (notmuch_config_t *config, const char *name)
 {
     notmuch_database_t *notmuch;
     char *val;
@@ -884,7 +885,7 @@ _print_db_config(notmuch_config_t *config, const char *name)
 			       notmuch_database_get_config (notmuch, name, &val)))
 	return EXIT_FAILURE;
 
-     puts (val);
+    puts (val);
 
     return EXIT_SUCCESS;
 }
@@ -892,20 +893,20 @@ _print_db_config(notmuch_config_t *config, const char *name)
 static int
 notmuch_config_command_get (notmuch_config_t *config, char *item)
 {
-    if (strcmp(item, "database.path") == 0) {
+    if (strcmp (item, "database.path") == 0) {
 	printf ("%s\n", notmuch_config_get_database_path (config));
-    } else if (strcmp(item, "user.name") == 0) {
+    } else if (strcmp (item, "user.name") == 0) {
 	printf ("%s\n", notmuch_config_get_user_name (config));
-    } else if (strcmp(item, "user.primary_email") == 0) {
+    } else if (strcmp (item, "user.primary_email") == 0) {
 	printf ("%s\n", notmuch_config_get_user_primary_email (config));
-    } else if (strcmp(item, "user.other_email") == 0) {
+    } else if (strcmp (item, "user.other_email") == 0) {
 	const char **other_email;
 	size_t i, length;
-	
+
 	other_email = notmuch_config_get_user_other_email (config, &length);
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", other_email[i]);
-    } else if (strcmp(item, "new.tags") == 0) {
+    } else if (strcmp (item, "new.tags") == 0) {
 	const char **tags;
 	size_t i, length;
 
@@ -944,7 +945,7 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
 }
 
 static int
-_set_db_config(notmuch_config_t *config, const char *key, int argc, char **argv)
+_set_db_config (notmuch_config_t *config, const char *key, int argc, char **argv)
 {
     notmuch_database_t *notmuch;
     const char *val = "";
@@ -1025,15 +1026,15 @@ static
 void
 _notmuch_config_list_built_with ()
 {
-    printf("%scompact=%s\n",
-	   BUILT_WITH_PREFIX,
-	   notmuch_built_with ("compact") ? "true" : "false");
-    printf("%sfield_processor=%s\n",
-	   BUILT_WITH_PREFIX,
-	   notmuch_built_with ("field_processor") ? "true" : "false");
-    printf("%sretry_lock=%s\n",
-	   BUILT_WITH_PREFIX,
-	   notmuch_built_with ("retry_lock") ? "true" : "false");
+    printf ("%scompact=%s\n",
+	    BUILT_WITH_PREFIX,
+	    notmuch_built_with ("compact") ? "true" : "false");
+    printf ("%sfield_processor=%s\n",
+	    BUILT_WITH_PREFIX,
+	    notmuch_built_with ("field_processor") ? "true" : "false");
+    printf ("%sretry_lock=%s\n",
+	    BUILT_WITH_PREFIX,
+	    notmuch_built_with ("retry_lock") ? "true" : "false");
 }
 
 static int
@@ -1054,11 +1055,11 @@ _list_db_config (notmuch_config_t *config)
 	return EXIT_FAILURE;
 
     for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
-	printf("%s=%s\n", notmuch_config_list_key (list), notmuch_config_list_value(list));
+	printf ("%s=%s\n", notmuch_config_list_key (list), notmuch_config_list_value (list));
     }
     notmuch_config_list_destroy (list);
 
-   return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 static int
@@ -1115,8 +1116,8 @@ notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 		 notmuch_requested_db_uuid);
 
     /* skip at least subcommand argument */
-    argc-= opt_index;
-    argv+= opt_index;
+    argc -= opt_index;
+    argv += opt_index;
 
     if (argc < 1) {
 	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");

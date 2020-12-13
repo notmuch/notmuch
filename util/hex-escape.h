@@ -29,11 +29,11 @@ typedef enum hex_status {
 
 hex_status_t
 hex_encode (void *talloc_ctx, const char *in, char **out,
-            size_t *out_size);
+	    size_t *out_size);
 
 hex_status_t
 hex_decode (void *talloc_ctx, const char *in, char **out,
-            size_t *out_size);
+	    size_t *out_size);
 
 /*
  * Non-allocating hex decode to decode 's' in-place. The length of the

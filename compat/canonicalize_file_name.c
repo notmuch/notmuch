@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 char *
-canonicalize_file_name (const char * path)
+canonicalize_file_name (const char *path)
 {
 #ifdef PATH_MAX
-    char *resolved_path =  malloc (PATH_MAX+1);
+    char *resolved_path =  malloc (PATH_MAX + 1);
     if (resolved_path == NULL)
 	return NULL;
 

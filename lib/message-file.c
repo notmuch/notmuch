@@ -64,21 +64,37 @@ _notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
     if (unlikely (message == NULL))
 	return NULL;
 
-    message->filename = talloc_strdup (message, filename);
+    const char *prefix = notmuch_database_get_path (notmuch);
+    if (prefix == NULL)
+	goto FAIL;
+
+    if (*filename == '/') {
+	if (strncmp (filename, prefix, strlen(prefix)) != 0) {
+	    _notmuch_database_log (notmuch, "Error opening %s: path outside mail root\n",
+				   filename);
+	    errno = 0;
+	    goto FAIL;
+	}
+	message->filename = talloc_strdup (message, filename);
+    } else {
+	message->filename = talloc_asprintf(message, "%s/%s", prefix, filename);
+    }
+
     if (message->filename == NULL)
 	goto FAIL;
 
     talloc_set_destructor (message, _notmuch_message_file_destructor);
 
-    message->stream = g_mime_stream_gzfile_open (filename);
+    message->stream = g_mime_stream_gzfile_open (message->filename);
     if (message->stream == NULL)
 	goto FAIL;
 
     return message;
 
   FAIL:
-    _notmuch_database_log (notmuch, "Error opening %s: %s\n",
-			  filename, strerror (errno));
+    if (errno)
+	_notmuch_database_log (notmuch, "Error opening %s: %s\n",
+			       filename, strerror (errno));
     _notmuch_message_file_close (message);
 
     return NULL;
@@ -110,7 +126,7 @@ _is_mbox (GMimeStream *stream)
     bool ret = false;
 
     /* Is this mbox? */
-    if (g_mime_stream_read (stream, from_buf, sizeof (from_buf)) == sizeof(from_buf) &&
+    if (g_mime_stream_read (stream, from_buf, sizeof (from_buf)) == sizeof (from_buf) &&
 	strncmp (from_buf, "From ", 5) == 0)
 	ret = true;
 
@@ -201,7 +217,8 @@ _notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
  */
 
 static char *
-_extend_header (char *combined, const char *value) {
+_extend_header (char *combined, const char *value)
+{
     char *decoded;
 
     decoded = g_mime_utils_header_decode_text (NULL, value);
@@ -226,7 +243,7 @@ _extend_header (char *combined, const char *value) {
     } else {
 	combined = decoded;
     }
- DONE:
+  DONE:
     return combined;
 }
 
@@ -242,7 +259,7 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 	return NULL;
 
 
-    for (int i=0; i < g_mime_header_list_get_count (headers); i++) {
+    for (int i = 0; i < g_mime_header_list_get_count (headers); i++) {
 	const char *value;
 	GMimeHeader *g_header = g_mime_header_list_get_header_at (headers, i);
 
@@ -264,7 +281,7 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 
 const char *
 _notmuch_message_file_get_header (notmuch_message_file_t *message,
-				 const char *header)
+				  const char *header)
 {
     const char *value;
     char *decoded;
@@ -366,7 +383,7 @@ _notmuch_message_file_get_headers (notmuch_message_file_t *message_file,
 	message_id = talloc_asprintf (message_file, "notmuch-sha1-%s", sha1);
 	free (sha1);
     }
- DONE:
+  DONE:
     if (ret == NOTMUCH_STATUS_SUCCESS) {
 	if (from_out)
 	    *from_out = from;

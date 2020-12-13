@@ -53,6 +53,7 @@ NOTMUCH_BEGIN_DECLS
 #include "error_util.h"
 #include "string-util.h"
 #include "crypto.h"
+#include "repair.h"
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
@@ -60,7 +61,7 @@ NOTMUCH_BEGIN_DECLS
 # define DEBUG_QUERY 1
 #endif
 
-#define COMPILE_TIME_ASSERT(pred) ((void)sizeof(char[1 - 2*!(pred)]))
+#define COMPILE_TIME_ASSERT(pred) ((void) sizeof (char[1 - 2 * ! (pred)]))
 
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
@@ -69,11 +70,11 @@ NOTMUCH_BEGIN_DECLS
 #define _NOTMUCH_VALID_BIT(bit) \
     ((bit) >= 0 && ((unsigned long) bit) < CHAR_BIT * sizeof (unsigned long long))
 #define NOTMUCH_TEST_BIT(val, bit) \
-    (_NOTMUCH_VALID_BIT(bit) ? !!((val) & (1ull << (bit))) : 0)
+    (_NOTMUCH_VALID_BIT (bit) ? ! ! ((val) & (1ull << (bit))) : 0)
 #define NOTMUCH_SET_BIT(valp, bit) \
-    (_NOTMUCH_VALID_BIT(bit) ? (*(valp) |= (1ull << (bit))) : *(valp))
+    (_NOTMUCH_VALID_BIT (bit) ? (*(valp) |= (1ull << (bit))) : *(valp))
 #define NOTMUCH_CLEAR_BIT(valp,  bit) \
-    (_NOTMUCH_VALID_BIT(bit) ? (*(valp) &= ~(1ull << (bit))) : *(valp))
+    (_NOTMUCH_VALID_BIT (bit) ? (*(valp) &= ~(1ull << (bit))) : *(valp))
 
 #define unused(x) x __attribute__ ((unused))
 
@@ -83,12 +84,12 @@ NOTMUCH_BEGIN_DECLS
 /* these macros gain us a few percent of speed on gcc */
 #if (__GNUC__ >= 3)
 /* the strange !! is to ensure that __builtin_expect() takes either 0 or 1
-   as its first argument */
+ * as its first argument */
 #ifndef likely
-#define likely(x)   __builtin_expect(!!(x), 1)
+#define likely(x)   __builtin_expect (! ! (x), 1)
 #endif
 #ifndef unlikely
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#define unlikely(x) __builtin_expect (! ! (x), 0)
 #endif
 #else
 #ifndef likely
@@ -124,17 +125,17 @@ typedef enum {
 
 typedef enum _notmuch_private_status {
     /* First, copy all the public status values. */
-    NOTMUCH_PRIVATE_STATUS_SUCCESS = NOTMUCH_STATUS_SUCCESS,
-    NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY = NOTMUCH_STATUS_OUT_OF_MEMORY,
-    NOTMUCH_PRIVATE_STATUS_READ_ONLY_DATABASE = NOTMUCH_STATUS_READ_ONLY_DATABASE,
-    NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION = NOTMUCH_STATUS_XAPIAN_EXCEPTION,
-    NOTMUCH_PRIVATE_STATUS_FILE_NOT_EMAIL = NOTMUCH_STATUS_FILE_NOT_EMAIL,
-    NOTMUCH_PRIVATE_STATUS_NULL_POINTER = NOTMUCH_STATUS_NULL_POINTER,
-    NOTMUCH_PRIVATE_STATUS_TAG_TOO_LONG = NOTMUCH_STATUS_TAG_TOO_LONG,
-    NOTMUCH_PRIVATE_STATUS_UNBALANCED_FREEZE_THAW = NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
+    NOTMUCH_PRIVATE_STATUS_SUCCESS			= NOTMUCH_STATUS_SUCCESS,
+    NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY		= NOTMUCH_STATUS_OUT_OF_MEMORY,
+    NOTMUCH_PRIVATE_STATUS_READ_ONLY_DATABASE		= NOTMUCH_STATUS_READ_ONLY_DATABASE,
+    NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION		= NOTMUCH_STATUS_XAPIAN_EXCEPTION,
+    NOTMUCH_PRIVATE_STATUS_FILE_NOT_EMAIL		= NOTMUCH_STATUS_FILE_NOT_EMAIL,
+    NOTMUCH_PRIVATE_STATUS_NULL_POINTER			= NOTMUCH_STATUS_NULL_POINTER,
+    NOTMUCH_PRIVATE_STATUS_TAG_TOO_LONG			= NOTMUCH_STATUS_TAG_TOO_LONG,
+    NOTMUCH_PRIVATE_STATUS_UNBALANCED_FREEZE_THAW	= NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
 
     /* Then add our own private values. */
-    NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG = NOTMUCH_STATUS_LAST_STATUS,
+    NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG		= NOTMUCH_STATUS_LAST_STATUS,
     NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND,
     NOTMUCH_PRIVATE_STATUS_BAD_PREFIX,
 
@@ -150,14 +151,14 @@ typedef enum _notmuch_private_status {
  * Note that the function _internal_error does not return. Evaluating
  * to NOTMUCH_STATUS_SUCCESS is done purely to appease the compiler.
  */
-#define COERCE_STATUS(private_status, format, ...)			\
-    ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)\
-     ?									\
-     _internal_error (format " (%s).\n",				\
-		      ##__VA_ARGS__,					\
-		      __location__),					\
-     (notmuch_status_t) NOTMUCH_PRIVATE_STATUS_SUCCESS			\
-     :									\
+#define COERCE_STATUS(private_status, format, ...)                      \
+    ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS) \
+     ?                                                                  \
+     _internal_error (format " (%s).\n",                                \
+		      ##__VA_ARGS__,                                    \
+		      __location__),                                    \
+     (notmuch_status_t) NOTMUCH_PRIVATE_STATUS_SUCCESS                  \
+     :                                                                  \
      (notmuch_status_t) private_status)
 
 /* Flags shared by various lookup functions. */
@@ -167,7 +168,7 @@ typedef enum _notmuch_find_flags {
     NOTMUCH_FIND_LOOKUP = 0,
     /* If set, create the necessary document (or documents) if they
      * are missing.  Requires a read/write database. */
-    NOTMUCH_FIND_CREATE = 1<<0,
+    NOTMUCH_FIND_CREATE = 1 << 0,
 } notmuch_find_flags_t;
 
 typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
@@ -185,7 +186,7 @@ _find_prefix (const char *name);
 /* Lookup a prefix value by name, including possibly user defined prefixes
  */
 const char *
-_notmuch_database_prefix (notmuch_database_t  *notmuch, const char *name);
+_notmuch_database_prefix (notmuch_database_t *notmuch, const char *name);
 
 char *
 _notmuch_message_id_compressed (void *ctx, const char *message_id);
@@ -250,13 +251,16 @@ _notmuch_database_filename_to_direntry (void *ctx,
 /* directory.cc */
 
 notmuch_directory_t *
-_notmuch_directory_create (notmuch_database_t *notmuch,
-			   const char *path,
-			   notmuch_find_flags_t flags,
-			   notmuch_status_t *status_ret);
+_notmuch_directory_find_or_create (notmuch_database_t *notmuch,
+				   const char *path,
+				   notmuch_find_flags_t flags,
+				   notmuch_status_t *status_ret);
 
 unsigned int
 _notmuch_directory_get_document_id (notmuch_directory_t *directory);
+
+notmuch_database_mode_t
+_notmuch_database_mode (notmuch_database_t *notmuch);
 
 /* message.cc */
 
@@ -436,7 +440,7 @@ _notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
  */
 const char *
 _notmuch_message_file_get_header (notmuch_message_file_t *message,
-				 const char *header);
+				  const char *header);
 
 notmuch_status_t
 _notmuch_message_file_get_headers (notmuch_message_file_t *message_file,
@@ -568,7 +572,7 @@ void
 _notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
 
 const char *
-_notmuch_message_get_thread_id_only(notmuch_message_t *message);
+_notmuch_message_get_thread_id_only (notmuch_message_t *message);
 
 size_t _notmuch_message_get_thread_depth (notmuch_message_t *message);
 
@@ -621,10 +625,10 @@ void
 _notmuch_string_list_sort (notmuch_string_list_t *list);
 
 const notmuch_string_list_t *
-_notmuch_message_get_references(notmuch_message_t *message);
+_notmuch_message_get_references (notmuch_message_t *message);
 
 /* string-map.c */
-typedef struct _notmuch_string_map  notmuch_string_map_t;
+typedef struct _notmuch_string_map notmuch_string_map_t;
 typedef struct _notmuch_string_map_iterator notmuch_string_map_iterator_t;
 notmuch_string_map_t *
 _notmuch_string_map_create (const void *ctx);
@@ -704,7 +708,7 @@ NOTMUCH_END_DECLS
  * template function for this to maintain type safety, and redefine
  * talloc_steal to use it.
  */
-#if !(__GNUC__ >= 3)
+#if ! (__GNUC__ >= 3)
 template <class T> T *
 _notmuch_talloc_steal (const void *new_ctx, const T *ptr)
 {

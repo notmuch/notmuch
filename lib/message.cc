@@ -69,10 +69,10 @@ struct maildir_flag_tag {
 
 /* ASCII ordered table of Maildir flags and associated tags */
 static struct maildir_flag_tag flag2tag[] = {
-    { 'D', "draft",   false},
-    { 'F', "flagged", false},
-    { 'P', "passed",  false},
-    { 'R', "replied", false},
+    { 'D', "draft",   false },
+    { 'F', "flagged", false },
+    { 'P', "passed",  false },
+    { 'R', "replied", false },
     { 'S', "unread",  true }
 };
 
@@ -88,6 +88,18 @@ _notmuch_message_destructor (notmuch_message_t *message)
     message->doc.~Document ();
 
     return 0;
+}
+
+#define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error) {
+    notmuch_database_t *notmuch = notmuch_message_get_database (message);
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred at %s: %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
 }
 
 static notmuch_message_t *
@@ -263,7 +275,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	return NULL;
     }
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable.");
 
     try {
@@ -274,8 +286,8 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred creating message: %s\n",
-		 error.get_msg().c_str());
+	_notmuch_database_log (notmuch_message_get_database (message), "A Xapian exception occurred creating message: %s\n",
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	return NULL;
@@ -306,10 +318,10 @@ _notmuch_message_get_term (notmuch_message_t *message,
 	return NULL;
 
     const std::string &term = *i;
-    if (strncmp (term.c_str(), prefix, prefix_len))
+    if (strncmp (term.c_str (), prefix, prefix_len))
 	return NULL;
 
-    value = talloc_strdup (message, term.c_str() + prefix_len);
+    value = talloc_strdup (message, term.c_str () + prefix_len);
 
 #if DEBUG_DATABASE_SANITY
     i++;
@@ -350,32 +362,32 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 	return;
 
     const char *thread_prefix = _find_prefix ("thread"),
-	*tag_prefix = _find_prefix ("tag"),
-	*id_prefix = _find_prefix ("id"),
-	*type_prefix = _find_prefix ("type"),
-	*filename_prefix = _find_prefix ("file-direntry"),
-	*property_prefix = _find_prefix ("property"),
-	*reference_prefix = _find_prefix ("reference"),
-	*replyto_prefix = _find_prefix ("replyto");
+	       *tag_prefix = _find_prefix ("tag"),
+	       *id_prefix = _find_prefix ("id"),
+	       *type_prefix = _find_prefix ("type"),
+	       *filename_prefix = _find_prefix ("file-direntry"),
+	       *property_prefix = _find_prefix ("property"),
+	       *reference_prefix = _find_prefix ("reference"),
+	       *replyto_prefix = _find_prefix ("replyto");
 
     /* We do this all in a single pass because Xapian decompresses the
      * term list every time you iterate over it.  Thus, while this is
      * slightly more costly than looking up individual fields if only
      * one field of the message object is actually used, it's a huge
      * win as more fields are used. */
-    for (int count=0; count < 3; count++) {
+    for (int count = 0; count < 3; count++) {
 	try {
 	    i = message->doc.termlist_begin ();
 	    end = message->doc.termlist_end ();
 
 	    /* Get thread */
-	    if (!message->thread_id)
+	    if (! message->thread_id)
 		message->thread_id =
 		    _notmuch_message_get_term (message, i, end, thread_prefix);
 
 	    /* Get tags */
 	    assert (strcmp (thread_prefix, tag_prefix) < 0);
-	    if (!message->tag_list) {
+	    if (! message->tag_list) {
 		message->tag_list =
 		    _notmuch_database_get_terms_with_prefix (message, i, end,
 							     tag_prefix);
@@ -384,7 +396,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 
 	    /* Get id */
 	    assert (strcmp (tag_prefix, id_prefix) < 0);
-	    if (!message->message_id)
+	    if (! message->message_id)
 		message->message_id =
 		    _notmuch_message_get_term (message, i, end, id_prefix);
 
@@ -407,7 +419,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 	     * expand them to full file names when needed in
 	     * _notmuch_message_ensure_filename_list. */
 	    assert (strcmp (type_prefix, filename_prefix) < 0);
-	    if (!message->filename_term_list && !message->filename_list)
+	    if (! message->filename_term_list && ! message->filename_list)
 		message->filename_term_list =
 		    _notmuch_database_get_terms_with_prefix (message, i, end,
 							     filename_prefix);
@@ -415,14 +427,14 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 
 	    /* Get property terms. Mimic the setup with filenames above */
 	    assert (strcmp (filename_prefix, property_prefix) < 0);
-	    if (!message->property_map && !message->property_term_list)
+	    if (! message->property_map && ! message->property_term_list)
 		message->property_term_list =
 		    _notmuch_database_get_terms_with_prefix (message, i, end,
-							 property_prefix);
+							     property_prefix);
 
 	    /* get references */
 	    assert (strcmp (property_prefix, reference_prefix) < 0);
-	    if (!message->reference_list) {
+	    if (! message->reference_list) {
 		message->reference_list =
 		    _notmuch_database_get_terms_with_prefix (message, i, end,
 							     reference_prefix);
@@ -430,14 +442,14 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 
 	    /* Get reply to */
 	    assert (strcmp (property_prefix, replyto_prefix) < 0);
-	    if (!message->in_reply_to)
+	    if (! message->in_reply_to)
 		message->in_reply_to =
 		    _notmuch_message_get_term (message, i, end, replyto_prefix);
 
 
 	    /* It's perfectly valid for a message to have no In-Reply-To
 	     * header. For these cases, we return an empty string. */
-	    if (!message->in_reply_to)
+	    if (! message->in_reply_to)
 		message->in_reply_to = talloc_strdup (message, "");
 
 	    /* all the way without an exception */
@@ -447,9 +459,6 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 	    if (status != NOTMUCH_STATUS_SUCCESS)
 		INTERNAL_ERROR ("unhandled error from notmuch_database_reopen: %s\n",
 				notmuch_status_to_string (status));
-	} catch (const Xapian::Error &error) {
-	    INTERNAL_ERROR ("A Xapian exception occurred fetching message metadata: %s\n",
-			    error.get_msg().c_str());
 	}
     }
     message->last_view = message->notmuch->view;
@@ -507,8 +516,14 @@ _notmuch_message_get_doc_id (notmuch_message_t *message)
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_metadata (message, message->message_id);
-    if (!message->message_id)
+    try {
+	_notmuch_message_ensure_metadata (message, message->message_id);
+    } catch (const Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
+
+    if (! message->message_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no message ID.\n",
 			message->doc_id);
     return message->message_id;
@@ -553,13 +568,11 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 	     * it could just mean we didn't record the header. */
 	    if ((message->notmuch->features &
 		 NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES) ||
-		! value.empty())
+		! value.empty ())
 		return talloc_strdup (message, value.c_str ());
 
 	} catch (Xapian::Error &error) {
-	    _notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred when reading header: %s\n",
-		     error.get_msg().c_str());
-	    message->notmuch->exception_reported = true;
+	    LOG_XAPIAN_EXCEPTION (message, error);
 	    return NULL;
 	}
     }
@@ -589,8 +602,13 @@ _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_metadata (message, message->thread_id);
-    if (!message->thread_id)
+    try {
+	_notmuch_message_ensure_metadata (message, message->thread_id);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
+    if (! message->thread_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no thread ID.\n",
 			message->doc_id);
     return message->thread_id;
@@ -604,7 +622,8 @@ _notmuch_message_add_reply (notmuch_message_t *message,
 }
 
 size_t
-_notmuch_message_get_thread_depth (notmuch_message_t *message) {
+_notmuch_message_get_thread_depth (notmuch_message_t *message)
+{
     return message->thread_depth;
 }
 
@@ -618,7 +637,7 @@ _notmuch_message_label_depths (notmuch_message_t *message,
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
 	notmuch_message_t *child = notmuch_messages_get (messages);
-	_notmuch_message_label_depths (child, depth+1);
+	_notmuch_message_label_depths (child, depth + 1);
     }
 }
 
@@ -730,7 +749,7 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 	type_prefix = _find_prefix ("type");
 
     /* Make sure we have the data to restore to Xapian*/
-    _notmuch_message_ensure_metadata (message,NULL);
+    _notmuch_message_ensure_metadata (message, NULL);
 
     /* Empirically, it turns out to be faster to remove all the terms,
      * and add back the ones we want. */
@@ -750,11 +769,11 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 
 	const char *tag = notmuch_tags_get (tags);
 
-	if (STRNCMP_LITERAL (tag, "encrypted") != 0 &&
-	    STRNCMP_LITERAL (tag, "signed") != 0 &&
-	    STRNCMP_LITERAL (tag, "attachment") != 0) {
+	if (strcmp (tag, "encrypted") != 0 &&
+	    strcmp (tag, "signed") != 0 &&
+	    strcmp (tag, "attachment") != 0) {
 	    std::string term = tag_prefix + tag;
-	    message->doc.add_term(term);
+	    message->doc.add_term (term);
 	}
     }
 
@@ -764,10 +783,10 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
     for (list = notmuch_message_get_properties (message, "", false);
 	 notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
 	std::string term = property_prefix +
-	    notmuch_message_properties_key(list) + "=" +
-	    notmuch_message_properties_value(list);
+			   notmuch_message_properties_key (list) + "=" +
+			   notmuch_message_properties_value (list);
 
-	message->doc.add_term(term);
+	message->doc.add_term (term);
     }
 
     notmuch_message_properties_destroy (list);
@@ -777,7 +796,8 @@ _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 
 
 /* Return true if p points at "new" or "cur". */
-static bool is_maildir (const char *p)
+static bool
+is_maildir (const char *p)
 {
     return strcmp (p, "cur") == 0 || strcmp (p, "new") == 0;
 }
@@ -972,7 +992,7 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 
     status = _notmuch_database_filename_to_direntry (
 	local, message->notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
-    if (status || !direntry)
+    if (status || ! direntry)
 	return status;
 
     /* Unlink this file from its parent directory. */
@@ -1041,7 +1061,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
     message->filename_list = _notmuch_string_list_create (message);
     node = message->filename_term_list->head;
 
-    if (!node) {
+    if (! node) {
 	/* A message document created by an old version of notmuch
 	 * (prior to rename support) will have the filename in the
 	 * data of the document rather than as a file-direntry term.
@@ -1102,14 +1122,18 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     if (message->filename_list == NULL)
 	return NULL;
 
     if (message->filename_list->head == NULL ||
-	message->filename_list->head->string == NULL)
-    {
+	message->filename_list->head->string == NULL) {
 	INTERNAL_ERROR ("message with no filename");
     }
 
@@ -1119,7 +1143,12 @@ notmuch_message_get_filename (notmuch_message_t *message)
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     return _notmuch_filenames_create (message, message->filename_list);
 }
@@ -1127,20 +1156,50 @@ notmuch_message_get_filenames (notmuch_message_t *message)
 int
 notmuch_message_count_files (notmuch_message_t *message)
 {
-    _notmuch_message_ensure_filename_list (message);
+    try {
+	_notmuch_message_ensure_filename_list (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return -1;
+    }
 
     return _notmuch_string_list_length (message->filename_list);
+}
+
+notmuch_status_t
+notmuch_message_get_flag_st (notmuch_message_t *message,
+			     notmuch_message_flag_t flag,
+			     notmuch_bool_t *is_set)
+{
+    if (! is_set)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    try {
+	if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
+	    ! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
+	    _notmuch_message_ensure_metadata (message, NULL);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    *is_set = NOTMUCH_TEST_BIT (message->flags, flag);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag)
 {
-    if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
-	! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
-	_notmuch_message_ensure_metadata (message, NULL);
+    notmuch_bool_t is_set;
+    notmuch_status_t status;
 
-    return NOTMUCH_TEST_BIT (message->flags, flag);
+    status = notmuch_message_get_flag_st (message, flag, &is_set);
+
+    if (status)
+	return FALSE;
+    else
+	return is_set;
 }
 
 void
@@ -1162,9 +1221,7 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	_notmuch_database_log(notmuch_message_get_database (message), "A Xapian exception occurred when reading date: %s\n",
-		 error.get_msg().c_str());
-	message->notmuch->exception_reported = true;
+	LOG_XAPIAN_EXCEPTION (message, error);
 	return 0;
     }
 
@@ -1179,7 +1236,12 @@ notmuch_message_get_tags (notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
 
-    _notmuch_message_ensure_metadata (message, message->tag_list);
+    try {
+	_notmuch_message_ensure_metadata (message, message->tag_list);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NULL;
+    }
 
     tags = _notmuch_tags_create (message, message->tag_list);
     /* _notmuch_tags_create steals the reference to the tag_list, but
@@ -1188,7 +1250,7 @@ notmuch_message_get_tags (notmuch_message_t *message)
      * possible to modify the message tags (which talloc_unlink's the
      * current list from the message) while still iterating because
      * the iterator will keep the current list alive. */
-    if (!talloc_reference (message, message->tag_list))
+    if (! talloc_reference (message, message->tag_list))
 	return NULL;
 
     return tags;
@@ -1202,11 +1264,11 @@ _notmuch_message_get_author (notmuch_message_t *message)
 
 void
 _notmuch_message_set_author (notmuch_message_t *message,
-			    const char *author)
+			     const char *author)
 {
     if (message->author)
-	talloc_free(message->author);
-    message->author = talloc_strdup(message, author);
+	talloc_free (message->author);
+    message->author = talloc_strdup (message, author);
     return;
 }
 
@@ -1260,9 +1322,7 @@ _notmuch_message_upgrade_last_mod (notmuch_message_t *message)
 void
 _notmuch_message_sync (notmuch_message_t *message)
 {
-    Xapian::WritableDatabase *db;
-
-    if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (_notmuch_database_mode (message->notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
     if (! message->modified)
@@ -1280,8 +1340,8 @@ _notmuch_message_sync (notmuch_message_t *message)
 				    _notmuch_database_new_revision (
 					message->notmuch)));
 
-    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
-    db->replace_document (message->doc_id, message->doc);
+    message->notmuch->writable_xapian_db->
+	replace_document (message->doc_id, message->doc);
     message->modified = false;
 }
 
@@ -1291,7 +1351,6 @@ notmuch_status_t
 _notmuch_message_delete (notmuch_message_t *message)
 {
     notmuch_status_t status;
-    Xapian::WritableDatabase *db;
     const char *mid, *tid, *query_string;
     notmuch_message_t *ghost;
     notmuch_private_status_t private_status;
@@ -1308,8 +1367,7 @@ _notmuch_message_delete (notmuch_message_t *message)
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-    db->delete_document (message->doc_id);
+    message->notmuch->writable_xapian_db->delete_document (message->doc_id);
 
     /* if this was a ghost to begin with, we are done */
     private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
@@ -1339,8 +1397,8 @@ _notmuch_message_delete (notmuch_message_t *message)
 		_notmuch_message_sync (ghost);
 	} else if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
 	    /* this is deeply weird, and we should not have gotten
-	       into this state.  is there a better error message to
-	       return here? */
+	     * into this state.  is there a better error message to
+	     * return here? */
 	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 	}
 
@@ -1358,8 +1416,8 @@ _notmuch_message_delete (notmuch_message_t *message)
 		message = notmuch_messages_get (messages);
 		status = _notmuch_message_delete (message);
 		if (status) /* we'll report the last failure we see;
-			     * if there is more than one failure, we
-			     * forget about previous ones */
+					 * if there is more than one failure, we
+					 * forget about previous ones */
 		    last_error = status;
 		notmuch_message_destroy (message);
 		notmuch_messages_move_to_next (messages);
@@ -1535,7 +1593,7 @@ _notmuch_message_has_term (notmuch_message_t *message,
 	Xapian::TermIterator i = message->doc.termlist_begin ();
 	i.skip_to (term);
 	if (i != message->doc.termlist_end () &&
-	    !strcmp ((*i).c_str (), term))
+	    ! strcmp ((*i).c_str (), term))
 	    out = true;
     } catch (Xapian::Error &error) {
 	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
@@ -1552,24 +1610,31 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
     notmuch_private_status_t private_status;
     notmuch_status_t status;
 
-    status = _notmuch_database_ensure_writable (message->notmuch);
-    if (status)
-	return status;
+    try {
+	status = _notmuch_database_ensure_writable (message->notmuch);
+	if (status)
+	    return status;
 
-    if (tag == NULL)
-	return NOTMUCH_STATUS_NULL_POINTER;
+	if (tag == NULL)
+	    return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (strlen (tag) > NOTMUCH_TAG_MAX)
-	return NOTMUCH_STATUS_TAG_TOO_LONG;
+	if (strlen (tag) > NOTMUCH_TAG_MAX)
+	    return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    private_status = _notmuch_message_add_term (message, "tag", tag);
-    if (private_status) {
-	INTERNAL_ERROR ("_notmuch_message_add_term return unexpected value: %d\n",
-			private_status);
+	private_status = _notmuch_message_add_term (message, "tag", tag);
+	if (private_status) {
+	    return COERCE_STATUS (private_status,
+				  "_notmuch_message_remove_term return unexpected value: %d\n",
+				  private_status);
+	}
+
+	if (! message->frozen)
+	    _notmuch_message_sync (message);
+
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
-
-    if (! message->frozen)
-	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -1580,24 +1645,30 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     notmuch_private_status_t private_status;
     notmuch_status_t status;
 
-    status = _notmuch_database_ensure_writable (message->notmuch);
-    if (status)
-	return status;
+    try {
+	status = _notmuch_database_ensure_writable (message->notmuch);
+	if (status)
+	    return status;
 
-    if (tag == NULL)
-	return NOTMUCH_STATUS_NULL_POINTER;
+	if (tag == NULL)
+	    return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (strlen (tag) > NOTMUCH_TAG_MAX)
-	return NOTMUCH_STATUS_TAG_TOO_LONG;
+	if (strlen (tag) > NOTMUCH_TAG_MAX)
+	    return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    private_status = _notmuch_message_remove_term (message, "tag", tag);
-    if (private_status) {
-	INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			private_status);
+	private_status = _notmuch_message_remove_term (message, "tag", tag);
+	if (private_status) {
+	    return COERCE_STATUS (private_status,
+				  "_notmuch_message_remove_term return unexpected value: %d\n",
+				  private_status);
+	}
+
+	if (! message->frozen)
+	    _notmuch_message_sync (message);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
-
-    if (! message->frozen)
-	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -1635,15 +1706,14 @@ _filename_is_in_maildir (const char *filename)
     dir = slash + 1;
 
     if (STRNCMP_LITERAL (dir, "cur/") == 0 ||
-	STRNCMP_LITERAL (dir, "new/") == 0)
-    {
+	STRNCMP_LITERAL (dir, "new/") == 0) {
 	return dir;
     }
 
     return NULL;
 }
 
-static void
+static notmuch_status_t
 _ensure_maildir_flags (notmuch_message_t *message, bool force)
 {
     const char *flags;
@@ -1658,11 +1728,12 @@ _ensure_maildir_flags (notmuch_message_t *message, bool force)
 	    message->maildir_flags = NULL;
 	}
     }
-
-    for (filenames = notmuch_message_get_filenames (message);
+    filenames = notmuch_message_get_filenames (message);
+    if (! filenames)
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    for (;
 	 notmuch_filenames_valid (filenames);
-	 notmuch_filenames_move_to_next (filenames))
-    {
+	 notmuch_filenames_move_to_next (filenames)) {
 	filename = notmuch_filenames_get (filenames);
 	dir = _filename_is_in_maildir (filename);
 
@@ -1686,13 +1757,37 @@ _ensure_maildir_flags (notmuch_message_t *message, bool force)
     }
     if (seen_maildir_info)
 	message->maildir_flags = combined_flags;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag)
 {
-    _ensure_maildir_flags (message, false);
-    return message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
+    notmuch_status_t status;
+    notmuch_bool_t ret;
+    status = notmuch_message_has_maildir_flag_st (message, flag, &ret);
+    if (status)
+	return FALSE;
+
+    return ret;
+}
+
+notmuch_status_t
+notmuch_message_has_maildir_flag_st (notmuch_message_t *message,
+				     char flag,
+				     notmuch_bool_t *is_set)
+{
+    notmuch_status_t status;
+    
+    if (! is_set)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    status = _ensure_maildir_flags (message, false);
+    if (status)
+	return status;
+    
+    *is_set =  message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
@@ -1701,7 +1796,9 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     notmuch_status_t status;
     unsigned i;
 
-    _ensure_maildir_flags (message, true);
+    status = _ensure_maildir_flags (message, true);
+    if (status)
+	return status;
     /* If none of the filenames have any maildir info field (not even
      * an empty info with no flags set) then there's no information to
      * go on, so do nothing. */
@@ -1712,11 +1809,10 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     if (status)
 	return status;
 
-    for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
+    for (i = 0; i < ARRAY_SIZE (flag2tag); i++) {
 	if ((strchr (message->maildir_flags, flag2tag[i].flag) != NULL)
 	    ^
-	    flag2tag[i].inverse)
-	{
+	    flag2tag[i].inverse) {
 	    status = notmuch_message_add_tag (message, flag2tag[i].tag);
 	} else {
 	    status = notmuch_message_remove_tag (message, flag2tag[i].tag);
@@ -1751,8 +1847,7 @@ _get_maildir_flag_actions (notmuch_message_t *message,
     /* First, find flags for all set tags. */
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
+	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 
 	for (i = 0; i < ARRAY_SIZE (flag2tag); i++) {
@@ -1802,7 +1897,7 @@ _get_maildir_flag_actions (notmuch_message_t *message,
  * non-ASCII ordering of flags), this function will return NULL
  * (meaning that renaming would not be safe and should not occur).
  */
-static char*
+static char *
 _new_maildir_filename (void *ctx,
 		       const char *filename,
 		       const char *flags_to_set,
@@ -1822,13 +1917,12 @@ _new_maildir_filename (void *ctx,
     info = strstr (filename, ":2,");
 
     if (info == NULL) {
-	info = filename + strlen(filename);
+	info = filename + strlen (filename);
     } else {
 	/* Loop through existing flags in filename. */
 	for (flags = info + 3, last_flag = 0;
 	     *flags;
-	     last_flag = flag, flags++)
-	{
+	     last_flag = flag, flags++) {
 	    flag = *flags;
 
 	    /* Original flags not in ASCII order. Abort. */
@@ -1836,7 +1930,7 @@ _new_maildir_filename (void *ctx,
 		return NULL;
 
 	    /* Non-ASCII flag. Abort. */
-	    if (flag > sizeof(flag_map) - 1)
+	    if (flag > sizeof (flag_map) - 1)
 		return NULL;
 
 	    /* Repeated flag value. Abort. */
@@ -1870,7 +1964,7 @@ _new_maildir_filename (void *ctx,
     /* Messages in new/ without maildir info can be kept in new/ if no
      * flags have changed. */
     dir = (char *) _filename_is_in_maildir (filename);
-    if (dir && STRNCMP_LITERAL (dir, "new/") == 0 && !*info && !flags_changed)
+    if (dir && STRNCMP_LITERAL (dir, "new/") == 0 && ! *info && ! flags_changed)
 	return talloc_strdup (ctx, filename);
 
     filename_new = (char *) talloc_size (ctx,
@@ -1885,8 +1979,7 @@ _new_maildir_filename (void *ctx,
     strcat (filename_new, ":2,");
 
     s = filename_new + strlen (filename_new);
-    for (i = 0; i < sizeof (flag_map); i++)
-    {
+    for (i = 0; i < sizeof (flag_map); i++) {
 	if (flag_map[i]) {
 	    *s = i;
 	    s++;
@@ -1915,8 +2008,7 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 
     for (filenames = notmuch_message_get_filenames (message);
 	 notmuch_filenames_valid (filenames);
-	 notmuch_filenames_move_to_next (filenames))
-    {
+	 notmuch_filenames_move_to_next (filenames)) {
 	filename = notmuch_filenames_get (filenames);
 
 	if (! _filename_is_in_maildir (filename))
@@ -1975,17 +2067,20 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     status = _notmuch_database_ensure_writable (message->notmuch);
     if (status)
 	return status;
+    tags = notmuch_message_get_tags (message);
+    if (! tags)
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 
-    for (tags = notmuch_message_get_tags (message);
+    for (;
 	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
+	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 
 	private_status = _notmuch_message_remove_term (message, "tag", tag);
 	if (private_status) {
-	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			    private_status);
+	    return COERCE_STATUS (private_status,
+				   "_notmuch_message_remove_term return unexpected value: %d\n",
+				   private_status);
 	}
     }
 
@@ -2057,8 +2152,8 @@ _notmuch_message_ensure_property_map (notmuch_message_t *message)
 	const char *key;
 	char *value;
 
-	value = strchr(node->string, '=');
-	if (!value)
+	value = strchr (node->string, '=');
+	if (! value)
 	    INTERNAL_ERROR ("malformed property term");
 
 	*value = '\0';
@@ -2105,9 +2200,11 @@ notmuch_message_reindex (notmuch_message_t *message,
 
     /* Save in case we need to delete message */
     orig_thread_id = notmuch_message_get_thread_id (message);
-    if (!orig_thread_id) {
-	/* XXX TODO: make up new error return? */
-	INTERNAL_ERROR ("message without thread-id");
+    if (! orig_thread_id) {
+	/* the following is correct as long as there is only one reason
+	   n_m_get_thread_id returns NULL
+	*/
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
     /* strdup it because the metadata may be invalidated */
@@ -2123,7 +2220,7 @@ notmuch_message_reindex (notmuch_message_t *message,
 
     private_status = _notmuch_message_remove_indexed_terms (message);
     if (private_status) {
-	ret = COERCE_STATUS(private_status, "error removing terms");
+	ret = COERCE_STATUS (private_status, "error removing terms");
 	goto DONE;
     }
 
@@ -2194,7 +2291,7 @@ notmuch_message_reindex (notmuch_message_t *message,
 	_notmuch_message_sync (message);
     }
 
- DONE:
+  DONE:
     if (message_file)
 	_notmuch_message_file_close (message_file);
 

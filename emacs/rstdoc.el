@@ -24,7 +24,6 @@
 ;;
 
 ;;; Commentary:
-;;
 
 ;; Rstdoc provides a facility to extract all of the docstrings defined in
 ;; an elisp source file. Usage:
@@ -33,16 +32,15 @@
 
 ;;; Code:
 
-(provide 'rstdoc)
-
 (defun rstdoc-batch-extract ()
-  "Extract docstrings to and from the files on the command line"
+  "Extract docstrings to and from the files on the command line."
   (apply #'rstdoc-extract command-line-args-left))
 
 (defun rstdoc-extract (in-file out-file)
-  "Write docstrings from IN-FILE to OUT-FILE"
+  "Write docstrings from IN-FILE to OUT-FILE."
   (load-file in-file)
   (let* ((definitions (cdr (assoc (expand-file-name in-file) load-history)))
+	 (text-quoting-style 'grave)
 	 (doc-hash (make-hash-table :test 'eq)))
     (mapc
      (lambda (elt)
@@ -63,14 +61,18 @@
 
 (defun rstdoc--insert-docstring (symbol docstring)
   (insert (format "\n.. |docstring::%s| replace::\n" symbol))
-  (insert (replace-regexp-in-string "^" "    " (rstdoc--rst-quote-string docstring)))
+  (insert (replace-regexp-in-string "^" "    "
+				    (rstdoc--rst-quote-string docstring)))
   (insert "\n"))
 
 (defvar rst--escape-alist
-  '( ("\\\\='" . "\\\\'")
-     ("\\([^\\]\\)'" . "\\1`")
-     ("^[[:space:]\t]*$" . "|br|")
-     ("^[[:space:]\t]" . "|indent| "))
+  '( ("\\\\='" . "\001")
+     ("`\\([^\n`']*\\)[`']" . "\002\\1\002") ;; good enough for now...
+     ("`" . "\\\\`")
+     ("\001" . "'")
+     ("\002" . "`")
+     ("^[[:space:]]*$" . "|br|")
+     ("^[[:space:]]" . "|indent| "))
     "list of (regex . replacement) pairs")
 
 (defun rstdoc--rst-quote-string (str)
@@ -81,5 +83,7 @@
       (while (re-search-forward (car pair) nil t)
 	(replace-match (cdr pair))))
     (buffer-substring (point-min) (point-max))))
+
+(provide 'rstdoc)
 
 ;;; rstdoc.el ends here

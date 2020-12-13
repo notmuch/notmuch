@@ -1,3 +1,154 @@
+Notmuch 0.31.2 (2020-11-08)
+===========================
+
+Build
+-----
+
+Catch one more occurence of "version" in the build system, which
+caused the file to be regenerated in the release tarball.
+
+Notmuch 0.31.1 (2020-11-08)
+===========================
+
+Library
+-------
+
+Fix a memory initialization bug in notmuch_database_get_config_list.
+
+Build
+-----
+
+Rename file 'version' to 'version.txt'. The old file name conflicted
+with a C++ header for some compilers.
+
+Replace use of coreutils `realpath` in configure.
+
+Notmuch 0.31 (2020-09-05)
+=========================
+
+Emacs
+-----
+
+Notmuch now supports Emacs 27.1. You may need to set
+`mml-secure-openpgp-sign-with-sender` and/or
+`mml-secure-smime-sign-with-sender` to continue signing messages.
+
+The minimum supported major version of GNU Emacs is now 25.1.
+
+Add support for moving between threads after notmuch-tree-from-search-thread.
+
+New `notmuch-unthreaded` mode (added in Notmuch 0.30)
+
+  Unthreaded view is a mode where each matching message is shown on a
+  separate line.
+
+  The main key entries to unthreaded view are
+
+  'u' enter a query to view in unthreaded mode (works in hello,
+      search, show and tree mode)
+
+  'U' view the current query in unthreaded mode (works from search,
+      show and tree)
+
+  Saved searches can also specify that they should open in unthreaded
+  view.
+
+  Currently it is not possible to specify the sort order: it will
+  always be newest first.
+
+Notmuch-Mutt
+------------
+
+The shell pipeline executed by notmuch-mutt, which symlinked matched
+files to a maildir for mutt to access is replaced with internal perl
+processing. This search operation is now more portable, and somewhat
+faster.
+
+Library
+-------
+
+Improve exception handling in the library. This should
+largely eliminate terminations inside the library due to uncaught
+exceptions or internal errors.  No doubt there are a few uncovered
+code paths still; please report them as bugs.
+
+Add `notmuch_message_get_flag_st` and
+`notmuch_message_has_maildir_flag_st`, and deprecate the existing
+non-status providing versions.
+
+Move memory de-allocation from `notmuch_database_close` to
+`notmuch_database_destroy`.
+
+Handle relative filenames in `notmuch_database_index_file`, as
+promised in the documentation.
+
+Python Bindings
+---------------
+
+Documentation for the python bindings is merged into the main
+sphinx-doc documentation tree. The merged documentation can be built
+with e.g. `make sphinx-html`
+
+Dependencies
+------------
+
+We now support building notmuch against Xapian 1.5 (the current
+development version).
+
+Test Suite
+----------
+
+Test suite fixes for compatibility with Emacs 27.1.
+
+Build System
+------------
+
+Man pages are now compressed reproducibly.
+
+Notmuch 0.30 (2020-07-10)
+=========================
+
+S/MIME
+------
+
+Handle S/MIME (PKCS#7) messages -- one-part signed messages, encrypted
+messages, and multilayer messages. Treat them symmetrically to
+OpenPGP messages. This includes handling protected headers
+gracefully.
+
+If you're using Notmuch with S/MIME, you currently need to configure
+gpgsm appropriately.
+
+Mixed-up MIME Repair
+--------------------
+
+Detect and automatically repair a common form of message mangling
+created by Microsoft Exchange (see index.repaired=mixedup in
+notmuch-properties(7)).
+
+Protected Headers
+-----------------
+
+Avoid indexing the legacy-display part of an encrypted message that
+has protected headers (see
+index.repaired=skip-protected-headers-legacy-display in
+notmuch-properties(7)).
+
+Python
+------
+
+Drop support for python2, focus on python3.
+
+Introduce new CFFI-based python bindings in the python module named
+"notmuch2".  Officially deprecate (but still support) the older
+"notmuch" module.
+
+Dependencies
+------------
+
+Support for Xapian 1.2 is removed. The minimum supported version of
+Xapian is now 1.4.0.
+
 Notmuch 0.29.3 (2019-11-27)
 ===========================
 
@@ -72,7 +223,7 @@ information about cryptographic protections for the Subject header.
 Emacs
 -----
 
-Optionally check for missing attachements in outgoing messages (see
+Optionally check for missing attachments in outgoing messages (see
 function `notmuch-mua-attachment-check`).
 
 Bind `B` to browse URLs in current message.

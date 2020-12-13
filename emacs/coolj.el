@@ -1,6 +1,6 @@
 ;;; coolj.el --- automatically wrap long lines  -*- coding:utf-8 -*-
 
-;; Copyright (C) 2000, 2001, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2004-2009 Free Software Foundation, Inc.
 
 ;; Authors:    Kai Grossjohann <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 ;;             Alex Schroeder <alex@gnu.org>
@@ -107,12 +107,12 @@ not need to be wrapped, move point to the next line and return t."
 If the line should not be broken, return nil; point remains on the
 line."
   (move-to-column fill-column)
-  (if (and (re-search-forward "[^ ]" (line-end-position) 1)
-           (> (current-column) fill-column))
-      ;; This line is too long.  Can we break it?
-      (or (coolj-find-break-backward prefix)
-          (progn (move-to-column fill-column)
-                 (coolj-find-break-forward)))))
+  (and (re-search-forward "[^ ]" (line-end-position) 1)
+       (> (current-column) fill-column)
+       ;; This line is too long.  Can we break it?
+       (or (coolj-find-break-backward prefix)
+	   (progn (move-to-column fill-column)
+		  (coolj-find-break-forward)))))
 
 (defun coolj-find-break-backward (prefix)
   "Move point backward to the first available breakpoint and return t.
@@ -135,12 +135,12 @@ If no breakpoint is found, return nil."
 If no break point is found, return nil."
   (and (search-forward " " (line-end-position) 1)
        (progn (skip-chars-forward " " (line-end-position))
-              (null (eolp)))
+	      (null (eolp)))
        (if (and fill-nobreak-predicate
-                (run-hook-with-args-until-success
-                 'fill-nobreak-predicate))
-           (coolj-find-break-forward)
-         t)))
+		(run-hook-with-args-until-success
+		 'fill-nobreak-predicate))
+	   (coolj-find-break-forward)
+	 t)))
 
 (provide 'coolj)
 

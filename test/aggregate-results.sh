@@ -7,87 +7,75 @@ success=0
 failed=0
 broken=0
 total=0
+all_skipped=0
 
 for file
 do
 	while read type value
 	do
 		case $type in
-		'')
-			continue ;;
 		fixed)
-			fixed=$(($fixed + $value)) ;;
+			fixed=$((fixed + value)) ;;
 		success)
-			success=$(($success + $value)) ;;
+			success=$((success + value)) ;;
 		failed)
-			failed=$(($failed + $value)) ;;
+			failed=$((failed + value)) ;;
 		broken)
-			broken=$(($broken + $value)) ;;
+			broken=$((broken + value)) ;;
 		total)
-			total=$(($total + $value)) ;;
+			total=$((total + value))
+			if [ "$value" -eq 0 ]; then
+				all_skipped=$((all_skipped + 1))
+			fi
 		esac
 	done <"$file"
 done
 
-pluralize () {
-    case $2 in
-	1)
-	    case $1 in
-		test)
-		    echo test ;;
-		failure)
-		    echo failure ;;
-	    esac
-	    ;;
-	*)
-	    case $1 in
-		test)
-		    echo tests ;;
-		failure)
-		    echo failures ;;
-	    esac
-	    ;;
-    esac
-}
+pluralize_s () { [ "$1" -eq 1 ] && s='' || s='s'; }
 
 echo "Notmuch test suite complete."
-if [ "$fixed" = "0" ] && [ "$failed" = "0" ]; then
-    tests=$(pluralize "test" $total)
-    printf "All $total $tests "
-    if [ "$broken" = "0" ]; then
-	echo "passed."
-    else
-	failures=$(pluralize "failure" $broken)
-	echo "behaved as expected ($broken expected $failures)."
-    fi;
+
+if [ "$fixed" -eq 0 ] && [ "$failed" -eq 0 ]; then
+	pluralize_s "$total"
+	printf "All $total test$s "
+	if [ "$broken" -eq 0 ]; then
+		echo "passed."
+	else
+		pluralize_s "$broken"
+		echo "behaved as expected ($broken expected failure$s)."
+	fi
 else
-    echo "$success/$total tests passed."
-    if [ "$broken" != "0" ]; then
-	tests=$(pluralize "test" $broken)
-	echo "$broken broken $tests failed as expected."
-    fi
-    if [ "$fixed" != "0" ]; then
-	tests=$(pluralize "test" $fixed)
-	echo "$fixed broken $tests now fixed."
-    fi
-    if [ "$failed" != "0" ]; then
-	tests=$(pluralize "test" $failed)
-	echo "$failed $tests failed."
-    fi
+	echo "$success/$total tests passed."
+	if [ "$broken" -ne 0 ]; then
+		pluralize_s "$broken"
+		echo "$broken broken test$s failed as expected."
+	fi
+	if [ "$fixed" -ne 0 ]; then
+		pluralize_s "$fixed"
+		echo "$fixed broken test$s now fixed."
+	fi
+	if [ "$failed" -ne 0 ]; then
+		pluralize_s "$failed"
+		echo "$failed test$s failed."
+	fi
 fi
 
-skipped=$(($total - $fixed - $success - $failed - $broken))
-if [ "$skipped" != "0" ]; then
-    tests=$(pluralize "test" $skipped)
-    echo "$skipped $tests skipped."
+skipped=$((total - fixed - success - failed - broken))
+if [ "$skipped" -ne 0 ]; then
+	pluralize_s "$skipped"
+	echo "$skipped test$s skipped."
+fi
+if [ "$all_skipped" -ne 0 ]; then
+	pluralize_s "$all_skipped"
+	echo "All tests in $all_skipped file$s skipped."
 fi
 
 # Note that we currently do not consider skipped tests as failing the
 # build.
 
-if [ $success -gt 0 -a $fixed -eq 0 -a $failed -eq 0 ]
+if [ "$success" -gt 0 ] && [ "$fixed" -eq 0 ] && [ "$failed" -eq 0 ]
 then
-    exit 0
+	exit 0
 else
-    exit 1
+	exit 1
 fi

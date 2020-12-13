@@ -43,15 +43,15 @@ typedef struct _GMimeFilterReplyClass GMimeFilterReplyClass;
  * A filter to insert/remove reply markers (lines beginning with >)
  **/
 struct _GMimeFilterReply {
-	GMimeFilter parent_object;
+    GMimeFilter parent_object;
 
-	gboolean encode;
-	gboolean saw_nl;
-	gboolean saw_angle;
+    gboolean encode;
+    gboolean saw_nl;
+    gboolean saw_angle;
 };
 
 struct _GMimeFilterReplyClass {
-	GMimeFilterClass parent_class;
+    GMimeFilterClass parent_class;
 
 };
 

@@ -24,64 +24,63 @@
 #include "parse-time-vrp.h"
 #include "parse-time-string.h"
 
-#define PREFIX "date:"
-
-/* See *ValueRangeProcessor in xapian-core/api/valuerangeproc.cc */
-Xapian::valueno
-ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
+Xapian::Query
+ParseTimeRangeProcessor::operator() (const std::string &begin, const std::string &end)
 {
-    time_t t, now;
-    std::string b;
-
-    /* Require date: prefix in start of the range... */
-    if (STRNCMP_LITERAL (begin.c_str (), PREFIX))
-	return Xapian::BAD_VALUENO;
-
-    /* ...and remove it. */
-    begin.erase (0, sizeof (PREFIX) - 1);
-    b = begin;
+    double from = DBL_MIN, to = DBL_MAX;
+    time_t parsed_time, now;
+    std::string str;
 
     /* Use the same 'now' for begin and end. */
     if (time (&now) == (time_t) -1)
-	return Xapian::BAD_VALUENO;
+	throw Xapian::QueryParserError ("unable to get current time");
 
     if (!begin.empty ()) {
-	if (parse_time_string (begin.c_str (), &t, &now, PARSE_TIME_ROUND_DOWN))
-	    return Xapian::BAD_VALUENO;
-
-	begin.assign (Xapian::sortable_serialise ((double) t));
+	if (parse_time_string (begin.c_str (), &parsed_time, &now, PARSE_TIME_ROUND_DOWN))
+	    throw Xapian::QueryParserError ("Didn't understand date specification '" + begin + "'");
+	else
+	    from = (double) parsed_time;
     }
 
     if (!end.empty ()) {
-	if (end == "!" && ! b.empty ())
-	    end = b;
+	if (end == "!" && ! begin.empty ())
+	    str = begin;
+	else
+	    str = end;
 
-	if (parse_time_string (end.c_str (), &t, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
-	    return Xapian::BAD_VALUENO;
-
-	end.assign (Xapian::sortable_serialise ((double) t));
+	if (parse_time_string (str.c_str (), &parsed_time, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
+	    throw Xapian::QueryParserError ("Didn't understand date specification '" + str + "'");
+	else
+	    to = (double) parsed_time;
     }
 
-    return valno;
+    return Xapian::Query (Xapian::Query::OP_VALUE_RANGE, slot,
+			  Xapian::sortable_serialise (from),
+			  Xapian::sortable_serialise (to));
 }
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 /* XXX TODO: is throwing an exception the right thing to do here? */
-Xapian::Query DateFieldProcessor::operator()(const std::string & str) {
-    time_t from, to, now;
+Xapian::Query
+DateFieldProcessor::operator() (const std::string & str)
+{
+    double from = DBL_MIN, to = DBL_MAX;
+    time_t parsed_time, now;
 
     /* Use the same 'now' for begin and end. */
     if (time (&now) == (time_t) -1)
-	throw Xapian::QueryParserError("Unable to get current time");
+	throw Xapian::QueryParserError ("Unable to get current time");
 
-    if (parse_time_string (str.c_str (), &from, &now, PARSE_TIME_ROUND_DOWN))
+    if (parse_time_string (str.c_str (), &parsed_time, &now, PARSE_TIME_ROUND_DOWN))
 	throw Xapian::QueryParserError ("Didn't understand date specification '" + str + "'");
+    else
+	from = (double) parsed_time;
 
-    if (parse_time_string (str.c_str (), &to, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
+    if (parse_time_string (str.c_str (), &parsed_time, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
 	throw Xapian::QueryParserError ("Didn't understand date specification '" + str + "'");
+    else
+	to = (double) parsed_time;
 
-    return Xapian::Query(Xapian::Query::OP_AND,
-			 Xapian::Query(Xapian::Query::OP_VALUE_GE, 0, Xapian::sortable_serialise ((double) from)),
-			 Xapian::Query(Xapian::Query::OP_VALUE_LE, 0, Xapian::sortable_serialise ((double) to)));
+    return Xapian::Query (Xapian::Query::OP_VALUE_RANGE, slot,
+			  Xapian::sortable_serialise (from),
+			  Xapian::sortable_serialise (to));
 }
-#endif

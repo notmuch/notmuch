@@ -18,7 +18,7 @@ GMimeObject *
 _notmuch_crypto_decrypt (bool *attempted,
 			 notmuch_decryption_policy_t decrypt,
 			 notmuch_message_t *message,
-			 GMimeMultipartEncrypted *part,
+			 GMimeObject *part,
 			 GMimeDecryptResult **decrypt_result,
 			 GError **err);
 
@@ -50,7 +50,7 @@ typedef struct _notmuch_message_crypto {
     /* signature status of the whole message (either the whole message
      * is signed, or it is not) -- this means that partially-signed
      * messages will get no signature status. */
-    GMimeSignatureList * sig_list;
+    GMimeSignatureList *sig_list;
     /* if part of the message was signed, and the MUA is clever, it
      * can determine on its own exactly which part and try to make
      * more sense of it. */
@@ -62,7 +62,7 @@ typedef struct _notmuch_message_crypto {
     /* the value of any "Subject:" header in the cryptographic payload
      * (the top level part within the crypto envelope), converted to
      * UTF-8 */
-    char * payload_subject;
+    char *payload_subject;
 
     /* if both signed and encrypted, was the signature encrypted? */
     bool signature_encrypted;
@@ -90,9 +90,12 @@ _notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_cr
 
 /* call potential_payload during a depth-first-search on a message
  * when encountering a message part that is not part of the envelope.
+ *
+ * Returns true if part is the root of the cryptographic payload of
+ * this message.
  */
-notmuch_status_t
-_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *payload, GMimeObject *parent, int childnum);
+bool
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum);
 
 
 #ifdef __cplusplus

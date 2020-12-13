@@ -25,9 +25,9 @@ notmuch_bool_t
 notmuch_built_with (const char *name)
 {
     if (STRNCMP_LITERAL (name, "compact") == 0) {
-	return HAVE_XAPIAN_COMPACT;
+	return true;
     } else if (STRNCMP_LITERAL (name, "field_processor") == 0) {
-	return HAVE_XAPIAN_FIELD_PROCESSOR;
+	return true;
     } else if (STRNCMP_LITERAL (name, "retry_lock") == 0) {
 	return HAVE_XAPIAN_DB_RETRY_LOCK;
     } else if (STRNCMP_LITERAL (name, "session_key") == 0) {

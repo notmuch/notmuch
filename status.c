@@ -42,8 +42,8 @@ print_status_message (const char *loc,
 
 notmuch_status_t
 print_status_database (const char *loc,
-		    const notmuch_database_t *notmuch,
-		    notmuch_status_t status)
+		       const notmuch_database_t *notmuch,
+		       notmuch_status_t status)
 {
     if (status) {
 	const char *msg;
@@ -72,3 +72,17 @@ status_to_exit (notmuch_status_t status)
 	return EXIT_FAILURE;
     }
 }
+
+notmuch_status_t
+print_status_gzbytes (const char *loc, gzFile file, int bytes)
+{
+    if (bytes <= 0) {
+	int errnum;
+	const char *errstr = gzerror (file, &errnum);
+	fprintf (stderr, "%s: zlib error %s (%d)\n", loc, errstr, errnum);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    } else {
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+}
+

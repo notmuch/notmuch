@@ -28,8 +28,8 @@ static void
 show_reply_headers (GMimeStream *stream, GMimeMessage *message)
 {
     /* Output RFC 2822 formatted (and RFC 2047 encoded) headers. */
-    if (g_mime_object_write_to_stream (GMIME_OBJECT(message), NULL, stream) < 0) {
-	INTERNAL_ERROR("failed to write headers to stdout\n");
+    if (g_mime_object_write_to_stream (GMIME_OBJECT (message), NULL, stream) < 0) {
+	INTERNAL_ERROR ("failed to write headers to stdout\n");
     }
 }
 
@@ -65,10 +65,11 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (node->part);
 
 	if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
-	    g_mime_content_type_is_type (content_type, "application", "pgp-signature")) {
-	    /* Ignore PGP/MIME cruft parts */
+	    g_mime_content_type_is_type (content_type, "application", "pgp-signature") ||
+	    g_mime_content_type_is_type (content_type, "application", "pkcs7-mime")) {
+	    /* Ignore PGP/MIME and S/MIME cruft parts */
 	} else if (g_mime_content_type_is_type (content_type, "text", "*") &&
-		   !g_mime_content_type_is_type (content_type, "text", "html")) {
+		   ! g_mime_content_type_is_type (content_type, "text", "html")) {
 	    show_text_part_content (node->part, stream, NOTMUCH_SHOW_TEXT_PART_REPLY);
 	} else if (disposition &&
 		   strcasecmp (g_mime_content_disposition_get_disposition (disposition),
@@ -117,7 +118,7 @@ address_match (const char *str, notmuch_config_t *config, address_match_t mode)
     const char **other;
     size_t i, other_len;
 
-    if (!str || *str == '\0')
+    if (! str || *str == '\0')
 	return NULL;
 
     primary = notmuch_config_get_user_primary_email (config);
@@ -263,14 +264,15 @@ reply_to_header_is_redundant (GMimeMessage *message,
     return ret;
 }
 
-static InternetAddressList *get_sender(GMimeMessage *message)
+static InternetAddressList *
+get_sender (GMimeMessage *message)
 {
     InternetAddressList *reply_to_list;
 
     reply_to_list = g_mime_message_get_reply_to_list (message);
     if (reply_to_list &&
 	internet_address_list_length (reply_to_list) > 0) {
-        /*
+	/*
 	 * Some mailing lists munge the Reply-To header despite it
 	 * being A Bad Thing, see
 	 * http://marc.merlins.org/netrants/reply-to-harmful.html
@@ -290,17 +292,20 @@ static InternetAddressList *get_sender(GMimeMessage *message)
     return g_mime_message_get_from (message);
 }
 
-static InternetAddressList *get_to(GMimeMessage *message)
+static InternetAddressList *
+get_to (GMimeMessage *message)
 {
     return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_TO);
 }
 
-static InternetAddressList *get_cc(GMimeMessage *message)
+static InternetAddressList *
+get_cc (GMimeMessage *message)
 {
     return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_CC);
 }
 
-static InternetAddressList *get_bcc(GMimeMessage *message)
+static InternetAddressList *
+get_bcc (GMimeMessage *message)
 {
     return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_BCC);
 }
@@ -327,10 +332,10 @@ add_recipients_from_message (GMimeMessage *reply,
 	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeAddressType recipient_type;
     } reply_to_map[] = {
-	{ get_sender,	GMIME_ADDRESS_TYPE_TO },
-	{ get_to,	GMIME_ADDRESS_TYPE_TO },
-	{ get_cc,	GMIME_ADDRESS_TYPE_CC },
-	{ get_bcc,	GMIME_ADDRESS_TYPE_BCC },
+	{ get_sender,   GMIME_ADDRESS_TYPE_TO },
+	{ get_to,       GMIME_ADDRESS_TYPE_TO },
+	{ get_cc,       GMIME_ADDRESS_TYPE_CC },
+	{ get_bcc,      GMIME_ADDRESS_TYPE_BCC },
     };
     const char *from_addr = NULL;
     unsigned int i;
@@ -344,7 +349,7 @@ add_recipients_from_message (GMimeMessage *reply,
 	n += scan_address_list (recipients, config, reply,
 				reply_to_map[i].recipient_type, &from_addr);
 
-	if (!reply_all && n) {
+	if (! reply_all && n) {
 	    /* Stop adding new recipients in reply-to-sender mode if
 	     * we have added some recipient(s) above.
 	     *
@@ -414,7 +419,7 @@ guess_from_in_received_by (notmuch_config_t *config, const char *received)
 	if (*by == '\0')
 	    break;
 	mta = xstrdup (by);
-	token = strtok(mta," \t");
+	token = strtok (mta, " \t");
 	if (token == NULL) {
 	    free (mta);
 	    break;
@@ -518,12 +523,12 @@ get_from_in_to_headers (notmuch_config_t *config, notmuch_message_t *message)
 }
 
 static GMimeMessage *
-create_reply_message(void *ctx,
-		     notmuch_config_t *config,
-		     notmuch_message_t *message,
-		     GMimeMessage *mime_message,
-		     bool reply_all,
-		     bool limited)
+create_reply_message (void *ctx,
+		      notmuch_config_t *config,
+		      notmuch_message_t *message,
+		      GMimeMessage *mime_message,
+		      bool reply_all,
+		      bool limited)
 {
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
@@ -533,6 +538,7 @@ create_reply_message(void *ctx,
      * otherwise.
      */
     GMimeMessage *reply = g_mime_message_new (limited ? 0 : 1);
+
     if (reply == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return NULL;
@@ -608,11 +614,12 @@ enum {
     FORMAT_HEADERS_ONLY,
 };
 
-static int do_reply(notmuch_config_t *config,
-		    notmuch_query_t *query,
-		    notmuch_show_params_t *params,
-		    int format,
-		    bool reply_all)
+static int
+do_reply (notmuch_config_t *config,
+	  notmuch_query_t *query,
+	  notmuch_show_params_t *params,
+	  int format,
+	  bool reply_all)
 {
     GMimeMessage *reply;
     mime_node_t *node;
@@ -645,8 +652,7 @@ static int do_reply(notmuch_config_t *config,
 
     for (;
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
 
 	if (mime_node_open (config, message, &params->crypto, &node))
@@ -655,7 +661,7 @@ static int do_reply(notmuch_config_t *config,
 	reply = create_reply_message (config, config, message,
 				      GMIME_MESSAGE (node->part), reply_all,
 				      format == FORMAT_HEADERS_ONLY);
-	if (!reply)
+	if (! reply)
 	    return 1;
 
 	if (format == FORMAT_JSON || format == FORMAT_SEXP) {
@@ -681,7 +687,7 @@ static int do_reply(notmuch_config_t *config,
 		    format_part_reply (stream_stdout, node);
 	    }
 	    g_mime_stream_flush (stream_stdout);
-	    g_object_unref(stream_stdout);
+	    g_object_unref (stream_stdout);
 	}
 
 	g_object_unref (G_OBJECT (reply));
@@ -709,22 +715,22 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
-	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
-				  { "json", FORMAT_JSON },
-				  { "sexp", FORMAT_SEXP },
-				  { "headers-only", FORMAT_HEADERS_ONLY },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
+				      { "json", FORMAT_JSON },
+				      { "sexp", FORMAT_SEXP },
+				      { "headers-only", FORMAT_HEADERS_ONLY },
+				      { 0, 0 } } },
 	{ .opt_int = &notmuch_format_version, .name = "format-version" },
 	{ .opt_keyword = &reply_all, .name = "reply-to", .keywords =
-	  (notmuch_keyword_t []){ { "all", true },
-				  { "sender", false },
-				  { 0, 0 } } },
-	{ .opt_keyword = (int*)(&params.crypto.decrypt), .name = "decrypt",
+	      (notmuch_keyword_t []){ { "all", true },
+				      { "sender", false },
+				      { 0, 0 } } },
+	{ .opt_keyword = (int *) (&params.crypto.decrypt), .name = "decrypt",
 	  .keyword_no_arg_value = "true", .keywords =
-	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
-				  { "auto", NOTMUCH_DECRYPT_AUTO },
-				  { "true", NOTMUCH_DECRYPT_NOSTASH },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
+				      { "auto", NOTMUCH_DECRYPT_AUTO },
+				      { "true", NOTMUCH_DECRYPT_NOSTASH },
+				      { 0, 0 } } },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -737,7 +743,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unsupported_format ();
 
-    query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
+    query_string = query_string_from_args (config, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;

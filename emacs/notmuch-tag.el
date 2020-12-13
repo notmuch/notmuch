@@ -20,19 +20,22 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          Damien Cassou <damien.cassou@gmail.com>
-;;
-;;; Code:
-;;
 
-(require 'cl)
+;;; Code:
+
+(require 'cl-lib)
+(eval-when-compile
+  (require 'pcase))
+
 (require 'crm)
+
 (require 'notmuch-lib)
 
-(declare-function notmuch-search-tag "notmuch" tag-changes)
-(declare-function notmuch-show-tag "notmuch-show" tag-changes)
-(declare-function notmuch-tree-tag "notmuch-tree" tag-changes)
-
-(autoload 'notmuch-jump "notmuch-jump")
+(declare-function notmuch-search-tag "notmuch"
+		  (tag-changes &optional beg end only-matched))
+(declare-function notmuch-show-tag "notmuch-show" (tag-changes))
+(declare-function notmuch-tree-tag "notmuch-tree" (tag-changes))
+(declare-function notmuch-jump "notmuch-jump" (action-map prompt))
 
 (define-widget 'notmuch-tag-key-type 'list
   "A single key tagging binding."
@@ -40,7 +43,9 @@
   :args '((list :inline t
 		:format "%v"
 		(key-sequence :tag "Key")
-		(radio :tag "Tag operations" (repeat :tag "Tag list" (string :format "%v" :tag "change"))
+		(radio :tag "Tag operations"
+		       (repeat :tag "Tag list"
+			       (string :format "%v" :tag "change"))
 		       (variable :tag "Tag variable"))
 		(string :tag "Name"))))
 
@@ -80,7 +85,7 @@ from TAGGING-OPERATIONS."
   :group 'notmuch-tag)
 
 (define-widget 'notmuch-tag-format-type 'lazy
-  "Customize widget for notmuch-tag-format and friends"
+  "Customize widget for notmuch-tag-format and friends."
   :type '(alist :key-type (regexp :tag "Tag")
 		:extra-offset -3
 		:value-type
@@ -230,7 +235,7 @@ DATA is the content of an SVG picture (e.g., as returned by
 (defun notmuch-tag-star-icon ()
   "Return SVG data representing a star icon.
 This can be used with `notmuch-tag-format-image-data'."
-"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
 <svg version=\"1.1\" width=\"16\" height=\"16\">
   <g transform=\"translate(-242.81601,-315.59635)\">
     <path
@@ -277,10 +282,10 @@ This can be used with `notmuch-tag-format-image-data'."
   (save-match-data
     ;; Don't use assoc-default since there's no way to distinguish a
     ;; missing key from a present key with a null cdr.
-    (assoc* tag format-alist
-	    :test (lambda (tag key)
-		    (and (eq (string-match key tag) 0)
-			 (= (match-end 0) (length tag)))))))
+    (cl-assoc tag format-alist
+	      :test (lambda (tag key)
+		      (and (eq (string-match key tag) 0)
+			   (= (match-end 0) (length tag)))))))
 
 (defun notmuch-tag--do-format (tag formatted-tag formats)
   "Apply a tag-formats entry to TAG."
@@ -309,13 +314,15 @@ are not in TAGS) are shown using formats from
 are in TAGS but are not in ORIG-TAGS) are shown using formats
 from `notmuch-tag-added-formats' and tags which have not been
 changed (the normal case) are shown using formats from
-`notmuch-tag-formats'"
+`notmuch-tag-formats'."
   (let* ((tag-state (cond ((not (member tag tags)) 'deleted)
 			  ((not (member tag orig-tags)) 'added)))
-	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
+	 (formatted-tag (gethash (cons tag tag-state)
+				 notmuch-tag--format-cache
+				 'missing)))
     (when (eq formatted-tag 'missing)
       (let ((base (notmuch-tag--get-formats tag notmuch-tag-formats))
-	    (over (case tag-state
+	    (over (cl-case tag-state
 		    (deleted (notmuch-tag--get-formats
 			      tag notmuch-tag-deleted-formats))
 		    (added (notmuch-tag--get-formats
@@ -323,7 +330,6 @@ changed (the normal case) are shown using formats from
 		    (otherwise nil))))
 	(setq formatted-tag (notmuch-tag--do-format tag tag base))
 	(setq formatted-tag (notmuch-tag--do-format tag formatted-tag over))
-
 	(puthash (cons tag tag-state) formatted-tag notmuch-tag--format-cache)))
     formatted-tag))
 
@@ -334,9 +340,9 @@ changed (the normal case) are shown using formats from
     (notmuch-apply-face
      (mapconcat #'identity
 		;; nil indicated that the tag was deliberately hidden
-		(delq nil (mapcar
-			   (apply-partially #'notmuch-tag-format-tag tags orig-tags)
-			   all-tags))
+		(delq nil (mapcar (apply-partially #'notmuch-tag-format-tag
+						   tags orig-tags)
+				  all-tags))
 		" ")
      face
      t)))
@@ -347,8 +353,7 @@ changed (the normal case) are shown using formats from
 'tag-changes' will contain the tags that are about to be added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
-the messages that are about to be tagged"
-
+the messages that are about to be tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
@@ -359,7 +364,7 @@ the messages that are about to be tagged"
 'tag-changes' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
-the messages that were tagged"
+the messages that were tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
@@ -376,8 +381,8 @@ the messages that were tagged"
   "Return a list of tags for messages matching SEARCH-TERMS.
 
 Returns all tags if no search terms are given."
-  (if (null search-terms)
-      (setq search-terms (list "*")))
+  (unless search-terms
+    (setq search-terms (list "*")))
   (split-string
    (with-output-to-string
      (with-current-buffer standard-output
@@ -398,7 +403,6 @@ completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
 non-nil, is the query string to present in the minibuffer.  It
 defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the
 initial input in the minibuffer."
-
   (let* ((all-tag-list (notmuch-tag-completions))
 	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
 	 (remove-tag-list (mapcar (apply-partially 'concat "-") current-tags))
@@ -436,7 +440,7 @@ from TAGS if present."
     (dolist (tag-change tag-changes)
       (let ((op (string-to-char tag-change))
 	    (tag (unless (string= tag-change "") (substring tag-change 1))))
-	(case op
+	(cl-case op
 	  (?+ (unless (member tag result-tags)
 		(push tag result-tags)))
 	  (?- (setq result-tags (delete tag result-tags)))
@@ -511,28 +515,28 @@ and vice versa."
   ;; REVERSE is specified.
   (interactive "P")
   (let (action-map)
-    (dolist (binding notmuch-tagging-keys)
-      (let* ((tag-function (case major-mode
+    (pcase-dolist (`(,key ,tag ,name) notmuch-tagging-keys)
+      (let* ((tag-function (cl-case major-mode
 			     (notmuch-search-mode #'notmuch-search-tag)
 			     (notmuch-show-mode #'notmuch-show-tag)
 			     (notmuch-tree-mode #'notmuch-tree-tag)))
-	     (key (first binding))
-	     (forward-tag-change (if (symbolp (second binding))
-				     (symbol-value (second binding))
-				   (second binding)))
+	     (tag (if (symbolp tag)
+		      (symbol-value tag)
+		    tag))
 	     (tag-change (if reverse
-			     (notmuch-tag-change-list forward-tag-change 't)
-			   forward-tag-change))
-	     (name (or (and (not (string= (third binding) ""))
-			    (third binding))
-		       (and (symbolp (second binding))
-			    (symbol-name (second binding)))))
+			     (notmuch-tag-change-list tag 't)
+			   tag))
+	     (name (or (and (not (string= name ""))
+			    name)
+		       (and (symbolp name)
+			    (symbol-name name))))
 	     (name-string (if name
-			      (if reverse (concat "Reverse " name)
+			      (if reverse
+				  (concat "Reverse " name)
 				name)
 			    (mapconcat #'identity tag-change " "))))
 	(push (list key name-string
-		     `(lambda () (,tag-function ',tag-change)))
+		    `(lambda () (,tag-function ',tag-change)))
 	      action-map)))
     (push (list notmuch-tag-jump-reverse-key
 		(if reverse
@@ -547,6 +551,4 @@ and vice versa."
 
 (provide 'notmuch-tag)
 
-;; Local Variables:
-;; byte-compile-warnings: (not cl-functions)
-;; End:
+;;; notmuch-tag.el ends here

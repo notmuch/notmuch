@@ -32,8 +32,8 @@ _create_filenames_for_terms_with_prefix (void *ctx,
     notmuch_string_list_t *filename_list;
     Xapian::TermIterator i, end;
 
-    i = notmuch->xapian_db->allterms_begin();
-    end = notmuch->xapian_db->allterms_end();
+    i = notmuch->xapian_db->allterms_begin ();
+    end = notmuch->xapian_db->allterms_end ();
     filename_list = _notmuch_database_get_terms_with_prefix (ctx, i, end,
 							     prefix);
     if (unlikely (filename_list == NULL))
@@ -48,6 +48,19 @@ struct _notmuch_directory {
     Xapian::Document doc;
     time_t mtime;
 };
+
+#define LOG_XAPIAN_EXCEPTION(directory, error) _log_xapian_exception (__location__, directory, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_directory_t *dir,  const Xapian::Error error) {
+    notmuch_database_t *notmuch = dir->notmuch;
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred at %s: %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
+}
+
 
 /* We end up having to call the destructor explicitly because we had
  * to use "placement new" in order to initialize C++ objects within a
@@ -94,12 +107,11 @@ find_directory_document (notmuch_database_t *notmuch,
  * NOTMUCH_STATUS_SUCCESS and this returns NULL.
  */
 notmuch_directory_t *
-_notmuch_directory_create (notmuch_database_t *notmuch,
-			   const char *path,
-			   notmuch_find_flags_t flags,
-			   notmuch_status_t *status_ret)
+_notmuch_directory_find_or_create (notmuch_database_t *notmuch,
+				   const char *path,
+				   notmuch_find_flags_t flags,
+				   notmuch_status_t *status_ret)
 {
-    Xapian::WritableDatabase *db;
     notmuch_directory_t *directory;
     notmuch_private_status_t private_status;
     const char *db_path;
@@ -114,7 +126,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 
     path = _notmuch_database_relative_path (notmuch, path);
 
-    if (create && notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (create && _notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable");
 
     directory = talloc (notmuch, notmuch_directory_t);
@@ -140,7 +152,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	directory->document_id = directory->doc.get_docid ();
 
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    if (!create) {
+	    if (! create) {
 		notmuch_directory_destroy (directory);
 		directory = NULL;
 		*status_ret = NOTMUCH_STATUS_SUCCESS;
@@ -176,10 +188,10 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 				      Xapian::sortable_serialise (0));
 
-	    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
 	    directory->document_id = _notmuch_database_generate_doc_id (notmuch);
-	    db->replace_document (directory->document_id, directory->doc);
+	    directory->notmuch->
+		writable_xapian_db
+		-> replace_document (directory->document_id, directory->doc);
 	    talloc_free (local);
 	}
 
@@ -187,8 +199,8 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    directory->doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
-		 "A Xapian exception occurred creating a directory: %s.\n",
-		 error.get_msg().c_str());
+			       "A Xapian exception occurred finding/creating a directory: %s.\n",
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	notmuch_directory_destroy (directory);
 	directory = NULL;
@@ -213,27 +225,25 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 			     time_t mtime)
 {
     notmuch_database_t *notmuch = directory->notmuch;
-    Xapian::WritableDatabase *db;
     notmuch_status_t status;
 
     status = _notmuch_database_ensure_writable (notmuch);
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
     try {
 	directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
-				   Xapian::sortable_serialise (mtime));
+				  Xapian::sortable_serialise (mtime));
 
-	db->replace_document (directory->document_id, directory->doc);
+	directory->notmuch
+	    ->writable_xapian_db->replace_document (directory->document_id, directory->doc);
 
 	directory->mtime = mtime;
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
-		 "A Xapian exception occurred setting directory mtime: %s.\n",
-		 error.get_msg().c_str());
+			       "A Xapian exception occurred setting directory mtime: %s.\n",
+			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -251,15 +261,19 @@ notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory)
 {
     char *term;
-    notmuch_filenames_t *child_files;
+    notmuch_filenames_t *child_files = NULL;
 
     term = talloc_asprintf (directory, "%s%u:",
 			    _find_prefix ("file-direntry"),
 			    directory->document_id);
 
-    child_files = _create_filenames_for_terms_with_prefix (directory,
-							   directory->notmuch,
-							   term);
+    try {
+	child_files = _create_filenames_for_terms_with_prefix (directory,
+							       directory->notmuch,
+							       term);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (directory, error);
+    }
 
     talloc_free (term);
 
@@ -270,14 +284,18 @@ notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory)
 {
     char *term;
-    notmuch_filenames_t *child_directories;
+    notmuch_filenames_t *child_directories = NULL;
 
     term = talloc_asprintf (directory, "%s%u:",
 			    _find_prefix ("directory-direntry"),
 			    directory->document_id);
 
-    child_directories = _create_filenames_for_terms_with_prefix (directory,
-						 directory->notmuch, term);
+    try {
+	child_directories = _create_filenames_for_terms_with_prefix (directory,
+								     directory->notmuch, term);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (directory, error);
+    }
 
     talloc_free (term);
 
@@ -288,25 +306,24 @@ notmuch_status_t
 notmuch_directory_delete (notmuch_directory_t *directory)
 {
     notmuch_status_t status;
-    Xapian::WritableDatabase *db;
 
     status = _notmuch_database_ensure_writable (directory->notmuch);
     if (status)
 	return status;
 
     try {
-	db = static_cast <Xapian::WritableDatabase *> (directory->notmuch->xapian_db);
-	db->delete_document (directory->document_id);
+	directory->notmuch->
+	    writable_xapian_db->delete_document (directory->document_id);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (directory->notmuch,
 			       "A Xapian exception occurred deleting directory entry: %s.\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	directory->notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
     notmuch_directory_destroy (directory);
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 void

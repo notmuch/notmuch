@@ -1,0 +1,33 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Here is the password
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <mixed-up@mangling.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-=-="
+
+--=-=-=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+Content-Transfer-Encoding: base64
+
+VmVyc2lvbjogMQ0K
+
+--=-=-=
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+
+LS0tLS1CRUdJTiBQR1AgTUVTU0FHRS0tLS0tDQoNCmhJd0R4RTAyM3ExVXF4WUJCQUNwNzBlN0tQ
+eTlPWWFoZUlya0x6bWhxMWxScW15NTFhTDFqQkwwSy9xTjdyZksNCkJaRUcxY1I4amVMalRGZFBL
+UExWS0pJODByN0ZnS0kweXd2V3ZsNlIxYUUxVHk1Qm5WWFQ5WHpDckVIN2ZxQ2wNClNLSzgyRXZv
+bFhUb2hBWkhVcmg2SzY2ZVFRVFRJQUMxbjdCMEE4aEVyemtnYU00K3NlTjNMbHZlelQ2VExOS00N
+CkFUcHFzRWJNMk1WckdndzBiM29Vc0dHQVBFdDJNbWpORVlzcmlLbnF3dDZkSkRaYy8vWHloamdN
+UWF5aUQ4ZGENCk4xZ1Qzb3FndS9nS0NwQlpEWXpIZjlPdFZpMlVubEZEV3k2cnJNWkxqV0RuSXY0
+dmU5UG4vcW9sd0hWanpkSjENClpmak5DNXQwejNYQURLR3JqTjl3dXRyNHFtN1NUVzFySEFYSFA2
+OFRRVHhJMHFnSktqUFhOS1dFdzZnPQ0KPXBKRzQNCi0tLS0tRU5EIFBHUCBNRVNTQUdFLS0tLS0N
+Cg==
+--=-=-=--

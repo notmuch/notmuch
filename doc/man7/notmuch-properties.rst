@@ -109,6 +109,30 @@ of its normal activity.
     example, an AES-128 key might be stashed in a notmuch property as:
     ``session-key=7:14B16AF65536C28AF209828DFE34C9E0``.
 
+**index.repaired**
+
+    Some messages arrive in forms that are confusing to view; they can
+    be mangled by mail transport agents, or the sending mail user
+    agent may structure them in a way that is confusing.  If notmuch
+    knows how to both detect and repair such a problematic message, it
+    will do so during indexing.
+
+    If it applies a message repair during indexing, it will use the
+    ``index.repaired`` property to note the type of repair(s) it
+    performed.
+
+    ``index.repaired=skip-protected-headers-legacy-display`` indicates
+    that when indexing the cleartext of an encrypted message, notmuch
+    skipped over a "legacy-display" text/rfc822-headers part that it
+    found in that message, since it was able to index the built-in
+    protected headers directly.
+
+    ``index.repaired=mixedup`` indicates the repair of a "Mixed Up"
+    encrypted PGP/MIME message, a mangling typically produced by
+    Microsoft's Exchange MTA.  See
+    https://tools.ietf.org/html/draft-dkg-openpgp-pgpmime-message-mangling
+    for more information.
+
 SEE ALSO
 ========
 

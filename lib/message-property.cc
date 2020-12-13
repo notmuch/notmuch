@@ -115,7 +115,7 @@ notmuch_status_t
 _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key, bool prefix)
 {
     notmuch_status_t status;
-    const char * term_prefix;
+    const char *term_prefix;
 
     status = _notmuch_database_ensure_writable (notmuch_message_get_database (message));
     if (status)
@@ -150,6 +150,7 @@ notmuch_message_properties_t *
 notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact)
 {
     notmuch_string_map_t *map;
+
     map = _notmuch_message_property_map (message);
     return _notmuch_string_map_iterator_create (map, key, exact);
 }

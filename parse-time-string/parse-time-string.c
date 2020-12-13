@@ -102,8 +102,8 @@
 /* XXX: Redefine these to add i18n support. The keyword table uses
  * N_() to mark strings to be translated; they are accessed
  * dynamically using _(). */
-#define _(s) (s)	/* i18n: define as gettext (s) */
-#define N_(s) (s)	/* i18n: define as gettext_noop (s) */
+#define _(s) (s)        /* i18n: define as gettext (s) */
+#define N_(s) (s)       /* i18n: define as gettext_noop (s) */
 
 #define ARRAY_SIZE(a) (sizeof (a) / sizeof (a[0]))
 
@@ -114,40 +114,40 @@
  */
 enum field {
     /* Keep SEC...YEAR in this order. */
-    TM_ABS_SEC,		/* seconds */
-    TM_ABS_MIN,		/* minutes */
-    TM_ABS_HOUR,	/* hours */
-    TM_ABS_MDAY,	/* day of the month */
-    TM_ABS_MON,		/* month */
-    TM_ABS_YEAR,	/* year */
+    TM_ABS_SEC,         /* seconds */
+    TM_ABS_MIN,         /* minutes */
+    TM_ABS_HOUR,        /* hours */
+    TM_ABS_MDAY,        /* day of the month */
+    TM_ABS_MON,         /* month */
+    TM_ABS_YEAR,        /* year */
 
-    TM_WDAY,		/* day of the week. special: may be relative */
-    TM_ABS_ISDST,	/* daylight saving time */
+    TM_WDAY,            /* day of the week. special: may be relative */
+    TM_ABS_ISDST,       /* daylight saving time */
 
-    TM_AMPM,		/* am vs. pm */
-    TM_TZ,		/* timezone in minutes */
+    TM_AMPM,            /* am vs. pm */
+    TM_TZ,              /* timezone in minutes */
 
     /* Keep SEC...YEAR in this order. */
-    TM_REL_SEC,		/* seconds relative to absolute or reference time */
-    TM_REL_MIN,		/* minutes ... */
-    TM_REL_HOUR,	/* hours ... */
-    TM_REL_DAY,		/* days ... */
-    TM_REL_MON,		/* months ... */
-    TM_REL_YEAR,	/* years ... */
-    TM_REL_WEEK,	/* weeks ... */
+    TM_REL_SEC,         /* seconds relative to absolute or reference time */
+    TM_REL_MIN,         /* minutes ... */
+    TM_REL_HOUR,        /* hours ... */
+    TM_REL_DAY,         /* days ... */
+    TM_REL_MON,         /* months ... */
+    TM_REL_YEAR,        /* years ... */
+    TM_REL_WEEK,        /* weeks ... */
 
-    TM_NONE,		/* not a field */
+    TM_NONE,            /* not a field */
 
-    TM_SIZE = TM_NONE,
-    TM_FIRST_ABS = TM_ABS_SEC,
-    TM_FIRST_REL = TM_REL_SEC,
+    TM_SIZE		= TM_NONE,
+    TM_FIRST_ABS	= TM_ABS_SEC,
+    TM_FIRST_REL	= TM_REL_SEC,
 };
 
 /* Values for the set array of struct state. */
 enum field_set {
-    FIELD_UNSET,	/* The field has not been touched by parser. */
-    FIELD_SET,		/* The field has been set by parser. */
-    FIELD_NOW,		/* The field will be set to reference time. */
+    FIELD_UNSET,        /* The field has not been touched by parser. */
+    FIELD_SET,          /* The field has been set by parser. */
+    FIELD_NOW,          /* The field will be set to reference time. */
 };
 
 static enum field
@@ -180,15 +180,15 @@ get_field_epoch_value (enum field field)
 
 /* The parsing state. */
 struct state {
-    int tm[TM_SIZE];			/* parsed date and time */
-    enum field_set set[TM_SIZE];	/* set status of tm */
+    int tm[TM_SIZE];                    /* parsed date and time */
+    enum field_set set[TM_SIZE];        /* set status of tm */
 
-    enum field last_field;	/* Previously set field. */
+    enum field last_field;              /* Previously set field. */
     char delim;
 
-    int postponed_length;	/* Number of digits in postponed value. */
+    int postponed_length;               /* Number of digits in postponed value. */
     int postponed_value;
-    char postponed_delim;	/* The delimiter preceding postponed number. */
+    char postponed_delim;               /* The delimiter preceding postponed number. */
 };
 
 /*
@@ -215,7 +215,7 @@ get_postponed_length (struct state *state)
 static bool
 consume_postponed_number (struct state *state, int *v, int *n, char *d)
 {
-    if (!state->postponed_length)
+    if (! state->postponed_length)
 	return false;
 
     if (n)
@@ -383,12 +383,14 @@ get_field (struct state *state, enum field field)
 /*
  * Validity checkers.
  */
-static bool is_valid_12hour (int h)
+static bool
+is_valid_12hour (int h)
 {
     return h >= 1 && h <= 12;
 }
 
-static bool is_valid_time (int h, int m, int s)
+static bool
+is_valid_time (int h, int m, int s)
 {
     /* Allow 24:00:00 to denote end of day. */
     if (h == 24 && m == 0 && s == 0)
@@ -397,22 +399,26 @@ static bool is_valid_time (int h, int m, int s)
     return h >= 0 && h <= 23 && m >= 0 && m <= 59 && s >= 0 && s <= 59;
 }
 
-static bool is_valid_mday (int mday)
+static bool
+is_valid_mday (int mday)
 {
     return mday >= 1 && mday <= 31;
 }
 
-static bool is_valid_mon (int mon)
+static bool
+is_valid_mon (int mon)
 {
     return mon >= 1 && mon <= 12;
 }
 
-static bool is_valid_year (int year)
+static bool
+is_valid_year (int year)
 {
     return year >= 1970;
 }
 
-static bool is_valid_date (int year, int mon, int mday)
+static bool
+is_valid_date (int year, int mon, int mday)
 {
     return is_valid_year (year) && is_valid_mon (mon) && is_valid_mday (mday);
 }
@@ -475,10 +481,10 @@ struct keyword;
 typedef int (*setter_t)(struct state *state, struct keyword *kw);
 
 struct keyword {
-    const char *name;	/* keyword */
-    enum field field;	/* field to set, or FIELD_NONE if N/A */
-    int value;		/* value to set, or 0 if N/A */
-    setter_t set;	/* function to use for setting, if non-NULL */
+    const char *name;   /* keyword */
+    enum field field;   /* field to set, or FIELD_NONE if N/A */
+    int value;          /* value to set, or 0 if N/A */
+    setter_t set;       /* function to use for setting, if non-NULL */
 };
 
 /*
@@ -515,7 +521,7 @@ kw_set_month (struct state *state, struct keyword *kw)
 
 	consume_postponed_number (state, &v, NULL, NULL);
 
-	if (!is_valid_mday (v))
+	if (! is_valid_mday (v))
 	    return -PARSE_TIME_ERR_INVALIDDATE;
 
 	r = set_field (state, TM_ABS_MDAY, v);
@@ -538,7 +544,7 @@ kw_set_ampm (struct state *state, struct keyword *kw)
 
 	consume_postponed_number (state, &v, NULL, NULL);
 
-	if (!is_valid_12hour (v))
+	if (! is_valid_12hour (v))
 	    return -PARSE_TIME_ERR_INVALIDTIME;
 
 	r = set_abs_time (state, v, 0, 0);
@@ -577,7 +583,7 @@ kw_set_ordinal (struct state *state, struct keyword *kw)
     int n, v;
 
     /* Require a postponed number. */
-    if (!consume_postponed_number (state, &v, &n, NULL))
+    if (! consume_postponed_number (state, &v, &n, NULL))
 	return -PARSE_TIME_ERR_DATEFORMAT;
 
     /* Ordinals are mday. */
@@ -591,7 +597,7 @@ kw_set_ordinal (struct state *state, struct keyword *kw)
 	return -PARSE_TIME_ERR_INVALIDDATE;
     else if (strcasecmp (kw->name, "rd") == 0 && v != 3 && v != 23)
 	return -PARSE_TIME_ERR_INVALIDDATE;
-    else if (strcasecmp (kw->name, "th") == 0 && !is_valid_mday (v))
+    else if (strcasecmp (kw->name, "th") == 0 && ! is_valid_mday (v))
 	return -PARSE_TIME_ERR_INVALIDDATE;
 
     return set_field (state, TM_ABS_MDAY, v);
@@ -622,95 +628,95 @@ kw_ignore (unused (struct state *state), unused (struct keyword *kw))
  */
 static struct keyword keywords[] = {
     /* Weekdays. */
-    { N_("sun|day"),	TM_WDAY,	0,	NULL },
-    { N_("mon|day"),	TM_WDAY,	1,	NULL },
-    { N_("tue|sday"),	TM_WDAY,	2,	NULL },
-    { N_("wed|nesday"),	TM_WDAY,	3,	NULL },
-    { N_("thu|rsday"),	TM_WDAY,	4,	NULL },
-    { N_("fri|day"),	TM_WDAY,	5,	NULL },
-    { N_("sat|urday"),	TM_WDAY,	6,	NULL },
+    { N_ ("sun|day"),    TM_WDAY,        0,      NULL },
+    { N_ ("mon|day"),    TM_WDAY,        1,      NULL },
+    { N_ ("tue|sday"),   TM_WDAY,        2,      NULL },
+    { N_ ("wed|nesday"), TM_WDAY,        3,      NULL },
+    { N_ ("thu|rsday"),  TM_WDAY,        4,      NULL },
+    { N_ ("fri|day"),    TM_WDAY,        5,      NULL },
+    { N_ ("sat|urday"),  TM_WDAY,        6,      NULL },
 
     /* Months. */
-    { N_("jan|uary"),	TM_ABS_MON,	1,	kw_set_month },
-    { N_("feb|ruary"),	TM_ABS_MON,	2,	kw_set_month },
-    { N_("mar|ch"),	TM_ABS_MON,	3,	kw_set_month },
-    { N_("apr|il"),	TM_ABS_MON,	4,	kw_set_month },
-    { N_("may"),	TM_ABS_MON,	5,	kw_set_month },
-    { N_("jun|e"),	TM_ABS_MON,	6,	kw_set_month },
-    { N_("jul|y"),	TM_ABS_MON,	7,	kw_set_month },
-    { N_("aug|ust"),	TM_ABS_MON,	8,	kw_set_month },
-    { N_("sep|tember"),	TM_ABS_MON,	9,	kw_set_month },
-    { N_("oct|ober"),	TM_ABS_MON,	10,	kw_set_month },
-    { N_("nov|ember"),	TM_ABS_MON,	11,	kw_set_month },
-    { N_("dec|ember"),	TM_ABS_MON,	12,	kw_set_month },
+    { N_ ("jan|uary"),   TM_ABS_MON,     1,      kw_set_month },
+    { N_ ("feb|ruary"),  TM_ABS_MON,     2,      kw_set_month },
+    { N_ ("mar|ch"),     TM_ABS_MON,     3,      kw_set_month },
+    { N_ ("apr|il"),     TM_ABS_MON,     4,      kw_set_month },
+    { N_ ("may"),        TM_ABS_MON,     5,      kw_set_month },
+    { N_ ("jun|e"),      TM_ABS_MON,     6,      kw_set_month },
+    { N_ ("jul|y"),      TM_ABS_MON,     7,      kw_set_month },
+    { N_ ("aug|ust"),    TM_ABS_MON,     8,      kw_set_month },
+    { N_ ("sep|tember"), TM_ABS_MON,     9,      kw_set_month },
+    { N_ ("oct|ober"),   TM_ABS_MON,     10,     kw_set_month },
+    { N_ ("nov|ember"),  TM_ABS_MON,     11,     kw_set_month },
+    { N_ ("dec|ember"),  TM_ABS_MON,     12,     kw_set_month },
 
     /* Durations. */
-    { N_("y|ears"),	TM_REL_YEAR,	1,	kw_set_rel },
-    { N_("mo|nths"),	TM_REL_MON,	1,	kw_set_rel },
-    { N_("*M"),		TM_REL_MON,	1,	kw_set_rel },
-    { N_("w|eeks"),	TM_REL_WEEK,	1,	kw_set_rel },
-    { N_("d|ays"),	TM_REL_DAY,	1,	kw_set_rel },
-    { N_("h|ours"),	TM_REL_HOUR,	1,	kw_set_rel },
-    { N_("hr|s"),	TM_REL_HOUR,	1,	kw_set_rel },
-    { N_("mi|nutes"),	TM_REL_MIN,	1,	kw_set_rel },
-    { N_("mins"),	TM_REL_MIN,	1,	kw_set_rel },
-    { N_("*m"),		TM_REL_MIN,	1,	kw_set_rel },
-    { N_("s|econds"),	TM_REL_SEC,	1,	kw_set_rel },
-    { N_("secs"),	TM_REL_SEC,	1,	kw_set_rel },
+    { N_ ("y|ears"),     TM_REL_YEAR,    1,      kw_set_rel },
+    { N_ ("mo|nths"),    TM_REL_MON,     1,      kw_set_rel },
+    { N_ ("*M"),         TM_REL_MON,     1,      kw_set_rel },
+    { N_ ("w|eeks"),     TM_REL_WEEK,    1,      kw_set_rel },
+    { N_ ("d|ays"),      TM_REL_DAY,     1,      kw_set_rel },
+    { N_ ("h|ours"),     TM_REL_HOUR,    1,      kw_set_rel },
+    { N_ ("hr|s"),       TM_REL_HOUR,    1,      kw_set_rel },
+    { N_ ("mi|nutes"),   TM_REL_MIN,     1,      kw_set_rel },
+    { N_ ("mins"),       TM_REL_MIN,     1,      kw_set_rel },
+    { N_ ("*m"),         TM_REL_MIN,     1,      kw_set_rel },
+    { N_ ("s|econds"),   TM_REL_SEC,     1,      kw_set_rel },
+    { N_ ("secs"),       TM_REL_SEC,     1,      kw_set_rel },
 
     /* Numbers. */
-    { N_("one"),	TM_NONE,	1,	kw_set_number },
-    { N_("two"),	TM_NONE,	2,	kw_set_number },
-    { N_("three"),	TM_NONE,	3,	kw_set_number },
-    { N_("four"),	TM_NONE,	4,	kw_set_number },
-    { N_("five"),	TM_NONE,	5,	kw_set_number },
-    { N_("six"),	TM_NONE,	6,	kw_set_number },
-    { N_("seven"),	TM_NONE,	7,	kw_set_number },
-    { N_("eight"),	TM_NONE,	8,	kw_set_number },
-    { N_("nine"),	TM_NONE,	9,	kw_set_number },
-    { N_("ten"),	TM_NONE,	10,	kw_set_number },
-    { N_("dozen"),	TM_NONE,	12,	kw_set_number },
-    { N_("hundred"),	TM_NONE,	100,	kw_set_number },
+    { N_ ("one"),        TM_NONE,        1,      kw_set_number },
+    { N_ ("two"),        TM_NONE,        2,      kw_set_number },
+    { N_ ("three"),      TM_NONE,        3,      kw_set_number },
+    { N_ ("four"),       TM_NONE,        4,      kw_set_number },
+    { N_ ("five"),       TM_NONE,        5,      kw_set_number },
+    { N_ ("six"),        TM_NONE,        6,      kw_set_number },
+    { N_ ("seven"),      TM_NONE,        7,      kw_set_number },
+    { N_ ("eight"),      TM_NONE,        8,      kw_set_number },
+    { N_ ("nine"),       TM_NONE,        9,      kw_set_number },
+    { N_ ("ten"),        TM_NONE,        10,     kw_set_number },
+    { N_ ("dozen"),      TM_NONE,        12,     kw_set_number },
+    { N_ ("hundred"),    TM_NONE,        100,    kw_set_number },
 
     /* Special number forms. */
-    { N_("this"),	TM_NONE,	0,	kw_set_number },
-    { N_("last"),	TM_NONE,	1,	kw_set_number },
+    { N_ ("this"),       TM_NONE,        0,      kw_set_number },
+    { N_ ("last"),       TM_NONE,        1,      kw_set_number },
 
     /* Other special keywords. */
-    { N_("yesterday"),	TM_REL_DAY,	1,	kw_set_rel },
-    { N_("today"),	TM_NONE,	0,	kw_set_today },
-    { N_("now"),	TM_NONE,	0,	kw_set_now },
-    { N_("noon"),	TM_NONE,	12,	kw_set_timeofday },
-    { N_("midnight"),	TM_NONE,	0,	kw_set_timeofday },
-    { N_("am"),		TM_AMPM,	0,	kw_set_ampm },
-    { N_("a.m."),	TM_AMPM,	0,	kw_set_ampm },
-    { N_("pm"),		TM_AMPM,	1,	kw_set_ampm },
-    { N_("p.m."),	TM_AMPM,	1,	kw_set_ampm },
-    { N_("st"),		TM_NONE,	0,	kw_set_ordinal },
-    { N_("nd"),		TM_NONE,	0,	kw_set_ordinal },
-    { N_("rd"),		TM_NONE,	0,	kw_set_ordinal },
-    { N_("th"),		TM_NONE,	0,	kw_set_ordinal },
-    { N_("ago"),       	TM_NONE,	0,	kw_ignore },
+    { N_ ("yesterday"),  TM_REL_DAY,     1,      kw_set_rel },
+    { N_ ("today"),      TM_NONE,        0,      kw_set_today },
+    { N_ ("now"),        TM_NONE,        0,      kw_set_now },
+    { N_ ("noon"),       TM_NONE,        12,     kw_set_timeofday },
+    { N_ ("midnight"),   TM_NONE,        0,      kw_set_timeofday },
+    { N_ ("am"),         TM_AMPM,        0,      kw_set_ampm },
+    { N_ ("a.m."),       TM_AMPM,        0,      kw_set_ampm },
+    { N_ ("pm"),         TM_AMPM,        1,      kw_set_ampm },
+    { N_ ("p.m."),       TM_AMPM,        1,      kw_set_ampm },
+    { N_ ("st"),         TM_NONE,        0,      kw_set_ordinal },
+    { N_ ("nd"),         TM_NONE,        0,      kw_set_ordinal },
+    { N_ ("rd"),         TM_NONE,        0,      kw_set_ordinal },
+    { N_ ("th"),         TM_NONE,        0,      kw_set_ordinal },
+    { N_ ("ago"),        TM_NONE,        0,      kw_ignore },
 
     /* Timezone codes: offset in minutes. XXX: Add more codes. */
-    { N_("pst"),	TM_TZ,		-8*60,	NULL },
-    { N_("mst"),	TM_TZ,		-7*60,	NULL },
-    { N_("cst"),	TM_TZ,		-6*60,	NULL },
-    { N_("est"),	TM_TZ,		-5*60,	NULL },
-    { N_("ast"),	TM_TZ,		-4*60,	NULL },
-    { N_("nst"),	TM_TZ,		-(3*60+30),	NULL },
+    { N_ ("pst"),        TM_TZ,          -8 * 60,  NULL },
+    { N_ ("mst"),        TM_TZ,          -7 * 60,  NULL },
+    { N_ ("cst"),        TM_TZ,          -6 * 60,  NULL },
+    { N_ ("est"),        TM_TZ,          -5 * 60,  NULL },
+    { N_ ("ast"),        TM_TZ,          -4 * 60,  NULL },
+    { N_ ("nst"),        TM_TZ,          -(3 * 60 + 30),     NULL },
 
-    { N_("gmt"),	TM_TZ,		0,	NULL },
-    { N_("utc"),	TM_TZ,		0,	NULL },
+    { N_ ("gmt"),        TM_TZ,          0,      NULL },
+    { N_ ("utc"),        TM_TZ,          0,      NULL },
 
-    { N_("wet"),	TM_TZ,		0,	NULL },
-    { N_("cet"),	TM_TZ,		1*60,	NULL },
-    { N_("eet"),	TM_TZ,		2*60,	NULL },
-    { N_("fet"),	TM_TZ,		3*60,	NULL },
+    { N_ ("wet"),        TM_TZ,          0,      NULL },
+    { N_ ("cet"),        TM_TZ,          1 * 60,   NULL },
+    { N_ ("eet"),        TM_TZ,          2 * 60,   NULL },
+    { N_ ("fet"),        TM_TZ,          3 * 60,   NULL },
 
-    { N_("wat"),	TM_TZ,		1*60,	NULL },
-    { N_("cat"),	TM_TZ,		2*60,	NULL },
-    { N_("eat"),	TM_TZ,		3*60,	NULL },
+    { N_ ("wat"),        TM_TZ,          1 * 60,   NULL },
+    { N_ ("cat"),        TM_TZ,          2 * 60,   NULL },
+    { N_ ("eat"),        TM_TZ,          3 * 60,   NULL },
 };
 
 /*
@@ -745,7 +751,7 @@ match_keyword (const char *str, const char *keyword, bool match_case)
 	    keyword++;
 	}
 
-	if (!*s || !isalpha ((unsigned char) *s) || !*keyword)
+	if (! *s || ! isalpha ((unsigned char) *s) || ! *keyword)
 	    break;
 
 	if (match_case) {
@@ -765,7 +771,7 @@ match_keyword (const char *str, const char *keyword, bool match_case)
 	return 0;
 
     /* did not match enough of keyword */
-    if (*keyword && !prefix_matched)
+    if (*keyword && ! prefix_matched)
 	return 0;
 
     return s - str;
@@ -784,7 +790,7 @@ parse_keyword (struct state *state, const char *s)
     int r;
 
     for (i = 0; i < ARRAY_SIZE (keywords); i++) {
-	const char *keyword = _(keywords[i].name);
+	const char *keyword = _ (keywords[i].name);
 	bool mcase = false;
 
 	/* Match case if keyword begins with '*'. */
@@ -800,7 +806,7 @@ parse_keyword (struct state *state, const char *s)
 	}
     }
 
-    if (!kw)
+    if (! kw)
 	return -PARSE_TIME_ERR_KEYWORD;
 
     if (kw->set)
@@ -846,7 +852,7 @@ parse_postponed_number (struct state *state, unused (enum field next_field))
     char d;
 
     /* Bail out if there's no postponed number. */
-    if (!consume_postponed_number (state, &v, &n, &d))
+    if (! consume_postponed_number (state, &v, &n, &d))
 	return 0;
 
     if (n == 1 || n == 2) {
@@ -854,7 +860,7 @@ parse_postponed_number (struct state *state, unused (enum field next_field))
 	 * handles "January 20". */
 	if (state->last_field == TM_ABS_MON) {
 	    /* D[D] */
-	    if (!is_valid_mday (v))
+	    if (! is_valid_mday (v))
 		return -PARSE_TIME_ERR_INVALIDDATE;
 
 	    return set_field (state, TM_ABS_MDAY, v);
@@ -869,7 +875,7 @@ parse_postponed_number (struct state *state, unused (enum field next_field))
 	/* Notable exception: Value affects parsing. Time zones are
 	 * always at most 1400 and we don't understand years before
 	 * 1970. */
-	if (!is_valid_year (v)) {
+	if (! is_valid_year (v)) {
 	    if (d == '+' || d == '-') {
 		/* +/-HHMM */
 		return set_user_tz (state, d, v / 100, v % 100);
@@ -884,7 +890,7 @@ parse_postponed_number (struct state *state, unused (enum field next_field))
 	int min = (v / 100) % 100;
 	int sec = v % 100;
 
-	if (!is_valid_time (hour, min, sec))
+	if (! is_valid_time (hour, min, sec))
 	    return -PARSE_TIME_ERR_INVALIDTIME;
 
 	return set_abs_time (state, hour, min, sec);
@@ -894,7 +900,7 @@ parse_postponed_number (struct state *state, unused (enum field next_field))
 	int mon = (v / 100) % 100;
 	int mday = v % 100;
 
-	if (!is_valid_date (year, mon, mday))
+	if (! is_valid_date (year, mon, mday))
 	    return -PARSE_TIME_ERR_INVALIDDATE;
 
 	return set_abs_date (state, year, mon, mday);
@@ -1039,13 +1045,13 @@ parse_date (struct state *state, char sep,
 	break;
     }
 
-    if (year != UNSET && !is_valid_year (year))
+    if (year != UNSET && ! is_valid_year (year))
 	return -PARSE_TIME_ERR_INVALIDDATE;
 
-    if (mon != UNSET && !is_valid_mon (mon))
+    if (mon != UNSET && ! is_valid_mon (mon))
 	return -PARSE_TIME_ERR_INVALIDDATE;
 
-    if (mday != UNSET && !is_valid_mday (mday))
+    if (mday != UNSET && ! is_valid_mday (mday))
 	return -PARSE_TIME_ERR_INVALIDDATE;
 
     return set_abs_date (state, year, mon, mday);
@@ -1081,7 +1087,7 @@ parse_time (struct state *state, char sep,
 	return set_user_tz (state, state->delim, v1, v2);
     }
 
-    if (!is_valid_time (v1, v2, n3 ? v3 : 0))
+    if (! is_valid_time (v1, v2, n3 ? v3 : 0))
 	return -PARSE_TIME_ERR_INVALIDTIME;
 
     return set_abs_time (state, v1, v2, n3 ? (int) v3 : UNSET);
@@ -1112,7 +1118,7 @@ parse_number (struct state *state, const char *s)
 
     v1 = strtoul_len (p, &p, &n1);
 
-    if (!is_sep (*p) || !isdigit ((unsigned char) *(p + 1))) {
+    if (! is_sep (*p) || ! isdigit ((unsigned char) *(p + 1))) {
 	/* A single number. */
 	r = parse_single_number (state, v1, n1);
 	if (r)
@@ -1155,7 +1161,7 @@ parse_delim (struct state *state, const char *s)
      * Skip non-alpha and non-digit, and store the last for further
      * processing.
      */
-    while (*p && !isalnum ((unsigned char) *p)) {
+    while (*p && ! isalnum ((unsigned char) *p)) {
 	set_delim (state, *p);
 	p++;
     }
@@ -1258,7 +1264,7 @@ normalize_tm (struct tm *tm)
     if (t == (time_t) -1)
 	return -PARSE_TIME_ERR_LIB;
 
-    if (!localtime_r (&t, tm))
+    if (! localtime_r (&t, tm))
 	return -PARSE_TIME_ERR_LIB;
 
     return 0;
@@ -1269,14 +1275,14 @@ static int
 tm_get_field (const struct tm *tm, enum field field)
 {
     switch (field) {
-    case TM_ABS_SEC:	return tm->tm_sec;
-    case TM_ABS_MIN:	return tm->tm_min;
-    case TM_ABS_HOUR:	return tm->tm_hour;
-    case TM_ABS_MDAY:	return tm->tm_mday;
-    case TM_ABS_MON:	return tm->tm_mon + 1; /* 0- to 1-based */
-    case TM_ABS_YEAR:	return 1900 + tm->tm_year;
-    case TM_WDAY:	return tm->tm_wday;
-    case TM_ABS_ISDST:	return tm->tm_isdst;
+    case TM_ABS_SEC:    return tm->tm_sec;
+    case TM_ABS_MIN:    return tm->tm_min;
+    case TM_ABS_HOUR:   return tm->tm_hour;
+    case TM_ABS_MDAY:   return tm->tm_mday;
+    case TM_ABS_MON:    return tm->tm_mon + 1; /* 0- to 1-based */
+    case TM_ABS_YEAR:   return 1900 + tm->tm_year;
+    case TM_WDAY:       return tm->tm_wday;
+    case TM_ABS_ISDST:  return tm->tm_isdst;
     default:
 	assert (false);
 	break;
@@ -1291,14 +1297,14 @@ fixup_ampm (struct state *state)
 {
     int hour, hdiff = 0;
 
-    if (!is_field_set (state, TM_AMPM))
+    if (! is_field_set (state, TM_AMPM))
 	return 0;
 
-    if (!is_field_set (state, TM_ABS_HOUR))
+    if (! is_field_set (state, TM_ABS_HOUR))
 	return -PARSE_TIME_ERR_TIMEFORMAT;
 
     hour = get_field (state, TM_ABS_HOUR);
-    if (!is_valid_12hour (hour))
+    if (! is_valid_12hour (hour))
 	return -PARSE_TIME_ERR_INVALIDTIME;
 
     if (get_field (state, TM_AMPM)) {
@@ -1348,7 +1354,7 @@ create_output (struct state *state, time_t *t_out, const time_t *ref,
      * date?
      */
     if (is_field_set (state, TM_WDAY) &&
-	!is_field_set (state, TM_ABS_MDAY)) {
+	! is_field_set (state, TM_ABS_MDAY)) {
 	int wday = get_field (state, TM_WDAY);
 	int today = tm_get_field (&now, TM_WDAY);
 	int rel_days;
@@ -1405,7 +1411,7 @@ create_output (struct state *state, time_t *t_out, const time_t *ref,
 	    }
 	}
 
-	if (!is_field_set (state, f))
+	if (! is_field_set (state, f))
 	    set_field (state, f, tm_get_field (&now, f));
     }
 
@@ -1489,7 +1495,7 @@ parse_time_string (const char *s, time_t *t, const time_t *ref, int round)
     struct state state = { .last_field = TM_NONE };
     int r;
 
-    if (!s || !t)
+    if (! s || ! t)
 	return EXTERNAL_ERR (-PARSE_TIME_ERR);
 
     r = parse_input (&state, s);

@@ -341,9 +341,9 @@ notmuch config set new.tags $OLDCONFIG
 
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
+chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
+chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 

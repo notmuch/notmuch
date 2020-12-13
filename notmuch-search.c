@@ -87,13 +87,16 @@ get_thread_query (notmuch_thread_t *thread,
 
     for (messages = notmuch_thread_get_messages (thread);
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	notmuch_message_t *message = notmuch_messages_get (messages);
 	const char *mid = notmuch_message_get_message_id (message);
+	notmuch_bool_t is_set;
+	char **buf;
+
+	if (notmuch_message_get_flag_st (message, NOTMUCH_MESSAGE_FLAG_MATCH, &is_set))
+	    return -1;
 	/* Determine which query buffer to extend */
-	char **buf = notmuch_message_get_flag (
-	    message, NOTMUCH_MESSAGE_FLAG_MATCH) ? matched_out : unmatched_out;
+	buf = is_set ? matched_out : unmatched_out;
 	/* Add this message's id: query.  Since "id" is an exclusive
 	 * prefix, it is implicitly 'or'd together, so we only need to
 	 * join queries with a space. */
@@ -103,7 +106,7 @@ get_thread_query (notmuch_thread_t *thread,
 	    *buf = talloc_asprintf_append_buffer (*buf, " %s", escaped);
 	else
 	    *buf = talloc_strdup (thread, escaped);
-	if (!*buf)
+	if (! *buf)
 	    return -1;
     }
     talloc_free (escaped);
@@ -134,15 +137,14 @@ do_search_threads (search_context_t *ctx)
     }
 
     status = notmuch_query_search_threads (ctx->query, &threads);
-    if (print_status_query("notmuch search", ctx->query, status))
+    if (print_status_query ("notmuch search", ctx->query, status))
 	return 1;
 
     format->begin_list (format);
 
     for (i = 0;
 	 notmuch_threads_valid (threads) && (ctx->limit < 0 || i < ctx->offset + ctx->limit);
-	 notmuch_threads_move_to_next (threads), i++)
-    {
+	 notmuch_threads_move_to_next (threads), i++) {
 	thread = notmuch_threads_get (threads);
 
 	if (i < ctx->offset) {
@@ -176,23 +178,23 @@ do_search_threads (search_context_t *ctx)
 	    relative_date = notmuch_time_relative_date (ctx_quote, date);
 
 	    if (format->is_text_printer) {
-                /* Special case for the text formatter */
+		/* Special case for the text formatter */
 		printf ("thread:%s %12s ",
 			thread_id,
 			relative_date);
 		if (total == files)
 		    printf ("[%d/%d] %s; %s (",
-			matched,
-			total,
-			sanitize_string (ctx_quote, authors),
-			sanitize_string (ctx_quote, subject));
+			    matched,
+			    total,
+			    sanitize_string (ctx_quote, authors),
+			    sanitize_string (ctx_quote, subject));
 		else
 		    printf ("[%d/%d(%d)] %s; %s (",
-			matched,
-			total,
-			files,
-			sanitize_string (ctx_quote, authors),
-			sanitize_string (ctx_quote, subject));
+			    matched,
+			    total,
+			    files,
+			    sanitize_string (ctx_quote, authors),
+			    sanitize_string (ctx_quote, subject));
 
 	    } else { /* Structured Output */
 		format->map_key (format, "thread");
@@ -237,12 +239,11 @@ do_search_threads (search_context_t *ctx)
 
 	    for (tags = notmuch_thread_get_tags (thread);
 		 notmuch_tags_valid (tags);
-		 notmuch_tags_move_to_next (tags))
-	    {
+		 notmuch_tags_move_to_next (tags)) {
 		const char *tag = notmuch_tags_get (tags);
 
 		if (format->is_text_printer) {
-                  /* Special case for the text formatter */
+		    /* Special case for the text formatter */
 		    if (first_tag)
 			first_tag = false;
 		    else
@@ -269,7 +270,8 @@ do_search_threads (search_context_t *ctx)
     return 0;
 }
 
-static mailbox_t *new_mailbox (void *ctx, const char *name, const char *addr)
+static mailbox_t *
+new_mailbox (void *ctx, const char *name, const char *addr)
 {
     mailbox_t *mailbox;
 
@@ -284,7 +286,8 @@ static mailbox_t *new_mailbox (void *ctx, const char *name, const char *addr)
     return mailbox;
 }
 
-static int mailbox_compare (const void *v1, const void *v2)
+static int
+mailbox_compare (const void *v1, const void *v2)
 {
     const mailbox_t *m1 = v1, *m2 = v2;
     int ret;
@@ -488,7 +491,7 @@ print_popular (const search_context_t *ctx, GList *list)
     }
 
     if (! mailbox)
-	INTERNAL_ERROR("Empty list in address hash table\n");
+	INTERNAL_ERROR ("Empty list in address hash table\n");
 
     /* The original count is no longer needed, so overwrite. */
     mailbox->count = total;
@@ -522,8 +525,8 @@ _count_filenames (notmuch_message_t *message)
     filenames = notmuch_message_get_filenames (message);
 
     while (notmuch_filenames_valid (filenames)) {
-        notmuch_filenames_move_to_next (filenames);
-        i++;
+	notmuch_filenames_move_to_next (filenames);
+	i++;
     }
 
     notmuch_filenames_destroy (filenames);
@@ -561,8 +564,7 @@ do_search_messages (search_context_t *ctx)
 
     for (i = 0;
 	 notmuch_messages_valid (messages) && (ctx->limit < 0 || i < ctx->offset + ctx->limit);
-	 notmuch_messages_move_to_next (messages), i++)
-    {
+	 notmuch_messages_move_to_next (messages), i++) {
 	if (i < ctx->offset)
 	    continue;
 
@@ -574,24 +576,23 @@ do_search_messages (search_context_t *ctx)
 
 	    for (j = 1;
 		 notmuch_filenames_valid (filenames);
-		 notmuch_filenames_move_to_next (filenames), j++)
-	    {
+		 notmuch_filenames_move_to_next (filenames), j++) {
 		if (ctx->dupe < 0 || ctx->dupe == j) {
 		    format->string (format, notmuch_filenames_get (filenames));
 		    format->separator (format);
 		}
 	    }
-	    
-	    notmuch_filenames_destroy( filenames );
+
+	    notmuch_filenames_destroy ( filenames );
 
 	} else if (ctx->output == OUTPUT_MESSAGES) {
-            /* special case 1 for speed */
-            if (ctx->dupe <= 1 || ctx->dupe <= _count_filenames (message)) {
-                format->set_prefix (format, "id");
-                format->string (format,
-                                notmuch_message_get_message_id (message));
-                format->separator (format);
-            }
+	    /* special case 1 for speed */
+	    if (ctx->dupe <= 1 || ctx->dupe <= _count_filenames (message)) {
+		format->set_prefix (format, "id");
+		format->string (format,
+				notmuch_message_get_message_id (message));
+		format->separator (format);
+	    }
 	} else {
 	    if (ctx->output & OUTPUT_SENDER) {
 		const char *addrs;
@@ -657,8 +658,7 @@ do_search_tags (const search_context_t *ctx)
 
     for (;
 	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
+	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 
 	format->string (format, tag);
@@ -702,7 +702,7 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 	break;
     default:
 	/* this should never happen */
-	INTERNAL_ERROR("no output format selected");
+	INTERNAL_ERROR ("no output format selected");
     }
 
     notmuch_exit_if_unsupported_format ();
@@ -752,8 +752,8 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 	size_t search_exclude_tags_length;
 	notmuch_status_t status;
 
-	search_exclude_tags = notmuch_config_get_search_exclude_tags
-	    (config, &search_exclude_tags_length);
+	search_exclude_tags = notmuch_config_get_search_exclude_tags (
+	    config, &search_exclude_tags_length);
 
 	for (i = 0; i < search_exclude_tags_length; i++) {
 	    status = notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
@@ -791,15 +791,15 @@ static search_context_t search_context = {
 
 static const notmuch_opt_desc_t common_options[] = {
     { .opt_keyword = &search_context.sort, .name = "sort", .keywords =
-      (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
-			      { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
-			      { 0, 0 } } },
+	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
+				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
+				  { 0, 0 } } },
     { .opt_keyword = &search_context.format_sel, .name = "format", .keywords =
-      (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
-			      { "sexp", NOTMUCH_FORMAT_SEXP },
-			      { "text", NOTMUCH_FORMAT_TEXT },
-			      { "text0", NOTMUCH_FORMAT_TEXT0 },
-			      { 0, 0 } } },
+	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+				  { "sexp", NOTMUCH_FORMAT_SEXP },
+				  { "text", NOTMUCH_FORMAT_TEXT },
+				  { "text0", NOTMUCH_FORMAT_TEXT0 },
+				  { 0, 0 } } },
     { .opt_int = &notmuch_format_version, .name = "format-version" },
     { }
 };
@@ -812,18 +812,18 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &ctx->output, .name = "output", .keywords =
-	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
-				  { "threads", OUTPUT_THREADS },
-				  { "messages", OUTPUT_MESSAGES },
-				  { "files", OUTPUT_FILES },
-				  { "tags", OUTPUT_TAGS },
-				  { 0, 0 } } },
-        { .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
-          (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
-                                  { "false", NOTMUCH_EXCLUDE_FALSE },
-                                  { "flag", NOTMUCH_EXCLUDE_FLAG },
-                                  { "all", NOTMUCH_EXCLUDE_ALL },
-                                  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
+				      { "threads", OUTPUT_THREADS },
+				      { "messages", OUTPUT_MESSAGES },
+				      { "files", OUTPUT_FILES },
+				      { "tags", OUTPUT_TAGS },
+				      { 0, 0 } } },
+	{ .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
+	      (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
+				      { "false", NOTMUCH_EXCLUDE_FALSE },
+				      { "flag", NOTMUCH_EXCLUDE_FLAG },
+				      { "all", NOTMUCH_EXCLUDE_ALL },
+				      { 0, 0 } } },
 	{ .opt_int = &ctx->offset, .name = "offset" },
 	{ .opt_int = &ctx->limit, .name = "limit" },
 	{ .opt_int = &ctx->dupe, .name = "duplicate" },
@@ -841,8 +841,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (ctx->output != OUTPUT_FILES && ctx->output != OUTPUT_MESSAGES &&
 	ctx->dupe != -1) {
-        fprintf (stderr, "Error: --duplicate=N is only supported with --output=files and --output=messages.\n");
-        return EXIT_FAILURE;
+	fprintf (stderr, "Error: --duplicate=N is only supported with --output=files and --output=messages.\n");
+	return EXIT_FAILURE;
     }
 
     if (_notmuch_search_prepare (ctx, config,
@@ -878,20 +878,20 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_flags = &ctx->output, .name = "output", .keywords =
-	  (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
-				  { "recipients", OUTPUT_RECIPIENTS },
-				  { "count", OUTPUT_COUNT },
-				  { "address", OUTPUT_ADDRESS },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
+				      { "recipients", OUTPUT_RECIPIENTS },
+				      { "count", OUTPUT_COUNT },
+				      { "address", OUTPUT_ADDRESS },
+				      { 0, 0 } } },
 	{ .opt_keyword = &ctx->exclude, .name = "exclude", .keywords =
-	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
-				  { "false", NOTMUCH_EXCLUDE_FALSE },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
+				      { "false", NOTMUCH_EXCLUDE_FALSE },
+				      { 0, 0 } } },
 	{ .opt_keyword = &ctx->dedup, .name = "deduplicate", .keywords =
-	  (notmuch_keyword_t []){ { "no", DEDUP_NONE },
-				  { "mailbox", DEDUP_MAILBOX },
-				  { "address", DEDUP_ADDRESS },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "no", DEDUP_NONE },
+				      { "mailbox", DEDUP_MAILBOX },
+				      { "address", DEDUP_ADDRESS },
+				      { 0, 0 } } },
 	{ .opt_inherit = common_options },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }

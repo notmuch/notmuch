@@ -19,6 +19,6 @@ util_error_string (util_status_t errnum)
 	/* we lack context to be more informative here */
 	return "zlib error";
     default:
-	INTERNAL_ERROR("unexpected error status %d", errnum);
+	INTERNAL_ERROR ("unexpected error status %d", errnum);
     }
 }

@@ -5,16 +5,16 @@
 #include "command-line-arguments.h"
 
 typedef enum {
-    OPT_FAILED, /* false */
-    OPT_OK, /* good */
-    OPT_GIVEBACK, /* pop one of the arguments you thought you were getting off the stack */
+    OPT_FAILED,         /* false */
+    OPT_OK,             /* good */
+    OPT_GIVEBACK,       /* pop one of the arguments you thought you were getting off the stack */
 } opt_handled;
 
 /*
-  Search the array of keywords for a given argument, assigning the
-  output variable to the corresponding value.  Return false if nothing
-  matches.
-*/
+ * Search the array of keywords for a given argument, assigning the
+ * output variable to the corresponding value.  Return false if nothing
+ * matches.
+ */
 
 static opt_handled
 _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next,
@@ -78,15 +78,17 @@ _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next,
 	return OPT_FAILED;
     }
 
-    *arg_desc->opt_bool = negate ? !value : value;
+    *arg_desc->opt_bool = negate ? (! value) : value;
 
     return OPT_OK;
 }
 
 static opt_handled
-_process_int_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+_process_int_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str)
+{
 
     char *endptr;
+
     if (next == '\0' || arg_str[0] == '\0') {
 	fprintf (stderr, "Option \"%s\" needs an integer argument.\n", arg_desc->name);
 	return OPT_FAILED;
@@ -102,7 +104,8 @@ _process_int_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg
 }
 
 static opt_handled
-_process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+_process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str)
+{
 
     if (next == '\0') {
 	fprintf (stderr, "Option \"%s\" needs a string argument.\n", arg_desc->name);
@@ -117,20 +120,22 @@ _process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *
 }
 
 /* Return number of non-NULL opt_* fields in opt_desc. */
-static int _opt_set_count (const notmuch_opt_desc_t *opt_desc)
+static int
+_opt_set_count (const notmuch_opt_desc_t *opt_desc)
 {
     return
-	!!opt_desc->opt_inherit +
-	!!opt_desc->opt_bool +
-	!!opt_desc->opt_int +
-	!!opt_desc->opt_keyword +
-	!!opt_desc->opt_flags +
-	!!opt_desc->opt_string +
-	!!opt_desc->opt_position;
+	(bool) opt_desc->opt_inherit +
+	(bool) opt_desc->opt_bool +
+	(bool) opt_desc->opt_int +
+	(bool) opt_desc->opt_keyword +
+	(bool) opt_desc->opt_flags +
+	(bool) opt_desc->opt_string +
+	(bool) opt_desc->opt_position;
 }
 
 /* Return true if opt_desc is valid. */
-static bool _opt_valid (const notmuch_opt_desc_t *opt_desc)
+static bool
+_opt_valid (const notmuch_opt_desc_t *opt_desc)
 {
     int n = _opt_set_count (opt_desc);
 
@@ -142,15 +147,17 @@ static bool _opt_valid (const notmuch_opt_desc_t *opt_desc)
 }
 
 /*
-   Search for the {pos_arg_index}th position argument, return false if
-   that does not exist.
-*/
+ * Search for the {pos_arg_index}th position argument, return false if
+ * that does not exist.
+ */
 
 bool
 parse_position_arg (const char *arg_str, int pos_arg_index,
-		    const notmuch_opt_desc_t *arg_desc) {
+		    const notmuch_opt_desc_t *arg_desc)
+{
 
     int pos_arg_counter = 0;
+
     while (_opt_valid (arg_desc)) {
 	if (arg_desc->opt_position) {
 	    if (pos_arg_counter == pos_arg_index) {
@@ -176,12 +183,12 @@ parse_position_arg (const char *arg_str, int pos_arg_index,
 int
 parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_index)
 {
-    assert(argv);
+    assert (argv);
 
     const char *_arg = argv[opt_index];
 
-    assert(_arg);
-    assert(options);
+    assert (_arg);
+    assert (options);
 
     const char *arg = _arg + 2; /* _arg starts with -- */
     const char *negative_arg = NULL;
@@ -239,7 +246,7 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	if (lookahead) {
 	    next = ' ';
 	    value = next_arg;
-	    opt_index ++;
+	    opt_index++;
 	}
 
 	opt_handled opt_status = OPT_FAILED;
@@ -258,12 +265,12 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	    return -1;
 
 	if (lookahead && opt_status == OPT_GIVEBACK)
-	    opt_index --;
+	    opt_index--;
 
 	if (try->present)
 	    *try->present = true;
 
-	return opt_index+1;
+	return opt_index + 1;
     }
     return -1;
 }
@@ -271,13 +278,14 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 /* See command-line-arguments.h for description */
 int
 parse_arguments (int argc, char **argv,
-		 const notmuch_opt_desc_t *options, int opt_index) {
+		 const notmuch_opt_desc_t *options, int opt_index)
+{
 
     int pos_arg_index = 0;
     bool more_args = true;
 
     while (more_args && opt_index < argc) {
-	if (strncmp (argv[opt_index],"--",2) != 0) {
+	if (strncmp (argv[opt_index], "--", 2) != 0) {
 
 	    more_args = parse_position_arg (argv[opt_index], pos_arg_index, options);
 
@@ -290,7 +298,7 @@ parse_arguments (int argc, char **argv,
 	    int prev_opt_index = opt_index;
 
 	    if (strlen (argv[opt_index]) == 2)
-		return opt_index+1;
+		return opt_index + 1;
 
 	    opt_index = parse_option (argc, argv, options, opt_index);
 	    if (opt_index < 0) {

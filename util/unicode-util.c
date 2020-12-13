@@ -1,8 +1,8 @@
 #include "unicode-util.h"
 
 /* Based on Xapian::Unicode::is_wordchar, to avoid forcing clients to
-   link directly to libxapian.
-*/
+ * link directly to libxapian.
+ */
 
 static bool
 unicode_is_wordchar (notmuch_unichar ch)

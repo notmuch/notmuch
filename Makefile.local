@@ -1,7 +1,7 @@
-# -*- makefile -*-
+# -*- makefile-gmake -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man build-info ruby-bindings
+all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -19,7 +19,7 @@ endif
 
 # Depend (also) on the file 'version'. In case of ifeq ($(IS_GIT),yes)
 # this file may already have been updated.
-version.stamp: $(srcdir)/version
+version.stamp: $(srcdir)/version.txt
 	echo $(VERSION) > $@
 
 $(TAR_FILE):
@@ -30,12 +30,12 @@ $(TAR_FILE):
 	   echo "Warning: No signed tag for $(VERSION)"; \
 	fi ; \
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
-	echo $(VERSION) > version.tmp
+	echo $(VERSION) > version.txt.tmp
 	ct=`git --no-pager log -1 --pretty=format:%ct $$ref` ; \
 	tar --owner root --group root --append -f $(TAR_FILE).tmp \
 		--transform s_^_$(PACKAGE)-$(VERSION)/_  \
-		--transform 's_.tmp$$__' --mtime=@$$ct version.tmp
-	rm version.tmp
+		--transform 's_.tmp$$__' --mtime=@$$ct version.txt.tmp
+	rm version.txt.tmp
 	xz -C sha256 -9 < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
@@ -54,6 +54,7 @@ update-versions:
 	sed -i -e "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" \
 	    -e "s/^SOVERSION[[:blank:]]*=.*$$/SOVERSION = \'${LIBNOTMUCH_VERSION_MAJOR}\'/" \
 	    ${PV_FILE}
+	cp version.txt bindings/python-cffi
 
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
@@ -66,6 +67,7 @@ update-versions:
 release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) clean
+	$(MAKE) VERSION=$(VERSION) sphinx-html
 	$(MAKE) VERSION=$(VERSION) test
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
 	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
@@ -79,6 +81,7 @@ ifeq ($(REALLY_UPLOAD),yes)
 	git push origin $(VERSION) $(DEB_TAG) release pristine-tar
 	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
+	rsync --verbose --delete --recursive doc/_build/html/ $(RELEASE_HOST):$(DOC_DIR)
 endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 
@@ -88,7 +91,7 @@ pre-release:
 	$(MAKE) VERSION=$(VERSION) test
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
 	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
-	$(MAKE) VERSION=$(VERSION) $(TAR_FILE)
+	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
 	mkdir -p releases
@@ -97,14 +100,16 @@ pre-release:
 .PHONY: debian-snapshot
 debian-snapshot:
 	make VERSION=$(VERSION) clean
-	TMPFILE=$$(mktemp /tmp/notmuch.XXXXXX);		\
-	  cp debian/changelog $${TMPFILE};		\
-	  EDITOR=/bin/true dch -b -v $(VERSION)+1	\
-	    -D UNRELEASED 'test build, not for upload';	\
-	  echo '3.0 (native)' > debian/source/format; 	\
-	  debuild -us -uc;				\
-	  mv -f $${TMPFILE} debian/changelog;		\
-	  echo '3.0 (quilt)' > debian/source/format
+	RETVAL=0 &&						\
+	  TMPFILE=$$(mktemp /tmp/notmuch.XXXXXX) &&		\
+	  cp debian/changelog $${TMPFILE} &&			\
+	  (EDITOR=/bin/true dch -b -v $(VERSION)+1		\
+	    -D UNRELEASED 'test build, not for upload' &&	\
+	  echo '3.0 (native)' > debian/source/format &&		\
+	  debuild -us -uc); RETVAL=$$?				\
+	  mv -f $${TMPFILE} debian/changelog;			\
+	  echo '3.0 (quilt)' > debian/source/format;		\
+	  exit $$RETVAL
 
 .PHONY: release-message
 release-message:
@@ -290,7 +295,7 @@ CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
 CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
 CLEAN := $(CLEAN) .deps
 
-DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config
+DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config sphinx.config
 
 CPPCHECK_STAMPS := $(SRCS:%=.stamps/cppcheck/%)
 .PHONY: cppcheck

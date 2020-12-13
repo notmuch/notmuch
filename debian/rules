@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-export PYBUILD_NAME=notmuch
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
 	dh $@ --with python3,elpa
@@ -15,19 +15,25 @@ override_dh_auto_configure:
 		--zshcompletiondir=/usr/share/zsh/vendor-completions \
 		--localstatedir=/var
 
+override_dh_auto_test:
+	dh_auto_test -- V=1
+
 override_dh_auto_build:
 	dh_auto_build -- V=1
-	dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch2 dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
-	dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch2 dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install
-	dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch2 dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	$(MAKE) -C contrib/notmuch-mutt DESTDIR=$(CURDIR)/debian/tmp install
 	dh_auto_install --sourcedirectory bindings/ruby

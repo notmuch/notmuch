@@ -1,0 +1,35 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Lyrics
+Date: Wed 29 May 2019 06:09:22 PM EDT
+Message-ID: <encrypted-signed@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBBAC9z781zV7QAInGMKHX6TKU5Xw/OkoWXahpDL88F6Ocm5R9
+7M9z2ocvlyrbgRhqE+nvFeGH/K7rVkBBT6TAcdIe/C8Qzbd3stPPcx1PlunGROj7
+H/WAcmDksK3HkXpHwmInUtzNw1pkhOoLy/sFSbPvtyg8GCUzXbafHAIIo0rB2tLB
+DwGWD3l4WdcyQWuYD9QJKuDIqdWo8E3TTcKkiOAt/6liwPNZ0jGzDeCuSTnWFj6Z
+AiXGeNtD3I1tCN/8T3NjEKOCQ+bdT5Y06dDaL61FpQ23eIuSUgksVxjnkEAb6iPe
+07gjzcyNuGP3WPI/0qu0wtZwpAQxvaNygDsQj/OjR5kn9luBd/VqodM3TWWS8miV
+m0z1tYbqYAQWW6TS7fXlsyXoOxTLW5MCfe3D36VSErL/NJItETklVKzNfKjMmRKx
+CI2ZUzugxPWSLQzOp5yl7iICk8e+vS9TkQw2j0nXAQYLYgmqZMhf4av5GlFv3tQu
+heO4XLT6NBDTHMFTDbgW42kE0N4MDPc29AqVFGImcTHvflF4Vp0qIbSJdIcHwKkU
+5LKqvicAa0lsIoJbsW3lHrzowyjov2vLH/VGd/wIX+MS3KT7cySdyp8HVMcwwyZu
+Y9nrTN/7G1FwKWlcGa4uJNcFFkYlcEymZj1EX2cyrdezPtX7K5vhwBYddptFD+Bn
+IVkghRut3UDeXe83F8OutWiZfK5EVYABq/aP3//hIbQl2o4Dkd3z9m+8LobrIV5s
+NXjAjU5WQOjRLoHBebG2HkMpFsWhXD/Fb/Bb58VOpdI=
+=x12v
+-----END PGP MESSAGE-----
+--=-=-=--

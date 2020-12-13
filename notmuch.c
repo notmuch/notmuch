@@ -61,9 +61,10 @@ const notmuch_opt_desc_t notmuch_shared_options [] = {
  * notmuch_process_shared_options (subcommand_name);
  */
 void
-notmuch_process_shared_options (const char *subcommand_name) {
+notmuch_process_shared_options (const char *subcommand_name)
+{
     if (print_version) {
-	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
+	printf ("notmuch " STRINGIFY (NOTMUCH_VERSION) "\n");
 	exit (EXIT_SUCCESS);
     }
 
@@ -76,8 +77,9 @@ notmuch_process_shared_options (const char *subcommand_name) {
 /* This is suitable for subcommands that do not actually open the
  * database.
  */
-int notmuch_minimal_options (const char *subcommand_name,
-				  int argc, char **argv)
+int
+notmuch_minimal_options (const char *subcommand_name,
+			 int argc, char **argv)
 {
     int opt_index;
 
@@ -98,14 +100,14 @@ int notmuch_minimal_options (const char *subcommand_name,
 
 
 struct _notmuch_client_indexing_cli_choices indexing_cli_choices = { };
-const notmuch_opt_desc_t  notmuch_shared_indexing_options [] = {
+const notmuch_opt_desc_t notmuch_shared_indexing_options [] = {
     { .opt_keyword = &indexing_cli_choices.decrypt_policy,
       .present = &indexing_cli_choices.decrypt_policy_set, .keywords =
-      (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
-			      { "true", NOTMUCH_DECRYPT_TRUE },
-			      { "auto", NOTMUCH_DECRYPT_AUTO },
-			      { "nostash", NOTMUCH_DECRYPT_NOSTASH },
-			      { 0, 0 } },
+	  (notmuch_keyword_t []){ { "false", NOTMUCH_DECRYPT_FALSE },
+				  { "true", NOTMUCH_DECRYPT_TRUE },
+				  { "auto", NOTMUCH_DECRYPT_AUTO },
+				  { "nostash", NOTMUCH_DECRYPT_NOSTASH },
+				  { 0, 0 } },
       .name = "decrypt" },
     { }
 };
@@ -192,7 +194,7 @@ find_command (const char *name)
     size_t i;
 
     for (i = 0; i < ARRAY_SIZE (commands); i++)
-	if ((!name && !commands[i].name) ||
+	if ((! name && ! commands[i].name) ||
 	    (name && commands[i].name && strcmp (name, commands[i].name) == 0))
 	    return &commands[i];
 
@@ -270,11 +272,11 @@ notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch)
 {
     const char *uuid = NULL;
 
-    if (!notmuch_requested_db_uuid)
+    if (! notmuch_requested_db_uuid)
 	return;
     IGNORE_RESULT (notmuch_database_get_revision (notmuch, &uuid));
 
-    if (strcmp (notmuch_requested_db_uuid, uuid) != 0){
+    if (strcmp (notmuch_requested_db_uuid, uuid) != 0) {
 	fprintf (stderr, "Error: requested database revision %s does not match %s\n",
 		 notmuch_requested_db_uuid, uuid);
 	exit (1);
@@ -297,7 +299,7 @@ _help_for (const char *topic_name)
     help_topic_t *topic;
     unsigned int i;
 
-    if (!topic_name) {
+    if (! topic_name) {
 	printf ("The notmuch mail system.\n\n");
 	usage (stdout);
 	return EXIT_SUCCESS;
@@ -333,7 +335,7 @@ _help_for (const char *topic_name)
 }
 
 static int
-notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
+notmuch_help_command (unused (notmuch_config_t *config), int argc, char *argv[])
 {
     int opt_index;
 
@@ -342,8 +344,8 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
 	return EXIT_FAILURE;
 
     /* skip at least subcommand argument */
-    argc-= opt_index;
-    argv+= opt_index;
+    argc -= opt_index;
+    argv += opt_index;
 
     if (argc == 0) {
 	return _help_for (NULL);
@@ -358,7 +360,7 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
  */
 static int
 notmuch_command (notmuch_config_t *config,
-		 unused(int argc), unused(char *argv[]))
+		 unused(int argc), unused(char **argv))
 {
     char *db_path;
     struct stat st;
@@ -417,7 +419,8 @@ notmuch_command (notmuch_config_t *config,
  * executed. Return true if external command is not found. Return
  * false on errors.
  */
-static bool try_external_command(char *argv[])
+static bool
+try_external_command (char *argv[])
 {
     char *old_argv0 = argv[0];
     bool ret = true;
@@ -431,7 +434,7 @@ static bool try_external_command(char *argv[])
     execvp (argv[0], argv);
     if (errno != ENOENT) {
 	fprintf (stderr, "Error: Running external command '%s' failed: %s\n",
-		 argv[0], strerror(errno));
+		 argv[0], strerror (errno));
 	ret = false;
     }
 
@@ -464,7 +467,7 @@ main (int argc, char *argv[])
     local = talloc_new (NULL);
 
     g_mime_init ();
-#if !GLIB_CHECK_VERSION(2, 35, 1)
+#if ! GLIB_CHECK_VERSION (2, 35, 1)
     g_type_init ();
 #endif
 
@@ -484,9 +487,9 @@ main (int argc, char *argv[])
 
     command = find_command (command_name);
     /* if command->function is NULL, try external command */
-    if (!command || !command->function) {
+    if (! command || ! command->function) {
 	/* This won't return if the external command is found. */
-	if (try_external_command(argv + opt_index))
+	if (try_external_command (argv + opt_index))
 	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 		     command_name);
 	ret = EXIT_FAILURE;
@@ -494,7 +497,7 @@ main (int argc, char *argv[])
     }
 
     config = notmuch_config_open (local, config_file_name, command->config_mode);
-    if (!config) {
+    if (! config) {
 	ret = EXIT_FAILURE;
 	goto DONE;
     }

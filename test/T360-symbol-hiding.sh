@@ -14,11 +14,11 @@ test_description='exception symbol hiding'
 test_begin_subtest 'running test' run_test
 mkdir -p ${PWD}/fakedb/.notmuch
 $TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent 2>&1 \
-	| notmuch_dir_sanitize | sed -e "s,\`,\',g" -e "s,${NOTMUCH_DEFAULT_XAPIAN_BACKEND},backend,g" > OUTPUT
+	| notmuch_dir_sanitize | sed -e "s,\`,\',g" -e "s,No [^[:space:]]* database,No XXXXXX database,g" > OUTPUT
 
 cat <<EOF > EXPECTED
 A Xapian exception occurred opening database: Couldn't stat 'CWD/fakedb/.notmuch/xapian'
-caught No backend database found at path 'CWD/nonexistent'
+caught No XXXXXX database found at path 'CWD/nonexistent'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

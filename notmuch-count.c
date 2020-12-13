@@ -165,10 +165,10 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &output, .name = "output", .keywords =
-	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
-				  { "messages", OUTPUT_MESSAGES },
-				  { "files", OUTPUT_FILES },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
+				      { "messages", OUTPUT_MESSAGES },
+				      { "files", OUTPUT_FILES },
+				      { 0, 0 } } },
 	{ .opt_bool = &exclude, .name = "exclude" },
 	{ .opt_bool = &print_lastmod, .name = "lastmod" },
 	{ .opt_bool = &batch, .name = "batch" },
@@ -214,7 +214,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (exclude) {
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
-	    (config, &search_exclude_tags_length);
+				  (config, &search_exclude_tags_length);
     }
 
     if (batch)

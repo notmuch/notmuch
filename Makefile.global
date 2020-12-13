@@ -1,3 +1,4 @@
+# -*- makefile-gmake -*-
 # Here's the (hopefully simple) versioning scheme.
 #
 # Releases of notmuch have a two-digit version (0.1, 0.2, etc.). We
@@ -16,7 +17,7 @@ else
 DATE:=$(shell date +%F)
 endif
 
-VERSION:=$(shell cat ${srcdir}/version)
+VERSION:=$(shell cat ${srcdir}/version.txt)
 ELPA_VERSION:=$(subst ~,_,$(VERSION))
 ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
 ifeq ($(IS_GIT),yes)
@@ -39,6 +40,7 @@ DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
+DOC_DIR=/srv/notmuchmail.org/www/doc/latest
 RELEASE_URL=https://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.xz
 ELPA_FILE:=$(PACKAGE)-emacs-$(ELPA_VERSION).tar
@@ -49,8 +51,7 @@ DETACHED_SIG_FILE=$(TAR_FILE).asc
 PV_FILE=bindings/python/notmuch/version.py
 
 # Smash together user's values with our extra values
-STD_CFLAGS := -std=gnu99
-FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(STD_CFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(extra_cflags) $(CONFIGURE_CFLAGS)
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(extra_cflags) $(CONFIGURE_CFLAGS)
 FINAL_CXXFLAGS = $(CPPFLAGS) $(CXXFLAGS) $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CONFIGURE_CXXFLAGS)
 FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lnotmuch_util -Llib -lnotmuch
 ifeq ($(LIBDIR_IN_LDCONFIG),0)

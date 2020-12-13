@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-int main()
+int
+main ()
 {
     ssize_t count = 0;
     size_t n = 0;
     char **lineptr = NULL;
     FILE *stream = NULL;
 
-    count = getline(lineptr, &n, stream);
+    count = getline (lineptr, &n, stream);
 }

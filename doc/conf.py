@@ -4,6 +4,8 @@
 import sys
 import os
 
+extensions = [ 'sphinx.ext.autodoc' ]
+
 # The suffix of source filenames.
 source_suffix = '.rst'
 
@@ -12,15 +14,25 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'notmuch'
-copyright = u'2009-2019, Carl Worth and many others'
+copyright = u'2009-2020, Carl Worth and many others'
 
 location = os.path.dirname(__file__)
 
 for pathdir in ['.', '..']:
-    version_file = os.path.join(location,pathdir,'version')
+    version_file = os.path.join(location,pathdir,'version.txt')
     if os.path.exists(version_file):
         with open(version_file,'r') as infile:
             version=infile.read().replace('\n','')
+
+# for autodoc
+sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'notmuch2'))
+
+# read generated config
+for pathdir in ['.', '..']:
+    conf_file = os.path.join(location,pathdir,'sphinx.config')
+    if os.path.exists(conf_file):
+        with open(conf_file,'r') as infile:
+            exec(''.join(infile.readlines()))
 
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -29,11 +41,22 @@ release = version
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
-# If we don't have emacs (or the user configured --without-emacs),
-# don't build the notmuch-emacs docs, as they need emacs to generate
-# the docstring include files
-if os.environ.get('HAVE_EMACS') != '1' or os.environ.get('WITH_EMACS') != '1':
+if tags.has('WITH_EMACS'):
+    # Hacky reimplementation of include to workaround limitations of
+    # sphinx-doc
+    lines = ['.. include:: /../emacs/rstdoc.rsti\n\n'] # in the source tree
+    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti'):
+        lines.extend(open(rsti_dir+'/'+file))
+    rst_epilog = ''.join(lines)
+    del lines
+else:
+    # If we don't have emacs (or the user configured --without-emacs),
+    # don't build the notmuch-emacs docs, as they need emacs to generate
+    # the docstring include files
     exclude_patterns.append('notmuch-emacs.rst')
+
+if not tags.has('WITH_PYTHON'):
+    exclude_patterns.append('python-bindings.rst')
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

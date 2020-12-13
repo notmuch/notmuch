@@ -12,6 +12,7 @@ use strict;
 use warnings;
 
 use File::Path;
+use File::Basename;
 use Getopt::Long qw(:config no_getopt_compat);
 use Mail::Header;
 use Mail::Box::Maildir;
@@ -41,16 +42,17 @@ sub search($$$) {
     my ($maildir, $remove_dups, $query) = @_;
     my $dup_option = "";
 
-    $query = shell_quote($query);
-
-    if ($remove_dups) {
-      $dup_option = "--duplicate=1";
-    }
+    my @args = qw/notmuch search --output=files/;
+    push @args, "--duplicate=1" if $remove_dups;
+    push @args, $query;
 
     empty_maildir($maildir);
-    system("notmuch search --output=files $dup_option $query"
-	   . " | sed -e 's: :\\\\ :g'"
-	   . " | xargs -r -I searchoutput ln -s searchoutput $maildir/cur/");
+    open my $pipe, '-|', @args or die "Running @args failed: $!\n";
+    while (<$pipe>) {
+	chomp;
+	my $ln = "$maildir/cur/" . basename $_;
+	symlink $_, "$ln" or warn "Failed to symlink '$_', '$ln': $!\n";
+    }
 }
 
 sub prompt($$) {

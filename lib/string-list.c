@@ -67,8 +67,8 @@ _notmuch_string_list_append (notmuch_string_list_t *list,
 static int
 cmpnode (const void *pa, const void *pb)
 {
-    notmuch_string_node_t *a = *(notmuch_string_node_t * const *)pa;
-    notmuch_string_node_t *b = *(notmuch_string_node_t * const *)pb;
+    notmuch_string_node_t *a = *(notmuch_string_node_t *const *) pa;
+    notmuch_string_node_t *b = *(notmuch_string_node_t *const *) pb;
 
     return strcmp (a->string, b->string);
 }
@@ -92,7 +92,7 @@ _notmuch_string_list_sort (notmuch_string_list_t *list)
     qsort (nodes, list->length, sizeof (*nodes), cmpnode);
 
     for (i = 0; i < list->length - 1; ++i)
-	nodes[i]->next = nodes[i+1];
+	nodes[i]->next = nodes[i + 1];
     nodes[i]->next = NULL;
     list->head = nodes[0];
     list->tail = &nodes[i]->next;

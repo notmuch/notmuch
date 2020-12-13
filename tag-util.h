@@ -8,25 +8,25 @@ typedef struct _tag_op_list_t tag_op_list_t;
 
 /* Use powers of 2 */
 typedef enum {
-    TAG_FLAG_NONE = 0,
+    TAG_FLAG_NONE		= 0,
 
     /* Operations are synced to maildir, if possible.
      */
-    TAG_FLAG_MAILDIR_SYNC = (1 << 0),
+    TAG_FLAG_MAILDIR_SYNC	= (1 << 0),
 
     /* Remove all tags from message before applying list.
      */
-    TAG_FLAG_REMOVE_ALL = (1 << 1),
+    TAG_FLAG_REMOVE_ALL		= (1 << 1),
 
     /* Don't try to avoid database operations. Useful when we
      * know that message passed needs these operations.
      */
-    TAG_FLAG_PRE_OPTIMIZED = (1 << 2),
+    TAG_FLAG_PRE_OPTIMIZED	= (1 << 2),
 
     /* Accept strange tags that might be user error;
      * intended for use by notmuch-restore.
      */
-    TAG_FLAG_BE_GENEROUS = (1 << 3)
+    TAG_FLAG_BE_GENEROUS	= (1 << 3)
 
 } tag_op_flag_t;
 
@@ -34,16 +34,16 @@ typedef enum {
  * skipped lines are positive.
  */
 typedef enum {
-    TAG_PARSE_OUT_OF_MEMORY = -1,
+    TAG_PARSE_OUT_OF_MEMORY	= -1,
 
     /* Line parsed successfully. */
-    TAG_PARSE_SUCCESS = 0,
+    TAG_PARSE_SUCCESS		= 0,
 
     /* Line has a syntax error */
-    TAG_PARSE_INVALID = 1,
+    TAG_PARSE_INVALID		= 1,
 
     /* Line was blank or a comment */
-    TAG_PARSE_SKIPPED = 2
+    TAG_PARSE_SKIPPED		= 2
 
 } tag_parse_status_t;
 
@@ -123,7 +123,7 @@ tag_op_list_append (tag_op_list_t *list,
 /*
  * Apply a list of tag operations, in order, to a given message.
  *
- * Flags can be bitwise ORed; see enum above for possibilies.
+ * Flags can be bitwise ORed; see enum above for possibilities.
  */
 
 notmuch_status_t

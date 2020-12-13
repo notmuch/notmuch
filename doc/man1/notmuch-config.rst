@@ -38,7 +38,7 @@ programmatically as described in the SYNOPSIS above.
     Every configuration item is printed to stdout, each on a separate
     line of the form::
 
-        *section*.\ *item*\ =\ *value*
+        section.item=value
 
     No additional whitespace surrounds the dot or equals sign
     characters. In a multiple-value item (a list), the values are
@@ -134,14 +134,6 @@ The available configuration items are described below.
 
     Default: ``true``.
 
-**crypto.gpg_path**
-    Name (or full path) of gpg binary to use in verification and
-    decryption of PGP/MIME messages.  NOTE: This configuration item is
-    deprecated, and will be ignored if notmuch is built against GMime
-    3.0 or later.
-
-    Default: ``gpg``.
-
 **index.decrypt** **[STORED IN DATABASE]**
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
@@ -206,8 +198,9 @@ The available configuration items are described below.
 
 **built_with.<name>**
     Compile time feature <name>. Current possibilities include
-    "compact" (see **notmuch-compact(1)**) and "field_processor" (see
-    **notmuch-search-terms(7)**).
+    "retry_lock" (configure option, included by default).
+    (since notmuch 0.30, "compact" and "field_processor" are
+    always included.)
 
 **query.<name>** **[STORED IN DATABASE]**
     Expansion for named query called <name>. See

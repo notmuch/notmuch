@@ -95,7 +95,7 @@ class Query(object):
             :exc:`NullPointerError` if the query creation failed
                 (e.g. too little memory).
             :exc:`NotInitializedError` if the underlying db was not
-                intitialized.
+                initialized.
         """
         db._assert_db_is_initialized()
         # create reference to parent db to keep it alive
@@ -140,7 +140,7 @@ class Query(object):
     _search_threads.restype = c_uint
 
     def search_threads(self):
-        """Execute a query for threads
+        r"""Execute a query for threads
 
         Execute a query for threads, returning a :class:`Threads` iterator.
         The returned threads are owned by the query and as such, will only be

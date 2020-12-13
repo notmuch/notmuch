@@ -36,6 +36,21 @@ cat<<EOF > QUERIES.BEFORE
 EOF
 test_expect_equal_file QUERIES.BEFORE OUTPUT
 
+test_begin_subtest 'dumping large queries'
+# This value is just large enough to trigger a limitation of gzprintf
+# to 8191 bytes in total (by default).
+repeat=1329
+notmuch config set query.big "$(seq -s' ' $repeat)"
+notmuch dump --include=config > OUTPUT
+notmuch config set query.big ''
+printf "#notmuch-dump batch-tag:3 config\n#@ query.big " > EXPECTED
+seq -s'%20' $repeat >> EXPECTED
+cat <<EOF >> EXPECTED
+#@ query.test date%3a2009-11-18..2009-11-18%20and%20tag%3aunread
+#@ query.test2 query%3atest%20and%20subject%3aMaildir
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "delete named queries"
 notmuch dump > BEFORE
 notmuch config set query.test
@@ -53,17 +68,11 @@ test_expect_equal_file QUERIES.BEFORE OUTPUT
 test_begin_subtest "search named query"
 notmuch search query:test > OUTPUT
 notmuch search $QUERYSTR > EXPECTED
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -ne 1 ]; then
-    test_subtest_known_broken
-fi
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search named query with other terms"
 notmuch search query:test and subject:Maildir > OUTPUT
 notmuch search $QUERYSTR and subject:Maildir > EXPECTED
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -ne 1 ]; then
-    test_subtest_known_broken
-fi
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search nested named query"

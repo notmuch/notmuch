@@ -128,9 +128,9 @@ OPTION SYNTAX
 -------------
 
 All options accepting an argument can be used with '=' or ':' as a
-separator. For the cases where it's not ambiguous (in particular
-excluding boolean options), a space can also be used. The following
-are all equivalent:
+separator. Except for boolean options (which would be ambiguous), a
+space can also be used as a separator. The following are all
+equivalent:
 
 ::
 

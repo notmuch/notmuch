@@ -1,4 +1,4 @@
-;; make-deps.el --- compute make dependencies for Elisp sources
+;;; make-deps.el --- compute make dependencies for Elisp sources
 ;;
 ;; Copyright © Austin Clements
 ;;
@@ -23,7 +23,6 @@
 
 (defun batch-make-deps ()
   "Invoke `make-deps' for each file on the command line."
-
   (setq debug-on-error t)
   (dolist (file command-line-args-left)
     (let ((default-directory command-line-default-directory))
@@ -37,8 +36,8 @@
 This prints make dependencies to `standard-output' based on the
 top-level `require' expressions in the current buffer.  Paths in
 rules will be given relative to DIR, or `default-directory'."
-
-  (setq dir (or dir default-directory))
+  (unless dir
+    (setq dir default-directory))
   (save-excursion
     (goto-char (point-min))
     (condition-case nil

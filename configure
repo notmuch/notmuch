@@ -26,8 +26,29 @@ readonly DEFAULT_IFS="$IFS"
 srcdir=$(dirname "$0")
 NOTMUCH_SRCDIR=$(cd "$srcdir" && pwd)
 
+case $NOTMUCH_SRCDIR in ( *\'* | *['\"`$']* )
+	echo "Definitely unsafe characters in source path '$NOTMUCH_SRCDIR'".
+	exit 1
+esac
+
+case $PWD in ( *\'* | *['\"`$']* )
+	echo "Definitely unsafe characters in current directory '$PWD'".
+	exit 1
+esac
+
+# In case of whitespace, builds may work, tests definitely will not.
+case $NOTMUCH_SRCDIR in ( *["$IFS"]* )
+	echo "Whitespace in source path '$NOTMUCH_SRCDIR' not supported".
+	exit 1
+esac
+
+case $PWD in ( *["$IFS"]* )
+	echo "Whitespace in current directory '$PWD' not supported".
+	exit 1
+esac
+
 subdirs="util compat lib parse-time-string completion doc emacs"
-subdirs="${subdirs} performance-test test test/test-databases"
+subdirs="${subdirs} performance-test test"
 subdirs="${subdirs} bindings"
 
 # For a non-srcdir configure invocation (such as ../configure), create
@@ -49,6 +70,14 @@ if [ "$srcdir" != "." ]; then
     mkdir bindings/ruby
     cp -a "$srcdir"/bindings/ruby/*.[ch] bindings/ruby
     cp -a "$srcdir"/bindings/ruby/extconf.rb bindings/ruby
+
+    # Use the same hack to replicate python-cffi source for
+    # out-of-tree builds (again, not ideal).
+    mkdir bindings/python-cffi
+    cp -a "$srcdir"/bindings/python-cffi/tests \
+       "$srcdir"/bindings/python-cffi/notmuch2 \
+       "$srcdir"/bindings/python-cffi/setup.py \
+       bindings/python-cffi/
 fi
 
 # Set several defaults (optionally specified by the user in
@@ -79,6 +108,7 @@ PREFIX=/usr/local
 LIBDIR=
 WITH_DOCS=1
 WITH_API_DOCS=1
+WITH_PYTHON_DOCS=1
 WITH_EMACS=1
 WITH_DESKTOP=1
 WITH_BASH=1
@@ -147,7 +177,7 @@ Fine tuning of some installation directories is available:
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
 	--bashcompletiondir=DIR Bash completions files [PREFIX/share/bash-completion/completions]
-	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
+	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/site-functions]
 
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
@@ -401,15 +431,22 @@ else
     have_pkg_config=0
 fi
 
-printf "Checking for Xapian development files... "
+
+
+printf "Checking for Xapian development files (>= 1.4.0)... "
 have_xapian=0
-for xapian_config in ${XAPIAN_CONFIG} xapian-config xapian-config-1.3; do
+for xapian_config in ${XAPIAN_CONFIG} xapian-config; do
     if ${xapian_config} --version > /dev/null 2>&1; then
 	xapian_version=$(${xapian_config} --version | sed -e 's/.* //')
-	printf "Yes (%s).\n" ${xapian_version}
-	have_xapian=1
-	xapian_cxxflags=$(${xapian_config} --cxxflags)
-	xapian_ldflags=$(${xapian_config} --libs)
+	case $xapian_version in
+		1.[4-9]* | 1.[1-9][0-9]* | [2-9]* | [1-9][0-9]*)
+			printf "Yes (%s).\n" ${xapian_version}
+			have_xapian=1
+			xapian_cxxflags=$(${xapian_config} --cxxflags)
+			xapian_ldflags=$(${xapian_config} --libs)
+			;;
+		*) printf "Xapian $xapian_version not supported... "
+	esac
 	break
     fi
 done
@@ -418,81 +455,10 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-have_xapian_compact=0
-have_xapian_field_processor=0
-if [ ${have_xapian} = "1" ]; then
-    printf "Checking for Xapian compaction support... "
-    cat>_compact.cc<<EOF
-#include <xapian.h>
-class TestCompactor : public Xapian::Compactor { };
-EOF
-    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _compact.cc -o _compact.o > /dev/null 2>&1
-    then
-	have_xapian_compact=1
-	printf "Yes.\n"
-    else
-	printf "No.\n"
-	errors=$((errors + 1))
-    fi
-
-    rm -f _compact.o _compact.cc
-
-    printf "Checking for Xapian FieldProcessor API... "
-    cat>_field_processor.cc<<EOF
-#include <xapian.h>
-class TitleFieldProcessor : public Xapian::FieldProcessor { };
-EOF
-    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _field_processor.cc -o _field_processor.o > /dev/null 2>&1
-    then
-	have_xapian_field_processor=1
-	printf "Yes.\n"
-    else
-	printf "No. (optional)\n"
-    fi
-
-    rm -f _field_processor.o _field_processor.cc
-
-    default_xapian_backend=""
-    # DB_RETRY_LOCK is only supported on Xapian > 1.3.2
-    have_xapian_db_retry_lock=0
-    if [ $WITH_RETRY_LOCK = "1" ]; then
-	printf "Checking for Xapian lock retry support... "
-	cat>_retry.cc<<EOF
-#include <xapian.h>
-int flag = Xapian::DB_RETRY_LOCK;
-EOF
-	if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _retry.cc -o _retry.o > /dev/null 2>&1
-	then
-	    have_xapian_db_retry_lock=1
-	    printf "Yes.\n"
-	else
-	    printf "No. (optional)\n"
-	fi
-	rm -f _retry.o _retry.cc
-    fi
-
-    printf "Testing default Xapian backend... "
-    cat >_default_backend.cc <<EOF
-#include <xapian.h>
-int main(int argc, char** argv) {
-   Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
-}
-EOF
-    ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
-    ./_default_backend
-    if [ -f test.db/iamglass ]; then
-	default_xapian_backend=glass
-    else
-	default_xapian_backend=chert
-    fi
-    printf "%s\n" "${default_xapian_backend}";
-    rm -rf test.db _default_backend _default_backend.cc
-fi
-
 GMIME_MINVER=3.0.3
 
-printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-3.0 > $GMIME_MINVER"; then
+printf "Checking for GMime development files (>= $GMIME_MINVER)... "
+if pkg-config --exists "gmime-3.0 >= $GMIME_MINVER"; then
     printf "Yes.\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-3.0)
@@ -513,11 +479,11 @@ int main () {
 
     g_mime_init ();
     parser = g_mime_parser_new ();
-    g_mime_parser_init_with_stream (parser, g_mime_stream_file_open("test/corpora/crypto/basic-encrypted.eml", "r", &error));
+    g_mime_parser_init_with_stream (parser, g_mime_stream_file_open("$srcdir/test/corpora/crypto/basic-encrypted.eml", "r", &error));
     if (error) return !! fprintf (stderr, "failed to instantiate parser with test/corpora/crypto/basic-encrypted.eml\n");
 
     body = GMIME_MULTIPART_ENCRYPTED(g_mime_message_get_mime_part (g_mime_parser_construct_message (parser, NULL)));
-    if (body == NULL) return !!	fprintf (stderr, "did not find a multipart encrypted message\n");
+    if (body == NULL) return !! fprintf (stderr, "did not find a multipart encrypted message\n");
 
     output = g_mime_multipart_encrypted_decrypt (body, GMIME_DECRYPT_EXPORT_SESSION_KEY, NULL, &decrypt_result, &error);
     if (error || output == NULL) return !! fprintf (stderr, "decryption failed\n");
@@ -533,7 +499,7 @@ EOF
         printf 'No.\nCould not make tempdir for testing session-key support.\n'
         errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _check_session_keys.c ${gmime_ldflags} -o _check_session_keys \
-           && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < test/gnupg-secret-key.asc \
+           && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
            && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
            && [ $SESSION_KEY = 9:0BACD64099D1468AB07C796F0C0AC4851948A658A15B34E803865E9FC635F2F5 ]
     then
@@ -554,6 +520,154 @@ EOF
         else
             printf 'You do not have the GPGME development libraries installed.\n'
         fi
+        errors=$((errors + 1))
+    fi
+    if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
+        rm -rf "$TEMP_GPG"
+    fi
+
+    # see https://github.com/jstedfast/gmime/pull/90
+    # should be fixed in GMime in 3.2.7, but some distros might patch
+    printf "Checking for GMime X.509 certificate validity... "
+
+    cat > _check_x509_validity.c <<EOF
+#include <stdio.h>
+#include <gmime/gmime.h>
+
+int main () {
+    GError *error = NULL;
+    GMimeParser *parser = NULL;
+    GMimeApplicationPkcs7Mime *body = NULL;
+    GMimeSignatureList *sig_list = NULL;
+    GMimeSignature *sig = NULL;
+    GMimeCertificate *cert = NULL;
+    GMimeObject *output = NULL;
+    GMimeValidity validity = GMIME_VALIDITY_UNKNOWN;
+    int len;
+
+    g_mime_init ();
+    parser = g_mime_parser_new ();
+    g_mime_parser_init_with_stream (parser, g_mime_stream_file_open("$srcdir/test/corpora/pkcs7/smime-onepart-signed.eml", "r", &error));
+    if (error) return !! fprintf (stderr, "failed to instantiate parser with test/corpora/pkcs7/smime-onepart-signed.eml\n");
+
+    body = GMIME_APPLICATION_PKCS7_MIME(g_mime_message_get_mime_part (g_mime_parser_construct_message (parser, NULL)));
+    if (body == NULL) return !!	fprintf (stderr, "did not find a application/pkcs7 message\n");
+
+    sig_list = g_mime_application_pkcs7_mime_verify (body, GMIME_VERIFY_NONE, &output, &error);
+    if (error || output == NULL) return !! fprintf (stderr, "verify failed\n");
+
+    if (sig_list == NULL) return !! fprintf (stderr, "no GMimeSignatureList found\n");
+    len = g_mime_signature_list_length (sig_list);
+    if (len != 1) return !! fprintf (stderr, "expected 1 signature, got %d\n", len);
+    sig = g_mime_signature_list_get_signature (sig_list, 0);
+    if (sig == NULL) return !! fprintf (stderr, "no GMimeSignature found at position 0\n");
+    cert = g_mime_signature_get_certificate (sig);
+    if (cert == NULL) return !! fprintf (stderr, "no GMimeCertificate found\n");
+    validity = g_mime_certificate_get_id_validity (cert);
+    if (validity != GMIME_VALIDITY_FULL) return !! fprintf (stderr, "Got validity %d, expected %d\n", validity, GMIME_VALIDITY_FULL);
+
+    return 0;
+}
+EOF
+    if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
+        printf 'No.\nCould not make tempdir for testing X.509 certificate validity support.\n'
+        errors=$((errors + 1))
+    elif ${CC} ${CFLAGS} ${gmime_cflags} _check_x509_validity.c ${gmime_ldflags} -o _check_x509_validity \
+            && echo disable-crl-checks > "$TEMP_GPG/gpgsm.conf" \
+            && echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$TEMP_GPG/trustlist.txt" \
+            && GNUPGHOME=${TEMP_GPG} gpgsm --batch --quiet --import < "$srcdir"/test/smime/ca.crt
+    then
+        if GNUPGHOME=${TEMP_GPG} ./_check_x509_validity; then
+            gmime_x509_cert_validity=1
+            printf "Yes.\n"
+        else
+            gmime_x509_cert_validity=0
+            printf "No.\n"
+            if pkg-config --exists "gmime-3.0 >= 3.2.7"; then
+                cat <<EOF
+*** Error: GMime fails to calculate X.509 certificate validity, and
+is later than 3.2.7, which should have fixed this issue.
+
+Please follow up on https://github.com/jstedfast/gmime/pull/90 with
+more details.
+EOF
+                errors=$((errors + 1))
+            fi
+        fi
+    else
+        printf 'No.\nFailed to set up gpgsm for testing X.509 certificate validity support.\n'
+        errors=$((errors + 1))
+    fi
+    if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
+        rm -rf "$TEMP_GPG"
+    fi
+
+    # see https://dev.gnupg.org/T3464
+    # there are problems verifying signatures when decrypting with session keys with GPGME 1.13.0 and 1.13.1
+    printf "Checking signature verification when decrypting using session keys... "
+
+    cat > _verify_sig_with_session_key.c <<EOF
+#include <stdio.h>
+#include <gmime/gmime.h>
+
+int main () {
+    GError *error = NULL;
+    GMimeParser *parser = NULL;
+    GMimeMultipartEncrypted *body = NULL;
+    GMimeDecryptResult *result = NULL;
+    GMimeSignatureList *sig_list = NULL;
+    GMimeSignature *sig = NULL;
+    GMimeObject *output = NULL;
+    GMimeSignatureStatus status;
+    int len;
+
+    g_mime_init ();
+    parser = g_mime_parser_new ();
+    g_mime_parser_init_with_stream (parser, g_mime_stream_file_open("$srcdir/test/corpora/crypto/encrypted-signed.eml", "r", &error));
+    if (error) return !! fprintf (stderr, "failed to instantiate parser with test/corpora/pkcs7/smime-onepart-signed.eml\n");
+
+    body = GMIME_MULTIPART_ENCRYPTED(g_mime_message_get_mime_part (g_mime_parser_construct_message (parser, NULL)));
+    if (body == NULL) return !!	fprintf (stderr, "did not find a multipart/encrypted message\n");
+
+    output = g_mime_multipart_encrypted_decrypt (body, GMIME_DECRYPT_NONE, "9:13607E4217515A70EC8DF9DBC16C5327B94577561D98AD1246FA8756659C7899", &result, &error);
+    if (error || output == NULL) return !! fprintf (stderr, "decrypt failed\n");
+
+    sig_list = g_mime_decrypt_result_get_signatures (result);
+    if (sig_list == NULL) return !! fprintf (stderr, "sig_list is NULL\n");
+
+    if (sig_list == NULL) return !! fprintf (stderr, "no GMimeSignatureList found\n");
+    len = g_mime_signature_list_length (sig_list);
+    if (len != 1) return !! fprintf (stderr, "expected 1 signature, got %d\n", len);
+    sig = g_mime_signature_list_get_signature (sig_list, 0);
+    if (sig == NULL) return !! fprintf (stderr, "no GMimeSignature found at position 0\n");
+    status = g_mime_signature_get_status (sig);
+    if (status & GMIME_SIGNATURE_STATUS_KEY_MISSING) return !! fprintf (stderr, "signature status contains KEY_MISSING (see https://dev.gnupg.org/T3464)\n");
+
+    return 0;
+}
+EOF
+    if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
+        printf 'No.\nCould not make tempdir for testing signature verification when decrypting with session keys.\n'
+        errors=$((errors + 1))
+    elif ${CC} ${CFLAGS} ${gmime_cflags} _verify_sig_with_session_key.c ${gmime_ldflags} -o _verify_sig_with_session_key \
+            && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
+            && rm -f ${TEMP_GPG}/private-keys-v1.d/*.key
+    then
+        if GNUPGHOME=${TEMP_GPG} ./_verify_sig_with_session_key; then
+            gmime_verify_with_session_key=1
+            printf "Yes.\n"
+        else
+            gmime_verify_with_session_key=0
+            printf "No.\n"
+            cat <<EOF
+*** Error: GMime fails to verify signatures when decrypting with a session key.
+
+This is most likely due to a buggy version of GPGME, which should be fixed in 1.13.2 or later.
+See https://dev.gnupg.org/T3464 for more details.
+EOF
+        fi
+    else
+        printf 'No.\nFailed to set up gpg for testing signature verification while decrypting with a session key.\n'
         errors=$((errors + 1))
     fi
     if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
@@ -583,7 +697,7 @@ fi
 if ! pkg-config --exists zlib; then
   ${CC} -o compat/gen_zlib_pc "$srcdir"/compat/gen_zlib_pc.c >/dev/null 2>&1 &&
   compat/gen_zlib_pc > compat/zlib.pc &&
-  PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
+  PKG_CONFIG_PATH=${PKG_CONFIG_PATH:+$PKG_CONFIG_PATH:}compat &&
   export PKG_CONFIG_PATH
   rm -f compat/gen_zlib_pc
 fi
@@ -650,6 +764,43 @@ if [ $have_python -eq 0 ]; then
     errors=$((errors + 1))
 fi
 
+have_python3=0
+if [ $have_python -eq 1 ]; then
+    printf "Checking for python3 (>= 3.5)..."
+    if "$python" -c 'import sys, sysconfig; assert sys.version_info >= (3,5)'; >/dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3=1
+    else
+        printf "No (will not install CFFI-based python bindings).\n"
+    fi
+fi
+
+have_python3_cffi=0
+have_python3_pytest=0
+if [ $have_python3 -eq 1 ]; then
+    printf "Checking for python3 cffi and setuptools... "
+    if "$python" -c 'import cffi,setuptools; cffi.FFI().verify()' >/dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3_cffi=1
+        WITH_PYTHON_DOCS=1
+    else
+        WITH_PYTHON_DOCS=0
+        printf "No (will not install CFFI-based python bindings).\n"
+    fi
+    rm -rf __pycache__  # cffi.FFI().verify() uses this space
+
+    printf "Checking for python3 pytest (>= 3.0)... "
+    conf=$(mktemp)
+    printf "[pytest]\nminversion=3.0\n" > $conf
+    if "$python" -m pytest -c $conf --version >/dev/null 2>&1; then
+        printf "Yes.\n"
+        have_python3_pytest=1
+    else
+        printf "No (will not test CFFI-based python bindings).\n"
+    fi
+    rm -f $conf
+fi
+
 printf "Checking for valgrind development files... "
 if pkg-config --exists valgrind; then
     printf "Yes.\n"
@@ -677,13 +828,14 @@ if [ -z "${EMACSETCDIR-}" ]; then
     EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
-printf "Checking if emacs (>= 24) is available... "
-if emacs --quick --batch --eval '(if (< emacs-major-version 24) (kill-emacs 1))' > /dev/null 2>&1; then
-    printf "Yes.\n"
-    have_emacs=1
-else
-    printf "No (so will not byte-compile emacs code)\n"
-    have_emacs=0
+if [ $WITH_EMACS = "1" ]; then
+    printf "Checking if emacs (>= 25) is available... "
+    if emacs --quick --batch --eval '(if (< emacs-major-version 25) (kill-emacs 1))' > /dev/null 2>&1; then
+        printf "Yes.\n"
+    else
+        printf "No (disabling emacs related parts of build)\n"
+        WITH_EMACS=0
+    fi
 fi
 
 have_doxygen=0
@@ -823,8 +975,8 @@ EOF
     if [ $have_python -eq 0 ]; then
 	echo "  python interpreter"
     fi
-    if [ $have_xapian -eq 0 -o $have_xapian_compact -eq 0 ]; then
-	echo "	Xapian library (>= version 1.2.6, including development files such as headers)"
+    if [ $have_xapian -eq 0 ]; then
+	echo "	Xapian library (>= version 1.4.0, including development files such as headers)"
 	echo "	https://xapian.org/"
     fi
     if [ $have_zlib -eq 0 ]; then
@@ -859,7 +1011,7 @@ On Debian and similar systems:
 
 Or on Fedora and similar systems:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel
+	sudo dnf install xapian-core-devel gmime30-devel libtalloc-devel zlib-devel
 
 On other systems, similar commands can be used, but the details of the
 package names may be different.
@@ -874,7 +1026,7 @@ to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
 Or:
-	sudo yum install pkgconfig
+	sudo dnf install pkgconfig
 
 But if pkg-config is not available for your system, then you will need
 to modify the configure script to manually set the cflags and ldflags
@@ -947,6 +1099,22 @@ else
     have_timegm="0"
 fi
 rm -f compat/have_timegm
+
+cat <<EOF > _time_t.c
+#include <time.h>
+#include <assert.h>
+static_assert(sizeof(time_t) >= 8, "sizeof(time_t) < 8");
+EOF
+
+printf "Checking for 64 bit time_t... "
+if ${CC} -c _time_t.c -o /dev/null
+then
+    printf "Yes.\n"
+    have_64bit_time_t=1
+else
+    printf "No.\n"
+    have_64bit_time_t=0
+fi
 
 printf "Checking for dirent.d_type... "
 if ${CC} -o compat/have_d_type "$srcdir"/compat/have_d_type.c > /dev/null 2>&1
@@ -1031,7 +1199,8 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
-rm -f minimal minimal.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys
+rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_x509_validity.c _check_x509_validity \
+   _verify_sig_with_session_key.c _verify_sig_with_session_key
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
@@ -1165,9 +1334,6 @@ BASH_ABSOLUTE = ${bash_absolute}
 HAVE_PERL = ${have_perl}
 PERL_ABSOLUTE = ${perl_absolute}
 
-# Whether there's an emacs binary available for byte-compiling
-HAVE_EMACS = ${have_emacs}
-
 # Whether there's a sphinx-build binary available for building documentation
 HAVE_SPHINX=${have_sphinx}
 
@@ -1187,7 +1353,7 @@ desktop_dir = \$(prefix)/share/applications
 bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
 
 # The directory to which zsh completions files should be installed
-zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
+zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/site-functions}
 
 # Whether the canonicalize_file_name function is available (if not, then notmuch will
 # build its own version)
@@ -1204,6 +1370,12 @@ HAVE_GETLINE = ${have_getline}
 # building/testing ruby bindings.
 HAVE_RUBY_DEV = ${have_ruby_dev}
 
+# Is the python cffi package available?
+HAVE_PYTHON3_CFFI = ${have_python3_cffi}
+
+# Is the python pytest package available?
+HAVE_PYTHON3_PYTEST = ${have_python3_pytest}
+
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
@@ -1219,14 +1391,8 @@ HAVE_TIMEGM = ${have_timegm}
 # Whether struct dirent has d_type (if not, then notmuch will use stat)
 HAVE_D_TYPE = ${have_d_type}
 
-# Whether the Xapian version in use supports compaction
-HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
-
-# Whether the Xapian version in use supports field processors
-HAVE_XAPIAN_FIELD_PROCESSOR = ${have_xapian_field_processor}
-
-# Whether the Xapian version in use supports DB_RETRY_LOCK
-HAVE_XAPIAN_DB_RETRY_LOCK = ${have_xapian_db_retry_lock}
+# Whether to have Xapian retry lock
+HAVE_XAPIAN_DB_RETRY_LOCK = ${WITH_RETRY_LOCK}
 
 # Whether the getpwuid_r function is standards-compliant
 # (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
@@ -1249,9 +1415,6 @@ LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
-
-# Which backend will Xapian use by default?
-DEFAULT_XAPIAN_BACKEND = ${default_xapian_backend}
 
 # Flags needed to compile and link against GMime
 GMIME_CFLAGS = ${gmime_cflags}
@@ -1305,16 +1468,14 @@ COMMON_CONFIGURE_CFLAGS = \\
 	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
 	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
 	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
-	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
 	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
-	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
 	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK)
 
 CONFIGURE_CFLAGS = \$(COMMON_CONFIGURE_CFLAGS)
 
 CONFIGURE_CXXFLAGS = \$(COMMON_CONFIGURE_CFLAGS) \$(XAPIAN_CXXFLAGS)
 
-CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
+CONFIGURE_LDFLAGS = \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF
 
 # construct the sh.config
@@ -1324,17 +1485,14 @@ cat > sh.config <<EOF
 
 NOTMUCH_SRCDIR='${NOTMUCH_SRCDIR}'
 
-# Whether the Xapian version in use supports compaction
-NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+# Whether to have Xapian retry lock
+NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${WITH_RETRY_LOCK}
 
-# Whether the Xapian version in use supports field processors
-NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
+# Whether GMime can verify X.509 certificate validity
+NOTMUCH_GMIME_X509_CERT_VALIDITY=${gmime_x509_cert_validity}
 
-# Whether the Xapian version in use supports lock retry
-NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${have_xapian_db_retry_lock}
-
-# Which backend will Xapian use by default?
-NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
+# Whether GMime can verify signatures when decrypting with a session key:
+NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY=${gmime_verify_with_session_key}
 
 # do we have man pages?
 NOTMUCH_HAVE_MAN=$((have_sphinx))
@@ -1342,6 +1500,9 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 # Whether bash exists, and if so where
 NOTMUCH_HAVE_BASH=${have_bash}
 NOTMUCH_BASH_ABSOLUTE=${bash_absolute}
+
+# Whether time_t is 64 bits (or more)
+NOTMUCH_HAVE_64BIT_TIME_T=${have_64bit_time_t}
 
 # Whether perl exists, and if so where
 NOTMUCH_HAVE_PERL=${have_perl}
@@ -1357,9 +1518,26 @@ NOTMUCH_RUBY=${RUBY}
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
 
+# Is the python cffi package available?
+NOTMUCH_HAVE_PYTHON3_CFFI=${have_python3_cffi}
+
+# Is the python pytest package available?
+NOTMUCH_HAVE_PYTHON3_PYTEST=${have_python3_pytest}
+
 # Platform we are run on
 PLATFORM=${platform}
 EOF
+
+{
+    echo "# Generated by configure, run from doc/conf.py"
+    if [ $WITH_EMACS = "1" ]; then
+        echo "tags.add('WITH_EMACS')"
+    fi
+    if [ $WITH_PYTHON_DOCS = "1" ]; then
+        echo "tags.add('WITH_PYTHON')"
+    fi
+    printf "rsti_dir = '%s'\n" "$(cd emacs && pwd -P)"
+} > sphinx.config
 
 # Finally, after everything configured, inform the user how to continue.
 cat <<EOF

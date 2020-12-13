@@ -25,7 +25,9 @@
 
 (require 'coolj)
 (require 'notmuch-lib)
-(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+
+(declare-function notmuch-show-insert-bodypart "notmuch-show"
+		  (msg part depth &optional hide))
 (defvar notmuch-show-indent-messages-width)
 
 ;;
@@ -186,24 +188,25 @@ message parts."
   (let* ((type (overlay-get overlay 'type))
 	 (invis-spec (overlay-get overlay 'invisible))
 	 (state (if (invisible-p invis-spec) "hidden" "visible"))
-	 (label-format (symbol-value (intern-soft (concat "notmuch-wash-button-"
-							  type "-" state "-format"))))
-	 (lines-count (count-lines (overlay-start overlay) (overlay-end overlay))))
+	 (label-format (symbol-value
+			(intern-soft
+			 (format "notmuch-wash-button-%s-%s-format"
+				 type state))))
+	 (lines-count (count-lines (overlay-start overlay)
+				   (overlay-end overlay))))
     (format label-format lines-count)))
 
 (defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
-  "Auxiliary function to do the actual making of overlays and buttons
+  "Auxiliary function to do the actual making of overlays and buttons.
 
 BEG and END are buffer locations. TYPE should a string, either
 \"citation\" or \"signature\". Optional PREFIX is some arbitrary
 text to insert before the button, probably for indentation.  Note
 that PREFIX should not include a newline."
-
   ;; This uses some slightly tricky conversions between strings and
   ;; symbols because of the way the button code works. Note that
   ;; replacing intern-soft with make-symbol will cause this to fail,
   ;; since the newly created symbol has no plist.
-
   (let ((overlay (make-overlay beg end))
 	(button-type (intern-soft (concat "notmuch-wash-button-"
 					  type "-toggle-type"))))
@@ -213,8 +216,8 @@ that PREFIX should not include a newline."
     (goto-char (1+ end))
     (save-excursion
       (goto-char beg)
-      (if prefix
-	  (insert-before-markers prefix))
+      (when prefix
+	(insert-before-markers prefix))
       (let ((button-beg (point)))
 	(insert-before-markers (notmuch-wash-button-label overlay) "\n")
 	(let ((button (make-button button-beg (1- (point))
@@ -226,19 +229,20 @@ that PREFIX should not include a newline."
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
   (beginning-of-line)
-  (if (and (< (point) (point-max))
-	   (re-search-forward notmuch-wash-original-regexp nil t))
-      (let* ((msg-start (match-beginning 0))
-	     (msg-end (point-max))
-	     (msg-lines (count-lines msg-start msg-end)))
-	(notmuch-wash-region-to-button
-	 msg msg-start msg-end "original")))
+  (when (and (< (point) (point-max))
+	     (re-search-forward notmuch-wash-original-regexp nil t))
+    (let* ((msg-start (match-beginning 0))
+	   (msg-end (point-max))
+	   (msg-lines (count-lines msg-start msg-end)))
+      (notmuch-wash-region-to-button
+       msg msg-start msg-end "original")))
   (while (and (< (point) (point-max))
 	      (re-search-forward notmuch-wash-citation-regexp nil t))
     (let* ((cite-start (match-beginning 0))
 	   (cite-end (match-end 0))
 	   (cite-lines (count-lines cite-start cite-end)))
-      (overlay-put (make-overlay cite-start cite-end) 'face 'notmuch-wash-cited-text)
+      (overlay-put (make-overlay cite-start cite-end)
+		   'face 'notmuch-wash-cited-text)
       (when (> cite-lines (+ notmuch-wash-citation-lines-prefix
 			     notmuch-wash-citation-lines-suffix
 			     1))
@@ -250,48 +254,44 @@ that PREFIX should not include a newline."
 	  (notmuch-wash-region-to-button
 	   msg hidden-start (point-marker)
 	   "citation")))))
-  (if (and (not (eobp))
-	   (re-search-forward notmuch-wash-signature-regexp nil t))
-      (let* ((sig-start (match-beginning 0))
-	     (sig-end (match-end 0))
-	     (sig-lines (count-lines sig-start (point-max))))
-	(if (<= sig-lines notmuch-wash-signature-lines-max)
-	    (let ((sig-start-marker (make-marker))
-		  (sig-end-marker (make-marker)))
-	      (set-marker sig-start-marker sig-start)
-	      (set-marker sig-end-marker (point-max))
-	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text)
-	      (notmuch-wash-region-to-button
-	       msg sig-start-marker sig-end-marker
-	       "signature"))))))
+  (when (and (not (eobp))
+	     (re-search-forward notmuch-wash-signature-regexp nil t))
+    (let* ((sig-start (match-beginning 0))
+	   (sig-end (match-end 0))
+	   (sig-lines (count-lines sig-start (point-max))))
+      (when (<= sig-lines notmuch-wash-signature-lines-max)
+	(let ((sig-start-marker (make-marker))
+	      (sig-end-marker (make-marker)))
+	  (set-marker sig-start-marker sig-start)
+	  (set-marker sig-end-marker (point-max))
+	  (overlay-put (make-overlay sig-start-marker sig-end-marker)
+		       'face 'message-cited-text)
+	  (notmuch-wash-region-to-button
+	   msg sig-start-marker sig-end-marker
+	   "signature"))))))
 
 ;;
 
 (defun notmuch-wash-elide-blank-lines (msg depth)
   "Elide leading, trailing and successive blank lines."
-
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
   ;; `gnus-art.el'.
-
   ;; Make all blank lines empty.
   (goto-char (point-min))
   (while (re-search-forward "^[[:space:]\t]+$" nil t)
     (replace-match "" nil t))
-
   ;; Replace multiple empty lines with a single empty line.
   (goto-char (point-min))
   (while (re-search-forward "^\n\\(\n+\\)" nil t)
     (delete-region (match-beginning 1) (match-end 1)))
-
   ;; Remove a leading blank line.
   (goto-char (point-min))
-  (if (looking-at "\n")
-      (delete-region (match-beginning 0) (match-end 0)))
-
+  (when (looking-at "\n")
+    (delete-region (match-beginning 0) (match-end 0)))
   ;; Remove a trailing blank line.
   (goto-char (point-max))
-  (if (looking-at "\n")
-      (delete-region (match-beginning 0) (match-end 0))))
+  (when (looking-at "\n")
+    (delete-region (match-beginning 0) (match-end 0))))
 
 ;;
 
@@ -306,20 +306,15 @@ Perform several transformations on the message body:
   text,
 - Remove citation trailers standing alone after a block of cited
   text."
-
   ;; Remove lines of repeated citation leaders with no other content.
   (goto-char (point-min))
   (while (re-search-forward "\\(^>[> ]*\n\\)\\{2,\\}" nil t)
     (replace-match "\\1"))
-
-  ;; Remove citation leaders standing alone before a block of cited
-  ;; text.
+  ;; Remove citation leaders standing alone before a block of cited text.
   (goto-char (point-min))
   (while (re-search-forward "\\(\n\\|^[^>].*\\)\n\\(^>[> ]*\n\\)" nil t)
     (replace-match "\\1\n"))
-
-  ;; Remove citation trailers standing alone after a block of cited
-  ;; text.
+  ;; Remove citation trailers standing alone after a block of cited text.
   (goto-char (point-min))
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
     (replace-match "\\2")))
@@ -334,7 +329,6 @@ the message lines to the minimum of the width of the window or
 its value. Otherwise, this function will wrap long lines in the
 message at the window width. When doing so, citation leaders in
 the wrapped text are maintained."
-
   (let* ((coolj-wrap-follows-window-size nil)
 	 (indent (* depth notmuch-show-indent-messages-width))
 	 (limit (if (numberp notmuch-wash-wrap-lines-length)
@@ -376,10 +370,10 @@ filename, before trimming any trailing . and - characters."
 
 Return the patch sequence number N from the last \"[PATCH N/M]\"
 style prefix in SUBJECT, or nil if such a prefix can't be found."
-  (when (string-match
-	 "^ *\\(\\[[^]]*\\] *\\)*\\[[^]]*?\\([0-9]+\\)/[0-9]+[^]]*\\].*"
-	 subject)
-      (string-to-number (substring subject (match-beginning 2) (match-end 2)))))
+  (and (string-match
+	"^ *\\(\\[[^]]*\\] *\\)*\\[[^]]*?\\([0-9]+\\)/[0-9]+[^]]*\\].*"
+	subject)
+       (string-to-number (substring subject (match-beginning 2) (match-end 2)))))
 
 (defun notmuch-wash-subject-to-patch-filename (subject)
   "Convert a patch mail SUBJECT into a filename.
@@ -398,7 +392,6 @@ original filename the sender had."
 Given that this function guesses whether a buffer includes a
 patch and then guesses the extent of the patch, there is scope
 for error."
-
   (goto-char (point-min))
   (when (re-search-forward diff-file-header-re nil t)
     (beginning-of-line -1)
@@ -406,12 +399,12 @@ for error."
 	  (patch-end (point-max))
 	  part)
       (goto-char patch-start)
-      (if (or
-	   ;; Patch ends with signature.
-	   (re-search-forward notmuch-wash-signature-regexp nil t)
-	   ;; Patch ends with bugtraq comment.
-	   (re-search-forward "^\\*\\*\\* " nil t))
-	  (setq patch-end (match-beginning 0)))
+      (when (or
+	     ;; Patch ends with signature.
+	     (re-search-forward notmuch-wash-signature-regexp nil t)
+	     ;; Patch ends with bugtraq comment.
+	     (re-search-forward "^\\*\\*\\* " nil t))
+	(setq patch-end (match-beginning 0)))
       (save-restriction
 	(narrow-to-region patch-start patch-end)
 	(setq part (plist-put part :content-type "inline patch"))

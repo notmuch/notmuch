@@ -24,7 +24,7 @@
 
 #ifndef NOTMUCH_REGEXP_FIELDS_H
 #define NOTMUCH_REGEXP_FIELDS_H
-#if HAVE_XAPIAN_FIELD_PROCESSOR
+
 #include <sys/types.h>
 #include <regex.h>
 #include "database-private.h"
@@ -35,7 +35,7 @@
  */
 class RegexpPostingSource : public Xapian::PostingSource
 {
- protected:
+protected:
     const Xapian::valueno slot_;
     regex_t regexp_;
     Xapian::Database db_;
@@ -46,7 +46,7 @@ class RegexpPostingSource : public Xapian::PostingSource
     RegexpPostingSource (const RegexpPostingSource &);
     RegexpPostingSource &operator= (const RegexpPostingSource &);
 
- public:
+public:
     RegexpPostingSource (Xapian::valueno slot, const std::string &regexp);
     ~RegexpPostingSource ();
     void init (const Xapian::Database &db);
@@ -62,20 +62,22 @@ class RegexpPostingSource : public Xapian::PostingSource
 
 
 class RegexpFieldProcessor : public Xapian::FieldProcessor {
- protected:
+protected:
     Xapian::valueno slot;
     std::string term_prefix;
     notmuch_field_flag_t options;
     Xapian::QueryParser &parser;
     notmuch_database_t *notmuch;
 
- public:
+public:
     RegexpFieldProcessor (std::string prefix, notmuch_field_flag_t options,
 			  Xapian::QueryParser &parser_, notmuch_database_t *notmuch_);
 
-    ~RegexpFieldProcessor () { };
+    ~RegexpFieldProcessor ()
+    {
+    };
 
-    Xapian::Query operator()(const std::string & str);
+    Xapian::Query operator() (const std::string & str);
 };
-#endif
+
 #endif /* NOTMUCH_REGEXP_FIELDS_H */

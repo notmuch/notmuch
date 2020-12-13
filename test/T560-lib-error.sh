@@ -211,8 +211,7 @@ int main (int argc, char** argv)
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
    }
-   path = talloc_asprintf (db, "%s/.notmuch/xapian/postlist.${db_ending}", argv[1]);
-   fd = open(path,O_WRONLY|O_TRUNC);
+   fd = open(argv[2],O_WRONLY|O_TRUNC);
    if (fd < 0) {
        fprintf (stderr, "error opening %s\n", argv[1]);
        exit (1);
@@ -228,9 +227,10 @@ cat <<'EOF' > c_tail
 }
 EOF
 
+POSTLIST_PATH=(${MAIL_DIR}/.notmuch/xapian/postlist.*)
 backup_database
 test_begin_subtest "Xapian exception finding message"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
        notmuch_message_t *message = NULL;
        stat = notmuch_database_find_message (db, "id:nonexistent", &message);
@@ -247,7 +247,7 @@ restore_database
 
 backup_database
 test_begin_subtest "Xapian exception getting tags"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
        notmuch_tags_t *tags = NULL;
        tags = notmuch_database_get_all_tags (db);
@@ -265,7 +265,7 @@ restore_database
 
 backup_database
 test_begin_subtest "Xapian exception creating directory"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
        notmuch_directory_t *directory = NULL;
        stat = notmuch_database_get_directory (db, "none/existing", &directory);
@@ -275,14 +275,14 @@ sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-A Xapian exception occurred creating a directory
+A Xapian exception occurred finding/creating a directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database
 
 backup_database
 test_begin_subtest "Xapian exception searching messages"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
        notmuch_messages_t *messages = NULL;
        notmuch_query_t *query=notmuch_query_create (db, "*");
@@ -301,7 +301,7 @@ restore_database
 
 backup_database
 test_begin_subtest "Xapian exception counting messages"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
        int count;
        notmuch_query_t *query=notmuch_query_create (db, "id:87ocn0qh6d.fsf@yoom.home.cworth.org");

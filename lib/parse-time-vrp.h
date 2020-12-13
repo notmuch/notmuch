@@ -26,20 +26,21 @@
 #include <xapian.h>
 
 /* see *ValueRangeProcessor in xapian-core/include/xapian/queryparser.h */
-class ParseTimeValueRangeProcessor : public Xapian::ValueRangeProcessor {
-protected:
-    Xapian::valueno valno;
+class ParseTimeRangeProcessor : public Xapian::RangeProcessor {
 
 public:
-    ParseTimeValueRangeProcessor (Xapian::valueno slot_)
-	: valno(slot_) { }
+    ParseTimeRangeProcessor (Xapian::valueno slot_, const std::string prefix_)
+	:  Xapian::RangeProcessor(slot_, prefix_, 0) { }
 
-    Xapian::valueno operator() (std::string &begin, std::string &end);
+    Xapian::Query operator() (const std::string &begin, const std::string &end);
 };
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 class DateFieldProcessor : public Xapian::FieldProcessor {
+private:
+    Xapian::valueno slot;
+public:
+    DateFieldProcessor(Xapian::valueno slot_) : slot(slot_) { };
     Xapian::Query operator()(const std::string & str);
 };
-#endif
+
 #endif /* NOTMUCH_PARSE_TIME_VRP_H */

@@ -95,6 +95,8 @@ TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
 TEST_GDB=${TEST_GDB:-gdb}
 TEST_CC=${TEST_CC:-cc}
 TEST_CFLAGS=${TEST_CFLAGS:-"-g -O0"}
+TEST_SHIM_CFLAGS=${TEST_SHIM_CFLAGS:-"-fpic -shared"}
+TEST_SHIM_LDFLAGS=${TEST_SHIM_LDFLAGS:-"-ldl"}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -107,11 +109,10 @@ unset ALTERNATE_EDITOR
 
 add_gnupg_home ()
 {
-    local output
-    [ -d ${GNUPGHOME} ] && return
+    [ -e "${GNUPGHOME}/gpg.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
-    mkdir -m 0700 "$GNUPGHOME"
+    mkdir -p -m 0700 "$GNUPGHOME"
     gpg --no-tty --import <$NOTMUCH_SRCDIR/test/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
     if (gpg --quick-random --version >/dev/null 2>&1) ; then
@@ -125,6 +126,27 @@ add_gnupg_home ()
     FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
     SELF_USERID="Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"
     printf '%s:6:\n' "$FINGERPRINT" | gpg --quiet --batch --no-tty --import-ownertrust
+}
+
+add_gpgsm_home ()
+{
+    local fpr
+    [ -e "$GNUPGHOME/gpgsm.conf" ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
+    mkdir -p -m 0700 "$GNUPGHOME"
+    openssl pkcs12 -export -passout pass: -inkey "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" \
+	< "$NOTMUCH_SRCDIR/test/smime/test.crt" | \
+	gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
+	      --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<''
+    fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
+    echo "$fpr S relax" >> "$GNUPGHOME/trustlist.txt"
+    gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
+    echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
+    printf '%s::1\n' include-certs disable-crl-checks | gpgconf --output /dev/null --change-options gpgsm
+    gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
+	      --disable-dirmngr --import "$NOTMUCH_SRCDIR/test/smime/bob.p12" >>"$GNUPGHOME"/import.log 2>&1 3<<<''
+    test_debug "cat $GNUPGHOME/import.log"
 }
 
 # Each test should start with something like this, after copyright notices:
@@ -322,13 +344,14 @@ trap 'trap_signal' HUP INT TERM
 # to the message and encrypting/signing.
 emacs_deliver_message ()
 {
-    local subject="$1"
-    local body="$2"
+    local subject body smtp_dummy_pid smtp_dummy_port
+    subject="$1"
+    body="$2"
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
     # eval'ing smtp-dummy --background will set smtp_dummy_pid and -_port
-    local smtp_dummy_pid= smtp_dummy_port=
+    smtp_dummy_pid= smtp_dummy_port=
     eval `$TEST_DIRECTORY/smtp-dummy --background sent_message`
     test -n "$smtp_dummy_pid" || return 1
     test -n "$smtp_dummy_port" || return 1
@@ -368,20 +391,21 @@ emacs_deliver_message ()
 # new" after message delivery
 emacs_fcc_message ()
 {
-    local nmn_args=''
+    local nmn_args subject body
+    nmn_args=''
     while [[ "$1" =~ ^-- ]]; do
-        nmn_args="$nmn_args $1"
-        shift
+	nmn_args="$nmn_args $1"
+	shift
     done
-    local subject="$1"
-    local body="$2"
+    subject="$1"
+    body="$2"
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
 
     test_emacs \
 	"(let ((message-send-mail-function (lambda () t))
-               (mail-host-address \"example.com\"))
+	       (mail-host-address \"example.com\"))
 	   (notmuch-mua-mail)
 	   (message-goto-to)
 	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
@@ -390,7 +414,9 @@ emacs_fcc_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $*
-	   (notmuch-mua-send-and-exit))" || return 1
+	   (let ((mml-secure-smime-sign-with-sender t)
+		 (mml-secure-openpgp-sign-with-sender t))
+	     (notmuch-mua-send-and-exit)))" || return 1
     notmuch new $nmn_args >/dev/null
 }
 
@@ -404,6 +430,7 @@ emacs_fcc_message ()
 # number of messages.
 add_email_corpus ()
 {
+    local corpus
     corpus=${1:-default}
 
     rm -rf ${MAIL_DIR}
@@ -434,6 +461,7 @@ test_begin_subtest ()
 # name.
 test_expect_equal ()
 {
+	local output expected testname
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_expect_equal without test_begin_subtest"
@@ -460,6 +488,7 @@ test_expect_equal ()
 # Like test_expect_equal, but takes two filenames.
 test_expect_equal_file ()
 {
+	local file1 file2 testname basename1 basename2
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
@@ -489,29 +518,37 @@ test_expect_equal_file ()
 # canonicalized before diff'ing.  If an argument cannot be parsed, it
 # is used unchanged so that there's something to diff against.
 test_expect_equal_json () {
+    local script output expected
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    local script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
+    script='import json, sys; json.dump(json.load(sys.stdin), sys.stdout, sort_keys=True, indent=4)'
     output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
-        || echo "$1")
+	|| echo "$1")
     expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "$script" \
-        || echo "$2")
+	|| echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
+}
+
+# Ensure that the argument is valid JSON data.
+test_valid_json () {
+    PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c "import sys, json; json.load(sys.stdin)" <<<"$1"
+    test_expect_equal "$?" 0
 }
 
 # Sort the top-level list of JSON data from stdin.
 test_sort_json () {
     PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c \
-        "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
+	"import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
 }
 
 # test for json objects:
 # read the source of test/json_check_nodes.py (or the output when
 # invoking it without arguments) for an explanation of the syntax.
 test_json_nodes () {
-        exec 1>&6 2>&7		# Restore stdout and stderr
+	local output
+	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_json_eval without test_begin_subtest"
 	fi
@@ -521,7 +558,7 @@ test_json_nodes () {
 
 	if ! test_skip "$test_subtest_name"
 	then
-	    output=$(PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON "$TEST_DIRECTORY"/json_check_nodes.py "$@")
+	    output=$(PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -B "$NOTMUCH_SRCDIR"/test/json_check_nodes.py "$@")
 		if [ "$?" = 0 ]
 		then
 			test_ok_
@@ -532,6 +569,7 @@ test_json_nodes () {
 }
 
 test_emacs_expect_t () {
+	local result
 	test "$#" = 1 ||
 	error "bug in the test script: not 1 parameter to test_emacs_expect_t"
 	if [ -z "$inside_subtest" ]; then
@@ -583,6 +621,11 @@ print(msg.as_string(False))
 ' "$@"
 }
 
+notmuch_exception_sanitize ()
+{
+    perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
+}
+
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
@@ -619,17 +662,18 @@ notmuch_json_show_sanitize ()
 	-e 's|"filename": "signature.asc",||g' \
 	-e 's|"filename": \["/[^"]*"\],|"filename": \["YYYYY"\],|g' \
 	-e 's|"timestamp": 97.......|"timestamp": 42|g' \
-        -e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
+	-e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
 }
 
 notmuch_emacs_error_sanitize ()
 {
-    local command=$1
+    local command
+    command=$1
     shift
     for file in "$@"; do
 	echo "=== $file ==="
 	cat "$file"
-    done | sed  \
+    done | sed \
 	-e 's/^\[.*\]$/[XXX]/' \
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
 }
@@ -688,6 +732,7 @@ declare -A test_subtest_missing_external_prereq_
 
 # declare prerequisite for the given external binary
 test_declare_external_prereq () {
+	local binary
 	binary="$1"
 	test "$#" = 2 && name=$2 || name="$binary(1)"
 
@@ -705,6 +750,7 @@ $binary () {
 # called indirectly (e.g. from emacs).
 # Returns success if dependency is available, failure otherwise.
 test_require_external_prereq () {
+	local binary
 	binary="$1"
 	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
 		# dependency is missing, call the replacement function to note it
@@ -883,8 +929,8 @@ test_expect_code () {
 # but is a prefix that can be used in the test script, like:
 #
 #	test_expect_success 'complain and die' '
-#           do something &&
-#           do something else &&
+#	    do something &&
+#	    do something else &&
 #	    test_must_fail git checkout ../outerspace
 #	'
 #
@@ -974,15 +1020,15 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
 # Here's what we are using here:
 #
-# --quick              Use minimal customization. This implies --no-init-file,
-#		       --no-site-file and (emacs 24) --no-site-lisp
+# --quick		Use minimal customization. This implies --no-init-file,
+#			--no-site-file and (emacs 24) --no-site-lisp
 #
 # --directory		Ensure that the local elisp sources are found
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
 exec ${TEST_EMACS} --quick \
-	--directory "$NOTMUCH_SRCDIR/emacs" --load notmuch.el \
+	--directory "$NOTMUCH_BUILDDIR/emacs" --load notmuch.el \
 	--directory "$NOTMUCH_SRCDIR/test" --load test-lib.el \
 	"\$@"
 EOF
@@ -1042,10 +1088,11 @@ test_python() {
 }
 
 test_ruby() {
-    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I $NOTMUCH_SRCDIR/bindings/ruby> OUTPUT
+    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
 }
 
 test_C () {
+    local exec_file test_file
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
@@ -1053,9 +1100,25 @@ test_C () {
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
-    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr > OUTPUT
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr | notmuch_exception_sanitize > OUTPUT
 }
 
+make_shim () {
+    local base_name test_file shim_file
+    base_name="$1"
+    test_file="${base_name}.c"
+    shim_file="${base_name}.so"
+    cat > ${test_file}
+    ${TEST_CC} ${TEST_CFLAGS} ${TEST_SHIM_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -o ${shim_file} ${test_file} ${TEST_SHIM_LDFLAGS}
+}
+
+notmuch_with_shim () {
+    local base_name shim_file
+    base_name="$1"
+    shift
+    shim_file="${base_name}.so"
+    LD_PRELOAD=./${shim_file}${LD_PRELOAD:+:$LD_PRELOAD} notmuch-shared "$@"
+}
 
 # Creates a script that counts how much time it is executed and calls
 # notmuch.  $notmuch_counter_command is set to the path to the
@@ -1198,17 +1261,6 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
 
-# convert variable from configure to more convenient form
-case "$NOTMUCH_DEFAULT_XAPIAN_BACKEND" in
-    glass)
-	db_ending=glass
-    ;;
-    chert)
-	db_ending=DB
-    ;;
-    *)
-	error "Unknown Xapian backend $NOTMUCH_DEFAULT_XAPIAN_BACKEND"
-esac
 # declare prerequisites for external binaries used in tests
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs

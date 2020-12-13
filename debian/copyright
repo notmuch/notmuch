@@ -1,36 +1,100 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: notmuch
-Source: git://notmuchmail.org/git/notmuch
+Source: https://git.notmuchmail.org/git/notmuch
 Upstream-Contact: Notmuch Mailing List <notmuch@notmuchmail.org>
 
 Files: *
-Copyright:  Copyright 2009 Carl Worth <cworth@cworth.org>
- Bart Trojanowski <bart@jukie.net>
- Keith Packard <keithp@keithp.com>
- Alexander Botero-Lowry <alex.boterolowry@gmail.com>
- Ingmar Vanhassel <ingmar@exherbo.org>
- Jed Brown <jed@59A2.org>
- Jan Janak <jan@ryngle.com>
- Chris Wilson <chris@chris-wilson.co.uk>
- Keith Amidon <keith@nicira.com>
- Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
- Mikhail Gusarov <dottedmag@dottedmag.net>
- Jeffrey C. Ollie <jeff@ocjtech.us>
- Jameson Graef Rollins <jrollins@finestructure.net>
- Stewart Smith <stewart@flamingspork.com>
- Adrian Perez <aperez@igalia.com>
- Kan-Ru Chen <kanru@kanru.info>
- James Rowe <jnrowe@gmail.com>
- Eric Anholt <eric@anholt.net>
- Alec Berryman <alec@thened.net>
- Tassilo Horn <tassilo@member.fsf.org>
- Stefan Schmidt <stefan@datenfreihafen.org>
- Rolland Santimano <rollandsantimano@yahoo.com>
- Peter Wang <novalazy@gmail.com>
- Lars Kellogg-Stedman <lars@seas.harvard.edu>
- Holger Freyther <zecke@selfish.org>
- David Bremner <bremner@unb.ca>
- Alexander Botero-Lowry <alexbl@fortitudo.(none)>
+Copyright:  Copyright 2009-2020
+ David Bremner
+ Carl Worth
+ Jani Nikula
+ Austin Clements
+ Daniel Kahn Gillmor
+ Mark Walters
+ Floris Bruynooghe
+ David Edmondson
+ Tomi Ollila
+ Sebastian Spaeth
+ Ali Polatel
+ Michal Sojka
+ Justus Winter
+ Sebastien Binet
+ W. Trevor King
+ Jameson Graef Rollins
+ Felipe Contreras
+ Pieter Praet
+ Peter Feigl
+ Dmitry Kurochkin
+ Peter Wang
+ Daniel Schoepe
+ Gregor Zattler
+ Keith Packard
+ Adam Wolfe Gordon
+ Stefano Zacchiroli
+ Vincent Breitmoser
+ laochailan
+ Ben Gamari
+ Aaron Ecay
+ Jesse Rosenthal
+ l-m-h@web.de
+ Thomas Jost
+ Dirk Hohndel
+ Blake Jones
+ Jonas Bernoulli
+ Damien Cassou
+ Vladimir Panteleev
+ Anton Khirnov
+ Matt Armstrong
+ Örjan Ekeberg
+ Jan Janak
+ Patrick Totzke
+ Chunyang Xu
+ rhn
+ Ruben Pollan
+ Ioan-Adrian Ratiu
+ Ethan Glasser-Camp
+ Todd
+ Chris Wilson
+ William Casarin
+ Yuri Volchkov
+ Cédric Cabessa
+ Mark Anderson
+ Jed Brown
+ Maxime Coste
+ Ludovic LANGE
+ Sebastian Poeplau
+ Mikhail
+ Gaute Hope
+ Keith Amidon
+ martin f. krafft
+ Jeffrey C. Ollie
+ Bart Trojanowski
+ Jameson Rollins
+ Scott Henson
+ Vladimir Marek
+ Servilio Afre Puentes
+ Kevin McCarthy
+ Tomas Carnecky
+ Kevin J. McCarthy
+ Scott Robinson
+ Wael M. Nasreddine
+ Charles Celerier
+ Olly Betts
+ Istvan Marko
+ Florian Klink
+ Thibaut Horel
+ Joel Borggrén-Franck
+ Ingmar Vanhassel
+ Olivier Taïbi
+ Ian Main
+ Alexander Botero-Lowry
+ Luis Ressel
+ Sergei Shilovsky
+ Trevor Jim
+ Jinwoo Lee
+ Uli Scholler
+ Matthew Lear
+ Amadeusz Żołnowski
 License: GPL-3+
 
 Files: debian/*

@@ -37,9 +37,8 @@ In addition to free text, the following prefixes can be used to force
 terms to match against specific portions of an email, (where <brackets>
 indicate user-supplied values).
 
-If notmuch is built with **Xapian Field Processors** (see below) some
-of the prefixes with <regex> forms can be also used to restrict the
-results to those whose value matches a regular expression (see
+Some of the prefixes with <regex> forms can be also used to restrict
+the results to those whose value matches a regular expression (see
 **regex(7)**) delimited with //, for example::
 
    notmuch search 'from:"/bob@.*[.]example[.]com/"'
@@ -87,8 +86,7 @@ thread:<thread-id>
     of output from **notmuch search**
 
 thread:{<notmuch query>}
-    If notmuch is built with **Xapian Field Processors** (see below),
-    threads may be searched for indirectly by providing an arbitrary
+    Threads may be searched for indirectly by providing an arbitrary
     notmuch query in **{}**. For example, the following returns
     threads containing a message from mallory and one (not necessarily
     the same message) with Subject containing the word "crypto".
@@ -158,9 +156,7 @@ lastmod:<initial-revision>..<final-revision>
 
 query:<name>
     The **query:** prefix allows queries to refer to previously saved
-    queries added with **notmuch-config(1)**. Named queries are only
-    available if notmuch is built with **Xapian Field Processors**
-    (see below).
+    queries added with **notmuch-config(1)**.
 
 property:<key>=<value>
     The **property:** prefix searches for messages with a particular
@@ -353,23 +349,21 @@ since 1970-01-01 00:00:00 UTC. For example:
 
     date:@<initial-timestamp>..@<final-timestamp>
 
-date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
-expansion takes place before interpretation, and thus, for example,
-date:monday..! matches from the beginning of Monday until the end of
-Monday.
-With **Xapian Field Processor** support (see below), non-range
-date queries such as date:yesterday will work, but otherwise
-will give unexpected results; if in doubt use date:yesterday..!
-
-Currently, we do not support spaces in range expressions. You can
+Currently, spaces in range expressions are not supported. You can
 replace the spaces with '\_', or (in most cases) '-', or (in some cases)
 leave the spaces out altogether. Examples in this man page use spaces
 for clarity.
 
-Open-ended ranges are supported (since Xapian 1.2.1), i.e. it's possible
-to specify date:..<until> or date:<since>.. to not limit the start or
-end time, respectively. Pre-1.2.1 Xapian does not report an error on
-open ended ranges, but it does not work as expected either.
+Open-ended ranges are supported. I.e. it's possible to specify
+date:..<until> or date:<since>.. to not limit the start or
+end time, respectively.
+
+Single expression
+-----------------
+
+date:<expr> works as a shorthand for date:<expr>..<expr>.
+For example, date:monday matches from the beginning of Monday until
+the end of Monday.
 
 Relative date and time
 ----------------------
@@ -445,24 +439,6 @@ Time zones
 -  (+\|-)HH[MM]
 
 Some time zone codes, e.g. UTC, EET.
-
-XAPIAN FIELD PROCESSORS
-=======================
-
-Certain optional features of the notmuch query processor rely on the
-presence of the Xapian field processor API. You can determine if your
-notmuch was built against a sufficiently recent version of Xapian by running
-
-::
-
-  % notmuch config get built_with.field_processor
-
-Currently the following features require field processor support:
-
-- non-range date queries, e.g. "date:today"
-- named queries e.g. "query:my_special_query"
-- regular expression searches, e.g. "subject:/^\\[SPAM\\]/"
-- thread subqueries, e.g. "thread:{from:bob}"
 
 SEE ALSO
 ========

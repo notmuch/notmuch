@@ -21,17 +21,22 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
+
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
 
 (require 'notmuch-lib)
 (require 'notmuch-mua)
 
-(declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
+(declare-function notmuch-search "notmuch"
+		  (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 (declare-function notmuch-tree "notmuch-tree"
-                  (&optional query query-context target buffer-name open-target))
+		  (&optional query query-context target buffer-name open-target unthreaded))
+(declare-function notmuch-unthreaded
+		  (&optional query query-context target buffer-name open-target))
+
 
 (defun notmuch-saved-search-get (saved-search field)
   "Get FIELD from SAVED-SEARCH.
@@ -44,17 +49,19 @@ lists (NAME QUERY COUNT-QUERY)."
    ((keywordp (car saved-search))
     (plist-get saved-search field))
    ;; It is not a plist so it is an old-style entry.
-   ((consp (cdr saved-search)) ;; It is a list (NAME QUERY COUNT-QUERY)
-    (case field
-      (:name (first saved-search))
-      (:query (second saved-search))
-      (:count-query (third saved-search))
-      (t nil)))
-   (t  ;; It is a cons-cell (NAME . QUERY)
-    (case field
-      (:name (car saved-search))
-      (:query (cdr saved-search))
-      (t nil)))))
+   ((consp (cdr saved-search))
+    (pcase-let ((`(,name ,query ,count-query) saved-search))
+      (cl-case field
+	(:name name)
+	(:query query)
+	(:count-query count-query)
+	(t nil))))
+   (t
+    (pcase-let ((`(,name . ,query) saved-search))
+      (cl-case field
+	(:name name)
+	(:query query)
+	(t nil))))))
 
 (defun notmuch-hello-saved-search-to-plist (saved-search)
   "Return a copy of SAVED-SEARCH in plist form.
@@ -63,7 +70,7 @@ If saved search is a plist then just return a copy. In other
 cases, for backwards compatibility, convert to plist form and
 return that."
   (if (keywordp (car saved-search))
-      (copy-seq saved-search)
+      (copy-sequence saved-search)
     (let ((fields (list :name :query :count-query))
 	  plist-search)
       (dolist (field fields plist-search)
@@ -85,21 +92,32 @@ searches so they still work in customize."
   :tag "Saved Search"
   :args '((list :inline t
 		:format "%v"
-		(group :format "%v" :inline t (const :format "   Name: " :name) (string :format "%v"))
-		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
+		(group :format "%v" :inline t
+		       (const :format "   Name: " :name)
+		       (string :format "%v"))
+		(group :format "%v" :inline t
+		       (const :format "  Query: " :query)
+		       (string :format "%v")))
 	  (checklist :inline t
 		     :format "%v"
-		     (group :format "%v" :inline t (const :format "Shortcut key: " :key) (key-sequence :format "%v"))
-		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
-		     (group :format "%v" :inline t (const :format "" :sort-order)
+		     (group :format "%v" :inline t
+			    (const :format "Shortcut key: " :key)
+			    (key-sequence :format "%v"))
+		     (group :format "%v" :inline t
+			    (const :format "Count-Query: " :count-query)
+			    (string :format "%v"))
+		     (group :format "%v" :inline t
+			    (const :format "" :sort-order)
 			    (choice :tag " Sort Order"
 				    (const :tag "Default" nil)
 				    (const :tag "Oldest-first" oldest-first)
 				    (const :tag "Newest-first" newest-first)))
-		     (group :format "%v" :inline t (const :format "" :search-type)
+		     (group :format "%v" :inline t
+			    (const :format "" :search-type)
 			    (choice :tag " Search Type"
 				    (const :tag "Search mode" nil)
-				    (const :tag "Tree mode" tree))))))
+				    (const :tag "Tree mode" tree)
+				    (const :tag "Unthreaded mode" unthreaded))))))
 
 (defcustom notmuch-saved-searches
   `((:name "inbox" :query "tag:inbox" :key ,(kbd "i"))
@@ -122,17 +140,16 @@ a plist. Supported properties are
   :sort-order      Specify the sort order to be used for the search.
                    Possible values are 'oldest-first 'newest-first or
                    nil. Nil means use the default sort order.
-  :search-type     Specify whether to run the search in search-mode
-                   or tree mode. Set to 'tree to specify tree
-                   mode, set to nil (or anything except tree) to
-                   specify search mode.
+  :search-type     Specify whether to run the search in search-mode,
+                   tree mode or unthreaded mode. Set to 'tree to specify tree
+                   mode, 'unthreaded to specify unthreaded mode, and set to nil
+                   (or anything except tree and unthreaded) to specify search mode.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
-;; The saved-search format is also used by the all-tags notmuch-hello
-;; section. This section generates its own saved-search list in one of
-;; the latter two forms.
-
+  ;; The saved-search format is also used by the all-tags notmuch-hello
+  ;; section. This section generates its own saved-search list in one of
+  ;; the latter two forms.
   :get 'notmuch-hello--saved-searches-to-plist
   :type '(repeat notmuch-saved-search-plist)
   :tag "List of Saved Searches"
@@ -352,7 +369,7 @@ supported for \"Customized queries section\" items."
   :type 'boolean)
 
 (defvar notmuch-hello-hidden-sections nil
-  "List of sections titles whose contents are hidden")
+  "List of sections titles whose contents are hidden.")
 
 (defvar notmuch-hello-first-run t
   "True if `notmuch-hello' is run for the first time, set to nil
@@ -365,10 +382,10 @@ afterwards.")
       (setq n (/ n 1000)))
     (setq result (or result '(0)))
     (apply #'concat
-     (number-to-string (car result))
-     (mapcar (lambda (elem)
-	      (format "%s%03d" notmuch-hello-thousands-separator elem))
-	     (cdr result)))))
+	   (number-to-string (car result))
+	   (mapcar (lambda (elem)
+		     (format "%s%03d" notmuch-hello-thousands-separator elem))
+		   (cdr result)))))
 
 (defun notmuch-hello-trim (search)
   "Trim whitespace."
@@ -392,10 +409,10 @@ afterwards.")
 			       notmuch-saved-searches)))
     ;; If an existing saved search with this name exists, remove it.
     (setq notmuch-saved-searches
-	  (loop for elem in notmuch-saved-searches
-		if (not (equal name
-			       (notmuch-saved-search-get elem :name)))
-		collect elem))
+	  (cl-loop for elem in notmuch-saved-searches
+		   if (not (equal name
+				  (notmuch-saved-search-get elem :name)))
+		   collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
 			     (add-to-list 'notmuch-saved-searches
@@ -413,37 +430,42 @@ afterwards.")
     (notmuch-hello-update)))
 
 (defun notmuch-hello-longest-label (searches-alist)
-  (or (loop for elem in searches-alist
-	    maximize (length (notmuch-saved-search-get elem :name)))
+  (or (cl-loop for elem in searches-alist
+	       maximize (length (notmuch-saved-search-get elem :name)))
       0))
 
 (defun notmuch-hello-reflect-generate-row (ncols nrows row list)
   (let ((len (length list)))
-    (loop for col from 0 to (- ncols 1)
-	  collect (let ((offset (+ (* nrows col) row)))
-		    (if (< offset len)
-			(nth offset list)
-		      ;; Don't forget to insert an empty slot in the
-		      ;; output matrix if there is no corresponding
-		      ;; value in the input matrix.
-		      nil)))))
+    (cl-loop for col from 0 to (- ncols 1)
+	     collect (let ((offset (+ (* nrows col) row)))
+		       (if (< offset len)
+			   (nth offset list)
+			 ;; Don't forget to insert an empty slot in the
+			 ;; output matrix if there is no corresponding
+			 ;; value in the input matrix.
+			 nil)))))
 
 (defun notmuch-hello-reflect (list ncols)
   "Reflect a `ncols' wide matrix represented by `list' along the
 diagonal."
   ;; Not very lispy...
   (let ((nrows (ceiling (length list) ncols)))
-    (loop for row from 0 to (- nrows 1)
-	  append (notmuch-hello-reflect-generate-row ncols nrows row list))))
+    (cl-loop for row from 0 to (- nrows 1)
+	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest ignore)
-  (if (widget-get widget :notmuch-search-type)
-      (notmuch-tree (widget-get widget
-				:notmuch-search-terms))
+  (cond
+   ((eq (widget-get widget :notmuch-search-type) 'tree)
+    (notmuch-tree (widget-get widget
+			      :notmuch-search-terms)))
+   ((eq (widget-get widget :notmuch-search-type) 'unthreaded)
+    (notmuch-unthreaded (widget-get widget
+				    :notmuch-search-terms)))
+   (t
     (notmuch-search (widget-get widget
 				:notmuch-search-terms)
 		    (widget-get widget
-				:notmuch-search-oldest-first))))
+				:notmuch-search-oldest-first)))))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -459,19 +481,17 @@ should be. Returns a cons cell `(tags-per-line width)'."
 		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
 		   (+ 9 1 (max notmuch-column-control widest)))))
-
 	  ((floatp notmuch-column-control)
 	   (let* ((available-width (- (window-width) notmuch-hello-indent))
-		  (proposed-width (max (* available-width notmuch-column-control) widest)))
+		  (proposed-width (max (* available-width notmuch-column-control)
+				       widest)))
 	     (floor available-width proposed-width)))
-
 	  (t
 	   (max 1
 		(/ (- (window-width) notmuch-hello-indent)
 		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
 		   (+ 9 1 widest)))))))
-
     (cons tags-per-line (/ (max 1
 				(- (window-width) notmuch-hello-indent
 				   ;; Count is 9 wide (8 digits plus
@@ -489,8 +509,7 @@ If FILTER is a function, it is called with QUERY as a parameter and
 the string it returns is used as the query. If nil is returned,
 the entry is hidden.
 
-Otherwise, FILTER is ignored.
-"
+Otherwise, FILTER is ignored."
   (cond
    ((functionp filter) (funcall filter query))
    ((stringp filter)
@@ -521,17 +540,15 @@ options will be handled as specified for
 	  (notmuch-hello-filtered-query count-query
 					(or (plist-get options :filter-count)
 					    (plist-get options :filter))))
-	  "\n")))
-
+	 "\n")))
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
-      (notmuch-logged-error "notmuch count --batch failed"
-			    "Please check that the notmuch CLI is new enough to support `count
+      (notmuch-logged-error
+       "notmuch count --batch failed"
+       "Please check that the notmuch CLI is new enough to support `count
 --batch'. In general we recommend running matching versions of
 the CLI and emacs interface."))
-
     (goto-char (point-min))
-
     (notmuch-remove-if-not
      #'identity
      (mapcar
@@ -542,7 +559,8 @@ the CLI and emacs interface."))
 				search-query (plist-get options :filter)))
 	       (message-count (prog1 (read (current-buffer))
 				(forward-line 1))))
-	  (when (and filtered-query (or (plist-get options :show-empty-searches) (> message-count 0)))
+	  (when (and filtered-query (or (plist-get options :show-empty-searches)
+					(> message-count 0)))
 	    (setq elem-plist (plist-put elem-plist :query filtered-query))
 	    (plist-put elem-plist :count message-count))))
       query-list))))
@@ -571,15 +589,15 @@ with `notmuch-hello-query-counts'."
     (mapc (lambda (elem)
 	    ;; (not elem) indicates an empty slot in the matrix.
 	    (when elem
-	      (if (> column-indent 0)
-		  (widget-insert (make-string column-indent ? )))
+	      (when (> column-indent 0)
+		(widget-insert (make-string column-indent ? )))
 	      (let* ((name (plist-get elem :name))
 		     (query (plist-get elem :query))
-		     (oldest-first (case (plist-get elem :sort-order)
+		     (oldest-first (cl-case (plist-get elem :sort-order)
 				     (newest-first nil)
 				     (oldest-first t)
 				     (otherwise notmuch-search-oldest-first)))
-		     (search-type (eq (plist-get elem :search-type) 'tree))
+		     (search-type (plist-get elem :search-type))
 		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
@@ -591,12 +609,11 @@ with `notmuch-hello-query-counts'."
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
-	    (setq count (1+ count))
+	    (cl-incf count)
 	    (when (eq (% count tags-per-line) 0)
 	      (setq column-indent 0)
 	      (widget-insert "\n")))
 	  reordered-list)
-
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
     (unless (eq (% count tags-per-line) 0)
@@ -621,7 +638,7 @@ with `notmuch-hello-query-counts'."
     (dolist (window (window-list))
       (let ((last-buf (window-parameter window 'notmuch-hello-last-buffer))
 	    (cur-buf (window-buffer window)))
-	(when (not (eq last-buf cur-buf))
+	(unless (eq last-buf cur-buf)
 	  ;; This window changed or is new.  Update recorded buffer
 	  ;; for next time.
 	  (set-window-parameter window 'notmuch-hello-last-buffer cur-buf)
@@ -635,7 +652,7 @@ with `notmuch-hello-query-counts'."
       ;; 24, we can't do it right here because something in this
       ;; hook's call stack overrides hello's point placement.
       (run-at-time nil nil #'notmuch-hello t))
-    (when (null hello-buf)
+    (unless hello-buf
       ;; Clean up hook
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
@@ -644,7 +661,7 @@ with `notmuch-hello-query-counts'."
 (defvar notmuch-emacs-version)
 
 (defun notmuch-hello-versions ()
-  "Display the notmuch version(s)"
+  "Display the notmuch version(s)."
   (interactive)
   (let ((notmuch-cli-version (notmuch-cli-version)))
     (message "notmuch version %s"
@@ -670,10 +687,9 @@ with `notmuch-hello-query-counts'."
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
-(fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
 
 (define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
- "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
 
 Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
 or click on a saved search to view matching threads. Edit saved
@@ -703,9 +719,9 @@ The screen may be customized via `\\[customize]'.
 Complete list of currently available key bindings:
 
 \\{notmuch-hello-mode-map}"
- (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
- ;;(setq buffer-read-only t)
-)
+  (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
+  ;;(setq buffer-read-only t)
+  )
 
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
@@ -729,7 +745,9 @@ Complete list of currently available key bindings:
       ;; dark background.
       (setq image (cons 'image
 			(append (cdr image)
-				(list :background (face-background 'notmuch-hello-logo-background)))))
+				(list :background
+				      (face-background
+				       'notmuch-hello-logo-background)))))
       (insert-image image))
     (widget-insert "  "))
 
@@ -749,9 +767,9 @@ Complete list of currently available key bindings:
 			     (notmuch-hello-update))
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
-		    (string-to-number (car (process-lines notmuch-command "count")))))
+		    (string-to-number
+		     (car (process-lines notmuch-command "count")))))
     (widget-insert " messages.\n")))
-
 
 (defun notmuch-hello-insert-saved-searches ()
   "Insert the saved-searches section."
@@ -803,48 +821,48 @@ Complete list of currently available key bindings:
 		   "clear")
     (widget-insert "\n\n")
     (let ((start (point)))
-      (loop for i from 1 to notmuch-hello-recent-searches-max
-	    for search in notmuch-search-history do
-	    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
-	      (set widget-symbol
-		   (widget-create 'editable-field
-				  ;; Don't let the search boxes be
-				  ;; less than 8 characters wide.
-				  :size (max 8
-					     (- (window-width)
-						;; Leave some space
-						;; at the start and
-						;; end of the
-						;; boxes.
-						(* 2 notmuch-hello-indent)
-						;; 1 for the space
-						;; before the
-						;; `[save]' button. 6
-						;; for the `[save]'
-						;; button.
-						1 6
-						;; 1 for the space
-						;; before the `[del]'
-						;; button. 5 for the
-						;; `[del]' button.
-						1 5))
-				  :action (lambda (widget &rest ignore)
-					    (notmuch-hello-search (widget-value widget)))
-				  search))
-	      (widget-insert " ")
-	      (widget-create 'push-button
-			     :notify (lambda (widget &rest ignore)
-				       (notmuch-hello-add-saved-search widget))
-			     :notmuch-saved-search-widget widget-symbol
-			     "save")
-	      (widget-insert " ")
-	      (widget-create 'push-button
-			     :notify (lambda (widget &rest ignore)
-				       (when (y-or-n-p "Are you sure you want to delete this search? ")
-					 (notmuch-hello-delete-search-from-history widget)))
-			     :notmuch-saved-search-widget widget-symbol
-			     "del"))
-	    (widget-insert "\n"))
+      (cl-loop for i from 1 to notmuch-hello-recent-searches-max
+	       for search in notmuch-search-history do
+	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
+		 (set widget-symbol
+		      (widget-create 'editable-field
+				     ;; Don't let the search boxes be
+				     ;; less than 8 characters wide.
+				     :size (max 8
+						(- (window-width)
+						   ;; Leave some space
+						   ;; at the start and
+						   ;; end of the
+						   ;; boxes.
+						   (* 2 notmuch-hello-indent)
+						   ;; 1 for the space
+						   ;; before the
+						   ;; `[save]' button. 6
+						   ;; for the `[save]'
+						   ;; button.
+						   1 6
+						   ;; 1 for the space
+						   ;; before the `[del]'
+						   ;; button. 5 for the
+						   ;; `[del]' button.
+						   1 5))
+				     :action (lambda (widget &rest ignore)
+					       (notmuch-hello-search (widget-value widget)))
+				     search))
+		 (widget-insert " ")
+		 (widget-create 'push-button
+				:notify (lambda (widget &rest ignore)
+					  (notmuch-hello-add-saved-search widget))
+				:notmuch-saved-search-widget widget-symbol
+				"save")
+		 (widget-insert " ")
+		 (widget-create 'push-button
+				:notify (lambda (widget &rest ignore)
+					  (when (y-or-n-p "Are you sure you want to delete this search? ")
+					    (notmuch-hello-delete-search-from-history widget)))
+				:notmuch-saved-search-widget widget-symbol
+				"del"))
+	       (widget-insert "\n"))
       (indent-rigidly start (point) notmuch-hello-indent))
     nil))
 
@@ -871,8 +889,8 @@ Supports the following entries in OPTIONS as a plist:
    the same values as :filter. If :filter and :filter-count are specified, this
    will be used instead of :filter, not in conjunction with it."
   (widget-insert title ": ")
-  (if (and notmuch-hello-first-run (plist-get options :initially-hidden))
-      (add-to-list 'notmuch-hello-hidden-sections title))
+  (when (and notmuch-hello-first-run (plist-get options :initially-hidden))
+    (add-to-list 'notmuch-hello-hidden-sections title))
   (let ((is-hidden (member title notmuch-hello-hidden-sections))
 	(start (point)))
     (if is-hidden
@@ -889,7 +907,7 @@ Supports the following entries in OPTIONS as a plist:
 				(notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
-    (when (not is-hidden)
+    (unless is-hidden
       (let ((searches (apply 'notmuch-hello-query-counts query-list options)))
 	(when (or (not (plist-get options :hide-if-empty))
 		  searches)
@@ -911,7 +929,7 @@ following:
 	 options))
 
 (defun notmuch-hello-insert-inbox ()
-  "Show an entry for each saved search and inboxed messages for each tag"
+  "Show an entry for each saved search and inboxed messages for each tag."
   (notmuch-hello-insert-searches "What's in your inbox"
 				 (append
 				  notmuch-saved-searches
@@ -919,7 +937,7 @@ following:
 				 :filter "tag:inbox"))
 
 (defun notmuch-hello-insert-alltags ()
-  "Insert a section displaying all tags and associated message counts"
+  "Insert a section displaying all tags and associated message counts."
   (notmuch-hello-insert-tags-section
    nil
    :initially-hidden (not notmuch-show-all-tags-list)
@@ -949,40 +967,32 @@ following:
 (defun notmuch-hello (&optional no-display)
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
-
   (notmuch-assert-cli-sane)
   ;; This may cause a window configuration change, so if the
   ;; auto-refresh hook is already installed, avoid recursive refresh.
   (let ((notmuch-hello-auto-refresh nil))
     (if no-display
 	(set-buffer "*notmuch-hello*")
-      (switch-to-buffer "*notmuch-hello*")))
-
+      (pop-to-buffer-same-window "*notmuch-hello*")))
   ;; Install auto-refresh hook
   (when notmuch-hello-auto-refresh
     (add-hook 'window-configuration-change-hook
 	      #'notmuch-hello-window-configuration-change))
-
   (let ((target-line (line-number-at-pos))
 	(target-column (current-column))
 	(inhibit-read-only t))
-
     ;; Delete all editable widget fields.  Editable widget fields are
     ;; tracked in a buffer local variable `widget-field-list' (and
     ;; others).  If we do `erase-buffer' without properly deleting the
     ;; widgets, some widget-related functions are confused later.
     (mapc 'widget-delete widget-field-list)
-
     (erase-buffer)
-
     (unless (eq major-mode 'notmuch-hello-mode)
       (notmuch-hello-mode))
-
     (let ((all (overlay-lists)))
       ;; Delete all the overlays.
       (mapc 'delete-overlay (car all))
       (mapc 'delete-overlay (cdr all)))
-
     (mapc
      (lambda (section)
        (let ((point-before (point)))
@@ -995,7 +1005,6 @@ following:
 	   (widget-insert "\n"))))
      notmuch-hello-sections)
     (widget-setup)
-
     ;; Move point back to where it was before refresh. Use line and
     ;; column instead of point directly to be insensitive to additions
     ;; and removals of text within earlier lines.

@@ -95,7 +95,7 @@ dependencies with a single simple command line. For example:
 
   For Fedora and similar:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python3-sphinx texinfo info
+	sudo dnf install xapian-core-devel gmime30-devel libtalloc-devel zlib-devel python3-sphinx texinfo info
 
 On other systems, a similar command can be used, but the details of
 the package names may be different.

@@ -31,8 +31,8 @@ Cheers,
 [ application/pgp-signature ]
 [ text/plain ]
 [ 4-line signature. Click/Enter to show. ]
- Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox signed unread)
-  Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
+Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox signed unread)
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
 Subject: Re: [notmuch] Working with Maildir storage?
 To: Mikhail Gusarov <dottedmag@dottedmag.net>
 Cc: notmuch@notmuchmail.org
@@ -57,9 +57,9 @@ It doesn't look like the patch is in git yet.
 [ application/pgp-signature ]
 [ text/plain ]
 [ 4-line signature. Click/Enter to show. ]
-   Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
-   Keith Packard <keithp@keithp.com> (2009-11-17) (inbox unread)
-    Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox signed unread)
+Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
+Keith Packard <keithp@keithp.com> (2009-11-17) (inbox unread)
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox signed unread)
 Subject: Re: [notmuch] Working with Maildir storage?
 To: Keith Packard <keithp@keithp.com>
 Cc: notmuch@notmuchmail.org
@@ -79,4 +79,4 @@ missing "#include <stdint.h>" (for the uint32_t on line 466).
 [ application/pgp-signature ]
 [ text/plain ]
 [ 4-line signature. Click/Enter to show. ]
- Carl Worth <cworth@cworth.org> (2009-11-18) (inbox unread)
+Carl Worth <cworth@cworth.org> (2009-11-18) (inbox unread)

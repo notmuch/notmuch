@@ -14,9 +14,6 @@ count=$(notmuch count from:keithp and to:keithp)
 test_expect_equal 0 "$count"
 
 test_begin_subtest "Same query against threads"
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
-    test_subtest_known_broken
-fi
 notmuch search thread:{from:keithp} and thread:{to:keithp} | notmuch_search_sanitize > OUTPUT
 cat<<EOF > EXPECTED
 thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
@@ -24,9 +21,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Mix thread and non-threads query"
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
-    test_subtest_known_broken
-fi
 notmuch search thread:{from:keithp} and to:keithp | notmuch_search_sanitize > OUTPUT
 cat<<EOF > EXPECTED
 thread:XXX   2009-11-18 [1/7] Lars Kellogg-Stedman| Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
@@ -34,9 +28,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Compound subquery"
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
-    test_subtest_known_broken
-fi
 notmuch search 'thread:"{from:keithp and date:2009}" and thread:{to:keithp}' | notmuch_search_sanitize > OUTPUT
 cat<<EOF > EXPECTED
 thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
@@ -44,9 +35,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Syntax/quoting error in subquery"
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
-    test_subtest_known_broken
-fi
 notmuch search 'thread:{from:keithp and date:2009} and thread:{to:keithp}' 1>OUTPUT 2>&1
 cat<<EOF > EXPECTED
 notmuch search: A Xapian exception occurred

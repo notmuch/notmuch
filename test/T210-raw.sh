@@ -40,7 +40,7 @@ for pow in range(10,21):
     msg['To'] = msg['From']
     msg['Message-Id'] = 'size-{:07d}@notmuch-test-suite'.format(size)
     content = ""
-    msg.set_content("")
+    msg.set_content("\n")
     padding = size - len(bytes(msg))
     lines = []
     while padding > 0:

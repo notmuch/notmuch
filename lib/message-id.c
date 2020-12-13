@@ -27,7 +27,7 @@ skip_space_and_comments (const char **str)
 		} else if (*s == ')') {
 		    nesting--;
 		} else if (*s == '\\') {
-		    if (*(s+1))
+		    if (*(s + 1))
 			s++;
 		}
 		s++;
@@ -90,7 +90,7 @@ _notmuch_message_id_parse (void *ctx, const char *message_id, const char **next)
 
 	for (r = result, len = strlen (r); *r; r++, len--)
 	    if (*r == ' ' || *r == '\t')
-		memmove (r, r+1, len);
+		memmove (r, r + 1, len);
     }
 
     return result;

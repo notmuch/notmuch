@@ -53,11 +53,19 @@ function (param_type param, param_type param)
   if/for/while test) and are preceded by a space. The opening brace of
   functions is the exception, and starts on a new line.
 
-* Comments are always C-style /* */ block comments.  They should start
-  with a capital letter and generally be written in complete
-  sentences.  Public library functions are documented immediately
-  before their prototype in lib/notmuch.h.  Internal functions are
-  typically documented immediately before their definition.
+* Opening parens also cuddle, even if the first argument does not fit
+  on the same line.
+
+* Ternary operators that span a line should be parenthesized like as
+  "a ? (\n b ) : c". This is mainly to keep the indentation tools
+  happy.
+
+* Comments are always C-style /* */ block comments, with a leading *
+  each line.  They should start with a capital letter and generally be
+  written in complete sentences.  Public library functions are
+  documented immediately before their prototype in lib/notmuch.h.
+  Internal functions are typically documented immediately before their
+  definition.
 
 * Code lines should be less than 80 columns and comments should be
   wrapped at 70 columns.

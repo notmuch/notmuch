@@ -32,7 +32,7 @@ from .tag import Tags
 from .message import Message
 
 class Messages(object):
-    """Represents a list of notmuch messages
+    r"""Represents a list of notmuch messages
 
     This object provides an iterator over a list of notmuch messages
     (Technically, it provides a wrapper for the underlying

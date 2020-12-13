@@ -1,0 +1,4 @@
+# elpa-notmuch is an elisp plugin for dealing with e-mail.  We can
+# already tell from the package name that it is an elisp package, so
+# it belongs in Section: mail, and lintian is being too strict here.
+elpa-notmuch: wrong-section-according-to-package-name elpa-notmuch => lisp

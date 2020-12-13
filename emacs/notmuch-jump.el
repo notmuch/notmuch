@@ -22,7 +22,9 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'pcase))
 
 (require 'notmuch-lib)
 (require 'notmuch-hello)
@@ -41,7 +43,6 @@ keys configured in the :key property of `notmuch-saved-searches'.
 Typically these shortcuts are a single key long, so this is a
 fast way to jump to a saved search from anywhere in Notmuch."
   (interactive)
-
   ;; Build the action map
   (let (action-map)
     (dolist (saved-search notmuch-saved-searches)
@@ -51,23 +52,28 @@ fast way to jump to a saved search from anywhere in Notmuch."
 	  (let ((name (plist-get saved-search :name))
 		(query (plist-get saved-search :query))
 		(oldest-first
-		 (case (plist-get saved-search :sort-order)
+		 (cl-case (plist-get saved-search :sort-order)
 		   (newest-first nil)
 		   (oldest-first t)
 		   (otherwise (default-value 'notmuch-search-oldest-first)))))
 	    (push (list key name
-			(if (eq (plist-get saved-search :search-type) 'tree)
-			    `(lambda () (notmuch-tree ',query))
-			  `(lambda () (notmuch-search ',query ',oldest-first))))
+			(cond
+			 ((eq (plist-get saved-search :search-type) 'tree)
+			  `(lambda () (notmuch-tree ',query)))
+			 ((eq (plist-get saved-search :search-type) 'unthreaded)
+			  `(lambda () (notmuch-unthreaded ',query)))
+			 (t
+			  `(lambda () (notmuch-search ',query ',oldest-first)))))
 		  action-map)))))
     (setq action-map (nreverse action-map))
-
     (if action-map
 	(notmuch-jump action-map "Search: ")
-      (error "To use notmuch-jump, please customize shortcut keys in notmuch-saved-searches."))))
+      (error "To use notmuch-jump, \
+please customize shortcut keys in notmuch-saved-searches."))))
 
 (defvar notmuch-jump--action nil)
 
+;;;###autoload
 (defun notmuch-jump (action-map prompt)
   "Interactively prompt for one of the keys in ACTION-MAP.
 
@@ -82,9 +88,7 @@ ACTION-MAP must be a list of triples of the form
 where KEY is a key binding, LABEL is a string label to display in
 the buffer, and ACTION is a nullary function to call.  LABEL may
 be null, in which case the action will still be bound, but will
-not appear in the pop-up buffer.
-"
-
+not appear in the pop-up buffer."
   (let* ((items (notmuch-jump--format-actions action-map))
 	 ;; Format the table of bindings and the full prompt
 	 (table
@@ -109,7 +113,6 @@ not appear in the pop-up buffer.
 	 (notmuch-jump--action nil))
     ;; Read the action
     (read-from-minibuffer full-prompt nil minibuffer-map)
-
     ;; If we got an action, do it
     (when notmuch-jump--action
       (funcall notmuch-jump--action))))
@@ -120,21 +123,18 @@ not appear in the pop-up buffer.
 Returns a list of strings, one for each item with a label in
 ACTION-MAP.  These strings can be inserted into a tabular
 buffer."
-
   ;; Compute the maximum key description width
   (let ((key-width 1))
-    (dolist (entry action-map)
+    (pcase-dolist (`(,key ,desc) action-map)
       (setq key-width
 	    (max key-width
-		 (string-width (format-kbd-macro (first entry))))))
+		 (string-width (format-kbd-macro key)))))
     ;; Format each action
-    (mapcar (lambda (entry)
-	      (let ((key (format-kbd-macro (first entry)))
-		    (desc (second entry)))
-		(concat
-		 (propertize key 'face 'minibuffer-prompt)
-		 (make-string (- key-width (length key)) ? )
-		 " " desc)))
+    (mapcar (pcase-lambda (`(,key ,desc))
+	      (setq key (format-kbd-macro key))
+	      (concat (propertize key 'face 'minibuffer-prompt)
+		      (make-string (- key-width (length key)) ? )
+		      " " desc))
 	    action-map)))
 
 (defun notmuch-jump--insert-items (width items)
@@ -169,39 +169,38 @@ buffer."
   "Translate ACTION-MAP into a minibuffer keymap."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-jump-minibuffer-map)
-    (dolist (action action-map)
-      (if (= (length (first action)) 1)
-	  (define-key map (first action)
-	    `(lambda () (interactive)
-	       (setq notmuch-jump--action ',(third action))
-	       (exit-minibuffer)))))
+    (pcase-dolist (`(,key ,name ,fn) action-map)
+      (when (= (length key) 1)
+	(define-key map key
+	  `(lambda () (interactive)
+	     (setq notmuch-jump--action ',fn)
+	     (exit-minibuffer)))))
     ;; By doing this in two passes (and checking if we already have a
     ;; binding) we avoid problems if the user specifies a binding which
     ;; is a prefix of another binding.
-    (dolist (action action-map)
-      (if (> (length (first action)) 1)
-	  (let* ((key (elt (first action) 0))
-		 (keystr (string key))
-		 (new-prompt (concat prompt (format-kbd-macro keystr) " "))
-		 (action-submap nil))
-	    (unless (lookup-key map keystr)
-	      (dolist (act action-map)
-		(when (= key (elt (first act) 0))
-		  (push (list (substring (first act) 1)
-			      (second act)
-			      (third act))
-			action-submap)))
-	      ;; We deal with backspace specially
-	      (push (list (kbd "DEL")
-			  "Backup"
-			  (apply-partially #'notmuch-jump action-map prompt))
-		    action-submap)
-	      (setq action-submap (nreverse action-submap))
-	      (define-key map keystr
-		`(lambda () (interactive)
-		   (setq notmuch-jump--action
-			 ',(apply-partially #'notmuch-jump action-submap new-prompt))
-		   (exit-minibuffer)))))))
+    (pcase-dolist (`(,key ,name ,fn) action-map)
+      (when (> (length key) 1)
+	(let* ((key (elt key 0))
+	       (keystr (string key))
+	       (new-prompt (concat prompt (format-kbd-macro keystr) " "))
+	       (action-submap nil))
+	  (unless (lookup-key map keystr)
+	    (pcase-dolist (`(,k ,n ,f) action-map)
+	      (when (= key (elt k 0))
+		(push (list (substring k 1) n f) action-submap)))
+	    ;; We deal with backspace specially
+	    (push (list (kbd "DEL")
+			"Backup"
+			(apply-partially #'notmuch-jump action-map prompt))
+		  action-submap)
+	    (setq action-submap (nreverse action-submap))
+	    (define-key map keystr
+	      `(lambda () (interactive)
+		 (setq notmuch-jump--action
+		       ',(apply-partially #'notmuch-jump
+					  action-submap
+					  new-prompt))
+		 (exit-minibuffer)))))))
     map))
 
 ;;

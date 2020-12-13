@@ -177,7 +177,7 @@ test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
                   (let ((inhibit-read-only t)) (erase-buffer)))
 	       (condition-case err
 		   (notmuch-show \"*\")
-		 (error (message \"%s\" (second err))))
+		 (error (message \"%s\" (cadr err))))
 	       (notmuch-test-wait)
 	       (with-current-buffer \"*Messages*\"
 		  (test-output \"MESSAGES\"))

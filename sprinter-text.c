@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <talloc.h>
@@ -44,11 +45,11 @@ text_string (struct sprinter *sp, const char *val)
 }
 
 static void
-text_integer (struct sprinter *sp, int val)
+text_integer (struct sprinter *sp, int64_t val)
 {
     struct sprinter_text *sptxt = (struct sprinter_text *) sp;
 
-    fprintf (sptxt->stream, "%d", val);
+    fprintf (sptxt->stream, "%"PRId64, val);
 }
 
 static void

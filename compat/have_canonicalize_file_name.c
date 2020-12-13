@@ -1,7 +1,8 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 
-int main()
+int
+main ()
 {
     char *found;
     char *string;

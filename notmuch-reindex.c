@@ -68,13 +68,13 @@ reindex_query (notmuch_database_t *notmuch, const char *query_string,
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
 
-	ret = notmuch_message_reindex(message, indexopts);
+	ret = notmuch_message_reindex (message, indexopts);
 	if (ret != NOTMUCH_STATUS_SUCCESS)
 	    break;
 	notmuch_message_destroy (message);
     }
 
-    if (!ret)
+    if (! ret)
 	ret = notmuch_database_end_atomic (notmuch);
 
     notmuch_query_destroy (query);
@@ -124,7 +124,7 @@ notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
+    query_string = query_string_from_args (config, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
@@ -134,7 +134,7 @@ notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[])
 	fprintf (stderr, "Error: notmuch reindex requires at least one search term.\n");
 	return EXIT_FAILURE;
     }
-    
+
     ret = reindex_query (notmuch, query_string, indexing_cli_choices.opts);
 
     notmuch_database_destroy (notmuch);

@@ -47,6 +47,7 @@ gz_getline (void *talloc_ctx, char **bufptr, ssize_t *bytes_read, gzFile stream)
 	    int zlib_status = 0;
 	    (void) gzerror (stream, &zlib_status);
 	    switch (zlib_status) {
+	    case Z_STREAM_END:
 	    case Z_OK:
 		/* no data read before EOF */
 		if (offset == 0)
@@ -70,16 +71,24 @@ gz_getline (void *talloc_ctx, char **bufptr, ssize_t *bytes_read, gzFile stream)
 	if (buf == NULL)
 	    return UTIL_OUT_OF_MEMORY;
     }
- SUCCESS:
+  SUCCESS:
     *bufptr = buf;
     *bytes_read = offset;
     return UTIL_SUCCESS;
 }
 
-const char *gz_error_string (util_status_t status, gzFile file)
+const char *
+gz_error_string (util_status_t status, gzFile file)
 {
     if (status == UTIL_GZERROR)
-	return gzerror (file, NULL);
+	return gzerror_str (file);
     else
 	return util_error_string (status);
+}
+
+const char *
+gzerror_str(gzFile file)
+{
+    int dummy;
+    return gzerror (file, &dummy);
 }

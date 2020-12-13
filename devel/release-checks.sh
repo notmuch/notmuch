@@ -29,7 +29,7 @@ append_emsg ()
 	emsgs="${emsgs:+$emsgs\n}  $1"
 }
 
-for f in ./version debian/changelog NEWS "$PV_FILE"
+for f in ./version.txt debian/changelog NEWS "$PV_FILE"
 do
 	if   [ ! -f "$f" ]; then append_emsg "File '$f' is missing"
 	elif [ ! -r "$f" ]; then append_emsg "File '$f' is unreadable"
@@ -53,7 +53,7 @@ then
 else
 	echo "Reading './version' file failed (surprisingly!)"
 	exit 1
-fi < ./version
+fi < ./version.txt
 
 readonly VERSION
 
@@ -109,7 +109,7 @@ else
 fi
 
 echo -n "Checking that python bindings version is $VERSION... "
-py_version=`python -c "with open('$PV_FILE') as vf: exec(vf.read()); print(__VERSION__)"`
+py_version=`python3 -c "with open('$PV_FILE') as vf: exec(vf.read()); print(__VERSION__)"`
 if [ "$py_version" = "$VERSION" ]
 then
 	echo Yes.
@@ -178,10 +178,7 @@ esac
 year=`exec date +%Y`
 echo -n "Checking that copyright in documentation contains 2009-$year... "
 # Read the value of variable `copyright' defined in 'doc/conf.py'.
-# As __file__ is not defined when python command is given from command line,
-# it is defined before contents of 'doc/conf.py' (which dereferences __file__)
-# is executed.
-copyrightline=`exec python -c "with open('doc/conf.py') as cf: __file__ = ''; exec(cf.read()); print(copyright)"`
+copyrightline=$(grep ^copyright doc/conf.py)
 case $copyrightline in
 	*2009-$year*)
 		echo Yes. ;;

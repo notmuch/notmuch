@@ -1,5 +1,5 @@
 usr/bin/notmuch
 usr/bin/notmuch-emacs-mua
+usr/share/applications/notmuch-emacs-mua.desktop
 usr/share/bash-completion
 usr/share/zsh/vendor-completions
-emacs/notmuch-emacs-mua.desktop usr/share/applications

@@ -20,30 +20,19 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
-(require 'cl)	;; This code is generally used uncompiled.
+(require 'cl-lib)
+
+;; Ensure that the dynamic variables that are defined by this library
+;; are defined by the time that we let-bind them.  This is needed
+;; because starting with Emacs 27 undeclared variables in evaluated
+;; interactive code (such as our tests) use lexical scope.
+(require 'smtpmail)
 
 ;; `read-file-name' by default uses `completing-read' function to read
 ;; user input.  It does not respect `standard-input' variable which we
 ;; use in tests to provide user input.  So replace it with a plain
 ;; `read' call.
 (setq read-file-name-function (lambda (&rest _) (read)))
-
-;; Work around a bug in emacs 23.1 and emacs 23.2 which prevents
-;; noninteractive (kill-emacs) from emacsclient.
-(if (and (= emacs-major-version 23) (< emacs-minor-version 3))
-  (defadvice kill-emacs (before disable-yes-or-no-p activate)
-    "Disable yes-or-no-p before executing kill-emacs"
-    (defun yes-or-no-p (prompt) t)))
-
-;; Emacs bug #2930:
-;;	23.0.92; `accept-process-output' and `sleep-for' do not run sentinels
-;; seems to be present in Emacs 23.1.
-;; Running `list-processes' after `accept-process-output' seems to work
-;; around this problem.
-(if (and (= emacs-major-version 23) (= emacs-minor-version 1))
-  (defadvice accept-process-output (after run-list-processes activate)
-    "run list-processes after executing accept-process-output"
-    (list-processes)))
 
 (defun notmuch-test-wait ()
   "Wait for process completion."
@@ -75,7 +64,7 @@ invisible text."
   (let (str)
     (while (< start end)
       (let ((next-pos (next-char-property-change start end)))
-	(when (not (invisible-p start))
+	(unless (invisible-p start)
 	  (setq str (concat str (buffer-substring-no-properties
 				 start next-pos))))
 	(setq start next-pos)))
@@ -91,35 +80,22 @@ invisible text."
 (defun orphan-watchdog-check (pid)
   "Periodically check that the process with id PID is still
 running, quit if it terminated."
-  (if (not (test-process-running pid))
-      (kill-emacs)))
+  (unless (test-process-running pid)
+    (kill-emacs)))
 
 (defun orphan-watchdog (pid)
   "Initiate orphan watchdog check."
   (run-at-time 60 60 'orphan-watchdog-check pid))
 
-(defun hook-counter (hook)
-  "Count how many times a hook is called.  Increments
-`hook'-counter variable value if it is bound, otherwise does
-nothing."
-  (let ((counter (intern (concat (symbol-name hook) "-counter"))))
-    (if (boundp counter)
-	(set counter (1+ (symbol-value counter))))))
+(defvar notmuch-hello-mode-hook-counter -100
+  "Tests that care about this counter must let-bind it to 0.")
+(add-hook 'notmuch-hello-mode-hook
+	  (lambda () (cl-incf notmuch-hello-mode-hook-counter)))
 
-(defun add-hook-counter (hook)
-  "Add hook to count how many times `hook' is called."
-  (add-hook hook (apply-partially 'hook-counter hook)))
-
-(add-hook-counter 'notmuch-hello-mode-hook)
-(add-hook-counter 'notmuch-hello-refresh-hook)
-
-(defadvice notmuch-search-process-filter (around pessimal activate disable)
-  "Feed notmuch-search-process-filter one character at a time."
-  (let ((string (ad-get-arg 1)))
-    (loop for char across string
-	  do (progn
-	       (ad-set-arg 1 (char-to-string char))
-	       ad-do-it))))
+(defvar notmuch-hello-refresh-hook-counter -100
+  "Tests that care about this counter must let-bind it to 0.")
+(add-hook 'notmuch-hello-refresh-hook
+	  (lambda () (cl-incf notmuch-hello-refresh-hook-counter)))
 
 (defun notmuch-test-mark-links ()
   "Enclose links in the current buffer with << and >>."
@@ -152,23 +128,22 @@ nothing."
 	  "Output:\t" (prin1-to-string output) "\n"))
 
 (defun notmuch-test-expect-equal (output expected)
-  "Compare OUTPUT with EXPECTED. Report any discrepencies."
-  (if (equal output expected)
-      t
-    (cond
-     ((and (listp output)
-	   (listp expected))
-      ;; Reporting the difference between two lists is done by
-      ;; reporting differing elements of OUTPUT and EXPECTED
-      ;; pairwise. This is expected to make analysis of failures
-      ;; simpler.
-      (apply #'concat (loop for o in output
-			    for e in expected
-			    if (not (equal o e))
-			    collect (notmuch-test-report-unexpected o e))))
-
-     (t
-      (notmuch-test-report-unexpected output expected)))))
+  "Compare OUTPUT with EXPECTED. Report any discrepancies."
+  (cond
+   ((equal output expected)
+    t)
+   ((and (listp output)
+	 (listp expected))
+    ;; Reporting the difference between two lists is done by
+    ;; reporting differing elements of OUTPUT and EXPECTED
+    ;; pairwise. This is expected to make analysis of failures
+    ;; simpler.
+    (apply #'concat (cl-loop for o in output
+			     for e in expected
+			     if (not (equal o e))
+			     collect (notmuch-test-report-unexpected o e))))
+   (t
+    (notmuch-test-report-unexpected output expected))))
 
 (defun notmuch-post-command ()
   (run-hooks 'post-command-hook))
@@ -193,13 +168,3 @@ nothing."
 ;; environments
 
 (setq mm-text-html-renderer 'html2text)
-
-;; Set some variables for S/MIME tests.
-
-(setq smime-keys '(("" "test_suite.pem" nil)))
-
-(setq mml-smime-use 'openssl)
-
-;; all test keys are without passphrase
-(eval-after-load 'smime
-  '(defun smime-ask-passphrase (cache)  nil))

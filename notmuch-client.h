@@ -49,13 +49,15 @@
 #include <errno.h>
 #include <signal.h>
 #include <ctype.h>
+#include <zlib.h>
 
 #include "talloc-extra.h"
 #include "crypto.h"
+#include "repair.h"
 
-#define unused(x) x __attribute__ ((unused))
+#define unused(x) x ## _unused __attribute__ ((unused))
 
-#define STRINGIFY(s) STRINGIFY_(s)
+#define STRINGIFY(s) STRINGIFY_ (s)
 #define STRINGIFY_(s) #s
 
 typedef struct mime_node mime_node_t;
@@ -63,10 +65,10 @@ struct sprinter;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
-    struct sprinter *(*new_sprinter) (const void *ctx, FILE *stream);
-    notmuch_status_t (*part) (const void *ctx, struct sprinter *sprinter,
-			      struct mime_node *node, int indent,
-			      const struct notmuch_show_params *params);
+    struct sprinter *(*new_sprinter)(const void *ctx, FILE *stream);
+    notmuch_status_t (*part)(const void *ctx, struct sprinter *sprinter,
+			     struct mime_node *node, int indent,
+			     const struct notmuch_show_params *params);
 } notmuch_show_format_t;
 
 typedef struct notmuch_show_params {
@@ -85,12 +87,12 @@ typedef struct notmuch_show_params {
  *
  * Note that __location__ comes from talloc.h.
  */
-#define INTERNAL_ERROR(format, ...)			\
-    do {						\
-	fprintf(stderr,					\
-		"Internal error: " format " (%s)\n",	\
-		##__VA_ARGS__, __location__);		\
-	exit (1);					\
+#define INTERNAL_ERROR(format, ...)                     \
+    do {                                                \
+	fprintf (stderr,                                 \
+		 "Internal error: " format " (%s)\n",    \
+		 ##__VA_ARGS__, __location__);           \
+	exit (1);                                       \
     } while (0)
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -101,8 +103,8 @@ typedef struct notmuch_show_params {
 static inline void
 chomp_newline (char *str)
 {
-    if (str && str[strlen(str)-1] == '\n')
-	str[strlen(str)-1] = '\0';
+    if (str && str[strlen (str) - 1] == '\n')
+	str[strlen (str) - 1] = '\0';
 }
 
 /* Exit status code indicating temporary failure; user is invited to
@@ -251,8 +253,8 @@ json_quote_str (const void *ctx, const char *str);
 /* notmuch-config.c */
 
 typedef enum {
-    NOTMUCH_CONFIG_OPEN	= 1 << 0,
-    NOTMUCH_CONFIG_CREATE = 1 << 1,
+    NOTMUCH_CONFIG_OPEN		= 1 << 0,
+    NOTMUCH_CONFIG_CREATE	= 1 << 1,
 } notmuch_config_mode_t;
 
 notmuch_config_t *
@@ -328,8 +330,8 @@ notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length
 
 void
 notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
-				      const char *list[],
-				      size_t length);
+					const char *list[],
+					size_t length);
 
 int
 notmuch_run_hook (const char *db_path, const char *hook);
@@ -388,14 +390,16 @@ struct mime_node {
 
     /* The list of signatures for signed or encrypted containers. If
      * there are no signatures, this will be NULL. */
-    GMimeSignatureList* sig_list;
+    GMimeSignatureList *sig_list;
 
     /* Internal: Context inherited from the root iterator. */
     struct mime_node_context *ctx;
 
     /* Internal: For successfully decrypted multipart parts, the
-     * decrypted part to substitute for the second child. */
-    GMimeObject *decrypted_child;
+     * decrypted part to substitute for the second child; or, for
+     * PKCS#7 parts, the part returned after removing/processing the
+     * PKCS#7 transformation */
+    GMimeObject *unwrapped_child;
 
     /* Internal: The next child for depth-first traversal and the part
      * number to assign it (or -1 if unknown). */
@@ -435,11 +439,11 @@ mime_node_t *
 mime_node_child (mime_node_t *parent, int child);
 
 /* Return the nth child of node in a depth-first traversal.  If n is
- * 0, returns node itself.  Returns NULL if there is no such part. */
+* 0, returns node itself.  Returns NULL if there is no such part. */
 mime_node_t *
 mime_node_seek_dfs (mime_node_t *node, int n);
 
-const _notmuch_message_crypto_t*
+const _notmuch_message_crypto_t *
 mime_node_get_message_crypto_status (mime_node_t *node);
 
 typedef enum dump_formats {
@@ -449,9 +453,9 @@ typedef enum dump_formats {
 } dump_format_t;
 
 typedef enum dump_includes {
-    DUMP_INCLUDE_TAGS = 1,
-    DUMP_INCLUDE_CONFIG = 2,
-    DUMP_INCLUDE_PROPERTIES = 4
+    DUMP_INCLUDE_TAGS		= 1,
+    DUMP_INCLUDE_CONFIG		= 2,
+    DUMP_INCLUDE_PROPERTIES	= 4
 } dump_include_t;
 
 #define DUMP_INCLUDE_DEFAULT (DUMP_INCLUDE_TAGS | DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_PROPERTIES)
@@ -466,9 +470,9 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       dump_include_t include,
 		       bool gzip_output);
 
-/* If status is non-zero (i.e. error) print appropriate
-   messages to stderr.
-*/
+/* If status indicates error print appropriate
+ * messages to stderr.
+ */
 
 notmuch_status_t
 print_status_query (const char *loc,
@@ -488,14 +492,24 @@ print_status_database (const char *loc,
 int
 status_to_exit (notmuch_status_t status);
 
+notmuch_status_t
+print_status_gzbytes (const char *loc,
+		      gzFile file,
+		      int bytes);
+
+/* the __location__ macro is defined in talloc.h */
+#define ASSERT_GZBYTES(file, bytes) ((print_status_gzbytes (__location__, file, bytes)) ? exit (1) : 0)
+#define GZPRINTF(file, fmt, ...) ASSERT_GZBYTES (file, gzprintf (file, fmt, ##__VA_ARGS__));
+#define GZPUTS(file, str) ASSERT_GZBYTES(file, gzputs (file, str));
+
 #include "command-line-arguments.h"
 
 extern const char *notmuch_requested_db_uuid;
-extern const notmuch_opt_desc_t  notmuch_shared_options [];
+extern const notmuch_opt_desc_t notmuch_shared_options [];
 void notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
 
-void notmuch_process_shared_options (const char* subcommand_name);
-int notmuch_minimal_options (const char* subcommand_name,
+void notmuch_process_shared_options (const char *subcommand_name);
+int notmuch_minimal_options (const char *subcommand_name,
 			     int argc, char **argv);
 
 
@@ -504,10 +518,10 @@ int notmuch_minimal_options (const char* subcommand_name,
 struct _notmuch_client_indexing_cli_choices {
     int decrypt_policy;
     bool decrypt_policy_set;
-    notmuch_indexopts_t * opts;
+    notmuch_indexopts_t *opts;
 };
 extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;
-extern const notmuch_opt_desc_t  notmuch_shared_indexing_options [];
+extern const notmuch_opt_desc_t notmuch_shared_indexing_options [];
 notmuch_status_t
 notmuch_process_shared_indexing_options (notmuch_database_t *notmuch);
 

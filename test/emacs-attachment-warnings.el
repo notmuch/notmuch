@@ -1,3 +1,4 @@
+(require 'cl-lib)
 (require 'notmuch-mua)
 
 (defun attachment-check-test (&optional fn)
@@ -12,7 +13,8 @@ Return `t' if the message would be sent, otherwise `nil'"
       (condition-case nil
 	  ;; Force `y-or-n-p' to always return `nil', as if the user
 	  ;; pressed "n".
-	  (letf (((symbol-function 'y-or-n-p) (lambda (&rest args) nil)))
+	  (cl-letf (((symbol-function 'y-or-n-p)
+		     (lambda (&rest args) nil)))
 	    (notmuch-mua-attachment-check)
 	    t)
 	('error nil))
@@ -36,6 +38,12 @@ Return `t' if the message would be sent, otherwise `nil'"
 	   ;; fontification properties. For fontification to happen we need to
 	   ;; allow some time for redisplay.
 	   (sit-for 0.01)))
+    (t . (lambda ()
+	   ;; "attach" is only mentioned in a forwarded message.
+	   (insert "Hello\n")
+	   (insert "<#mml type=message/rfc822 disposition=inline>\n")
+	   (insert "X-Has-Attach:\n")
+	   (insert "<#/mml>\n")))
 
     ;; These should not be okay:
     (nil . (lambda () (insert "Here is an attachment:\n")))
@@ -49,20 +57,25 @@ Return `t' if the message would be sent, otherwise `nil'"
 	     ;; looking at fontification properties. For fontification
 	     ;; to happen we need to allow some time for redisplay.
 	     (sit-for 0.01)))
+    (nil . (lambda ()
+	   ;; "attachment" is mentioned before a forwarded message.
+	   (insert "I also attach something.\n")
+	   (insert "<#mml type=message/rfc822 disposition=inline>\n")
+	   (insert "X-Has-Attach:\n")
+	   (insert "<#/mml>\n")))
     ))
 
 (defun notmuch-test-attachment-warning-1 ()
   (let (output expected)
-    (mapcar (lambda (test)
-	      (let* ((expect (car test))
-		     (body (cdr test))
-		     (result (attachment-check-test body)))
-		(push expect expected)
-		(push (if (eq result expect)
-			  result
-			;; In the case of a failure, include the test
-			;; details to make it simpler to debug.
-			(format "%S <-- %S" result body))
-		      output)))
-	    attachment-check-tests)
+    (dolist (test attachment-check-tests)
+      (let* ((expect (car test))
+	     (body (cdr test))
+	     (result (attachment-check-test body)))
+	(push expect expected)
+	(push (if (eq result expect)
+		  result
+		;; In the case of a failure, include the test
+		;; details to make it simpler to debug.
+		(format "%S <-- %S" result body))
+	      output)))
     (notmuch-test-expect-equal output expected)))

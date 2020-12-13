@@ -22,12 +22,12 @@
 #include "database-private.h"
 
 #include <gmime/gmime.h>
-#include <glib.h> /* GHashTable */
+#include <glib.h>                                       /* GHashTable */
 
 #ifdef DEBUG_THREADING
-#define THREAD_DEBUG(format, ...) fprintf(stderr, format " (%s).\n", ##__VA_ARGS__, __location__)
+#define THREAD_DEBUG(format, ...) fprintf (stderr, format " (%s).\n", ##__VA_ARGS__, __location__)
 #else
-#define THREAD_DEBUG(format, ...) do {} while (0) /* ignored */
+#define THREAD_DEBUG(format, ...) do {} while (0)       /* ignored */
 #endif
 
 struct _notmuch_thread {
@@ -165,8 +165,8 @@ _resolve_thread_authors_string (notmuch_thread_t *thread)
     g_ptr_array_free (thread->matched_authors_array, true);
     thread->matched_authors_array = NULL;
 
-    if (!thread->authors)
-	thread->authors = talloc_strdup(thread, "");
+    if (! thread->authors)
+	thread->authors = talloc_strdup (thread, "");
 }
 
 /* clean up the ugly "Lastname, Firstname" format that some mail systems
@@ -180,14 +180,14 @@ static char *
 _thread_cleanup_author (notmuch_thread_t *thread,
 			const char *author, const char *from)
 {
-    char *clean_author,*test_author;
+    char *clean_author, *test_author;
     const char *comma;
     char *blank;
-    int fname,lname;
+    int fname, lname;
 
     if (author == NULL)
 	return NULL;
-    clean_author = talloc_strdup(thread, author);
+    clean_author = talloc_strdup (thread, author);
     if (clean_author == NULL)
 	return NULL;
     /* check if there's a comma in the name and that there's a
@@ -196,34 +196,34 @@ _thread_cleanup_author (notmuch_thread_t *thread,
      * one character long ",\0").
      * Otherwise just return the copy of the original author name that
      * we just made*/
-    comma = strchr(author,',');
-    if (comma && strlen(comma) > 1) {
+    comma = strchr (author, ',');
+    if (comma && strlen (comma) > 1) {
 	/* let's assemble what we think is the correct name */
 	lname = comma - author;
 
 	/* Skip all the spaces after the comma */
-	fname = strlen(author) - lname - 1;
+	fname = strlen (author) - lname - 1;
 	comma += 1;
 	while (*comma == ' ') {
 	    fname -= 1;
 	    comma += 1;
 	}
-	strncpy(clean_author, comma, fname);
+	strncpy (clean_author, comma, fname);
 
-	*(clean_author+fname) = ' ';
-	strncpy(clean_author + fname + 1, author, lname);
-	*(clean_author+fname+1+lname) = '\0';
+	*(clean_author + fname) = ' ';
+	strncpy (clean_author + fname + 1, author, lname);
+	*(clean_author + fname + 1 + lname) = '\0';
 	/* make a temporary copy and see if it matches the email */
-	test_author = talloc_strdup(thread,clean_author);
+	test_author = talloc_strdup (thread, clean_author);
 
-	blank=strchr(test_author,' ');
+	blank = strchr (test_author, ' ');
 	while (blank != NULL) {
 	    *blank = '.';
-	    blank=strchr(test_author,' ');
+	    blank = strchr (test_author, ' ');
 	}
-	if (strcasestr(from, test_author) == NULL)
+	if (strcasestr (from, test_author) == NULL)
 	    /* we didn't identify this as part of the email address
-	    * so let's punt and return the original author */
+	     * so let's punt and return the original author */
 	    strcpy (clean_author, author);
     }
     return clean_author;
@@ -251,16 +251,14 @@ _thread_add_message (notmuch_thread_t *thread,
     if (omit_exclude != NOTMUCH_EXCLUDE_FALSE) {
 	for (tags = notmuch_message_get_tags (message);
 	     notmuch_tags_valid (tags);
-	     notmuch_tags_move_to_next (tags))
-	{
+	     notmuch_tags_move_to_next (tags)) {
 	    tag = notmuch_tags_get (tags);
 	    /* Is message excluded? */
 	    for (notmuch_string_node_t *term = exclude_terms->head;
 		 term != NULL;
-		 term = term->next)
-	    {
+		 term = term->next) {
 		/* Check for an empty string, and then ignore initial 'K'. */
-		if (*(term->string) && strcmp(tag, (term->string + 1)) == 0) {
+		if (*(term->string) && strcmp (tag, (term->string + 1)) == 0) {
 		    message_excluded = true;
 		    break;
 		}
@@ -309,8 +307,7 @@ _thread_add_message (notmuch_thread_t *thread,
 
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
+	 notmuch_tags_move_to_next (tags)) {
 	tag = notmuch_tags_get (tags);
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
     }
@@ -338,12 +335,12 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
 
 	cleaned_subject = talloc_strndup (thread,
 					  subject + 4,
-					  strlen(subject) - 4);
+					  strlen (subject) - 4);
     } else {
 	cleaned_subject = talloc_strdup (thread, subject);
     }
 
-    if (! EMPTY_STRING(cleaned_subject)) {
+    if (! EMPTY_STRING (cleaned_subject)) {
 	if (thread->subject)
 	    talloc_free (thread->subject);
 
@@ -354,14 +351,16 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
 /* Add a message to this thread which is known to match the original
  * search specification. The 'sort' parameter controls whether the
  * oldest or newest matching subject is applied to the thread as a
- * whole. */
-static void
+ * whole. Returns 0 on success.
+ */
+static int
 _thread_add_matched_message (notmuch_thread_t *thread,
 			     notmuch_message_t *message,
 			     notmuch_sort_t sort)
 {
     time_t date;
     notmuch_message_t *hashed_message;
+    notmuch_bool_t is_set;
 
     date = notmuch_message_get_date (message);
 
@@ -373,34 +372,38 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 
     if (date > thread->newest || ! thread->matched_messages) {
 	thread->newest = date;
-	const char *cur_subject = notmuch_thread_get_subject(thread);
-	if (sort != NOTMUCH_SORT_OLDEST_FIRST || EMPTY_STRING(cur_subject))
+	const char *cur_subject = notmuch_thread_get_subject (thread);
+	if (sort != NOTMUCH_SORT_OLDEST_FIRST || EMPTY_STRING (cur_subject))
 	    _thread_set_subject_from_message (thread, message);
     }
 
-    if (!notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED))
+    if (notmuch_message_get_flag_st (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, &is_set))
+	return -1;
+    if (! is_set)
 	thread->matched_messages++;
 
     if (g_hash_table_lookup_extended (thread->message_hash,
-			    notmuch_message_get_message_id (message), NULL,
-			    (void **) &hashed_message)) {
+				      notmuch_message_get_message_id (message), NULL,
+				      (void **) &hashed_message)) {
 	notmuch_message_set_flag (hashed_message,
 				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
     }
 
     _thread_add_matched_author (thread, _notmuch_message_get_author (hashed_message));
+    return 0;
 }
 
 static bool
-_parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message) {
+_parent_via_in_reply_to (notmuch_thread_t *thread, notmuch_message_t *message)
+{
     notmuch_message_t *parent;
     const char *in_reply_to;
 
     in_reply_to = _notmuch_message_get_in_reply_to (message);
-    THREAD_DEBUG("checking message = %s in_reply_to=%s\n",
-		 notmuch_message_get_message_id (message), in_reply_to);
+    THREAD_DEBUG ("checking message = %s in_reply_to=%s\n",
+		  notmuch_message_get_message_id (message), in_reply_to);
 
-    if (in_reply_to && (! EMPTY_STRING(in_reply_to)) &&
+    if (in_reply_to && (! EMPTY_STRING (in_reply_to)) &&
 	g_hash_table_lookup_extended (thread->message_hash,
 				      in_reply_to, NULL,
 				      (void **) &parent)) {
@@ -420,32 +423,32 @@ _parent_or_toplevel (notmuch_thread_t *thread, notmuch_message_t *message)
     const notmuch_string_list_t *references =
 	_notmuch_message_get_references (message);
 
-    THREAD_DEBUG("trying to reparent via references: %s\n",
-		     notmuch_message_get_message_id (message));
+    THREAD_DEBUG ("trying to reparent via references: %s\n",
+		  notmuch_message_get_message_id (message));
 
     for (notmuch_string_node_t *ref_node = references->head;
 	 ref_node; ref_node = ref_node->next) {
-	THREAD_DEBUG("checking reference=%s\n", ref_node->string);
+	THREAD_DEBUG ("checking reference=%s\n", ref_node->string);
 	if ((g_hash_table_lookup_extended (thread->message_hash,
 					   ref_node->string, NULL,
 					   (void **) &new_parent))) {
 	    size_t new_depth = _notmuch_message_get_thread_depth (new_parent);
-	    THREAD_DEBUG("got depth %lu\n", new_depth);
-	    if (new_depth > max_depth || !parent) {
-		THREAD_DEBUG("adding at depth %lu parent=%s\n", new_depth, ref_node->string);
+	    THREAD_DEBUG ("got depth %lu\n", new_depth);
+	    if (new_depth > max_depth || ! parent) {
+		THREAD_DEBUG ("adding at depth %lu parent=%s\n", new_depth, ref_node->string);
 		max_depth = new_depth;
 		parent = new_parent;
 	    }
 	}
     }
     if (parent) {
-	THREAD_DEBUG("adding reply %s to parent=%s\n",
-		 notmuch_message_get_message_id (message),
-		 notmuch_message_get_message_id (parent));
+	THREAD_DEBUG ("adding reply %s to parent=%s\n",
+		      notmuch_message_get_message_id (message),
+		      notmuch_message_get_message_id (parent));
 	_notmuch_message_add_reply (parent, message);
     } else {
-	THREAD_DEBUG("adding as toplevel %s\n",
-		 notmuch_message_get_message_id (message));
+	THREAD_DEBUG ("adding as toplevel %s\n",
+		      notmuch_message_get_message_id (message));
 	_notmuch_message_list_add_message (thread->toplevel_list, message);
     }
 }
@@ -479,22 +482,21 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
      */
     if (first_node) {
 	message = first_node->message;
-	THREAD_DEBUG("checking first message  %s\n",
-		     notmuch_message_get_message_id (message));
+	THREAD_DEBUG ("checking first message  %s\n",
+		      notmuch_message_get_message_id (message));
 
-        if (_notmuch_message_list_empty (maybe_toplevel_list) ||
+	if (_notmuch_message_list_empty (maybe_toplevel_list) ||
 	    ! _parent_via_in_reply_to (thread, message)) {
 
-	    THREAD_DEBUG("adding first message as toplevel = %s\n",
-			 notmuch_message_get_message_id (message));
+	    THREAD_DEBUG ("adding first message as toplevel = %s\n",
+			  notmuch_message_get_message_id (message));
 	    _notmuch_message_list_add_message (maybe_toplevel_list, message);
 	}
     }
 
     for (notmuch_messages_t *messages = _notmuch_messages_create (maybe_toplevel_list);
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	notmuch_message_t *message = notmuch_messages_get (messages);
 	_notmuch_message_label_depths (message, 0);
     }
@@ -616,8 +618,7 @@ _notmuch_thread_create (void *ctx,
 
     for (;
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	unsigned int doc_id;
 
 	message = notmuch_messages_get (messages);
@@ -629,7 +630,10 @@ _notmuch_thread_create (void *ctx,
 
 	if ( _notmuch_doc_id_set_contains (match_set, doc_id)) {
 	    _notmuch_doc_id_set_remove (match_set, doc_id);
-	    _thread_add_matched_message (thread, message, sort);
+	    if (_thread_add_matched_message (thread, message, sort)) {
+		thread = NULL;
+		goto DONE;
+	    }
 	}
 
 	_notmuch_message_close (message);

@@ -45,20 +45,20 @@ typedef struct notmuch_opt_desc {
 
 
 /*
-  This is the main entry point for command line argument parsing.
-
-  Parse command line arguments according to structure options,
-  starting at position opt_index.
-
-  All output of parsed values is via pointers in options.
-
-  Parsing stops at -- (consumed) or at the (k+1)st argument
-  not starting with -- (a "positional argument") if options contains
-  k positional argument descriptors.
-
-  Returns the index of first non-parsed argument, or -1 in case of error.
-
-*/
+ * This is the main entry point for command line argument parsing.
+ *
+ * Parse command line arguments according to structure options,
+ * starting at position opt_index.
+ *
+ * All output of parsed values is via pointers in options.
+ *
+ * Parsing stops at -- (consumed) or at the (k+1)st argument
+ * not starting with -- (a "positional argument") if options contains
+ * k positional argument descriptors.
+ *
+ * Returns the index of first non-parsed argument, or -1 in case of error.
+ *
+ */
 int
 parse_arguments (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_index);
 
@@ -71,12 +71,12 @@ parse_arguments (int argc, char **argv, const notmuch_opt_desc_t *options, int o
  */
 
 int
-parse_option (int argc, char **argv, const notmuch_opt_desc_t* options, int opt_index);
+parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_index);
 
 bool
 parse_position_arg (const char *arg,
 		    int position_arg_index,
-		    const notmuch_opt_desc_t* options);
+		    const notmuch_opt_desc_t *options);
 
 
 #endif

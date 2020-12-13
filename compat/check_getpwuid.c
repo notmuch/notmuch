@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <pwd.h>
 
-int main()
+int
+main ()
 {
     struct passwd passwd, *ignored;
 

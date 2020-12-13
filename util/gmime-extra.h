@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-GMimeStream *g_mime_stream_stdout_new(void);
+GMimeStream *g_mime_stream_stdout_new (void);
 
 /* Return a GMime stream for this open file descriptor, un-gzipping if
  * necessary */
@@ -27,7 +27,7 @@ const char *g_mime_certificate_get_fpr16 (GMimeCertificate *cert);
  */
 char *g_mime_message_get_address_string (GMimeMessage *message, GMimeAddressType type);
 
-InternetAddressList * g_mime_message_get_addresses (GMimeMessage *message, GMimeAddressType type);
+InternetAddressList *g_mime_message_get_addresses (GMimeMessage *message, GMimeAddressType type);
 
 /**
  * return talloc allocated date string
@@ -39,21 +39,21 @@ char *g_mime_message_get_date_string (void *ctx, GMimeMessage *message);
  * glib allocated list of From: addresses
  */
 
-InternetAddressList * g_mime_message_get_from (GMimeMessage *message);
+InternetAddressList *g_mime_message_get_from (GMimeMessage *message);
 
 
 /**
  * return string for From: address
  * (owned by gmime)
  */
-const char * g_mime_message_get_from_string (GMimeMessage *message);
+const char *g_mime_message_get_from_string (GMimeMessage *message);
 
-InternetAddressList * g_mime_message_get_reply_to_list (GMimeMessage *message);
+InternetAddressList *g_mime_message_get_reply_to_list (GMimeMessage *message);
 
 /**
  * return talloc allocated reply-to string
  */
-char * g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message);
+char *g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message);
 
 void g_mime_parser_set_scan_from (GMimeParser *parser, gboolean flag);
 
@@ -68,7 +68,7 @@ gint64 g_mime_utils_header_decode_date_unix (const char *date);
 /**
  * Return string for valid User ID (or NULL if no valid User ID exists)
  */
-const char * g_mime_certificate_get_valid_userid (GMimeCertificate *cert);
+const char *g_mime_certificate_get_valid_userid (GMimeCertificate *cert);
 
 #ifdef __cplusplus
 }

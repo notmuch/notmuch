@@ -1,4 +1,5 @@
 libnotmuch.so.5 libnotmuch5 #MINVER#
+* Build-Depends-Package: libnotmuch-dev
  notmuch_built_with@Base 0.23~rc0
  notmuch_config_list_destroy@Base 0.23~rc0
  notmuch_config_list_key@Base 0.23~rc0
@@ -55,6 +56,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_message_get_filename@Base 0.3
  notmuch_message_get_filenames@Base 0.5
  notmuch_message_get_flag@Base 0.3
+ notmuch_message_get_flag_st@Base 0.31~rc0
  notmuch_message_get_header@Base 0.3
  notmuch_message_get_message_id@Base 0.3
  notmuch_message_get_properties@Base 0.23~rc0
@@ -63,6 +65,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_message_get_tags@Base 0.3
  notmuch_message_get_thread_id@Base 0.3
  notmuch_message_has_maildir_flag@Base 0.26~rc0
+ notmuch_message_has_maildir_flag_st@Base 0.31~rc0
  notmuch_message_maildir_flags_to_tags@Base 0.5
  notmuch_message_properties_destroy@Base 0.23~rc0
  notmuch_message_properties_key@Base 0.23~rc0
@@ -128,8 +131,6 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  (c++)"typeinfo for Xapian::DatabaseError@Base" 0.24~rc0
  (c++)"typeinfo for Xapian::DatabaseModifiedError@Base" 0.24~rc0
  (c++|optional=present with Xapian 1.4)"typeinfo for Xapian::QueryParserError@Base" 0.23~rc0
- (c++)"typeinfo for Xapian::QueryParser::add_valuerangeprocessor(Xapian::ValueRangeProcessor*)::ShimRangeProcessor@Base" 0.25~rc0
- (c++)"typeinfo name for Xapian::QueryParser::add_valuerangeprocessor(Xapian::ValueRangeProcessor*)::ShimRangeProcessor@Base" 0.25~rc0
  (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::DocNotFoundError@Base" 0.6.1

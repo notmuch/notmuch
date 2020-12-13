@@ -1,3 +1,100 @@
+notmuch (0.31.2-3) unstable; urgency=medium
+
+  * Switch to debhelper compat level 13
+
+ -- David Bremner <bremner@debian.org>  Mon, 09 Nov 2020 13:59:47 -0400
+
+notmuch (0.31.2-2) unstable; urgency=medium
+
+  * Run tests in verbose mode
+
+ -- David Bremner <bremner@debian.org>  Mon, 09 Nov 2020 08:45:38 -0400
+
+notmuch (0.31.2-1) unstable; urgency=medium
+
+  * Delete stray "version" file in upstream source
+
+ -- David Bremner <bremner@debian.org>  Sun, 08 Nov 2020 11:32:45 -0400
+
+notmuch (0.31.1-1) unstable; urgency=medium
+
+  * New upstream bugfix release.
+    - Portability / C++20 fixes
+    - Fix initialization bug in library config handling.
+
+ -- David Bremner <bremner@debian.org>  Sun, 08 Nov 2020 07:48:22 -0400
+
+notmuch (0.31-1) unstable; urgency=medium
+
+  * New upstream release
+  * Compatibility fixes for Emacs 27.1
+
+ -- David Bremner <bremner@debian.org>  Sat, 05 Sep 2020 21:47:42 -0300
+
+notmuch (0.31~rc2-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Bug fix: "suggest elpa-mailscripts", thanks to Sean Whitton (Closes:
+    #944269).
+  * Bug fix: "suggest mailscripts", thanks to Sean Whitton (Closes:
+    #944270).
+  * Bug fix: "please drop transitional package notmuch-emacs from
+    src:notmuch", thanks to Holger Levsen (Closes: #940738).
+
+ -- David Bremner <bremner@debian.org>  Tue, 25 Aug 2020 07:51:33 -0300
+
+notmuch (0.31~rc1-1) experimental; urgency=medium
+
+  * Fix buggy test in T562-lib-database
+  * Clean up generated file in source package.
+
+ -- David Bremner <bremner@debian.org>  Mon, 17 Aug 2020 21:05:46 -0300
+
+notmuch (0.31~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Update notmuch-emacs for compatibility with GNU Emacs 27.1.
+
+ -- David Bremner <bremner@debian.org>  Sun, 16 Aug 2020 11:08:14 -0300
+
+notmuch (0.30-1) unstable; urgency=medium
+
+  * New upstream release
+  * Improvements to S/MIME handling
+  * Repairs to some mangled MIME messages
+  * New python bindings (notmuch2) compatible with current python 3
+
+ -- David Bremner <bremner@debian.org>  Fri, 10 Jul 2020 22:24:14 -0300
+
+notmuch (0.30~rc3-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Mark two tests broken on legacy (32 bit time_t) architectures.
+  * Drop -std=c99
+
+ -- David Bremner <bremner@debian.org>  Fri, 03 Jul 2020 06:48:51 -0300
+
+notmuch (0.30~rc2-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Upstream fixes for new python bindings (python3-notmuch2).
+  * Update debian/copyright (one new author).
+
+ -- David Bremner <bremner@debian.org>  Tue, 16 Jun 2020 08:32:16 -0300
+
+notmuch (0.30~rc1-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Update debian/changelog (new copyright holders)
+
+ -- David Bremner <bremner@debian.org>  Sat, 06 Jun 2020 08:06:56 -0300
+
+notmuch (0.30~rc0-2) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Mon, 01 Jun 2020 21:01:27 -0300
+
 notmuch (0.29.3-1~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

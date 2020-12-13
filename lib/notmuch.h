@@ -57,18 +57,18 @@ NOTMUCH_BEGIN_DECLS
  * The library version number.  This must agree with the soname
  * version in Makefile.local.
  */
-#define LIBNOTMUCH_MAJOR_VERSION	5
-#define LIBNOTMUCH_MINOR_VERSION	2
-#define LIBNOTMUCH_MICRO_VERSION	0
+#define LIBNOTMUCH_MAJOR_VERSION        5
+#define LIBNOTMUCH_MINOR_VERSION        3
+#define LIBNOTMUCH_MICRO_VERSION        0
 
 
 #if defined (__clang_major__) && __clang_major__ >= 3 \
     || defined (__GNUC__) && __GNUC__ >= 5 \
     || defined (__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ >= 5
-#define NOTMUCH_DEPRECATED(major,minor) \
+#define NOTMUCH_DEPRECATED(major, minor) \
     __attribute__ ((deprecated ("function deprecated as of libnotmuch " #major "." #minor)))
 #else
-#define NOTMUCH_DEPRECATED(major,minor) __attribute__ ((deprecated))
+#define NOTMUCH_DEPRECATED(major, minor) __attribute__ ((deprecated))
 #endif
 
 
@@ -95,8 +95,8 @@ NOTMUCH_BEGIN_DECLS
  * #endif
  * @endcode
  */
-#define LIBNOTMUCH_CHECK_VERSION(major, minor, micro)			\
-    (LIBNOTMUCH_MAJOR_VERSION > (major) ||					\
+#define LIBNOTMUCH_CHECK_VERSION(major, minor, micro)                   \
+    (LIBNOTMUCH_MAJOR_VERSION > (major) ||                                      \
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION > (minor)) || \
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION == (minor) && \
       LIBNOTMUCH_MICRO_VERSION >= (micro)))
@@ -405,8 +405,8 @@ typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
  * 'closure' is passed verbatim to any callback invoked.
  */
 notmuch_status_t
-notmuch_database_compact (const char* path,
-			  const char* backup_path,
+notmuch_database_compact (const char *path,
+			  const char *backup_path,
 			  notmuch_compact_status_cb_t status_cb,
 			  void *closure);
 
@@ -431,6 +431,8 @@ notmuch_database_get_path (notmuch_database_t *database);
 
 /**
  * Return the database format version of the given database.
+ *
+ * @retval 0 on error
  */
 unsigned int
 notmuch_database_get_version (notmuch_database_t *database);
@@ -444,6 +446,9 @@ notmuch_database_get_version (notmuch_database_t *database);
  * fail with NOTMUCH_STATUS_UPGRADE_REQUIRED.  This always returns
  * FALSE for a read-only database because there's no way to upgrade a
  * read-only database.
+ *
+ * Also returns FALSE if an error occurs accessing the database.
+ *
  */
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *database);
@@ -467,8 +472,8 @@ notmuch_database_needs_upgrade (notmuch_database_t *database);
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *database,
-			  void (*progress_notify) (void *closure,
-						   double progress),
+			  void (*progress_notify)(void *closure,
+						  double progress),
 			  void *closure);
 
 /**
@@ -525,7 +530,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  */
 unsigned long
 notmuch_database_get_revision (notmuch_database_t *notmuch,
-				const char **uuid);
+			       const char **uuid);
 
 /**
  * Retrieve a directory object from the database for 'path'.
@@ -551,7 +556,7 @@ notmuch_database_get_revision (notmuch_database_t *notmuch,
  *	directory not retrieved.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *database,
@@ -614,7 +619,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *	mode so no message can be added.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
  */
@@ -632,7 +637,7 @@ notmuch_database_index_file (notmuch_database_t *database,
  * use notmuch_database_index_file instead.
  *
  */
-NOTMUCH_DEPRECATED(5,1)
+NOTMUCH_DEPRECATED (5, 1)
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
@@ -664,7 +669,7 @@ notmuch_database_add_message (notmuch_database_t *database,
  *	mode so no message can be removed.
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *database,
@@ -722,7 +727,7 @@ notmuch_database_find_message (notmuch_database_t *database,
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
- * 	database to use this function.
+ *      database to use this function.
  */
 notmuch_status_t
 notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
@@ -930,7 +935,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
  * use notmuch_query_search_threads instead.
  *
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out);
 
@@ -986,7 +991,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
  *
  */
 
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out);
@@ -1082,7 +1087,7 @@ notmuch_query_count_messages (notmuch_query_t *query, unsigned int *count);
  * @deprecated Deprecated since libnotmuch 5.0 (notmuch 0.25). Please
  * use notmuch_query_count_messages instead.
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
 
@@ -1100,7 +1105,7 @@ notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
  *
  * NOTMUCH_STATUS_OUT_OF_MEMORY: Memory allocation failed. The value
  *      of *count is not defined
-
+ *
  * NOTMUCH_STATUS_SUCCESS: query completed successfully.
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occurred. The
@@ -1117,7 +1122,7 @@ notmuch_query_count_threads (notmuch_query_t *query, unsigned *count);
  * @deprecated Deprecated as of libnotmuch 5.0 (notmuch 0.25). Please
  * use notmuch_query_count_threads_st instead.
  */
-NOTMUCH_DEPRECATED(5,0)
+NOTMUCH_DEPRECATED (5, 0)
 notmuch_status_t
 notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
 
@@ -1363,9 +1368,8 @@ notmuch_message_get_database (const notmuch_message_t *message);
  * message is valid, (which is until the query from which it derived
  * is destroyed).
  *
- * This function will not return NULL since Notmuch ensures that every
- * message has a unique message ID, (Notmuch will generate an ID for a
- * message if the original file does not contain one).
+ * This function will return NULL if triggers an unhandled Xapian
+ * exception.
  */
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
@@ -1379,8 +1383,8 @@ notmuch_message_get_message_id (notmuch_message_t *message);
  * notmuch_message_destroy on 'message' or until a query from which it
  * derived is destroyed).
  *
- * This function will not return NULL since Notmuch ensures that every
- * message belongs to a single thread.
+ * This function will return NULL if triggers an unhandled Xapian
+ * exception.
  */
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message);
@@ -1403,14 +1407,18 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
  * NULL. (Note that notmuch_messages_valid will accept that NULL
  * value as legitimate, and simply return FALSE for it.)
  *
- * The returned list will be destroyed when the thread is destroyed.
+ * This function also returns NULL if it triggers a Xapian exception.
+ *
+ * The returned list will be destroyed when the thread is
+ * destroyed.
  */
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
 /**
  * Get the total number of files associated with a message.
- * @returns Non-negative integer
+ * @returns Non-negative integer for file count.
+ * @returns Negative integer for error.
  * @since libnotmuch 5.0 (notmuch 0.25)
  */
 int
@@ -1431,6 +1439,8 @@ notmuch_message_count_files (notmuch_message_t *message);
  * this function will arbitrarily return a single one of those
  * filenames. See notmuch_message_get_filenames for returning the
  * complete list of filenames.
+ *
+ * This function returns NULL if it triggers a Xapian exception.
  */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
@@ -1444,6 +1454,8 @@ notmuch_message_get_filename (notmuch_message_t *message);
  *
  * Each filename in the iterator is an absolute filename, (the initial
  * component will match notmuch_database_get_path() ).
+ *
+ * This function returns NULL if it triggers a Xapian exception.
  */
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message);
@@ -1479,10 +1491,35 @@ typedef enum _notmuch_message_flag {
 
 /**
  * Get a value of a flag for the email corresponding to 'message'.
+ *
+ * returns FALSE in case of errors.
+ *
+ * @deprecated Deprecated as of libnotmuch 5.3 (notmuch 0.31). Please
+ * use notmuch_message_get_flag_st instead.
  */
+NOTMUCH_DEPRECATED(5,3)
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag);
+
+/**
+ * Get a value of a flag for the email corresponding to 'message'.
+ *
+ * @param message a message object
+ * @param flag flag to check
+ * @param is_set pointer to boolean to store flag value.
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS
+ * @retval #NOTMUCH_STATUS_NULL_POINTER is_set is NULL
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION Accessing the database
+ * triggered an exception.
+ *
+ * @since libnotmuch 5.3 (notmuch 0.31)
+ */
+notmuch_status_t
+notmuch_message_get_flag_st (notmuch_message_t *message,
+			     notmuch_message_flag_t flag,
+			     notmuch_bool_t *is_set);
 
 /**
  * Set a value of a flag for the email corresponding to 'message'.
@@ -1497,9 +1534,11 @@ notmuch_message_set_flag (notmuch_message_t *message,
  * For the original textual representation of the Date header from the
  * message call notmuch_message_get_header() with a header value of
  * "date".
+ *
+ * Returns 0 in case of error.
  */
 time_t
-notmuch_message_get_date  (notmuch_message_t *message);
+notmuch_message_get_date (notmuch_message_t *message);
 
 /**
  * Get the value of the specified header from 'message' as a UTF-8 string.
@@ -1601,8 +1640,10 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
  *
- * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
- *	mode so message cannot be modified.
+ * @retval #NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *	read-only mode so message cannot be modified.
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION: an exception was thrown
+ *      accessing the database.
  */
 notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
@@ -1646,9 +1687,31 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * return TRUE if any filename of 'message' has maildir flag 'flag',
  * FALSE otherwise.
  *
+ * Deprecated wrapper for notmuch_message_has_maildir_flag_st
+ *
+ * @returns FALSE in case of error
+ * @deprecated libnotmuch 5.3 (notmuch 0.31)
  */
+NOTMUCH_DEPRECATED(5, 3)
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag);
+
+/**
+ * check message for maildir flag
+ *
+ * @param [in,out]	message message to check
+ * @param [in] flag	flag to check for
+ * @param [out] is_set  pointer to boolean
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS
+ * @retval #NOTMUCH_STATUS_NULL_POINTER is_set is NULL
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION Accessing the database
+ * triggered an exception.
+ */
+notmuch_status_t
+notmuch_message_has_maildir_flag_st (notmuch_message_t *message,
+				     char flag,
+				     notmuch_bool_t *is_set);
 
 /**
  * Rename message filename(s) to encode tags as maildir flags.
@@ -1811,7 +1874,7 @@ notmuch_message_add_property (notmuch_message_t *message, const char *key, const
 /**
  * Remove a (key,value) pair from a message.
  *
- * It is not an error to remove a non-existant (key,value) pair
+ * It is not an error to remove a non-existent (key,value) pair
  *
  * @returns
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
@@ -2085,6 +2148,8 @@ notmuch_directory_get_mtime (notmuch_directory_t *directory);
  *
  * The returned filenames will be the basename-entries only (not
  * complete paths).
+ *
+ * Returns NULL if it triggers a Xapian exception
  */
 notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory);
@@ -2095,6 +2160,8 @@ notmuch_directory_get_child_files (notmuch_directory_t *directory);
  *
  * The returned filenames will be the basename-entries only (not
  * complete paths).
+ *
+ * Returns NULL if it triggers a Xapian exception
  */
 notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory);
@@ -2224,6 +2291,7 @@ notmuch_config_list_key (notmuch_config_list_t *config_list);
  * next call to notmuch_config_list_value or notmuch config_list_destroy
  *
  * @since libnotmuch 4.4 (notmuch 0.23)
+ * @retval NULL for errors
  */
 const char *
 notmuch_config_list_value (notmuch_config_list_t *config_list);
@@ -2257,6 +2325,7 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
  * added to the index.  At the moment it is a featureless stub.
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
+ * @retval NULL in case of error
  */
 notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db);
@@ -2312,7 +2381,7 @@ notmuch_indexopts_destroy (notmuch_indexopts_t *options);
  */
 notmuch_bool_t
 notmuch_built_with (const char *name);
-/* @} */
+/**@}*/
 
 #pragma GCC visibility pop
 

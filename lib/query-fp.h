@@ -26,17 +26,18 @@
 #include <xapian.h>
 #include "notmuch.h"
 
-#if HAVE_XAPIAN_FIELD_PROCESSOR
 class QueryFieldProcessor : public Xapian::FieldProcessor {
- protected:
+protected:
     Xapian::QueryParser &parser;
     notmuch_database_t *notmuch;
 
- public:
+public:
     QueryFieldProcessor (Xapian::QueryParser &parser_, notmuch_database_t *notmuch_)
-	: parser(parser_), notmuch(notmuch_) { };
+	: parser (parser_), notmuch (notmuch_)
+    {
+    };
 
-    Xapian::Query operator()(const std::string & str);
+    Xapian::Query operator() (const std::string & str);
 };
-#endif
+
 #endif /* NOTMUCH_QUERY_FP_H */

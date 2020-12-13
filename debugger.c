@@ -39,8 +39,7 @@ debugger_is_active (void)
 
     sprintf (buf, "/proc/%d/exe", getppid ());
     if (readlink (buf, buf2, sizeof (buf2)) != -1 &&
-	strncmp (basename (buf2), "gdb", 3) == 0)
-    {
+	strncmp (basename (buf2), "gdb", 3) == 0) {
 	return true;
     }
 

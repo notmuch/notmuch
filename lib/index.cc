@@ -43,46 +43,46 @@ typedef struct {
  * which we discard data. */
 static const int first_uuencode_skipping_state = 11;
 static const scanner_state_t uuencode_states[] = {
-    {0,  'b',  'b',  1,  0},
-    {1,  'e',  'e',  2,  0},
-    {2,  'g',  'g',  3,  0},
-    {3,  'i',  'i',  4,  0},
-    {4,  'n',  'n',  5,  0},
-    {5,  ' ',  ' ',  6,  0},
-    {6,  '0',  '7',  7,  0},
-    {7,  '0',  '7',  8,  0},
-    {8,  '0',  '7',  9,  0},
-    {9,  ' ',  ' ',  10, 0},
-    {10, '\n', '\n', 11, 10},
-    {11, 'M',  'M',  12, 0},
-    {12, ' ',  '`',  12, 11}
+    { 0,  'b',  'b',  1,  0 },
+    { 1,  'e',  'e',  2,  0 },
+    { 2,  'g',  'g',  3,  0 },
+    { 3,  'i',  'i',  4,  0 },
+    { 4,  'n',  'n',  5,  0 },
+    { 5,  ' ',  ' ',  6,  0 },
+    { 6,  '0',  '7',  7,  0 },
+    { 7,  '0',  '7',  8,  0 },
+    { 8,  '0',  '7',  9,  0 },
+    { 9,  ' ',  ' ',  10, 0 },
+    { 10, '\n', '\n', 11, 10 },
+    { 11, 'M',  'M',  12, 0 },
+    { 12, ' ',  '`',  12, 11 }
 };
 
 /* The following table is intended to implement this DFA (in 'dot'
-   format). Note that 2 and 3 are "hidden" states used to step through
-   the possible out edges of state 1.
-
-digraph html_filter {
-       0 -> 1  [label="<"];
-       0 -> 0;
-       1 -> 4 [label="'"];
-       1 -> 5 [label="\""];
-       1 -> 0 [label=">"];
-       1 -> 1;
-       4 -> 1 [label="'"];
-       4 -> 4;
-       5 -> 1 [label="\""];
-       5 -> 5;
-}
-*/
+ * format). Note that 2 and 3 are "hidden" states used to step through
+ * the possible out edges of state 1.
+ *
+ * digraph html_filter {
+ *     0 -> 1  [label="<"];
+ *     0 -> 0;
+ *     1 -> 4 [label="'"];
+ *     1 -> 5 [label="\""];
+ *     1 -> 0 [label=">"];
+ *     1 -> 1;
+ *     4 -> 1 [label="'"];
+ *     4 -> 4;
+ *     5 -> 1 [label="\""];
+ *     5 -> 5;
+ * }
+ */
 static const int first_html_skipping_state = 1;
 static const scanner_state_t html_states[] = {
-    {0,  '<',  '<',  1,  0},
-    {1,  '\'', '\'', 4,  2},  /* scanning for quote or > */
-    {1,  '"',  '"',  5,  3},
-    {1,  '>',  '>',  0,  1},
-    {4,  '\'', '\'', 1,  4},  /* inside single quotes */
-    {5,  '"', '"',   1,  5},  /* inside double quotes */
+    { 0,  '<',  '<',  1,  0 },
+    { 1,  '\'', '\'', 4,  2 },  /* scanning for quote or > */
+    { 1,  '"',  '"',  5,  3 },
+    { 1,  '>',  '>',  0,  1 },
+    { 4,  '\'', '\'', 1,  4 },  /* inside single quotes */
+    { 5,  '"', '"',   1,  5 },  /* inside double quotes */
 };
 
 /* Oh, how I wish that gobject didn't require so much noisy boilerplate!
@@ -168,6 +168,7 @@ static GMimeFilter *
 filter_copy (GMimeFilter *gmime_filter)
 {
     NotmuchFilterDiscardNonTerm *filter = (NotmuchFilterDiscardNonTerm *) gmime_filter;
+
     return notmuch_filter_discard_non_term_new (filter->content_type);
 }
 
@@ -190,7 +191,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 
     next = filter->state;
     while (inptr < inend) {
-	 /* Each state is defined by a contiguous set of rows of the
+	/* Each state is defined by a contiguous set of rows of the
 	 * state table marked by a common value for '.state'. The
 	 * state numbers must be equal to the index of the first row
 	 * in a given state; thus the loop condition here looks for a
@@ -198,9 +199,9 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 	 * in the underlying DFA.
 	 */
 	do {
-	    if (*inptr >= states[next].a && *inptr <= states[next].b)  {
+	    if (*inptr >= states[next].a && *inptr <= states[next].b) {
 		next = states[next].next_if_match;
-	    } else  {
+	    } else {
 		next = states[next].next_if_not_match;
 	    }
 
@@ -245,7 +246,7 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
     static GType type = 0;
     NotmuchFilterDiscardNonTerm *filter;
 
-    if (!type) {
+    if (! type) {
 	static const GTypeInfo info = {
 	    .class_size = sizeof (NotmuchFilterDiscardNonTermClass),
 	    .base_init = NULL,
@@ -266,11 +267,11 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
     filter->content_type = content_type;
     filter->state = 0;
     if (g_mime_content_type_is_type (content_type, "text", "html")) {
-      filter->states = html_states;
-      filter->first_skipping_state = first_html_skipping_state;
+	filter->states = html_states;
+	filter->first_skipping_state = first_html_skipping_state;
     } else {
-      filter->states = uuencode_states;
-      filter->first_skipping_state = first_uuencode_skipping_state;
+	filter->states = uuencode_states;
+	filter->first_skipping_state = first_uuencode_skipping_state;
     }
 
     return (GMimeFilter *) filter;
@@ -356,6 +357,7 @@ static void
 _index_content_type (notmuch_message_t *message, GMimeObject *part)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (part);
+
     if (content_type) {
 	char *mime_string = g_mime_content_type_get_mime_type (content_type);
 	if (mime_string) {
@@ -367,8 +369,14 @@ _index_content_type (notmuch_message_t *message, GMimeObject *part)
 
 static void
 _index_encrypted_mime_part (notmuch_message_t *message, notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *part,
+			    GMimeObject *part,
 			    _notmuch_message_crypto_t *msg_crypto);
+
+static void
+_index_pkcs7_part (notmuch_message_t *message,
+		   notmuch_indexopts_t *indexopts,
+		   GMimeObject *part,
+		   _notmuch_message_crypto_t *msg_crypto);
 
 /* Callback to generate terms for each mime part of a message. */
 static void
@@ -385,11 +393,20 @@ _index_mime_part (notmuch_message_t *message,
     GMimeContentType *content_type;
     char *body;
     const char *charset;
+    GMimeObject *repaired_part = NULL;
 
     if (! part) {
 	_notmuch_database_log (notmuch_message_get_database (message),
-			      "Warning: Not indexing empty mime part.\n");
-	return;
+			       "Warning: Not indexing empty mime part.\n");
+	goto DONE;
+    }
+
+    repaired_part = _notmuch_repair_mixed_up_mangled (part);
+    if (repaired_part) {
+	/* This was likely "Mixed Up" in transit!  We will instead use
+	 * the more likely-to-be-correct variant. */
+	notmuch_message_add_property (message, "index.repaired", "mixedup");
+	part = repaired_part;
     }
 
     _index_content_type (message, part);
@@ -399,13 +416,12 @@ _index_mime_part (notmuch_message_t *message,
 	int i;
 
 	if (GMIME_IS_MULTIPART_SIGNED (multipart))
-	  _notmuch_message_add_term (message, "tag", "signed");
+	    _notmuch_message_add_term (message, "tag", "signed");
 
 	if (GMIME_IS_MULTIPART_ENCRYPTED (multipart))
-	  _notmuch_message_add_term (message, "tag", "encrypted");
+	    _notmuch_message_add_term (message, "tag", "encrypted");
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
-	    notmuch_status_t status;
 	    GMimeObject *child;
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
 		/* Don't index the signature, but index its content type. */
@@ -422,9 +438,9 @@ _index_mime_part (notmuch_message_t *message,
 		_index_content_type (message,
 				     g_mime_multipart_get_part (multipart, i));
 		if (i == GMIME_MULTIPART_ENCRYPTED_CONTENT) {
-		    _index_encrypted_mime_part(message, indexopts,
-					       GMIME_MULTIPART_ENCRYPTED (part),
-					       msg_crypto);
+		    _index_encrypted_mime_part (message, indexopts,
+						part,
+						msg_crypto);
 		} else {
 		    if (i != GMIME_MULTIPART_ENCRYPTED_VERSION) {
 			_notmuch_database_log (notmuch_message_get_database (message),
@@ -434,14 +450,16 @@ _index_mime_part (notmuch_message_t *message,
 		continue;
 	    }
 	    child = g_mime_multipart_get_part (multipart, i);
-	    status = _notmuch_message_crypto_potential_payload (msg_crypto, child, part, i);
-	    if (status)
-		_notmuch_database_log (notmuch_message_get_database (message),
-				       "Warning: failed to mark the potential cryptographic payload (%s).\n",
-				       notmuch_status_to_string (status));
-	    _index_mime_part (message, indexopts, child, msg_crypto);
+	    GMimeObject *toindex = child;
+	    if (_notmuch_message_crypto_potential_payload (msg_crypto, child, part, i) &&
+		msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+		toindex = _notmuch_repair_crypto_payload_skip_legacy_display (child);
+		if (toindex != child)
+		    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+	    }
+	    _index_mime_part (message, indexopts, toindex, msg_crypto);
 	}
-	return;
+	goto DONE;
     }
 
     if (GMIME_IS_MESSAGE_PART (part)) {
@@ -451,21 +469,25 @@ _index_mime_part (notmuch_message_t *message,
 
 	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
 
-	return;
+	goto DONE;
+    }
+
+    if (GMIME_IS_APPLICATION_PKCS7_MIME (part)) {
+	_index_pkcs7_part (message, indexopts, part, msg_crypto);
+	goto DONE;
     }
 
     if (! (GMIME_IS_PART (part))) {
 	_notmuch_database_log (notmuch_message_get_database (message),
-			      "Warning: Not indexing unknown mime part: %s.\n",
-			      g_type_name (G_OBJECT_TYPE (part)));
-	return;
+			       "Warning: Not indexing unknown mime part: %s.\n",
+			       g_type_name (G_OBJECT_TYPE (part)));
+	goto DONE;
     }
 
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
 	strcasecmp (g_mime_content_disposition_get_disposition (disposition),
-		    GMIME_DISPOSITION_ATTACHMENT) == 0)
-    {
+		    GMIME_DISPOSITION_ATTACHMENT) == 0) {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
 
 	_notmuch_message_add_term (message, "tag", "attachment");
@@ -473,7 +495,7 @@ _index_mime_part (notmuch_message_t *message,
 
 	/* XXX: Would be nice to call out to something here to parse
 	 * the attachment into text and then index that. */
-	return;
+	goto DONE;
     }
 
     byte_array = g_byte_array_new ();
@@ -519,6 +541,9 @@ _index_mime_part (notmuch_message_t *message,
 
 	free (body);
     }
+  DONE:
+    if (repaired_part)
+	g_object_unref (repaired_part);
 }
 
 /* descend (if desired) into the cleartext part of an encrypted MIME
@@ -526,15 +551,15 @@ _index_mime_part (notmuch_message_t *message,
 static void
 _index_encrypted_mime_part (notmuch_message_t *message,
 			    notmuch_indexopts_t *indexopts,
-			    GMimeMultipartEncrypted *encrypted_data,
+			    GMimeObject *encrypted_data,
 			    _notmuch_message_crypto_t *msg_crypto)
 {
     notmuch_status_t status;
     GError *err = NULL;
-    notmuch_database_t * notmuch = NULL;
+    notmuch_database_t *notmuch = NULL;
     GMimeObject *clear = NULL;
 
-    if (!indexopts || (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_FALSE))
+    if (! indexopts || (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_FALSE))
 	return;
 
     notmuch = notmuch_message_get_database (message);
@@ -544,15 +569,15 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     bool get_sk = (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
     clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
 				     message, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
-    if (!attempted)
+    if (! attempted)
 	return;
-    if (err || !clear) {
+    if (err || ! clear) {
 	if (decrypt_result)
 	    g_object_unref (decrypt_result);
 	if (err) {
 	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (%d:%d) [%s]\n",
 				   err->domain, err->code, err->message);
-	    g_error_free(err);
+	    g_error_free (err);
 	} else {
 	    _notmuch_database_log (notmuch, "Failed to decrypt during indexing. (unknown error)\n");
 	}
@@ -577,8 +602,14 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	}
 	g_object_unref (decrypt_result);
     }
-    status = _notmuch_message_crypto_potential_payload (msg_crypto, clear, GMIME_OBJECT (encrypted_data), GMIME_MULTIPART_ENCRYPTED_CONTENT);
-    _index_mime_part (message, indexopts, clear, msg_crypto);
+    GMimeObject *toindex = clear;
+    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, encrypted_data, GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
+	msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	toindex = _notmuch_repair_crypto_payload_skip_legacy_display (clear);
+	if (toindex != clear)
+	    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+    }
+    _index_mime_part (message, indexopts, toindex, msg_crypto);
     g_object_unref (clear);
 
     status = notmuch_message_add_property (message, "index.decryption", "success");
@@ -586,6 +617,57 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	_notmuch_database_log (notmuch, "failed to add index.decryption "
 			       "property (%d)\n", status);
 
+}
+
+static void
+_index_pkcs7_part (notmuch_message_t *message,
+		   notmuch_indexopts_t *indexopts,
+		   GMimeObject *part,
+		   _notmuch_message_crypto_t *msg_crypto)
+{
+    GMimeApplicationPkcs7Mime *pkcs7;
+    GMimeSecureMimeType p7type;
+    GMimeObject *mimeobj = NULL;
+    GMimeSignatureList *sigs = NULL;
+    GError *err = NULL;
+    notmuch_database_t *notmuch = NULL;
+
+    pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
+    p7type = g_mime_application_pkcs7_mime_get_smime_type (pkcs7);
+    notmuch = notmuch_message_get_database (message);
+    _index_content_type (message, part);
+
+    if (p7type == GMIME_SECURE_MIME_TYPE_SIGNED_DATA) {
+	sigs = g_mime_application_pkcs7_mime_verify (pkcs7, GMIME_VERIFY_NONE, &mimeobj, &err);
+	if (sigs == NULL) {
+	    _notmuch_database_log (notmuch, "Failed to verify PKCS#7 SignedData during indexing. (%d:%d) [%s]\n",
+				   err->domain, err->code, err->message);
+	    g_error_free (err);
+	    goto DONE;
+	}
+	_notmuch_message_add_term (message, "tag", "signed");
+	GMimeObject *toindex = mimeobj;
+	if (_notmuch_message_crypto_potential_payload (msg_crypto, mimeobj, part, 0) &&
+	    msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	    toindex = _notmuch_repair_crypto_payload_skip_legacy_display (mimeobj);
+	    if (toindex != mimeobj)
+		notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+	}
+	_index_mime_part (message, indexopts, toindex, msg_crypto);
+    } else if (p7type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
+	_notmuch_message_add_term (message, "tag", "encrypted");
+	_index_encrypted_mime_part (message, indexopts,
+				    part,
+				    msg_crypto);
+    } else {
+	_notmuch_database_log (notmuch, "Cannot currently handle PKCS#7 smime-type '%s'\n",
+			       g_mime_object_get_content_type_parameter (part, "smime-type"));
+    }
+ DONE:
+    if (mimeobj)
+	g_object_unref (mimeobj);
+    if (sigs)
+	g_object_unref (sigs);
 }
 
 static notmuch_status_t

@@ -18,6 +18,7 @@
  * Author: Peter Feigl <peter.feigl@gmx.at>
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <talloc.h>
@@ -161,11 +162,11 @@ sexp_keyword (struct sprinter *sp, const char *val)
 }
 
 static void
-sexp_integer (struct sprinter *sp, int val)
+sexp_integer (struct sprinter *sp, int64_t val)
 {
     struct sprinter_sexp *sps = sexp_begin_value (sp);
 
-    fprintf (sps->stream, "%d", val);
+    fprintf (sps->stream, "%"PRId64, val);
 }
 
 static void

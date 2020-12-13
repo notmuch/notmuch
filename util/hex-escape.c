@@ -72,7 +72,7 @@ hex_encode (void *ctx, const char *in, char **out, size_t *out_size)
     if (*out == NULL)
 	*out_size = 0;
 
-    if (!maybe_realloc (ctx, needed, out, out_size))
+    if (! maybe_realloc (ctx, needed, out, out_size))
 	return HEX_OUT_OF_MEMORY;
 
     q = *out;
@@ -82,7 +82,7 @@ hex_encode (void *ctx, const char *in, char **out, size_t *out_size)
 	if (is_output (*p)) {
 	    *q++ = *p++;
 	} else {
-	    sprintf (q, "%%%02x", (unsigned char)*p++);
+	    sprintf (q, "%%%02x", (unsigned char) *p++);
 	    q += 3;
 	}
     }
@@ -105,8 +105,8 @@ hex_decode_internal (const char *in, unsigned char *out)
 	    char *endp;
 
 	    /* This also handles unexpected end-of-string. */
-	    if (!isxdigit ((unsigned char) in[1]) ||
-		!isxdigit ((unsigned char) in[2]))
+	    if (! isxdigit ((unsigned char) in[1]) ||
+		! isxdigit ((unsigned char) in[2]))
 		return HEX_SYNTAX_ERROR;
 
 	    buf[0] = in[1];
@@ -139,10 +139,10 @@ hex_decode_inplace (char *s)
 }
 
 hex_status_t
-hex_decode (void *ctx, const char *in, char **out, size_t * out_size)
+hex_decode (void *ctx, const char *in, char **out, size_t *out_size)
 {
     const char *p;
-    size_t needed = 1;	/* for the NUL */
+    size_t needed = 1;  /* for the NUL */
 
     assert (ctx); assert (in); assert (out); assert (out_size);
 
@@ -152,7 +152,7 @@ hex_decode (void *ctx, const char *in, char **out, size_t * out_size)
 	else
 	    needed += 1;
 
-    if (!maybe_realloc (ctx, needed, out, out_size))
+    if (! maybe_realloc (ctx, needed, out, out_size))
 	return HEX_OUT_OF_MEMORY;
 
     return hex_decode_internal (in, (unsigned char *) *out);

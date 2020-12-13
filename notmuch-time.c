@@ -39,14 +39,14 @@
  *
  */
 #define MINUTE (60)
-#define HOUR (60 * MINUTE)
-#define DAY (24 * HOUR)
+#define HOUR (60 *MINUTE)
+#define DAY (24 *HOUR)
 #define RELATIVE_DATE_MAX 20
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then)
 {
     struct tm tm_now, tm_then;
-    time_t now = time(NULL);
+    time_t now = time (NULL);
     time_t delta;
     char *result;
 
@@ -76,26 +76,25 @@ notmuch_time_relative_date (const void *ctx, time_t then)
 
     if (delta <= 7 * DAY) {
 	if (tm_then.tm_wday == tm_now.tm_wday &&
-	    delta < DAY)
-	{
+	    delta < DAY) {
 	    strftime (result, RELATIVE_DATE_MAX,
-		      "Today %R", &tm_then); /* Today 12:30 */
+		      "Today %R", &tm_then);    /* Today 12:30 */
 	    return result;
 	} else if ((tm_now.tm_wday + 7 - tm_then.tm_wday) % 7 == 1) {
 	    strftime (result, RELATIVE_DATE_MAX,
-		      "Yest. %R", &tm_then); /* Yest. 12:30 */
+		      "Yest. %R", &tm_then);    /* Yest. 12:30 */
 	    return result;
 	} else {
 	    if (tm_then.tm_wday != tm_now.tm_wday) {
 		strftime (result, RELATIVE_DATE_MAX,
-			  "%a. %R", &tm_then); /* Mon. 12:30 */
+			  "%a. %R", &tm_then);  /* Mon. 12:30 */
 		return result;
 	    }
 	}
     }
 
     strftime (result, RELATIVE_DATE_MAX,
-	      "%B %d", &tm_then); /* October 12 */
+	      "%B %d", &tm_then);               /* October 12 */
     return result;
 }
 #undef MINUTE

@@ -36,6 +36,9 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
     _notmuch_message_crypto_t *msg_crypto;
 
+    /* repaired/unmangled parts that will need to be cleaned up */
+    GSList *repaired_parts;
+
     /* Context provided by the caller. */
     _notmuch_crypto_t *crypto;
 } mime_node_context_t;
@@ -52,10 +55,22 @@ _mime_node_context_free (mime_node_context_t *res)
     if (res->stream)
 	g_object_unref (res->stream);
 
+    if (res->repaired_parts)
+	g_slist_free_full (res->repaired_parts, g_object_unref);
+
     return 0;
 }
 
-const _notmuch_message_crypto_t*
+/* keep track of objects that need to be destroyed when the mime node
+ * context goes away. */
+static void
+_mime_node_context_track_repaired_part (mime_node_context_t *ctx, GMimeObject *part)
+{
+    if (part)
+	ctx->repaired_parts = g_slist_prepend (ctx->repaired_parts, part);
+}
+
+const _notmuch_message_crypto_t *
 mime_node_get_message_crypto_status (mime_node_t *node)
 {
     return node->ctx->msg_crypto;
@@ -97,8 +112,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	notmuch_filenames_t *filenames;
 	for (filenames = notmuch_message_get_filenames (message);
 	     notmuch_filenames_valid (filenames);
-	     notmuch_filenames_move_to_next (filenames))
-	{
+	     notmuch_filenames_move_to_next (filenames)) {
 	    filename = notmuch_filenames_get (filenames);
 	    fd = open (filename, O_RDONLY);
 	    if (fd != -1)
@@ -109,27 +123,27 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	if (fd == -1) {
 	    /* Give up */
 	    fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
+    }
 
     mctx->stream = g_mime_stream_gzfile_new (fd);
-    if (!mctx->stream) {
+    if (! mctx->stream) {
 	fprintf (stderr, "Out of memory.\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
     mctx->parser = g_mime_parser_new_with_stream (mctx->stream);
-    if (!mctx->parser) {
+    if (! mctx->parser) {
 	fprintf (stderr, "Out of memory.\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
     mctx->mime_message = g_mime_parser_construct_message (mctx->parser, NULL);
-    if (!mctx->mime_message) {
+    if (! mctx->mime_message) {
 	fprintf (stderr, "Failed to parse %s\n", filename);
 	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
@@ -153,7 +167,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     *root_out = root;
     return NOTMUCH_STATUS_SUCCESS;
 
-DONE:
+  DONE:
     talloc_free (root);
     return status;
 }
@@ -171,9 +185,30 @@ static void
 set_signature_list_destructor (mime_node_t *node)
 {
     GMimeSignatureList **proxy = talloc (node, GMimeSignatureList *);
+
     if (proxy) {
 	*proxy = node->sig_list;
 	talloc_set_destructor (proxy, _signature_list_free);
+    }
+}
+
+/* Unwrapped MIME part destructor */
+static int
+_unwrapped_child_free (GMimeObject **proxy)
+{
+    g_object_unref (*proxy);
+    return 0;
+}
+
+/* Set up unwrapped MIME part destructor */
+static void
+set_unwrapped_child_destructor (mime_node_t *node)
+{
+    GMimeObject **proxy = talloc (node, GMimeObject *);
+
+    if (proxy) {
+	*proxy = node->unwrapped_child;
+	talloc_set_destructor (proxy, _unwrapped_child_free);
     }
 }
 
@@ -185,8 +220,17 @@ node_verify (mime_node_t *node, GMimeObject *part)
     notmuch_status_t status;
 
     node->verify_attempted = true;
-    node->sig_list = g_mime_multipart_signed_verify
-	(GMIME_MULTIPART_SIGNED (part), GMIME_ENCRYPT_NONE, &err);
+    if (GMIME_IS_APPLICATION_PKCS7_MIME (part))
+	node->sig_list = g_mime_application_pkcs7_mime_verify (
+	    GMIME_APPLICATION_PKCS7_MIME (part), GMIME_VERIFY_NONE, &node->unwrapped_child, &err);
+    else
+	node->sig_list = g_mime_multipart_signed_verify (
+	    GMIME_MULTIPART_SIGNED (part), GMIME_VERIFY_NONE, &err);
+
+    if (node->unwrapped_child) {
+	node->nchildren = 1;
+	set_unwrapped_child_destructor (node);
+    }
 
     if (node->sig_list)
 	set_signature_list_destructor (node);
@@ -209,22 +253,23 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
     notmuch_status_t status;
-    GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
     notmuch_message_t *message = NULL;
 
-    if (! node->decrypted_child) {
+    if (! node->unwrapped_child) {
 	for (mime_node_t *parent = node; parent; parent = parent->parent)
 	    if (parent->envelope_file) {
 		message = parent->envelope_file;
 		break;
 	    }
 
-	node->decrypted_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
+	node->unwrapped_child = _notmuch_crypto_decrypt (&node->decrypt_attempted,
 							 node->ctx->crypto->decrypt,
 							 message,
-							 encrypteddata, &decrypt_result, &err);
+							 part, &decrypt_result, &err);
+	if (node->unwrapped_child)
+	    set_unwrapped_child_destructor (node);
     }
-    if (! node->decrypted_child) {
+    if (! node->unwrapped_child) {
 	fprintf (stderr, "Failed to decrypt part: %s\n",
 		 err ? err->message : "no error explanation given");
 	goto DONE;
@@ -259,21 +304,22 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	g_object_unref (decrypt_result);
     }
 
- DONE:
+  DONE:
     if (err)
 	g_error_free (err);
 }
+
+static bool
+_mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild);
 
 static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
-    notmuch_status_t status;
 
     /* Set basic node properties */
-    node->part = part;
     node->ctx = parent->ctx;
-    if (!talloc_reference (node, node->ctx)) {
+    if (! talloc_reference (node, node->ctx)) {
 	fprintf (stderr, "Out of memory.\n");
 	talloc_free (node);
 	return NULL;
@@ -282,10 +328,29 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
     node->part_num = node->next_part_num = -1;
     node->next_child = 0;
 
+    if (_mime_node_set_up_part (node, part, numchild))
+	return node;
+    talloc_free (node);
+    return NULL;
+}
+
+/* associate a MIME part with a node. */
+static bool
+_mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
+{
     /* Deal with the different types of parts */
     if (GMIME_IS_PART (part)) {
+	node->part = part;
 	node->nchildren = 0;
     } else if (GMIME_IS_MULTIPART (part)) {
+	GMimeObject *repaired_part = _notmuch_repair_mixed_up_mangled (part);
+	if (repaired_part) {
+	    /* This was likely "Mixed Up" in transit!  We replace it
+	     * with the more likely-to-be-correct variant. */
+	    _mime_node_context_track_repaired_part (node->ctx, repaired_part);
+	    part = repaired_part;
+	}
+	node->part = part;
 	node->nchildren = g_mime_multipart_get_count (GMIME_MULTIPART (part));
     } else if (GMIME_IS_MESSAGE_PART (part)) {
 	/* Promote part to an envelope and open it */
@@ -297,11 +362,10 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
     } else {
 	fprintf (stderr, "Warning: Unknown mime part type: %s.\n",
 		 g_type_name (G_OBJECT_TYPE (part)));
-	talloc_free (node);
-	return NULL;
+	return false;
     }
 
-    /* Handle PGP/MIME parts */
+    /* Handle PGP/MIME parts (by definition not cryptographic payload parts) */
     if (GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
@@ -320,13 +384,32 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part, int numchild)
 	} else {
 	    node_verify (node, part);
 	}
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
+	       GMIME_SECURE_MIME_TYPE_SIGNED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part))) {
+	/* If node->ctx->crypto->verify is false, it would be better
+	 * to just unwrap (instead of verifying), but
+	 * https://github.com/jstedfast/gmime/issues/67 */
+	node_verify (node, part);
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
+	       GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part)) &&
+	       (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
+	node_decrypt_and_verify (node, part);
+	if (node->unwrapped_child && node->nchildren == 0)
+	    node->nchildren = 1;
     } else {
-	status = _notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, parent ? parent->part : NULL, numchild);
-	if (status)
-	    fprintf (stderr, "Warning: failed to record potential crypto payload (%s).\n", notmuch_status_to_string (status));
+	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild) &&
+	    node->ctx->msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
+	    GMimeObject *clean_payload = _notmuch_repair_crypto_payload_skip_legacy_display (part);
+	    if (clean_payload != part) {
+		/* only one layer of recursion is possible here
+		 * because there can be only a single cryptographic
+		 * payload: */
+		return _mime_node_set_up_part (node, clean_payload, numchild);
+	    }
+	}
     }
 
-    return node;
+    return true;
 }
 
 mime_node_t *
@@ -335,19 +418,23 @@ mime_node_child (mime_node_t *parent, int child)
     GMimeObject *sub;
     mime_node_t *node;
 
-    if (!parent || !parent->part || child < 0 || child >= parent->nchildren)
+    if (! parent || ! parent->part || child < 0 || child >= parent->nchildren)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {
-	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->decrypted_child)
-	    sub = parent->decrypted_child;
+	if (child == GMIME_MULTIPART_ENCRYPTED_CONTENT && parent->unwrapped_child)
+	    sub = parent->unwrapped_child;
 	else
-	    sub = g_mime_multipart_get_part
-		(GMIME_MULTIPART (parent->part), child);
+	    sub = g_mime_multipart_get_part (
+		GMIME_MULTIPART (parent->part), child);
     } else if (GMIME_IS_MESSAGE (parent->part)) {
 	sub = g_mime_message_get_mime_part (GMIME_MESSAGE (parent->part));
+    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (parent->part) &&
+	       parent->unwrapped_child &&
+	       child == 0) {
+	sub = parent->unwrapped_child;
     } else {
-	/* This should have been caught by message_part_create */
+	/* This should have been caught by _mime_node_set_up_part */
 	INTERNAL_ERROR ("Unexpected GMimeObject type: %s",
 			g_type_name (G_OBJECT_TYPE (parent->part)));
     }

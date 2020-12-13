@@ -111,7 +111,7 @@ xregcomp (regex_t *preg, const char *regex, int cflags)
 
 	regerror (rerr, preg, error, error_size);
 	fprintf (stderr, "compiling regex %s: %s\n",
-			regex, error);
+		 regex, error);
 	free (error);
 	return 1;
     }

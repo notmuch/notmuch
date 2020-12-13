@@ -2,10 +2,6 @@
 test_description='regular expression searches'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
-    test_done
-fi
-
 add_message '[dir]=bad' '[subject]="To the bone"'
 add_message '[dir]=.' '[subject]="Top level"'
 add_message '[dir]=bad/news' '[subject]="Bears"'

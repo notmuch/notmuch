@@ -1,6 +1,7 @@
 #include <dirent.h>
 
-int main()
+int
+main ()
 {
     struct dirent ent;
 

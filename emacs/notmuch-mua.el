@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
+
 (require 'message)
 (require 'mm-view)
 (require 'format-spec)
@@ -30,8 +32,6 @@
 (require 'notmuch-draft)
 (require 'notmuch-message)
 
-(eval-when-compile (require 'cl))
-
 (declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
 (declare-function notmuch-maildir-message-do-fcc "notmuch-maildir-fcc" ())
@@ -40,7 +40,7 @@
 
 ;;
 
-(defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
+(defcustom notmuch-mua-send-hook nil
   "Hook run before sending messages."
   :type 'hook
   :group 'notmuch-send
@@ -58,7 +58,7 @@ window/frame that will be destroyed when the buffer is killed.
 You may want to customize `message-kill-buffer-on-exit'
 accordingly."
    (when (< emacs-major-version 24)
-	   " Due to a known bug in Emacs 23, you should not set
+     " Due to a known bug in Emacs 23, you should not set
 this to `new-window' if `message-kill-buffer-on-exit' is
 disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send
@@ -106,13 +106,13 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 This function specifies which parts of a mime message with
 multiple parts get a header."
   :type '(radio (const :tag "No part headers"
-		               notmuch-show-reply-insert-header-p-never)
+		       notmuch-show-reply-insert-header-p-never)
 		(const :tag "All except multipart/* and hidden parts"
-		               notmuch-show-reply-insert-header-p-trimmed)
+		       notmuch-show-reply-insert-header-p-trimmed)
 		(const :tag "Only for included text parts"
-			       notmuch-show-reply-insert-header-p-minimal)
+		       notmuch-show-reply-insert-header-p-minimal)
 		(const :tag "Exactly as in show view"
-			       notmuch-show-insert-header-p)
+		       notmuch-show-insert-header-p)
 		(function :tag "Other"))
   :group 'notmuch-reply)
 
@@ -137,17 +137,21 @@ Typically this is added to `notmuch-mua-send-hook'."
 	 ;; When the message mentions attachment...
 	 (save-excursion
 	   (message-goto-body)
-	   (loop while (re-search-forward notmuch-mua-attachment-regexp (point-max) t)
-		 ;; For every instance of the "attachment" string
-		 ;; found, examine the text properties. If the text
-		 ;; has either a `face' or `syntax-table' property
-		 ;; then it is quoted text and should *not* cause the
-		 ;; user to be asked about a missing attachment.
-		 if (let ((props (text-properties-at (match-beginning 0))))
-		      (not (or (memq 'syntax-table props)
-			       (memq 'face props))))
-		 return t
-		 finally return nil))
+	   ;; Limit search from reaching other possible parts of the message
+	   (let ((search-limit (search-forward "\n<#" nil t)))
+	     (message-goto-body)
+	     (cl-loop while (re-search-forward notmuch-mua-attachment-regexp
+					       search-limit t)
+		      ;; For every instance of the "attachment" string
+		      ;; found, examine the text properties. If the text
+		      ;; has either a `face' or `syntax-table' property
+		      ;; then it is quoted text and should *not* cause the
+		      ;; user to be asked about a missing attachment.
+		      if (let ((props (text-properties-at (match-beginning 0))))
+			   (not (or (memq 'syntax-table props)
+				    (memq 'face props))))
+		      return t
+		      finally return nil)))
 	 ;; ...but doesn't have a part with a filename...
 	 (save-excursion
 	   (message-goto-body)
@@ -194,17 +198,19 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-add-more-hidden-headers ()
   "Add some headers to the list that are hidden by default."
   (mapc (lambda (header)
-	  (when (not (member header message-hidden-headers))
+	  (unless (member header message-hidden-headers)
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
 (defun notmuch-mua-reply-crypto (parts)
   "Add mml sign-encrypt flag if any part of original message is encrypted."
-  (loop for part in parts
-	if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
-	  do (mml-secure-message-sign-encrypt)
-	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
-	  do (notmuch-mua-reply-crypto (plist-get part :content))))
+  (cl-loop for part in parts
+	   if (notmuch-match-content-type (plist-get part :content-type)
+					  "multipart/encrypted")
+	   do (mml-secure-message-sign-encrypt)
+	   else if (notmuch-match-content-type (plist-get part :content-type)
+					       "multipart/*")
+	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -222,22 +228,17 @@ Typically this is added to `notmuch-mua-send-hook'."
 	original)
     (when process-crypto
       (setq args (append args '("--decrypt=true"))))
-
     (if reply-all
 	(setq args (append args '("--reply-to=all")))
       (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
-
     ;; Get the reply object as SEXP, and parse it into an elisp object.
     (setq reply (apply #'notmuch-call-notmuch-sexp args))
-
     ;; Extract the original message to simplify the following code.
     (setq original (plist-get reply :original))
-
     ;; Extract the headers of both the reply and the original message.
     (let* ((original-headers (plist-get original :headers))
 	   (reply-headers (plist-get reply :reply-headers)))
-
       ;; If sender is non-nil, set the From: header to its value.
       (when sender
 	(plist-put reply-headers :From sender))
@@ -245,28 +246,27 @@ Typically this is added to `notmuch-mua-send-hook'."
 	  ;; Overlay the composition window on that being used to read
 	  ;; the original message.
 	  ((same-window-regexps '("\\*mail .*")))
-
-	;; We modify message-header-format-alist to get around a bug in message.el.
-	;; See the comment above on notmuch-mua-insert-references.
+	;; We modify message-header-format-alist to get around
+	;; a bug in message.el.  See the comment above on
+	;; notmuch-mua-insert-references.
 	(let ((message-header-format-alist
-	       (loop for pair in message-header-format-alist
-		     if (eq (car pair) 'References)
-		     collect (cons 'References
-				   (apply-partially
-				    'notmuch-mua-insert-references
-				    (cdr pair)))
-		     else
-		     collect pair)))
+	       (cl-loop for pair in message-header-format-alist
+			if (eq (car pair) 'References)
+			collect (cons 'References
+				      (apply-partially
+				       'notmuch-mua-insert-references
+				       (cdr pair)))
+			else
+			collect pair)))
 	  (notmuch-mua-mail (plist-get reply-headers :To)
 			    (notmuch-sanitize (plist-get reply-headers :Subject))
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
-
-      ;; Create a buffer-local queue for tag changes triggered when sending the reply
+      ;; Create a buffer-local queue for tag changes triggered when
+      ;; sending the reply.
       (when notmuch-message-replied-tags
 	(setq-local notmuch-message-queued-tag-changes
 		    (list (cons query-string notmuch-message-replied-tags))))
-
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
       ;; message*setup-hooks may have added to the message body already.
@@ -275,62 +275,57 @@ Typically this is added to `notmuch-mua-send-hook'."
 	(narrow-to-region (point) (point-max))
 	(goto-char (point-max))
 	(if (re-search-backward message-signature-separator nil t)
-	    (if message-signature-insert-empty-line
-		(forward-line -1))
+	    (when message-signature-insert-empty-line
+	      (forward-line -1))
 	  (goto-char (point-max))))
-
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
 	    (start (point)))
-
 	;; notmuch-mua-cite-function constructs a citation line based
 	;; on the From and Date headers of the original message, which
 	;; are assumed to be in the buffer.
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
-
-	(insert (with-temp-buffer
-		  (let
-		      ;; Don't attempt to clean up messages, excerpt
-		      ;; citations, etc. in the original message before
-		      ;; quoting.
-		      ((notmuch-show-insert-text/plain-hook nil)
-		       ;; Don't omit long parts.
-		       (notmuch-show-max-text-part-size 0)
-		       ;; Insert headers for parts as appropriate for replying.
-		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
-		       ;; Ensure that any encrypted parts are
-		       ;; decrypted during the generation of the reply
-		       ;; text.
-		       (notmuch-show-process-crypto process-crypto)
-		       ;; Don't indent multipart sub-parts.
-		       (notmuch-show-indent-multipart nil))
-		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
-		    (letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
-			   ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
-			  (notmuch-show-insert-body original (plist-get original :body) 0)
-			  (buffer-substring-no-properties (point-min) (point-max))))))
-
+	(insert
+	 (with-temp-buffer
+	   (let
+	       ;; Don't attempt to clean up messages, excerpt
+	       ;; citations, etc. in the original message before
+	       ;; quoting.
+	       ((notmuch-show-insert-text/plain-hook nil)
+		;; Don't omit long parts.
+		(notmuch-show-max-text-part-size 0)
+		;; Insert headers for parts as appropriate for replying.
+		(notmuch-show-insert-header-p-function
+		 notmuch-mua-reply-insert-header-p-function)
+		;; Ensure that any encrypted parts are
+		;; decrypted during the generation of the reply
+		;; text.
+		(notmuch-show-process-crypto process-crypto)
+		;; Don't indent multipart sub-parts.
+		(notmuch-show-indent-multipart nil))
+	     ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
+	     (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+		       ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+	       (notmuch-show-insert-body original (plist-get original :body) 0)
+	       (buffer-substring-no-properties (point-min) (point-max))))))
 	(set-mark (point))
 	(goto-char start)
 	;; Quote the original message according to the user's configured style.
 	(funcall notmuch-mua-cite-function)))
-
     ;; Crypto processing based crypto content of the original message
     (when process-crypto
       (notmuch-mua-reply-crypto (plist-get original :body))))
-
   ;; Push mark right before signature, if any.
   (message-goto-signature)
   (unless (eobp)
     (end-of-line -1))
   (push-mark)
-
   (message-goto-body)
   (set-buffer-modified-p nil))
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
-  "Notmuch message composition mode. Mostly like `message-mode'"
+  "Notmuch message composition mode. Mostly like `message-mode'."
   (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
@@ -342,7 +337,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is
-modified. This function is notmuch addaptation of
+modified. This function is notmuch adaptation of
 `message-pop-to-buffer'."
   (let ((buffer (get-buffer name)))
     (if (and buffer
@@ -371,18 +366,18 @@ modified. This function is notmuch addaptation of
 				   return-action &rest ignored)
   "Invoke the notmuch mail composition window."
   (interactive)
-
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (when (not (string= "" user-agent))
+      (unless (string= "" user-agent)
 	(push (cons 'User-Agent user-agent) other-headers))))
-
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from
-		       (notmuch-user-name) (notmuch-user-primary-email))) other-headers))
-
+		       (notmuch-user-name)
+		       (notmuch-user-primary-email)))
+	  other-headers))
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
-			     (or switch-function (notmuch-mua-get-switch-function)))
+			     (or switch-function
+				 (notmuch-mua-get-switch-function)))
   (let ((headers
 	 (append
 	  ;; The following is copied from `message-mail'
@@ -393,7 +388,8 @@ modified. This function is notmuch addaptation of
 	  ;; https://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
-	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
+	    (when (stringp (car h))
+	      (setcar h (intern (capitalize (car h))))))))
 	(args (list yank-action send-actions))
 	;; Cause `message-setup-1' to do things relevant for mail,
 	;; such as observe `message-default-mail-headers'.
@@ -409,7 +405,6 @@ modified. This function is notmuch addaptation of
   (message-hide-headers)
   (set-buffer-modified-p nil)
   (notmuch-mua-maybe-set-window-dedicated)
-
   (message-goto-to))
 
 (defcustom notmuch-identities nil
@@ -429,19 +424,6 @@ the From: header is already filled in by notmuch."
   :group 'notmuch-send)
 
 (defvar notmuch-mua-sender-history nil)
-
-;; Workaround: Running `ido-completing-read' in emacs 23.1, 23.2 and 23.3
-;; without some explicit initialization fill freeze the operation.
-;; Hence, we advice `ido-completing-read' to ensure required initialization
-;; is done.
-(if (and (= emacs-major-version 23) (< emacs-minor-version 4))
-    (defadvice ido-completing-read (before notmuch-ido-mode-init activate)
-      (ido-init-completion-maps)
-      (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
-      (add-hook 'choose-completion-string-functions
-		'ido-choose-completion-string)
-      (ad-disable-advice 'ido-completing-read 'before 'notmuch-ido-mode-init)
-      (ad-activate 'ido-completing-read)))
 
 (defun notmuch-mua-prompt-for-sender ()
   "Prompt for a sender from the user's configured identities."
@@ -466,8 +448,8 @@ If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
   (interactive "P")
   (let ((other-headers
-	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
+	 (and (or prompt-for-sender notmuch-always-prompt-for-sender)
+	      (list (cons 'From (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
 (defun notmuch-mua-new-forward-messages (messages &optional prompt-for-sender)
@@ -476,16 +458,16 @@ the From: address first."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompteed for
 the From: address."
   (let* ((other-headers
-	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
-	 forward-subject  ;; Comes from the first message and is
-			  ;; applied later.
-	 forward-references ;; List of accumulated message-references of forwarded messages
-	 forward-queries) ;; List of corresponding message-query
-
+	  (and (or prompt-for-sender notmuch-always-prompt-for-sender)
+	       (list (cons 'From (notmuch-mua-prompt-for-sender)))))
+	 ;; Comes from the first message and is applied later.
+	 forward-subject
+	 ;; List of accumulated message-references of forwarded messages.
+	 forward-references
+	 ;; List of corresponding message-query.
+	 forward-queries)
     ;; Generate the template for the outgoing message.
     (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
-
     (save-excursion
       ;; Insert all of the forwarded messages.
       (mapc (lambda (id)
@@ -495,7 +477,8 @@ the From: address."
 		(with-current-buffer temp-buffer
 		  (erase-buffer)
 		  (let ((coding-system-for-read 'no-conversion))
-		    (call-process notmuch-command nil t nil "show" "--format=raw" id))
+		    (call-process notmuch-command nil t nil
+				  "show" "--format=raw" id))
 		  ;; Because we process the messages in reverse order,
 		  ;; always generate a forwarded subject, then use the
 		  ;; last (i.e. first) one.
@@ -510,7 +493,6 @@ the From: address."
 	    ;; `message-forward-make-body' always puts the message at
 	    ;; the top, so do them in reverse order.
 	    (reverse messages))
-
       ;; Add in the appropriate subject.
       (save-restriction
 	(message-narrow-to-headers)
@@ -519,15 +501,13 @@ the From: address."
 	(message-remove-header "References")
 	(message-add-header (concat "References: "
 				    (mapconcat 'identity forward-references " "))))
-
-      ;; Create a buffer-local queue for tag changes triggered when sending the message
+      ;; Create a buffer-local queue for tag changes triggered when
+      ;; sending the message.
       (when notmuch-message-forwarded-tags
 	(setq-local notmuch-message-queued-tag-changes
-		    (loop for id in forward-queries
-			  collect
-			  (cons id
-				notmuch-message-forwarded-tags))))
-
+		    (cl-loop for id in forward-queries
+			     collect
+			     (cons id notmuch-message-forwarded-tags))))
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.
       (message-hide-headers)
@@ -539,22 +519,19 @@ the From: address."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
-
-;; In current emacs (24.3) select-active-regions is set to t by
-;; default. The reply insertion code sets the region to the quoted
-;; message to make it easy to delete (kill-region or C-w). These two
-;; things combine to put the quoted message in the primary selection.
-;;
-;; This is not what the user wanted and is a privacy risk (accidental
-;; pasting of the quoted message). We can avoid some of the problems
-;; by let-binding select-active-regions to nil. This fixes if the
-;; primary selection was previously in a non-emacs window but not if
-;; it was in an emacs window. To avoid the problem in the latter case
-;; we deactivate mark.
-
-  (let ((sender
-	 (when prompt-for-sender
-	   (notmuch-mua-prompt-for-sender)))
+  ;; In current emacs (24.3) select-active-regions is set to t by
+  ;; default. The reply insertion code sets the region to the quoted
+  ;; message to make it easy to delete (kill-region or C-w). These two
+  ;; things combine to put the quoted message in the primary selection.
+  ;;
+  ;; This is not what the user wanted and is a privacy risk (accidental
+  ;; pasting of the quoted message). We can avoid some of the problems
+  ;; by let-binding select-active-regions to nil. This fixes if the
+  ;; primary selection was previously in a non-emacs window but not if
+  ;; it was in an emacs window. To avoid the problem in the latter case
+  ;; we deactivate mark.
+  (let ((sender (and prompt-for-sender
+		     (notmuch-mua-prompt-for-sender)))
 	(select-active-regions nil))
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
@@ -606,10 +583,11 @@ unencrypted.  Really send? "))))
   (run-hooks 'notmuch-mua-send-hook)
   (when (and (notmuch-mua-check-no-misplaced-secure-tag)
 	     (notmuch-mua-check-secure-tag-has-newline))
-    (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	  (if exit
-	      (message-send-and-exit arg)
-	    (message-send arg)))))
+    (cl-letf (((symbol-function 'message-do-fcc)
+	       #'notmuch-maildir-message-do-fcc))
+      (if exit
+	  (message-send-and-exit arg)
+	(message-send arg)))))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
@@ -622,11 +600,6 @@ unencrypted.  Really send? "))))
 (defun notmuch-mua-kill-buffer ()
   (interactive)
   (message-kill-buffer))
-
-(defun notmuch-mua-message-send-hook ()
-  "The default function used for `notmuch-mua-send-hook', this
-simply runs the corresponding `message-mode' hook functions."
-  (run-hooks 'message-send-hook))
 
 ;;
 

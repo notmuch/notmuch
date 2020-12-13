@@ -1,6 +1,6 @@
 (defun notmuch-test-address-cleaning-1 ()
   (notmuch-test-expect-equal (notmuch-show-clean-address "dme@dme.org")
-			"dme@dme.org"))
+			     "dme@dme.org"))
 
 (defun notmuch-test-address-cleaning-2 ()
   (let* ((input '("foo@bar.com"

@@ -71,12 +71,14 @@ static bool
 _debug_query (void)
 {
     char *env = getenv ("NOTMUCH_DEBUG_QUERY");
+
     return (env && strcmp (env, "") != 0);
 }
 
 /* Explicit destructor call for placement new */
 static int
-_notmuch_query_destructor (notmuch_query_t *query) {
+_notmuch_query_destructor (notmuch_query_t *query)
+{
     query->xapian_query.~Query();
     query->terms.~set<std::string>();
     return 0;
@@ -123,12 +125,12 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
     try {
 	query->xapian_query =
 	    query->notmuch->query_parser->
-		parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+	    parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 
-       /* Xapian doesn't support skip_to on terms from a query since
-	*  they are unordered, so cache a copy of all terms in
-	*  something searchable.
-	*/
+	/* Xapian doesn't support skip_to on terms from a query since
+	 *  they are unordered, so cache a copy of all terms in
+	 *  something searchable.
+	 */
 
 	for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
 	     t != query->xapian_query.get_terms_end (); ++t)
@@ -137,7 +139,7 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
 	query->parsed = true;
 
     } catch (const Xapian::Error &error) {
-	if (!query->notmuch->exception_reported) {
+	if (! query->notmuch->exception_reported) {
 	    _notmuch_database_log (query->notmuch,
 				   "A Xapian exception occurred parsing query: %s\n",
 				   error.get_msg ().c_str ());
@@ -188,7 +190,7 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag)
 	return status;
 
     term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
-    if (query->terms.count(term) != 0)
+    if (query->terms.count (term) != 0)
 	return NOTMUCH_STATUS_IGNORED;
 
     _notmuch_string_list_append (query->exclude_terms, term);
@@ -236,7 +238,7 @@ notmuch_query_search_messages_st (notmuch_query_t *query,
 
 notmuch_status_t
 notmuch_query_search_messages (notmuch_query_t *query,
-				  notmuch_messages_t **out)
+			       notmuch_messages_t **out)
 {
     return _notmuch_query_search_documents (query, "mail", out);
 }
@@ -278,8 +280,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	Xapian::MSetIterator iterator;
 
 	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0)
-	{
+	    strcmp (query_string, "*") == 0) {
 	    final_query = mail_query;
 	} else {
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
@@ -291,15 +292,14 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	    exclude_query = _notmuch_exclude_tags (query);
 
 	    if (query->omit_excluded == NOTMUCH_EXCLUDE_TRUE ||
-		query->omit_excluded == NOTMUCH_EXCLUDE_ALL)
-	    {
+		query->omit_excluded == NOTMUCH_EXCLUDE_ALL) {
 		final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
 					     final_query, exclude_query);
 	    } else { /* NOTMUCH_EXCLUDE_FLAG */
 		exclude_query = Xapian::Query (Xapian::Query::OP_AND,
-					   exclude_query, final_query);
+					       exclude_query, final_query);
 
-		enquire.set_weighting_scheme (Xapian::BoolWeight());
+		enquire.set_weighting_scheme (Xapian::BoolWeight ());
 		enquire.set_query (exclude_query);
 
 		mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
@@ -318,7 +318,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	}
 
 
-	enquire.set_weighting_scheme (Xapian::BoolWeight());
+	enquire.set_weighting_scheme (Xapian::BoolWeight ());
 
 	switch (query->sort) {
 	case NOTMUCH_SORT_OLDEST_FIRST:
@@ -354,10 +354,10 @@ _notmuch_query_search_documents (notmuch_query_t *query,
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
 			       "A Xapian exception occurred performing query: %s\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	_notmuch_database_log_append (notmuch,
-			       "Query string was: %s\n",
-			       query->query_string);
+				      "Query string was: %s\n",
+				      query->query_string);
 
 	notmuch->exception_reported = true;
 	talloc_free (messages);
@@ -408,8 +408,7 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
 				       &status);
 
     if (message == NULL &&
-       status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-    {
+	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
     }
 
@@ -439,8 +438,8 @@ _notmuch_doc_id_set_init (void *ctx,
     unsigned char *bitmap;
 
     for (unsigned int i = 0; i < arr->len; i++)
-	max = MAX(max, g_array_index (arr, unsigned int, i));
-    bitmap = talloc_zero_array (ctx, unsigned char, DOCIDSET_WORD(max) + 1);
+	max = MAX (max, g_array_index (arr, unsigned int, i));
+    bitmap = talloc_zero_array (ctx, unsigned char, DOCIDSET_WORD (max) + 1);
 
     if (bitmap == NULL)
 	return false;
@@ -450,7 +449,7 @@ _notmuch_doc_id_set_init (void *ctx,
 
     for (unsigned int i = 0; i < arr->len; i++) {
 	unsigned int doc_id = g_array_index (arr, unsigned int, i);
-	bitmap[DOCIDSET_WORD(doc_id)] |= 1 << DOCIDSET_BIT(doc_id);
+	bitmap[DOCIDSET_WORD (doc_id)] |= 1 << DOCIDSET_BIT (doc_id);
     }
 
     return true;
@@ -462,7 +461,7 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 {
     if (doc_id >= doc_ids->bound)
 	return false;
-    return doc_ids->bitmap[DOCIDSET_WORD(doc_id)] & (1 << DOCIDSET_BIT(doc_id));
+    return doc_ids->bitmap[DOCIDSET_WORD (doc_id)] & (1 << DOCIDSET_BIT (doc_id));
 }
 
 void
@@ -470,7 +469,7 @@ _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
 			    unsigned int doc_id)
 {
     if (doc_id < doc_ids->bound)
-	doc_ids->bitmap[DOCIDSET_WORD(doc_id)] &= ~(1 << DOCIDSET_BIT(doc_id));
+	doc_ids->bitmap[DOCIDSET_WORD (doc_id)] &= ~(1 << DOCIDSET_BIT (doc_id));
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not
@@ -489,7 +488,7 @@ _notmuch_threads_destructor (notmuch_threads_t *threads)
 notmuch_status_t
 notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out)
 {
-    return notmuch_query_search_threads(query, out);
+    return notmuch_query_search_threads (query, out);
 }
 
 notmuch_status_t
@@ -624,8 +623,7 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	Xapian::MSet mset;
 
 	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0)
-	{
+	    strcmp (query_string, "*") == 0) {
 	    final_query = mail_query;
 	} else {
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
@@ -635,10 +633,10 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	exclude_query = _notmuch_exclude_tags (query);
 
 	final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
-					 final_query, exclude_query);
+				     final_query, exclude_query);
 
-	enquire.set_weighting_scheme(Xapian::BoolWeight());
-	enquire.set_docid_order(Xapian::Enquire::ASCENDING);
+	enquire.set_weighting_scheme (Xapian::BoolWeight ());
+	enquire.set_docid_order (Xapian::Enquire::ASCENDING);
 
 	if (_debug_query ()) {
 	    fprintf (stderr, "Exclude query is:\n%s\n",
@@ -657,12 +655,12 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	mset = enquire.get_mset (0, 1,
 				 notmuch->xapian_db->get_doccount ());
 
-	count = mset.get_matches_estimated();
+	count = mset.get_matches_estimated ();
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
 			       "A Xapian exception occurred performing query: %s\n",
-			       error.get_msg().c_str());
+			       error.get_msg ().c_str ());
 	_notmuch_database_log_append (notmuch,
 				      "Query string was: %s\n",
 				      query->query_string);

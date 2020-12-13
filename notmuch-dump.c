@@ -21,7 +21,7 @@
 #include "notmuch-client.h"
 #include "hex-escape.h"
 #include "string-util.h"
-#include <zlib.h>
+#include "zlib-extra.h"
 
 static int
 database_dump_config (notmuch_database_t *notmuch, gzFile output)
@@ -42,7 +42,7 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 		     notmuch_config_list_key (list));
 	    goto DONE;
 	}
-	gzprintf (output, "#@ %s", buffer);
+	GZPRINTF (output, "#@ %s", buffer);
 
 	if (hex_encode (notmuch, notmuch_config_list_value (list),
 			&buffer, &buffer_size) != HEX_SUCCESS) {
@@ -51,12 +51,14 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 	    goto DONE;
 	}
 
-	gzprintf (output, " %s\n", buffer);
+	GZPUTS (output, " ");
+	GZPUTS (output, buffer);
+	GZPUTS (output, "\n");
     }
 
     ret = EXIT_SUCCESS;
 
- DONE:
+  DONE:
     if (list)
 	notmuch_config_list_destroy (list);
 
@@ -71,22 +73,22 @@ print_dump_header (gzFile output, int output_format, int include)
 {
     const char *sep = "";
 
-    gzprintf (output, "#notmuch-dump %s:%d ",
+    GZPRINTF (output, "#notmuch-dump %s:%d ",
 	      (output_format == DUMP_FORMAT_SUP) ? "sup" : "batch-tag",
 	      NOTMUCH_DUMP_VERSION);
 
     if (include & DUMP_INCLUDE_CONFIG) {
-	gzputs (output, "config");
+	GZPUTS (output, "config");
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_PROPERTIES) {
-	gzprintf (output, "%sproperties", sep);
+	GZPRINTF (output, "%sproperties", sep);
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_TAGS) {
-	gzprintf (output, "%stags", sep);
+	GZPRINTF (output, "%stags", sep);
     }
-    gzputs (output, "\n");
+    GZPUTS (output, "\n");
 }
 
 static int
@@ -115,7 +117,7 @@ dump_properties_message (void *ctx,
 		fprintf (stderr, "Error: failed to hex-encode message-id %s\n", message_id);
 		return 1;
 	    }
-	    gzprintf (output, "#= %s", *buffer_p);
+	    GZPRINTF (output, "#= %s", *buffer_p);
 	    first = false;
 	}
 
@@ -126,18 +128,18 @@ dump_properties_message (void *ctx,
 	    fprintf (stderr, "Error: failed to hex-encode key %s\n", key);
 	    return 1;
 	}
-	gzprintf (output, " %s", *buffer_p);
+	GZPRINTF (output, " %s", *buffer_p);
 
 	if (hex_encode (ctx, val, buffer_p, size_p) != HEX_SUCCESS) {
 	    fprintf (stderr, "Error: failed to hex-encode value %s\n", val);
 	    return 1;
 	}
-	gzprintf (output, "=%s", *buffer_p);
+	GZPRINTF (output, "=%s", *buffer_p);
     }
     notmuch_message_properties_destroy (list);
 
     if (! first)
-	gzprintf (output, "\n", *buffer_p);
+	GZPRINTF (output, "\n", *buffer_p);
 
     return 0;
 }
@@ -165,7 +167,7 @@ dump_tags_message (void *ctx,
     }
 
     if (output_format == DUMP_FORMAT_SUP) {
-	gzprintf (output, "%s (", message_id);
+	GZPRINTF (output, "%s (", message_id);
     }
 
     for (notmuch_tags_t *tags = notmuch_message_get_tags (message);
@@ -174,12 +176,12 @@ dump_tags_message (void *ctx,
 	const char *tag_str = notmuch_tags_get (tags);
 
 	if (! first)
-	    gzputs (output, " ");
+	    GZPUTS (output, " ");
 
 	first = 0;
 
 	if (output_format == DUMP_FORMAT_SUP) {
-	    gzputs (output, tag_str);
+	    GZPUTS (output, tag_str);
 	} else {
 	    if (hex_encode (ctx, tag_str,
 			    buffer_p, size_p) != HEX_SUCCESS) {
@@ -187,12 +189,12 @@ dump_tags_message (void *ctx,
 			 tag_str);
 		return EXIT_FAILURE;
 	    }
-	    gzprintf (output, "+%s", *buffer_p);
+	    GZPRINTF (output, "+%s", *buffer_p);
 	}
     }
 
     if (output_format == DUMP_FORMAT_SUP) {
-	gzputs (output, ")\n");
+	GZPUTS (output, ")\n");
     } else {
 	if (make_boolean_term (ctx, "id", message_id,
 			       buffer_p, size_p)) {
@@ -200,7 +202,7 @@ dump_tags_message (void *ctx,
 		     message_id, strerror (errno));
 	    return EXIT_FAILURE;
 	}
-	gzprintf (output, " -- %s\n", *buffer_p);
+	GZPRINTF (output, " -- %s\n", *buffer_p);
     }
     return EXIT_SUCCESS;
 }
@@ -220,7 +222,7 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
     if (include & DUMP_INCLUDE_CONFIG) {
 	if (print_status_database ("notmuch dump", notmuch,
-				   database_dump_config(notmuch,output)))
+				   database_dump_config (notmuch, output)))
 	    return EXIT_FAILURE;
     }
 
@@ -307,7 +309,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		 name_for_error, strerror (errno));
 	if (close (outfd))
 	    fprintf (stderr, "Error closing %s during shutdown: %s\n",
-		 name_for_error, strerror (errno));
+		     name_for_error, strerror (errno));
 	goto DONE;
     }
 
@@ -316,7 +318,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 
     ret = gzflush (output, Z_FINISH);
     if (ret) {
-	fprintf (stderr, "Error flushing output: %s\n", gzerror (output, NULL));
+	fprintf (stderr, "Error flushing output: %s\n", gzerror_str (output));
 	goto DONE;
     }
 
@@ -332,7 +334,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
     ret = gzclose_w (output);
     if (ret) {
 	fprintf (stderr, "Error closing %s: %s\n", name_for_error,
-		 gzerror (output, NULL));
+		 gzerror_str (output));
 	ret = EXIT_FAILURE;
 	output = NULL;
 	goto DONE;
@@ -348,7 +350,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 	}
 
     }
- DONE:
+  DONE:
     if (ret != EXIT_SUCCESS && output)
 	(void) gzclose_w (output);
 
@@ -380,13 +382,13 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &output_format, .name = "format", .keywords =
-	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
-				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
-				  { 0, 0 } } },
+	      (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
+				      { "batch-tag", DUMP_FORMAT_BATCH_TAG },
+				      { 0, 0 } } },
 	{ .opt_flags = &include, .name = "include", .keywords =
-	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
-				  { "properties", DUMP_INCLUDE_PROPERTIES },
-				  { "tags", DUMP_INCLUDE_TAGS} } },
+	      (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				      { "properties", DUMP_INCLUDE_PROPERTIES },
+				      { "tags", DUMP_INCLUDE_TAGS } } },
 	{ .opt_string = &output_file_name, .name = "output" },
 	{ .opt_bool = &gzip_output, .name = "gzip" },
 	{ .opt_inherit = notmuch_shared_options },
