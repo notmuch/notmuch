@@ -26,8 +26,9 @@ test_begin_subtest 'checking output'
 test_expect_equal "$result" "$output"
 
 test_begin_subtest 'comparing existing to exported symbols'
-nm -P $NOTMUCH_BUILDDIR/lib/libnotmuch.so | awk '$2 == "T" && $1 ~ "^notmuch" {print $1}' | sort | uniq > ACTUAL
-sed -n 's/^\(notmuch_[a-zA-Z0-9_]*\)[[:blank:]]*(.*/\1/p' $NOTMUCH_SRCDIR/lib/notmuch.h | sort | uniq > EXPORTED
+readelf -Ws $NOTMUCH_BUILDDIR/lib/libnotmuch.so | \
+    awk '$4 == "FUNC" && $5 == "GLOBAL" && $7 != "UND" {print $8}' | sort -u > ACTUAL
+sed -n 's/^\(notmuch_[a-zA-Z0-9_]*\)[[:blank:]]*(.*/\1/p' $NOTMUCH_SRCDIR/lib/notmuch.h | sort -u > EXPORTED
 test_expect_equal_file EXPORTED ACTUAL
 
 test_done

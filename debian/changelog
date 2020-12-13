@@ -1,3 +1,9 @@
+notmuch (0.31.2-5) unstable; urgency=medium
+
+  * Use readelf instead of nm in T360, hopefully build in ppc64
+
+ -- David Bremner <bremner@debian.org>  Sun, 13 Dec 2020 08:24:23 -0400
+
 notmuch (0.31.2-4) unstable; urgency=medium
 
   * Move prerequisite to file targets from phony ones. Thanks to
