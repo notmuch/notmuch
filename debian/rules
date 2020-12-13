@@ -18,6 +18,9 @@ override_dh_auto_configure:
 override_dh_auto_test:
 	dh_auto_test -- V=1
 
+override_dh_dwz:
+	dh_dwz -Xruby
+
 override_dh_auto_build:
 	dh_auto_build -- V=1
 	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
