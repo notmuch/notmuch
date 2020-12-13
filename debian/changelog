@@ -1,8 +1,8 @@
-notmuch (0.31.2-3~bpo10+2) unstable; urgency=medium
+notmuch (0.31.2-3~bpo10+2) buster-backports; urgency=medium
 
   * Re-upload with binaries for NEW package.
 
- -- David Bremner <bremner@debian.org>  Sun, 13 Dec 2020 13:14:08 -0400
+ -- David Bremner <bremner@debian.org>  Sun, 13 Dec 2020 13:23:57 -0400
 
 notmuch (0.31.2-3~bpo10+1) buster-backports; urgency=medium
 
