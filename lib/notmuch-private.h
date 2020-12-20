@@ -638,6 +638,11 @@ _notmuch_string_map_append (notmuch_string_map_t *map,
 			    const char *key,
 			    const char *value);
 
+void
+_notmuch_string_map_set (notmuch_string_map_t *map,
+			 const char *key,
+			 const char *value);
+
 const char *
 _notmuch_string_map_get (notmuch_string_map_t *map, const char *key);
 
