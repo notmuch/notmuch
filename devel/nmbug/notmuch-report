@@ -370,9 +370,11 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
       border-bottom-right-radius: {border_radius};
     }}
     tbody:nth-child(4n+1) tr td {{
+      color: #000;
       background-color: #ffd96e;
     }}
     tbody:nth-child(4n+3) tr td {{
+      color: #000;
       background-color: #bce;
     }}
     hr {{
