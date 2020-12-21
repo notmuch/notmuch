@@ -1102,7 +1102,7 @@ notmuch_config_command_list (notmuch_config_t *config)
 }
 
 int
-notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_config_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     int ret;
     int opt_index;

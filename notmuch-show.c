@@ -1215,7 +1215,7 @@ static const notmuch_show_format_t *formatters[] = {
 };
 
 int
-notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     notmuch_query_t *query;

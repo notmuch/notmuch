@@ -444,7 +444,7 @@ add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
 }
 
 int
-notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_insert_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     notmuch_status_t status, close_status;
     notmuch_database_t *notmuch;

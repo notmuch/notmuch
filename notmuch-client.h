@@ -171,46 +171,46 @@ void
 notmuch_exit_if_unsupported_format (void);
 
 int
-notmuch_count_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_count_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_dump_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_new_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_new_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_insert_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_reindex_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_reply_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_restore_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_search_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_search_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_address_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_address_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_setup_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_setup_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_show_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_show_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_tag_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_config_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 int
-notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_compact_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);

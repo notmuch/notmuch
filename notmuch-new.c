@@ -1043,7 +1043,7 @@ print_results (const add_files_state_t *state)
 }
 
 int
-notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     add_files_state_t add_files_state = {

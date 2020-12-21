@@ -187,7 +187,7 @@ tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
 }
 
 int
-notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_tag_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     tag_op_list_t *tag_ops = NULL;
     char *query_string = NULL;

@@ -27,8 +27,11 @@
  *
  * The return value will be used as notmuch exit status code,
  * preferably EXIT_SUCCESS or EXIT_FAILURE.
+ *
+ * Each subcommand should be passed either a config object, or an open
+ * database
  */
-typedef int (*command_function_t) (notmuch_config_t *config, int argc, char *argv[]);
+typedef int (*command_function_t) (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 typedef struct command {
     const char *name;
@@ -38,10 +41,10 @@ typedef struct command {
 } command_t;
 
 static int
-notmuch_help_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_help_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 static int
-notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
+notmuch_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
 
 static int
 _help_for (const char *topic);
@@ -335,7 +338,7 @@ _help_for (const char *topic_name)
 }
 
 static int
-notmuch_help_command (unused (notmuch_config_t *config), int argc, char *argv[])
+notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     int opt_index;
 
@@ -360,6 +363,7 @@ notmuch_help_command (unused (notmuch_config_t *config), int argc, char *argv[])
  */
 static int
 notmuch_command (notmuch_config_t *config,
+		 unused(notmuch_database_t *notmuch),
 		 unused(int argc), unused(char **argv))
 {
     char *db_path;
@@ -369,7 +373,7 @@ notmuch_command (notmuch_config_t *config,
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
     if (notmuch_config_is_new (config))
-	return notmuch_setup_command (config, 0, NULL);
+	return notmuch_setup_command (config, NULL, 0, NULL);
 
     /* Notmuch is already configured, but is there a database? */
     db_path = talloc_asprintf (config, "%s/%s",
@@ -502,7 +506,7 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    ret = (command->function)(config, argc - opt_index, argv + opt_index);
+    ret = (command->function)(config, NULL, argc - opt_index, argv + opt_index);
 
   DONE:
     if (config)

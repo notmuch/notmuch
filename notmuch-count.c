@@ -148,7 +148,7 @@ count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
 }
 
 int
-notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_count_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     char *query_str;

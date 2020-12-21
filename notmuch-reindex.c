@@ -83,7 +83,7 @@ reindex_query (notmuch_database_t *notmuch, const char *query_string,
 }
 
 int
-notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_reindex_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     char *query_string = NULL;
     notmuch_database_t *notmuch;
