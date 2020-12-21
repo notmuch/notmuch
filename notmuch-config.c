@@ -324,7 +324,7 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
 notmuch_config_t *
 notmuch_config_open (void *ctx,
 		     const char *filename,
-		     notmuch_config_mode_t config_mode)
+		     notmuch_command_mode_t config_mode)
 {
     GError *error = NULL;
     size_t tmp;
@@ -359,8 +359,8 @@ notmuch_config_open (void *ctx,
 
     config->key_file = g_key_file_new ();
 
-    if (config_mode & NOTMUCH_CONFIG_OPEN) {
-	bool create_new = (config_mode & NOTMUCH_CONFIG_CREATE) != 0;
+    if (config_mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
+	bool create_new = (config_mode & NOTMUCH_COMMAND_CONFIG_CREATE) != 0;
 
 	if (! get_config_from_file (config, create_new)) {
 	    talloc_free (config);
