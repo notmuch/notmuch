@@ -286,6 +286,21 @@ test_begin_subtest "Count, default exclusion: tag in query (threads)"
 output=$(notmuch count --output=threads tag:test and tag:deleted)
 test_expect_equal "$output" "3"
 
+test_begin_subtest "Count, default exclusion, batch"
+notmuch count  --batch --output=messages<<EOF > OUTPUT
+tag:test
+tag:test and tag:deleted
+tag:test
+tag:test and tag:deleted
+EOF
+cat <<EOF >EXPECTED
+2
+4
+2
+4
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Count, exclude=true: tag in query (messages)"
 output=$(notmuch count --exclude=true tag:test and tag:deleted)
 test_expect_equal "$output" "4"

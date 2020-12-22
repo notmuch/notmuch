@@ -64,10 +64,9 @@ count_files (notmuch_query_t *query)
 /* return 0 on success, -1 on failure */
 static int
 print_count (notmuch_database_t *notmuch, const char *query_str,
-	     const char **exclude_tags, size_t exclude_tags_length, int output, int print_lastmod)
+	     notmuch_config_values_t *exclude_tags, int output, int print_lastmod)
 {
     notmuch_query_t *query;
-    size_t i;
     int count;
     unsigned int ucount;
     unsigned long revision;
@@ -81,13 +80,18 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	return -1;
     }
 
-    for (i = 0; i < exclude_tags_length; i++) {
-	status = notmuch_query_add_tag_exclude (query, exclude_tags[i]);
-	if (status && status != NOTMUCH_STATUS_IGNORED) {
-	    print_status_query ("notmuch count", query, status);
-	    return -1;
+    for (notmuch_config_values_start (exclude_tags);
+	 notmuch_config_values_valid (exclude_tags);
+	 notmuch_config_values_move_to_next (exclude_tags)) {
+
+	status = notmuch_query_add_tag_exclude (query,
+						notmuch_config_values_get (exclude_tags));
+	    if (status && status != NOTMUCH_STATUS_IGNORED) {
+		print_status_query ("notmuch count", query, status);
+		ret = -1;
+		goto DONE;
+	    }
 	}
-    }
 
     switch (output) {
     case OUTPUT_MESSAGES:
@@ -127,8 +131,8 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 }
 
 static int
-count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
-	    size_t exclude_tags_length, int output, int print_lastmod)
+count_file (notmuch_database_t *notmuch, FILE *input, notmuch_config_values_t *exclude_tags,
+	    int output, int print_lastmod)
 {
     char *line = NULL;
     ssize_t line_len;
@@ -137,8 +141,7 @@ count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
 
     while (! ret && (line_len = getline (&line, &line_size, input)) != -1) {
 	chomp_newline (line);
-	ret = print_count (notmuch, line, exclude_tags, exclude_tags_length,
-			   output, print_lastmod);
+	ret = print_count (notmuch, line, exclude_tags, output, print_lastmod);
     }
 
     if (line)
@@ -148,15 +151,13 @@ count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
 }
 
 int
-notmuch_count_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_count_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
     bool exclude = true;
-    const char **search_exclude_tags = NULL;
-    size_t search_exclude_tags_length = 0;
+    notmuch_config_values_t *exclude_tags = NULL;
     bool batch = false;
     bool print_lastmod = false;
     FILE *input = stdin;
@@ -200,29 +201,22 @@ notmuch_count_command (notmuch_config_t *config, unused(notmuch_database_t *notm
 	return EXIT_FAILURE;
     }
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return EXIT_FAILURE;
-
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-    query_str = query_string_from_args (config, argc - opt_index, argv + opt_index);
+    query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return EXIT_FAILURE;
     }
 
     if (exclude) {
-	search_exclude_tags = notmuch_config_get_search_exclude_tags
-				  (config, &search_exclude_tags_length);
+	exclude_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_EXCLUDE_TAGS);
     }
 
     if (batch)
-	ret = count_file (notmuch, input, search_exclude_tags,
-			  search_exclude_tags_length, output, print_lastmod);
+	ret = count_file (notmuch, input, exclude_tags, output, print_lastmod);
     else
-	ret = print_count (notmuch, query_str, search_exclude_tags,
-			   search_exclude_tags_length, output, print_lastmod);
+	ret = print_count (notmuch, query_str, exclude_tags, output, print_lastmod);
 
     notmuch_database_destroy (notmuch);
 

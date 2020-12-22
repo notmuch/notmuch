@@ -153,7 +153,7 @@ static command_t commands[] = {
       "Get addresses from messages matching the given search terms." },
     { "show", notmuch_show_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Show all messages matching the search terms." },
-    { "count", notmuch_count_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "count", notmuch_count_command, NOTMUCH_COMMAND_DATABASE_EARLY,
       "Count messages matching the search terms." },
     { "reply", notmuch_reply_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Construct a reply template for a set of messages." },
