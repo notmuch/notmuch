@@ -31,6 +31,8 @@ struct _notmuch_config_list {
     char *current_val;
 };
 
+static const char * _notmuch_config_key_to_string (notmuch_config_key_t key);
+
 static int
 _notmuch_config_list_destroy (notmuch_config_list_t *list)
 {
@@ -280,7 +282,7 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
     return status;
 }
 
-const char *
+static const char *
 _notmuch_config_key_to_string (notmuch_config_key_t key) {
     switch (key) {
     case NOTMUCH_CONFIG_DATABASE_PATH:
@@ -300,6 +302,52 @@ _notmuch_config_key_to_string (notmuch_config_key_t key) {
     default:
 	return NULL;
     }
+}
+
+static const char *
+_notmuch_config_default (void *ctx, notmuch_config_key_t key) {
+    char *path;
+
+    switch (key) {
+    case NOTMUCH_CONFIG_DATABASE_PATH:
+	path = getenv ("MAILDIR");
+	if (path)
+	    path = talloc_strdup (ctx, path);
+	else
+	    path = talloc_asprintf (ctx, "%s/mail",
+				    getenv ("HOME"));
+	return path;
+    case NOTMUCH_CONFIG_EXCLUDE_TAGS:
+	return "";
+    case NOTMUCH_CONFIG_NEW_TAGS:
+	return "inbox;unread";
+    case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
+	return "true";
+    case NOTMUCH_CONFIG_USER_NAME:
+    case NOTMUCH_CONFIG_PRIMARY_EMAIL:
+    case NOTMUCH_CONFIG_OTHER_EMAIL:
+	return NULL;
+    default:
+    case NOTMUCH_CONFIG_LAST:
+	INTERNAL_ERROR ("illegal key enum %d", key);
+   }
+}
+
+notmuch_status_t
+_notmuch_config_load_defaults (notmuch_database_t *notmuch) {
+    notmuch_config_key_t key;
+    for (key = NOTMUCH_CONFIG_FIRST;
+	 key < NOTMUCH_CONFIG_LAST;
+	 key = notmuch_config_key_t(key + 1)) {
+	const char *val = notmuch_config_get (notmuch, key);
+	const char *key_string = _notmuch_config_key_to_string (key);
+
+	val = _notmuch_string_map_get (notmuch->config, key_string);
+	if (! val) {
+	    _notmuch_string_map_set (notmuch->config, key_string, _notmuch_config_default (notmuch, key));
+	}
+    }
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 const char *

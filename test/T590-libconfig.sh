@@ -239,6 +239,33 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "load default values"
+export MAILDIR=${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} '' %NULL%
+{
+    notmuch_config_key_t key;
+    for (key = NOTMUCH_CONFIG_FIRST;
+	 key < NOTMUCH_CONFIG_LAST;
+	 key = (notmuch_config_key_t)(key + 1)) {
+	const char *val = notmuch_config_get (db, key);
+        printf("%s\n", val ? val : "NULL" );
+    }
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+MAIL_DIR
+
+inbox;unread
+true
+NULL
+NULL
+NULL
+== stderr ==
+EOF
+unset MAILDIR
+test_expect_equal_file EXPECTED OUTPUT
+
 backup_database
 test_begin_subtest "override config from \${NOTMUCH_CONFIG}"
 notmuch config set test.key1 overridden

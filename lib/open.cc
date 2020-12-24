@@ -289,6 +289,10 @@ notmuch_database_open_with_config (const char *database_path,
 	if (status)
 	    goto DONE;
 
+	status = _notmuch_config_load_defaults (notmuch);
+	if (status)
+	    goto DONE;
+
 	status = _notmuch_database_setup_standard_query_fields (notmuch);
 	if (status)
 	    goto DONE;
