@@ -498,6 +498,18 @@ notmuch_database_compact (const char *path,
 			  void *closure);
 
 /**
+ * Like notmuch_database_compact, but take an open database as a
+ * parameter.
+ *
+ * @since libnnotmuch 5.4 (notmuch 0.32)
+ */
+notmuch_status_t
+notmuch_database_compact_db (notmuch_database_t *database,
+			     const char *backup_path,
+			     notmuch_compact_status_cb_t status_cb,
+			     void *closure);
+
+/**
  * Destroy the notmuch database, closing it if necessary and freeing
  * all associated resources.
  *

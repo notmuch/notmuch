@@ -705,17 +705,9 @@ notmuch_database_compact (const char *path,
 			  notmuch_compact_status_cb_t status_cb,
 			  void *closure)
 {
-    void *local;
-    char *notmuch_path, *xapian_path, *compact_xapian_path;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
-    struct stat statbuf;
-    bool keep_backup;
     char *message = NULL;
-
-    local = talloc_new (NULL);
-    if (! local)
-	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
     ret = notmuch_database_open_verbose (path,
 					 NOTMUCH_DATABASE_MODE_READ_WRITE,
@@ -723,8 +715,40 @@ notmuch_database_compact (const char *path,
 					 &message);
     if (ret) {
 	if (status_cb) status_cb (message, closure);
-	goto DONE;
+	return ret;
     }
+
+    _notmuch_config_cache (notmuch, NOTMUCH_CONFIG_DATABASE_PATH, path);
+
+    return notmuch_database_compact_db (notmuch,
+					backup_path,
+					status_cb,
+					closure);
+}
+
+notmuch_status_t
+notmuch_database_compact_db (notmuch_database_t *notmuch,
+			     const char *backup_path,
+			     notmuch_compact_status_cb_t status_cb,
+			     void *closure) {
+    void *local;
+    char *notmuch_path, *xapian_path, *compact_xapian_path;
+    const char* path;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    struct stat statbuf;
+    bool keep_backup;
+
+    ret = _notmuch_database_ensure_writable (notmuch);
+    if (ret)
+	return ret;
+
+    path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
+    if (! path)
+	return NOTMUCH_STATUS_PATH_ERROR;
+
+    local = talloc_new (NULL);
+    if (! local)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
