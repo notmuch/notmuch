@@ -464,3 +464,8 @@ notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const
 
     return notmuch_database_set_config (notmuch, _notmuch_config_key_to_string (key), val);
 }
+
+void
+_notmuch_config_cache (notmuch_database_t *notmuch, notmuch_config_key_t key, const char *val) {
+    _notmuch_string_map_set (notmuch->config, _notmuch_config_key_to_string (key), val);
+}

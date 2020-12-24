@@ -713,6 +713,10 @@ _notmuch_config_load_from_file (notmuch_database_t * db, GKeyFile *file);
 
 notmuch_status_t
 _notmuch_config_load_defaults (notmuch_database_t * db);
+
+void
+_notmuch_config_cache (notmuch_database_t *db, notmuch_config_key_t key, const char* val);
+
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus
