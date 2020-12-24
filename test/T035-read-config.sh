@@ -447,4 +447,18 @@ EOF
 restore_config
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "running compact (xdg)"
+xdg_config
+notmuch compact
+output=$(notmuch count '*')
+restore_config
+test_expect_equal "52" "$output"
+
+test_begin_subtest "running compact (xdg + profile)"
+xdg_config ${RANDOM}
+notmuch compact
+output=$(notmuch count '*')
+restore_config
+test_expect_equal "52" "$output"
+
 test_done

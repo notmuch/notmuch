@@ -27,9 +27,8 @@ status_update_cb (const char *msg, unused (void *closure))
 }
 
 int
-notmuch_compact_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_compact_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
-    const char *path = notmuch_config_get_database_path (config);
     const char *backup_path = NULL;
     notmuch_status_t ret;
     bool quiet = false;
@@ -55,8 +54,8 @@ notmuch_compact_command (notmuch_config_t *config, unused(notmuch_database_t *no
 
     if (! quiet)
 	printf ("Compacting database...\n");
-    ret = notmuch_database_compact (path, backup_path,
-				    quiet ? NULL : status_update_cb, NULL);
+    ret = notmuch_database_compact_db (notmuch, backup_path,
+				       quiet ? NULL : status_update_cb, NULL);
     if (ret) {
 	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string (ret));
 	return EXIT_FAILURE;
