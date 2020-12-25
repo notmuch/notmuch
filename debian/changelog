@@ -1,3 +1,12 @@
+notmuch (0.31.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Second fix for T360, fix regression on ppc64el
+  * Fix for exclude tags in notmuch2 python bindings
+  * Fix for memory error in notmuch_database_get_config_list
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 Dec 2020 11:48:37 -0400
+
 notmuch (0.31.2-5) unstable; urgency=medium
 
   * Use readelf instead of nm in T360, hopefully build in ppc64

@@ -73,12 +73,11 @@ release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
-	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
 ifeq ($(REALLY_UPLOAD),yes)
-	git push origin $(VERSION) $(DEB_TAG) release pristine-tar
+	git push origin $(VERSION) release pristine-tar
 	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
 	rsync --verbose --delete --recursive doc/_build/html/ $(RELEASE_HOST):$(DOC_DIR)
@@ -90,7 +89,6 @@ pre-release:
 	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
-	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
 	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
