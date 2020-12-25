@@ -578,7 +578,7 @@ class Database(base.NotmuchObject):
         if exclude_tags is not None:
             for tag in exclude_tags:
                 if isinstance(tag, str):
-                    tag = str.encode('utf-8')
+                    tag = tag.encode('utf-8')
                 capi.lib.notmuch_query_add_tag_exclude(query_p, tag)
         return querymod.Query(self, query_p)
 
