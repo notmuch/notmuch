@@ -36,7 +36,6 @@ endif
 endif
 
 UPSTREAM_TAG=$(subst ~,_,$(VERSION))
-DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
