@@ -1,3 +1,9 @@
+notmuch (0.31.3-2) unstable; urgency=medium
+
+  * Don't install gdb on hppa (skip gdb based tests)
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 Dec 2020 15:14:07 -0400
+
 notmuch (0.31.3-1) unstable; urgency=medium
 
   * New upstream bugfix release
