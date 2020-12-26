@@ -27,7 +27,7 @@ int main (int argc, char** argv)
                                               &db,
                                               &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
-     fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
+     fprintf (stderr, "error opening database\n%s\n%s\n", notmuch_status_to_string (stat), msg ? msg : "");
      exit (1);
    }
 EOF
@@ -504,5 +504,70 @@ test.key2 = testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
+
+test_begin_subtest "no config, fail to open database"
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+cat c_head - c_tail <<'EOF' | test_C %NULL% '' %NULL%
+{
+   printf("NOT RUN");
+}
+EOF
+NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+error opening database
+Erroneous NULL pointer
+Error: Cannot open a database for a NULL path.
+
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "open database from NOTMUCH_DATABASE"
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+export NOTMUCH_DATABASE=${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C %NULL% '' %NULL%
+{
+   EXPECT0(notmuch_database_get_config (db, "test.key1", &val));
+   printf("test.key1 = %s\n", val);
+   EXPECT0(notmuch_database_get_config (db, "test.key2", &val));
+   printf("test.key2 = %s\n", val);
+}
+EOF
+NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+unset NOTMUCH_DATABASE
+cat <<'EOF' >EXPECTED
+== stdout ==
+test.key1 = testvalue1
+test.key2 = testvalue2
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "NOTMUCH_DATABASE overrides config"
+old_path=$(notmuch config get database.path)
+notmuch config set database.path /nonexistent
+export NOTMUCH_DATABASE=${MAIL_DIR}
+cat c_head - c_tail <<'EOF' | test_C %NULL% '' %NULL%
+{
+   EXPECT0(notmuch_database_get_config (db, "test.key1", &val));
+   printf("test.key1 = %s\n", val);
+   EXPECT0(notmuch_database_get_config (db, "test.key2", &val));
+   printf("test.key2 = %s\n", val);
+}
+EOF
+NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+unset NOTMUCH_DATABASE
+cat <<'EOF' >EXPECTED
+== stdout ==
+test.key1 = testvalue1
+test.key2 = testvalue2
+== stderr ==
+EOF
+notmuch config set database.path "${old_path}"
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_done

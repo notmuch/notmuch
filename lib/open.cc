@@ -168,6 +168,10 @@ _choose_database_path (void *ctx,
 	return status;
     }
 
+    if (! *database_path) {
+	*database_path = getenv ("NOTMUCH_DATABASE");
+    }
+
     if (! *database_path && *key_file) {
 	char *path = g_key_file_get_value (*key_file, "database", "path", NULL);
 	if (path) {
