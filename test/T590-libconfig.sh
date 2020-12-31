@@ -364,6 +364,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 MAIL_DIR
+MAIL_DIR
 MAIL_DIR/.notmuch/hooks
 
 inbox;unread

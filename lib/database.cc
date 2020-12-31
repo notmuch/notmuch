@@ -1350,7 +1350,7 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
     const char *db_path, *relative;
     unsigned int db_path_len;
 
-    db_path = notmuch_database_get_path (notmuch);
+    db_path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
     db_path_len = strlen (db_path);
 
     relative = path;

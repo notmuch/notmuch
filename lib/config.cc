@@ -406,6 +406,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
     switch (key) {
     case NOTMUCH_CONFIG_DATABASE_PATH:
 	return "database.path";
+    case NOTMUCH_CONFIG_MAIL_ROOT:
+	return "database.mail_root";
     case NOTMUCH_CONFIG_HOOK_DIR:
 	return "database.hook_dir";
     case NOTMUCH_CONFIG_EXCLUDE_TAGS:
@@ -428,7 +430,7 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 }
 
 static const char *
-_notmuch_config_default (void *ctx, notmuch_config_key_t key)
+_notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 {
     char *path;
 
@@ -436,11 +438,14 @@ _notmuch_config_default (void *ctx, notmuch_config_key_t key)
     case NOTMUCH_CONFIG_DATABASE_PATH:
 	path = getenv ("MAILDIR");
 	if (path)
-	    path = talloc_strdup (ctx, path);
+	    path = talloc_strdup (notmuch, path);
 	else
-	    path = talloc_asprintf (ctx, "%s/mail",
+	    path = talloc_asprintf (notmuch, "%s/mail",
 				    getenv ("HOME"));
 	return path;
+    case NOTMUCH_CONFIG_MAIL_ROOT:
+	/* by default, mail root is the same as database path */
+	return notmuch_database_get_path (notmuch);
     case NOTMUCH_CONFIG_EXCLUDE_TAGS:
 	return "";
     case NOTMUCH_CONFIG_NEW_TAGS:

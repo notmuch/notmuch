@@ -1102,7 +1102,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 
 	*colon = '\0';
 
-	db_path = notmuch_database_get_path (message->notmuch);
+	db_path = notmuch_config_get (message->notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
 
 	directory = _notmuch_database_get_directory_path (local,
 							  message->notmuch,

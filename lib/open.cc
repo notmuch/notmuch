@@ -263,6 +263,11 @@ _choose_xapian_path (void *ctx, const char *database_path, const char **xapian_p
     if (status)
 	goto DONE;
 
+    trial_path = talloc_asprintf (ctx, "%s/xapian", database_path);
+    status = _trial_open (trial_path, message_ptr);
+    if (status != NOTMUCH_STATUS_PATH_ERROR)
+	goto DONE;
+
     notmuch_path = talloc_asprintf (ctx, "%s/.notmuch", database_path);
     status = _db_dir_exists (notmuch_path, message_ptr);
     if (status)

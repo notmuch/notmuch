@@ -64,7 +64,7 @@ _notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
     if (unlikely (message == NULL))
 	return NULL;
 
-    const char *prefix = notmuch_database_get_path (notmuch);
+    const char *prefix = notmuch_config_get (notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
 
     if (prefix == NULL)
 	goto FAIL;
