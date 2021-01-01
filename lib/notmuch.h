@@ -2509,6 +2509,18 @@ notmuch_config_values_get (notmuch_config_values_t *values);
 void
 notmuch_config_values_move_to_next (notmuch_config_values_t *values);
 
+
+/**
+ * reset the 'values' iterator to the first element
+ *
+ * @param[in,out] values iterator. A NULL value is ignored.
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ */
+void
+notmuch_config_values_start (notmuch_config_values_t *values);
+
 /**
  * Destroy a config values iterator, along with any associated
  * resources.

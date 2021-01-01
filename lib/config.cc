@@ -34,6 +34,8 @@ struct _notmuch_config_list {
 struct _notmuch_config_values {
     const char *iterator;
     size_t tok_len;
+    const char *string;
+    void *children; /* talloc_context */
 };
 
 static const char * _notmuch_config_key_to_string (notmuch_config_key_t key);
@@ -256,23 +258,33 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 notmuch_config_values_t *
 notmuch_config_get_values (notmuch_database_t *notmuch, notmuch_config_key_t key)
 {
-    notmuch_config_values_t *values;
+    notmuch_config_values_t *values = NULL;
+    bool ok = false;
 
-    const char *str;
     const char *key_str = _notmuch_config_key_to_string (key);
 
     if (! key_str)
-	return NULL;
-
-    str  = _notmuch_string_map_get (notmuch->config, key_str);
-    if (! str)
-	return NULL;
+	goto DONE;
 
     values = talloc (notmuch, notmuch_config_values_t);
     if (unlikely(! values))
-	return NULL;
+	goto DONE;
 
-    values->iterator = strsplit_len (str, ';', &(values->tok_len));
+    values->children = talloc_new (values);
+
+    values->string = _notmuch_string_map_get (notmuch->config, key_str);
+    if (! values->string)
+	goto DONE;
+
+    values->iterator = strsplit_len (values->string, ';', &(values->tok_len));
+    ok = true;
+
+ DONE:
+    if (!ok) {
+	if (values)
+	    talloc_free(values);
+	return NULL;
+    }
     return values;
 }
 
@@ -287,6 +299,19 @@ notmuch_config_values_valid (notmuch_config_values_t *values) {
 const char *
 notmuch_config_values_get (notmuch_config_values_t *values) {
     return talloc_strndup (values, values->iterator, values->tok_len);
+}
+
+void
+notmuch_config_values_start (notmuch_config_values_t *values) {
+    if (values == NULL)
+	return;
+    if (values->children) {
+	talloc_free (values->children);
+    }
+
+    values->children = talloc_new (values);
+
+    values->iterator = strsplit_len (values->string, ';', &(values->tok_len));
 }
 
 void
