@@ -394,6 +394,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key) {
 	return "search.exclude_tags";
     case NOTMUCH_CONFIG_NEW_TAGS:
 	return "new.tags";
+    case NOTMUCH_CONFIG_NEW_IGNORE:
+	return "new.ignore";
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
 	return "maildir.synchronize_flags";
     case NOTMUCH_CONFIG_PRIMARY_EMAIL:
@@ -426,6 +428,7 @@ _notmuch_config_default (void *ctx, notmuch_config_key_t key) {
 	return "inbox;unread";
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
 	return "true";
+    case NOTMUCH_CONFIG_NEW_IGNORE:
     case NOTMUCH_CONFIG_USER_NAME:
     case NOTMUCH_CONFIG_PRIMARY_EMAIL:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
