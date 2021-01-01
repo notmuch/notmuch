@@ -114,6 +114,36 @@ DONE:
     return status;
 }
 
+static notmuch_status_t
+_choose_database_path (const char *config_path,
+		       const char *profile,
+		       GKeyFile **key_file,
+		       const char **database_path,
+		       char **message)
+{
+    notmuch_status_t status;
+
+    status =_load_key_file (config_path, profile, key_file);
+    if (status) {
+	*message = strdup ("Error: cannot load config file.\n");
+	return status;
+    }
+
+    if (! *database_path && *key_file)
+	*database_path = g_key_file_get_value (*key_file, "database", "path", NULL);
+
+    if (*database_path == NULL) {
+	*message = strdup ("Error: Cannot open a database for a NULL path.\n");
+	return NOTMUCH_STATUS_NULL_POINTER;
+    }
+
+    if (*database_path[0] != '/') {
+	*message = strdup ("Error: Database path must be absolute.\n");
+	return NOTMUCH_STATUS_PATH_ERROR;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
@@ -133,26 +163,8 @@ notmuch_database_open_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     static int initialized = 0;
 
-    status = _load_key_file (config_path, profile, &key_file);
-    if (status) {
-	message = strdup ("Error: cannot load config file");
+    if ((status = _choose_database_path (config_path, profile, &key_file, &database_path, &message)))
 	goto DONE;
-    }
-	
-    if (! database_path && key_file)
-	database_path = g_key_file_get_value (key_file, "database", "path", NULL);
-
-    if (database_path == NULL) {
-	message = strdup ("Error: Cannot open a database for a NULL path.\n");
-	status = NOTMUCH_STATUS_NULL_POINTER;
-	goto DONE;
-    }
-
-    if (database_path[0] != '/') {
-	message = strdup ("Error: Database path must be absolute.\n");
-	status = NOTMUCH_STATUS_PATH_ERROR;
-	goto DONE;
-    }
 
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
 	message = strdup ("Out of memory\n");
