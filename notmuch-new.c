@@ -48,8 +48,7 @@ typedef struct {
     enum verbosity verbosity;
     bool debug;
     bool full_scan;
-    const char **new_tags;
-    size_t new_tags_length;
+    notmuch_config_values_t *new_tags;
     const char **ignore_verbatim;
     size_t ignore_verbatim_length;
     regex_t *ignore_regex;
@@ -65,7 +64,7 @@ typedef struct {
     _filename_list_t *removed_directories;
     _filename_list_t *directory_mtimes;
 
-    bool synchronize_flags;
+    notmuch_bool_t synchronize_flags;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_print_progress = 0;
@@ -245,19 +244,17 @@ _special_directory (const char *entry)
 }
 
 static bool
-_setup_ignore (notmuch_config_t *config, add_files_state_t *state)
+_setup_ignore (notmuch_database_t *notmuch, add_files_state_t *state)
 {
-    const char **ignore_list, **ignore;
+    notmuch_config_values_t *ignore_list;
     int nregex = 0, nverbatim = 0;
     const char **verbatim = NULL;
     regex_t *regex = NULL;
 
-    ignore_list = notmuch_config_get_new_ignore (config, NULL);
-    if (! ignore_list)
-	return true;
-
-    for (ignore = ignore_list; *ignore; ignore++) {
-	const char *s = *ignore;
+    for (ignore_list = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_IGNORE);
+	 notmuch_config_values_valid (ignore_list);
+	 notmuch_config_values_move_to_next (ignore_list)) {
+	const char *s = notmuch_config_values_get (ignore_list);
 	size_t len = strlen (s);
 
 	if (len == 0) {
@@ -276,8 +273,8 @@ _setup_ignore (notmuch_config_t *config, add_files_state_t *state)
 		return false;
 	    }
 
-	    r = talloc_strndup (config, s + 1, len - 2);
-	    regex = talloc_realloc (config, regex, regex_t, nregex + 1);
+	    r = talloc_strndup (notmuch, s + 1, len - 2);
+	    regex = talloc_realloc (notmuch, regex, regex_t, nregex + 1);
 	    preg = &regex[nregex];
 
 	    rerr = regcomp (preg, r, REG_EXTENDED | REG_NOSUB);
@@ -295,7 +292,7 @@ _setup_ignore (notmuch_config_t *config, add_files_state_t *state)
 
 	    talloc_free (r);
 	} else {
-	    verbatim = talloc_realloc (config, verbatim, const char *,
+	    verbatim = talloc_realloc (notmuch, verbatim, const char *,
 				       nverbatim + 1);
 	    verbatim[nverbatim++] = s;
 	}
@@ -371,7 +368,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
 	  add_files_state_t *state)
 {
     notmuch_message_t *message = NULL;
-    const char **tag;
+    const char *tag;
     notmuch_status_t status;
 
     status = notmuch_database_begin_atomic (notmuch);
@@ -387,13 +384,17 @@ add_file (notmuch_database_t *notmuch, const char *filename,
 	if (state->synchronize_flags)
 	    notmuch_message_maildir_flags_to_tags (message);
 
-	for (tag = state->new_tags; *tag != NULL; tag++) {
+	for (notmuch_config_values_start (state->new_tags);
+	     notmuch_config_values_valid (state->new_tags);
+	     notmuch_config_values_move_to_next (state->new_tags)) {
 	    notmuch_bool_t is_set;
+
+	    tag = notmuch_config_values_get (state->new_tags);
 	    /* Currently all errors from has_maildir_flag are fatal */
 	    if ((status = notmuch_message_has_maildir_flag_st (message, 'S', &is_set)))
 		goto DONE;
-	    if (strcmp ("unread", *tag) != 0 || ! is_set) {
-		notmuch_message_add_tag (message, *tag);
+	    if (strcmp ("unread", tag) != 0 || ! is_set) {
+		notmuch_message_add_tag (message, tag);
 	    }
 	}
 
@@ -962,8 +963,7 @@ remove_filename (notmuch_database_t *notmuch,
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
 static notmuch_status_t
-_remove_directory (void *ctx,
-		   notmuch_database_t *notmuch,
+_remove_directory (notmuch_database_t *notmuch,
 		   const char *path,
 		   add_files_state_t *add_files_state)
 {
@@ -979,7 +979,7 @@ _remove_directory (void *ctx,
     for (files = notmuch_directory_get_child_files (directory);
 	 notmuch_filenames_valid (files);
 	 notmuch_filenames_move_to_next (files)) {
-	absolute = talloc_asprintf (ctx, "%s/%s", path,
+	absolute = talloc_asprintf (notmuch, "%s/%s", path,
 				    notmuch_filenames_get (files));
 	status = remove_filename (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
@@ -990,9 +990,9 @@ _remove_directory (void *ctx,
     for (subdirs = notmuch_directory_get_child_directories (directory);
 	 notmuch_filenames_valid (subdirs);
 	 notmuch_filenames_move_to_next (subdirs)) {
-	absolute = talloc_asprintf (ctx, "%s/%s", path,
+	absolute = talloc_asprintf (notmuch, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
-	status = _remove_directory (ctx, notmuch, absolute, add_files_state);
+	status = _remove_directory (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
 	if (status)
 	    goto DONE;
@@ -1094,9 +1094,8 @@ _maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state) {
 }
 
 int
-notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
     add_files_state_t add_files_state = {
 	.verbosity = VERBOSITY_NORMAL,
 	.debug = false,
@@ -1105,7 +1104,6 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
     };
     struct timeval tv_start;
     int ret = 0;
-    struct stat st;
     const char *db_path;
     char *dot_notmuch_path;
     struct sigaction action;
@@ -1140,21 +1138,30 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
     else if (verbose)
 	add_files_state.verbosity = VERBOSITY_VERBOSE;
 
-    add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
-    add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
-    db_path = notmuch_config_get_database_path (config);
-    add_files_state.db_path = db_path;
+    add_files_state.new_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_TAGS);
 
-    if (! _setup_ignore (config, &add_files_state))
+    if (print_status_database (
+	    "notmuch new",
+	    notmuch,
+	    notmuch_config_get_bool (notmuch, NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS,
+				     &add_files_state.synchronize_flags)))
 	return EXIT_FAILURE;
 
-    for (i = 0; i < add_files_state.new_tags_length; i++) {
-	const char *error_msg;
+    db_path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
+    add_files_state.db_path = db_path;
 
-	error_msg = illegal_tag (add_files_state.new_tags[i], false);
+    if (! _setup_ignore (notmuch, &add_files_state))
+	return EXIT_FAILURE;
+
+    for (notmuch_config_values_start (add_files_state.new_tags);
+	 notmuch_config_values_valid (add_files_state.new_tags);
+	 notmuch_config_values_move_to_next (add_files_state.new_tags)) {
+	const char *tag,*error_msg;
+
+	tag = notmuch_config_values_get (add_files_state.new_tags);
+	error_msg = illegal_tag (tag, false);
 	if (error_msg) {
-	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n",
-		     add_files_state.new_tags[i], error_msg);
+	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n", tag, error_msg);
 	    return EXIT_FAILURE;
 	}
     }
@@ -1165,34 +1172,21 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
 	    return EXIT_FAILURE;
     }
 
-    dot_notmuch_path = talloc_asprintf (config, "%s/%s", db_path, ".notmuch");
+    dot_notmuch_path = talloc_asprintf (notmuch, "%s/%s", db_path, ".notmuch");
 
-    if (stat (dot_notmuch_path, &st)) {
-	int count;
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-	count = 0;
+    if (notmuch_database_get_revision (notmuch, NULL) == 0) {
+	int count = 0;
 	count_files (db_path, &count, &add_files_state);
 	if (interrupted)
 	    return EXIT_FAILURE;
 
 	if (add_files_state.verbosity >= VERBOSITY_NORMAL)
 	    printf ("Found %d total files (that's not much mail).\n", count);
-	if (notmuch_database_create (db_path, &notmuch))
-	    return EXIT_FAILURE;
+
 	add_files_state.total_files = count;
     } else {
-	char *status_string = NULL;
-	if (notmuch_database_open_verbose (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
-					   &notmuch, &status_string)) {
-	    if (status_string) {
-		fputs (status_string, stderr);
-		free (status_string);
-	    }
-	    return EXIT_FAILURE;
-	}
-
-	notmuch_exit_if_unmatched_db_uuid (notmuch);
-
 	if (_maybe_upgrade (notmuch, &add_files_state))
 	    return EXIT_FAILURE;
 
@@ -1223,9 +1217,9 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
 
     gettimeofday (&add_files_state.tv_start, NULL);
 
-    add_files_state.removed_files = _filename_list_create (config);
-    add_files_state.removed_directories = _filename_list_create (config);
-    add_files_state.directory_mtimes = _filename_list_create (config);
+    add_files_state.removed_files = _filename_list_create (notmuch);
+    add_files_state.removed_directories = _filename_list_create (notmuch);
+    add_files_state.directory_mtimes = _filename_list_create (notmuch);
 
     if (add_files_state.verbosity == VERBOSITY_NORMAL &&
 	add_files_state.output_is_a_tty && ! debugger_is_active ()) {
@@ -1252,7 +1246,7 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_directories->head, i = 0; f && ! interrupted; f = f->next, i++) {
-	ret = _remove_directory (config, notmuch, f->filename, &add_files_state);
+	ret = _remove_directory (notmuch, f->filename, &add_files_state);
 	if (ret)
 	    goto DONE;
 	if (do_print_progress) {
@@ -1287,10 +1281,12 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
 	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
 		 notmuch_status_to_string (ret));
 
-    notmuch_database_destroy (notmuch);
+    notmuch_database_close (notmuch);
 
     if (hooks && ! ret && ! interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
+
+    notmuch_database_destroy (notmuch);
 
     if (ret || interrupted)
 	return EXIT_FAILURE;

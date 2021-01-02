@@ -143,7 +143,8 @@ static command_t commands[] = {
       "Notmuch main command." },
     { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE,
       "Interactively set up notmuch for first use." },
-    { "new", notmuch_new_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "new", notmuch_new_command,
+      NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE | NOTMUCH_COMMAND_DATABASE_CREATE,
       "Find and import new messages to the notmuch database." },
     { "insert", notmuch_insert_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Add a new message into the maildir and notmuch database." },
@@ -504,23 +505,48 @@ main (int argc, char *argv[])
     if (command->mode & NOTMUCH_COMMAND_DATABASE_EARLY) {
 	char *status_string = NULL;
 	notmuch_database_mode_t mode;
-	if (command->mode & NOTMUCH_COMMAND_DATABASE_WRITE)
+	notmuch_status_t status;
+
+	if (command->mode & NOTMUCH_COMMAND_DATABASE_WRITE ||
+	    command->mode & NOTMUCH_COMMAND_DATABASE_CREATE)
 	    mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
 	else
 	    mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 
-	if (notmuch_database_open_with_config (NULL,
-					       mode,
-					       config_file_name,
-					       NULL,
-					       &notmuch,
-					       &status_string)) {
-	    if (status_string) {
-		fputs (status_string, stderr);
-		free (status_string);
-	    }
+	if (command->mode & NOTMUCH_COMMAND_DATABASE_CREATE) {
+	    status = notmuch_database_create_with_config (NULL,
+							  config_file_name,
+							  NULL,
+							  &notmuch,
+							  &status_string);
+	    if (status && status != NOTMUCH_STATUS_DATABASE_EXISTS) {
+		if (status_string) {
+		    fputs (status_string, stderr);
+		    free (status_string);
+		}
 
-	    return EXIT_FAILURE;
+		if (status == NOTMUCH_STATUS_NO_CONFIG)
+		    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+
+		return EXIT_FAILURE;
+	    }
+	}
+
+	if (notmuch == NULL) {
+	    status = notmuch_database_open_with_config (NULL,
+							mode,
+							config_file_name,
+							NULL,
+							&notmuch,
+							&status_string);
+	    if (status) {
+		if (status_string) {
+		    fputs (status_string, stderr);
+		    free (status_string);
+		}
+
+		return EXIT_FAILURE;
+	    }
 	}
     } else {
 	config = notmuch_config_open (local, config_file_name, command->mode);

@@ -324,10 +324,10 @@ test_expect_equal "$output" ""
 
 OLDCONFIG=$(notmuch config get new.tags)
 
-test_begin_subtest "Empty tags in new.tags are forbidden"
+test_begin_subtest "Empty tags in new.tags are ignored"
 notmuch config set new.tags "foo;;bar"
-output=$(NOTMUCH_NEW --debug 2>&1)
-test_expect_equal "$output" "Error: tag '' in new.tags: empty tag forbidden"
+output=$(NOTMUCH_NEW --quiet 2>&1)
+test_expect_equal "$output" ""
 
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"

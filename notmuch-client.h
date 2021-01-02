@@ -257,6 +257,7 @@ typedef enum {
     NOTMUCH_COMMAND_CONFIG_CREATE	= 1 << 1,
     NOTMUCH_COMMAND_DATABASE_EARLY	= 1 << 2,
     NOTMUCH_COMMAND_DATABASE_WRITE	= 1 << 3,
+    NOTMUCH_COMMAND_DATABASE_CREATE	= 1 << 4,
 } notmuch_command_mode_t;
 
 notmuch_config_t *

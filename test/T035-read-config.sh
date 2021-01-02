@@ -461,4 +461,18 @@ output=$(notmuch count '*')
 restore_config
 test_expect_equal "52" "$output"
 
+test_begin_subtest "run notmuch-new (xdg)"
+xdg_config
+generate_message
+output=$(NOTMUCH_NEW --debug)
+restore_config
+test_expect_equal "$output" "Added 1 new message to the database."
+
+test_begin_subtest "run notmuch-new (xdg + profile)"
+xdg_config ${RANDOM}
+generate_message
+output=$(NOTMUCH_NEW --debug)
+restore_config
+test_expect_equal "$output" "Added 1 new message to the database."
+
 test_done
