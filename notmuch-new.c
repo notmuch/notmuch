@@ -1042,6 +1042,57 @@ print_results (const add_files_state_t *state)
     printf ("\n");
 }
 
+static int
+_maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state) {
+    if (notmuch_database_needs_upgrade (notmuch)) {
+	time_t now = time (NULL);
+	struct tm *gm_time = gmtime (&now);
+	notmuch_status_t status;
+	char *dot_notmuch_path = talloc_asprintf (notmuch, "%s/%s", state->db_path, ".notmuch");
+
+	/* since dump files are written atomically, the amount of
+	 * harm from overwriting one within a second seems
+	 * relatively small. */
+
+	const char *backup_name =
+	    talloc_asprintf (notmuch, "%s/dump-%04d%02d%02dT%02d%02d%02d.gz",
+			     dot_notmuch_path,
+			     gm_time->tm_year + 1900,
+			     gm_time->tm_mon + 1,
+			     gm_time->tm_mday,
+			     gm_time->tm_hour,
+			     gm_time->tm_min,
+			     gm_time->tm_sec);
+
+	if (state->verbosity >= VERBOSITY_NORMAL) {
+	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
+	    printf ("This process is safe to interrupt.\n");
+	    printf ("Backing up tags to %s...\n", backup_name);
+	}
+
+	if (notmuch_database_dump (notmuch, backup_name, "",
+				   DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_DEFAULT, true)) {
+	    fprintf (stderr, "Backup failed. Aborting upgrade.");
+	    return EXIT_FAILURE;
+	}
+
+	gettimeofday (&state->tv_start, NULL);
+	status = notmuch_database_upgrade (
+	    notmuch,
+	    state->verbosity >= VERBOSITY_NORMAL ? upgrade_print_progress : NULL,
+	    state);
+	if (status) {
+	    printf ("Upgrade failed: %s\n",
+		    notmuch_status_to_string (status));
+	    notmuch_database_destroy (notmuch);
+	    return EXIT_FAILURE;
+	}
+	if (state->verbosity >= VERBOSITY_NORMAL)
+	    printf ("Your notmuch database has now been upgraded.\n");
+    }
+    return EXIT_SUCCESS;
+}
+
 int
 notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
@@ -1142,50 +1193,8 @@ notmuch_new_command (notmuch_config_t *config, unused(notmuch_database_t *notmuc
 
 	notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-	if (notmuch_database_needs_upgrade (notmuch)) {
-	    time_t now = time (NULL);
-	    struct tm *gm_time = gmtime (&now);
-
-	    /* since dump files are written atomically, the amount of
-	     * harm from overwriting one within a second seems
-	     * relatively small. */
-
-	    const char *backup_name =
-		talloc_asprintf (notmuch, "%s/dump-%04d%02d%02dT%02d%02d%02d.gz",
-				 dot_notmuch_path,
-				 gm_time->tm_year + 1900,
-				 gm_time->tm_mon + 1,
-				 gm_time->tm_mday,
-				 gm_time->tm_hour,
-				 gm_time->tm_min,
-				 gm_time->tm_sec);
-
-	    if (add_files_state.verbosity >= VERBOSITY_NORMAL) {
-		printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
-		printf ("This process is safe to interrupt.\n");
-		printf ("Backing up tags to %s...\n", backup_name);
-	    }
-
-	    if (notmuch_database_dump (notmuch, backup_name, "",
-				       DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_DEFAULT, true)) {
-		fprintf (stderr, "Backup failed. Aborting upgrade.");
-		return EXIT_FAILURE;
-	    }
-
-	    gettimeofday (&add_files_state.tv_start, NULL);
-	    status = notmuch_database_upgrade (
-		notmuch,
-		add_files_state.verbosity >= VERBOSITY_NORMAL ? upgrade_print_progress : NULL,
-		&add_files_state);
-	    if (status) {
-		printf ("Upgrade failed: %s\n",
-			notmuch_status_to_string (status));
-		notmuch_database_destroy (notmuch);
-		return EXIT_FAILURE;
-	    }
-	    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
-		printf ("Your notmuch database has now been upgraded.\n");
-	}
+	if (_maybe_upgrade (notmuch, &add_files_state))
+	    return EXIT_FAILURE;
 
 	add_files_state.total_files = 0;
     }
