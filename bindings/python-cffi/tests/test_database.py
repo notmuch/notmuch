@@ -80,7 +80,7 @@ class TestCreate:
             db.create(tmppath)
 
     def test_create_existing(self, tmppath, db):
-        with pytest.raises(errors.FileError):
+        with pytest.raises(errors.DatabaseExistsError):
             dbmod.Database.create(path=tmppath)
 
     def test_close(self, db):

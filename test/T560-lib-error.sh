@@ -93,7 +93,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot create a database for a NULL path.
+Error: Cannot open a database for a NULL path.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

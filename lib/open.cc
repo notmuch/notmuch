@@ -364,29 +364,31 @@ notmuch_database_create_verbose (const char *path,
 				 notmuch_database_t **database,
 				 char **status_string)
 {
+    return notmuch_database_create_with_config (path, "", NULL, database, status_string);
+}
+
+notmuch_status_t
+notmuch_database_create_with_config (const char *database_path,
+				     const char *config_path,
+				     const char *profile,
+				     notmuch_database_t **database,
+				     char **status_string)
+{
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path = NULL;
     char *message = NULL;
+    GKeyFile *key_file = NULL;
     struct stat st;
     int err;
 
-    if (path == NULL) {
-	message = strdup ("Error: Cannot create a database for a NULL path.\n");
-	status = NOTMUCH_STATUS_NULL_POINTER;
+    if ((status = _choose_database_path (config_path, profile, &key_file, &database_path, &message)))
 	goto DONE;
-    }
 
-    if (path[0] != '/') {
-	message = strdup ("Error: Database path must be absolute.\n");
-	status = NOTMUCH_STATUS_PATH_ERROR;
-	goto DONE;
-    }
-
-    err = stat (path, &st);
+    err = stat (database_path, &st);
     if (err) {
 	IGNORE_RESULT (asprintf (&message, "Error: Cannot create database at %s: %s.\n",
-				 path, strerror (errno)));
+				 database_path, strerror (errno)));
 	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -394,25 +396,31 @@ notmuch_database_create_verbose (const char *path,
     if (! S_ISDIR (st.st_mode)) {
 	IGNORE_RESULT (asprintf (&message, "Error: Cannot create database at %s: "
 				 "Not a directory.\n",
-				 path));
+				 database_path));
 	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    notmuch_path = talloc_asprintf (NULL, "%s/%s", path, ".notmuch");
+    notmuch_path = talloc_asprintf (NULL, "%s/%s", database_path, ".notmuch");
 
     err = mkdir (notmuch_path, 0755);
-
     if (err) {
-	IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
-				 notmuch_path, strerror (errno)));
-	status = NOTMUCH_STATUS_FILE_ERROR;
+	if (errno == EEXIST) {
+	    status = NOTMUCH_STATUS_DATABASE_EXISTS;
+	} else {
+	    IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
+				     notmuch_path, strerror (errno)));
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	}
 	goto DONE;
     }
 
-    status = notmuch_database_open_verbose (path,
-					    NOTMUCH_DATABASE_MODE_READ_WRITE,
-					    &notmuch, &message);
+    /* XXX this reads the config file twice, which is a bit wasteful */
+    status = notmuch_database_open_with_config (database_path,
+						NOTMUCH_DATABASE_MODE_READ_WRITE,
+						config_path,
+						profile,
+						&notmuch, &message);
     if (status)
 	goto DONE;
 
