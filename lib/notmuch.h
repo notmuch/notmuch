@@ -213,6 +213,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_NO_CONFIG,
     /**
+     * Database exists, so not (re)-created
+     */
+    NOTMUCH_STATUS_DATABASE_EXISTS,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
