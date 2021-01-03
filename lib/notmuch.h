@@ -209,6 +209,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_UNKNOWN_CRYPTO_PROTOCOL,
     /**
+     * Unable to load a config file
+     */
+    NOTMUCH_STATUS_NO_CONFIG,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */

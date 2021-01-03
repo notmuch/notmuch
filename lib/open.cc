@@ -106,7 +106,7 @@ _load_key_file (const char *path,
 
     *key_file = g_key_file_new ();
     if (! g_key_file_load_from_file (*key_file, path, G_KEY_FILE_NONE, NULL)) {
-	status = NOTMUCH_STATUS_FILE_ERROR;
+	status = NOTMUCH_STATUS_NO_CONFIG;
     }
 
 DONE:
