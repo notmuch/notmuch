@@ -519,8 +519,8 @@ cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
 error opening database
-Erroneous NULL pointer
-Error: Cannot open a database for a NULL path.
+Something went wrong trying to read or write a file
+Error: Cannot open database at CWD/home/.local/share/notmuch/default: No such file or directory.
 
 EOF
 test_expect_equal_file EXPECTED OUTPUT

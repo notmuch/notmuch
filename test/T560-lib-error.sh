@@ -22,7 +22,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot open a database for a NULL path.
+Error: Cannot open database at CWD/home/.local/share/notmuch/default: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -93,7 +93,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot open a database for a NULL path.
+Error: Cannot open database at CWD/home/.local/share/notmuch/default: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

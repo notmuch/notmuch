@@ -37,8 +37,31 @@ symlink_config () {
     unset DATABASE_PATH
 }
 
-for config in traditional split symlink; do
-    # start each set of tests with a known set of messages
+xdg_config () {
+    local dir
+    local profile=${1:-default}
+
+    if [[ $profile != default ]]; then
+	export NOTMUCH_PROFILE=$profile
+    fi
+
+    backup_config
+    DATABASE_PATH="${HOME}/.local/share/notmuch/${profile}"
+    rm -rf $DATABASE_PATH
+    mkdir -p $DATABASE_PATH
+
+    config_dir="${HOME}/.config/notmuch/${profile}"
+    mkdir -p ${config_dir}
+    CONFIG_PATH=$config_dir/config
+    mv ${NOTMUCH_CONFIG} $CONFIG_PATH
+    unset NOTMUCH_CONFIG
+
+    notmuch --config=${CONFIG_PATH} config set database.mail_root ${TMP_DIRECTORY}/mail
+    notmuch --config=${CONFIG_PATH} config set database.path
+}
+
+for config in traditional split XDG XDG+profile symlink; do
+    #start each set of tests with an known set of messages
     add_email_corpus
 
     case $config in
@@ -47,6 +70,14 @@ for config in traditional split symlink; do
 	    ;;
 	split)
 	    split_config
+	    mv mail/.notmuch/xapian $DATABASE_PATH
+	    ;;
+	XDG)
+	    xdg_config
+	    mv mail/.notmuch/xapian $DATABASE_PATH
+	    ;;
+	XDG+profile)
+	    xdg_config ${RANDOM}
 	    mv mail/.notmuch/xapian $DATABASE_PATH
 	    ;;
 	symlink)
