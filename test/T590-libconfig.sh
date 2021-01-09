@@ -201,6 +201,37 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "NOTMUCH_CONFIG_HOOK_DIR: traditional"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+   const char *val = notmuch_config_get (db, NOTMUCH_CONFIG_HOOK_DIR);
+   printf("database.hook_dir = %s\n", val);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+database.hook_dir = MAIL_DIR/.notmuch/hooks
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "NOTMUCH_CONFIG_HOOK_DIR: xdg"
+dir="${HOME}/.config/notmuch/default/hooks"
+mkdir -p $dir
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+   const char *val = notmuch_config_get (db, NOTMUCH_CONFIG_HOOK_DIR);
+   printf("database.hook_dir = %s\n", val);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+database.hook_dir = CWD/home/.config/notmuch/default/hooks
+== stderr ==
+EOF
+rmdir $dir
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "notmuch_config_get_values"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
 {
@@ -333,7 +364,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 MAIL_DIR
-NULL
+MAIL_DIR/.notmuch/hooks
 
 inbox;unread
 NULL

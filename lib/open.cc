@@ -69,6 +69,44 @@ _xdg_dir (void *ctx,
 }
 
 static notmuch_status_t
+_choose_hook_dir (notmuch_database_t *notmuch,
+		  const char *profile,
+		  char **message)
+{
+    const char *config;
+    const char *hook_dir;
+    struct stat st;
+    int err;
+
+    hook_dir = notmuch_config_get (notmuch, NOTMUCH_CONFIG_HOOK_DIR);
+
+    if (hook_dir)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    config = _xdg_dir (notmuch, "XDG_CONFIG_HOME", ".config", profile);
+    if (! config)
+	return  NOTMUCH_STATUS_PATH_ERROR;
+
+    hook_dir = talloc_asprintf (notmuch, "%s/hooks", config);
+
+    err = stat (hook_dir, &st);
+    if (err) {
+	if (errno == ENOENT) {
+	    const char *database_path = notmuch_database_get_path (notmuch);
+	    hook_dir = talloc_asprintf (notmuch, "%s/.notmuch/hooks", database_path);
+	} else {
+	    IGNORE_RESULT (asprintf (message, "Error: Cannot stat %s: %s.\n",
+				     hook_dir, strerror (errno)));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	}
+    }
+
+    _notmuch_config_cache (notmuch, NOTMUCH_CONFIG_HOOK_DIR, hook_dir);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
 _load_key_file (const char *path,
 		const char *profile,
 		GKeyFile **key_file)
@@ -298,6 +336,10 @@ notmuch_database_open_with_config (const char *database_path,
 
 	if (key_file)
 	    status = _notmuch_config_load_from_file (notmuch, key_file);
+	if (status)
+	    goto DONE;
+
+	status = _choose_hook_dir (notmuch, profile, &message);
 	if (status)
 	    goto DONE;
 
