@@ -43,6 +43,7 @@ enum verbosity {
 
 typedef struct {
     const char *db_path;
+    const char *mail_root;
 
     int output_is_a_tty;
     enum verbosity verbosity;
@@ -307,18 +308,18 @@ _setup_ignore (notmuch_database_t *notmuch, add_files_state_t *state)
 }
 
 static char *
-_get_relative_path (const char *db_path, const char *dirpath, const char *entry)
+_get_relative_path (const char *mail_root, const char *dirpath, const char *entry)
 {
-    size_t db_path_len = strlen (db_path);
+    size_t mail_root_len = strlen (mail_root);
 
     /* paranoia? */
-    if (strncmp (dirpath, db_path, db_path_len) != 0) {
+    if (strncmp (dirpath, mail_root, mail_root_len) != 0) {
 	fprintf (stderr, "Warning: '%s' is not a subdirectory of '%s'\n",
-		 dirpath, db_path);
+		 dirpath, mail_root);
 	return NULL;
     }
 
-    dirpath += db_path_len;
+    dirpath += mail_root_len;
     while (*dirpath == '/')
 	dirpath++;
 
@@ -346,7 +347,7 @@ _entry_in_ignore_list (add_files_state_t *state, const char *dirpath,
     if (state->ignore_regex_length == 0)
 	return false;
 
-    path = _get_relative_path (state->db_path, dirpath, entry);
+    path = _get_relative_path (state->mail_root, dirpath, entry);
     if (! path)
 	return false;
 
@@ -1050,22 +1051,34 @@ _maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state)
     if (notmuch_database_needs_upgrade (notmuch)) {
 	time_t now = time (NULL);
 	struct tm *gm_time = gmtime (&now);
+	struct stat st;
+	int err;
 	notmuch_status_t status;
 	char *dot_notmuch_path = talloc_asprintf (notmuch, "%s/%s", state->db_path, ".notmuch");
+
+	const char *backup_name;
+
+	err = stat (dot_notmuch_path, &st);
+	if (err) {
+	    if (errno == ENOENT) {
+		dot_notmuch_path = NULL;
+	    } else {
+		fprintf (stderr, "Failed to stat %s: %s\n", dot_notmuch_path, strerror (errno));
+		return EXIT_FAILURE;
+	    }
+	}
 
 	/* since dump files are written atomically, the amount of
 	 * harm from overwriting one within a second seems
 	 * relatively small. */
-
-	const char *backup_name =
-	    talloc_asprintf (notmuch, "%s/dump-%04d%02d%02dT%02d%02d%02d.gz",
-			     dot_notmuch_path,
-			     gm_time->tm_year + 1900,
-			     gm_time->tm_mon + 1,
-			     gm_time->tm_mday,
-			     gm_time->tm_hour,
-			     gm_time->tm_min,
-			     gm_time->tm_sec);
+	backup_name = talloc_asprintf (notmuch, "%s/dump-%04d%02d%02dT%02d%02d%02d.gz",
+				       dot_notmuch_path ? dot_notmuch_path : state->db_path,
+				       gm_time->tm_year + 1900,
+				       gm_time->tm_mon + 1,
+				       gm_time->tm_mday,
+				       gm_time->tm_hour,
+				       gm_time->tm_min,
+				       gm_time->tm_sec);
 
 	if (state->verbosity >= VERBOSITY_NORMAL) {
 	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
@@ -1108,7 +1121,7 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     };
     struct timeval tv_start;
     int ret = 0;
-    const char *db_path;
+    const char *db_path, *mail_root;
     struct sigaction action;
     _filename_node_t *f;
     int opt_index;
@@ -1153,6 +1166,9 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     db_path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
     add_files_state.db_path = db_path;
 
+    mail_root = notmuch_config_get (notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
+    add_files_state.mail_root = mail_root;
+
     if (! _setup_ignore (notmuch, &add_files_state))
 	return EXIT_FAILURE;
 
@@ -1189,7 +1205,7 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
 
     if (notmuch_database_get_revision (notmuch, NULL) == 0) {
 	int count = 0;
-	count_files (db_path, &count, &add_files_state);
+	count_files (mail_root, &count, &add_files_state);
 	if (interrupted)
 	    return EXIT_FAILURE;
 
@@ -1235,7 +1251,7 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
 	timer_is_active = true;
     }
 
-    ret = add_files (notmuch, db_path, &add_files_state);
+    ret = add_files (notmuch, mail_root, &add_files_state);
     if (ret)
 	goto DONE;
 

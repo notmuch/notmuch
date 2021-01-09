@@ -95,6 +95,47 @@ EOF
     notmuch search --output=messages '*' > OUTPUT
     test_expect_equal_file EXPECTED OUTPUT
 
+    test_begin_subtest "use existing database ($config)"
+    output=$(notmuch new)
+    test_expect_equal "$output" 'No new mail.'
+
+    test_begin_subtest "create database ($config)"
+    rm -rf $DATABASE_PATH/{.notmuch,}/xapian
+    notmuch new
+    output=$(notmuch count '*')
+    test_expect_equal "$output" '52'
+
+    test_begin_subtest "detect new files ($config)"
+    generate_message
+    generate_message
+    notmuch new
+    output=$(notmuch count '*')
+    test_expect_equal "$output" '54'
+
+    test_begin_subtest "Show a raw message ($config)"
+    add_message
+    notmuch show --format=raw id:$gen_msg_id > OUTPUT
+    test_expect_equal_file $gen_msg_filename OUTPUT
+    rm -f $gen_msg_filename
+
+    test_begin_subtest "reply ($config)"
+    add_message '[from]="Sender <sender@example.com>"' \
+		[to]=test_suite@notmuchmail.org \
+		[subject]=notmuch-reply-test \
+		'[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+		'[body]="basic reply test"'
+    notmuch reply id:${gen_msg_id} 2>&1 > OUTPUT
+    cat <<EOF > EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> basic reply test
+EOF
+    test_expect_equal_file EXPECTED OUTPUT
     restore_config
 done
 
