@@ -2460,6 +2460,7 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 typedef enum _notmuch_config_key {
     NOTMUCH_CONFIG_FIRST,
     NOTMUCH_CONFIG_DATABASE_PATH = NOTMUCH_CONFIG_FIRST,
+    NOTMUCH_CONFIG_HOOK_DIR,
     NOTMUCH_CONFIG_EXCLUDE_TAGS,
     NOTMUCH_CONFIG_NEW_TAGS,
     NOTMUCH_CONFIG_NEW_IGNORE,

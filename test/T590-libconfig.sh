@@ -333,6 +333,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 MAIL_DIR
+NULL
 
 inbox;unread
 NULL
