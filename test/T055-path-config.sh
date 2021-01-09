@@ -167,6 +167,16 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > basic reply test
 EOF
     test_expect_equal_file EXPECTED OUTPUT
+    test_begin_subtest "insert+search ($config)"
+    generate_message \
+	"[subject]=\"insert-subject\"" \
+	"[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \
+	"[body]=\"insert-message\""
+    mkdir -p "$MAIL_DIR"/{cur,new,tmp}
+    notmuch insert < "$gen_msg_filename"
+    cur_msg_filename=$(notmuch search --output=files "subject:insert-subject")
+    test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
+
     restore_config
 done
 

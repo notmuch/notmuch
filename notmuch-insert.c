@@ -449,7 +449,7 @@ notmuch_insert_command (unused(notmuch_config_t *config), notmuch_database_t *no
 {
     notmuch_status_t status, close_status;
     struct sigaction action;
-    const char *db_path;
+    const char *mail_root;
     notmuch_config_values_t *new_tags = NULL;
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
@@ -481,13 +481,7 @@ notmuch_insert_command (unused(notmuch_config_t *config), notmuch_database_t *no
 
     notmuch_process_shared_options (argv[0]);
 
-
-    db_path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
-
-    if (! db_path)
-	INTERNAL_ERROR ("Unable to retrieve database path");
-    else
-	db_path = talloc_strdup (local, db_path);
+    mail_root = notmuch_config_get (notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
 
     new_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_TAGS);
 
@@ -533,7 +527,7 @@ notmuch_insert_command (unused(notmuch_config_t *config), notmuch_database_t *no
 	return EXIT_FAILURE;
     }
 
-    maildir = talloc_asprintf (local, "%s/%s", db_path, folder);
+    maildir = talloc_asprintf (local, "%s/%s", mail_root, folder);
     if (! maildir) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
