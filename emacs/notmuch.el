@@ -232,8 +232,6 @@ there will be called at other points of notmuch execution."
 (defvar notmuch-search-target-thread)
 (defvar notmuch-search-target-line)
 
-(defvar notmuch-search-disjunctive-regexp "\\<[oO][rR]\\>")
-
 ;;; Movement
 
 (defun notmuch-search-scroll-up ()
@@ -1079,10 +1077,8 @@ default sort order is defined by `notmuch-search-oldest-first'."
 
 (defun notmuch-group-disjunctive-query-string (query-string)
   "Group query if it contains a complex expression.
-
-Enclose QUERY-STRING in parentheses if it matches
-`notmuch-search-disjunctive-regexp'."
-  (if (string-match-p notmuch-search-disjunctive-regexp query-string)
+Enclose QUERY-STRING in parentheses if contains \"OR\" operators."
+  (if (string-match-p "\\<[oO][rR]\\>" query-string)
       (concat "( " query-string " )")
     query-string))
 
