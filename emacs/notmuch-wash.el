@@ -231,7 +231,7 @@ that PREFIX should not include a newline."
 
 ;;; Hook functions
 
-(defun notmuch-wash-excerpt-citations (msg depth)
+(defun notmuch-wash-excerpt-citations (_msg _depth)
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
   (beginning-of-line)
@@ -273,7 +273,7 @@ that PREFIX should not include a newline."
 	   sig-start-marker sig-end-marker
 	   "signature"))))))
 
-(defun notmuch-wash-elide-blank-lines (msg depth)
+(defun notmuch-wash-elide-blank-lines (_msg _depth)
   "Elide leading, trailing and successive blank lines."
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
   ;; `gnus-art.el'.
@@ -294,7 +294,7 @@ that PREFIX should not include a newline."
   (when (looking-at "\n")
     (delete-region (match-beginning 0) (match-end 0))))
 
-(defun notmuch-wash-tidy-citations (msg depth)
+(defun notmuch-wash-tidy-citations (_msg _depth)
   "Improve the display of cited regions of a message.
 
 Perform several transformations on the message body:
@@ -318,7 +318,7 @@ Perform several transformations on the message body:
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
     (replace-match "\\2")))
 
-(defun notmuch-wash-wrap-long-lines (msg depth)
+(defun notmuch-wash-wrap-long-lines (_msg depth)
   "Wrap long lines in the message.
 
 If `notmuch-wash-wrap-lines-length' is a number, this will wrap
