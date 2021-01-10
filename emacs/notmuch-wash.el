@@ -200,7 +200,7 @@ message parts."
 				   (overlay-end overlay))))
     (format label-format lines-count)))
 
-(defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
+(defun notmuch-wash-region-to-button (beg end type &optional prefix)
   "Auxiliary function to do the actual making of overlays and buttons.
 
 BEG and END are buffer locations. TYPE should a string, either
@@ -237,8 +237,7 @@ that PREFIX should not include a newline."
   (beginning-of-line)
   (when (and (< (point) (point-max))
 	     (re-search-forward notmuch-wash-original-regexp nil t))
-    (notmuch-wash-region-to-button msg
-				   (match-beginning 0)
+    (notmuch-wash-region-to-button (match-beginning 0)
 				   (point-max)
 				   "original"))
   (while (and (< (point) (point-max))
@@ -257,7 +256,7 @@ that PREFIX should not include a newline."
 	  (goto-char cite-end)
 	  (forward-line (- notmuch-wash-citation-lines-suffix))
 	  (notmuch-wash-region-to-button
-	   msg hidden-start (point-marker)
+	   hidden-start (point-marker)
 	   "citation")))))
   (when (and (not (eobp))
 	     (re-search-forward notmuch-wash-signature-regexp nil t))
@@ -271,7 +270,7 @@ that PREFIX should not include a newline."
 	  (overlay-put (make-overlay sig-start-marker sig-end-marker)
 		       'face 'message-cited-text)
 	  (notmuch-wash-region-to-button
-	   msg sig-start-marker sig-end-marker
+	   sig-start-marker sig-end-marker
 	   "signature"))))))
 
 (defun notmuch-wash-elide-blank-lines (msg depth)
