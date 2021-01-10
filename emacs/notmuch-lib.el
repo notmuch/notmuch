@@ -956,7 +956,8 @@ status."
 
 (defun notmuch-start-notmuch-error-sentinel (proc event)
   (let ((buffer (process-get proc 'err-buffer)))
-    (kill-buffer buffer)))
+    (when (buffer-live-p buffer)
+      (kill-buffer buffer))))
 
 (defvar-local notmuch-show-process-crypto nil)
 
