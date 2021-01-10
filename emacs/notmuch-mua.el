@@ -82,6 +82,22 @@ If this is `nil' then no `User-Agent:' will be generated."
   :type '(repeat string)
   :group 'notmuch-send)
 
+(defcustom notmuch-identities nil
+  "Identities that can be used as the From: address when composing a new message.
+
+If this variable is left unset, then a list will be constructed from the
+name and addresses configured in the notmuch configuration file."
+  :type '(repeat string)
+  :group 'notmuch-send)
+
+(defcustom notmuch-always-prompt-for-sender nil
+  "Always prompt for the From: address when composing or forwarding a message.
+
+This is not taken into account when replying to a message, because in that case
+the From: header is already filled in by notmuch."
+  :type 'boolean
+  :group 'notmuch-send)
+
 (defgroup notmuch-reply nil
   "Replying to messages in notmuch"
   :group 'notmuch)
@@ -409,22 +425,6 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (set-buffer-modified-p nil)
   (notmuch-mua-maybe-set-window-dedicated)
   (message-goto-to))
-
-(defcustom notmuch-identities nil
-  "Identities that can be used as the From: address when composing a new message.
-
-If this variable is left unset, then a list will be constructed from the
-name and addresses configured in the notmuch configuration file."
-  :type '(repeat string)
-  :group 'notmuch-send)
-
-(defcustom notmuch-always-prompt-for-sender nil
-  "Always prompt for the From: address when composing or forwarding a message.
-
-This is not taken into account when replying to a message, because in that case
-the From: header is already filled in by notmuch."
-  :type 'boolean
-  :group 'notmuch-send)
 
 (defvar notmuch-mua-sender-history nil)
 
