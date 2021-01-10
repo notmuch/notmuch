@@ -385,18 +385,16 @@ supported for \"Customized queries section\" items."
 		     (format "%s%03d" notmuch-hello-thousands-separator elem))
 		   (cdr result)))))
 
-(defun notmuch-hello-search (&optional search)
-  (unless (null search)
-    (setq search (string-trim search))
-    (let ((history-delete-duplicates t))
-      (add-to-history 'notmuch-search-history search)))
-  (notmuch-search search notmuch-search-oldest-first))
+(defun notmuch-hello-search (widget &rest _event)
+  (let ((search (widget-value widget)))
+    (when search
+      (setq search (string-trim search))
+      (let ((history-delete-duplicates t))
+	(add-to-history 'notmuch-search-history search)))
+    (notmuch-search search notmuch-search-oldest-first)))
 
-(defun notmuch-hello-add-saved-search (widget)
-  (interactive)
-  (let ((search (widget-value
-		 (symbol-value
-		  (widget-get widget :notmuch-saved-search-widget))))
+(defun notmuch-hello-add-saved-search (widget &rest _event)
+  (let ((search (widget-value (widget-get widget :parent)))
 	(name (completing-read "Name for saved search: "
 			       notmuch-saved-searches)))
     ;; If an existing saved search with this name exists, remove it.
@@ -412,13 +410,11 @@ supported for \"Customized queries section\" items."
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
-(defun notmuch-hello-delete-search-from-history (widget)
-  (interactive)
-  (let ((search (widget-value
-		 (symbol-value
-		  (widget-get widget :notmuch-saved-search-widget)))))
-    (setq notmuch-search-history (delete search
-					 notmuch-search-history))
+(defun notmuch-hello-delete-search-from-history (widget &rest _event)
+  (when (y-or-n-p "Are you sure you want to delete this search? ")
+    (let ((search (widget-value (widget-get widget :parent))))
+      (setq notmuch-search-history
+	    (delete search notmuch-search-history)))
     (notmuch-hello-update)))
 
 (defun notmuch-hello-longest-label (searches-alist)
@@ -768,8 +764,7 @@ Complete list of currently available key bindings:
 		 ;; search boxes.
 		 :size (max 8 (- (window-width) notmuch-hello-indent
 				 (length "Search: ")))
-		 :action (lambda (widget &rest ignore)
-			   (notmuch-hello-search (widget-value widget))))
+		 :action #'notmuch-hello-search)
   ;; Add an invisible dot to make `widget-end-of-line' ignore
   ;; trailing spaces in the search widget field.  A dot is used
   ;; instead of a space to make `show-trailing-whitespace'
@@ -816,20 +811,16 @@ Complete list of currently available key bindings:
 						   ;; button. 5 for the
 						   ;; `[del]' button.
 						   1 5))
-				     :action (lambda (widget &rest ignore)
-					       (notmuch-hello-search (widget-value widget)))
+				     :action #'notmuch-hello-search
 				     search))
 		 (widget-insert " ")
 		 (widget-create 'push-button
-				:notify (lambda (widget &rest ignore)
-					  (notmuch-hello-add-saved-search widget))
+				:notify #'notmuch-hello-add-saved-search
 				:notmuch-saved-search-widget widget-symbol
 				"save")
 		 (widget-insert " ")
 		 (widget-create 'push-button
-				:notify (lambda (widget &rest ignore)
-					  (when (y-or-n-p "Are you sure you want to delete this search? ")
-					    (notmuch-hello-delete-search-from-history widget)))
+				:notify #'notmuch-hello-delete-search-from-history
 				:notmuch-saved-search-widget widget-symbol
 				"del"))
 	       (widget-insert "\n"))
