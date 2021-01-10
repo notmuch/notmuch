@@ -431,16 +431,16 @@ the From: header is already filled in by notmuch."
 (defun notmuch-mua-prompt-for-sender ()
   "Prompt for a sender from the user's configured identities."
   (if notmuch-identities
-      (ido-completing-read "Send mail from: " notmuch-identities
-			   nil nil nil 'notmuch-mua-sender-history
-			   (car notmuch-identities))
+      (completing-read "Send mail from: " notmuch-identities
+		       nil nil nil 'notmuch-mua-sender-history
+		       (car notmuch-identities))
     (let* ((name (notmuch-user-name))
 	   (addrs (cons (notmuch-user-primary-email)
 			(notmuch-user-other-email)))
 	   (address
-	    (ido-completing-read (concat "Sender address for " name ": ") addrs
-				 nil nil nil 'notmuch-mua-sender-history
-				 (car addrs))))
+	    (completing-read (concat "Sender address for " name ": ") addrs
+			     nil nil nil 'notmuch-mua-sender-history
+			     (car addrs))))
       (message-make-from name address))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
