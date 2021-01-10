@@ -17,10 +17,6 @@ DESCRIPTION
 The **config** command can be used to get or set settings in the notmuch
 configuration file and corresponding database.
 
-Items marked **[STORED IN DATABASE]** are only in the database.  They
-should not be placed in the configuration file, and should be accessed
-programmatically as described in the SYNOPSIS above.
-
 **get**
     The value of the specified configuration item is printed to
     stdout. If the item has multiple values (it is a list), each value
@@ -53,6 +49,11 @@ The available configuration items are described below.
     a sub-directory of the path configured here named ``.notmuch``.
 
     Default: ``$MAILDIR`` variable if set, otherwise ``$HOME/mail``.
+
+**database.hook_dir**
+
+    Directory containing hooks run by notmuch commands. See
+    **notmuch-hooks(5)**.
 
 **user.name**
     Your full name.
@@ -134,7 +135,7 @@ The available configuration items are described below.
 
     Default: ``true``.
 
-**index.decrypt** **[STORED IN DATABASE]**
+**index.decrypt**
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
 
@@ -187,7 +188,7 @@ The available configuration items are described below.
 
     Default: ``auto``.
 
-**index.header.<prefix>** **[STORED IN DATABASE]**
+**index.header.<prefix>**
     Define the query prefix <prefix>, based on a mail header. For
     example ``index.header.List=List-Id`` will add a probabilistic
     prefix ``List:`` that searches the ``List-Id`` field.  User
@@ -202,7 +203,7 @@ The available configuration items are described below.
     (since notmuch 0.30, "compact" and "field_processor" are
     always included.)
 
-**query.<name>** **[STORED IN DATABASE]**
+**query.<name>**
     Expansion for named query called <name>. See
     **notmuch-search-terms(7)** for more information about named
     queries.
@@ -214,8 +215,32 @@ The following environment variables can be used to control the behavior
 of notmuch.
 
 **NOTMUCH\_CONFIG**
-    Specifies the location of the notmuch configuration file. Notmuch
-    will use ${HOME}/.notmuch-config if this variable is not set.
+    Specifies the location of the notmuch configuration file.
+
+**NOTMUCH_PROFILE**
+    Selects among notmuch configurations.
+
+FILES
+=====
+
+CONFIGURATION
+-------------
+
+If ``NOTMUCH_CONFIG`` is unset, notmuch tries (in order)
+
+- ``$XDG_CONFIG_HOME/notmuch/<profile>/config`` where ``<profile>`` is
+  defined by ``$NOTMUCH_PROFILE`` or "default"
+- ``${HOME}/.notmuch-config<profile>`` where ``<profile>`` is
+  ``.$NOTMUCH_PROFILE`` or ""
+
+Hooks
+-----
+
+If ``database.hook_dir`` is unset, notmuch tries (in order)
+
+- ``$XDG_CONFIG_HOME/notmuch/<profile>/hooks`` where ``<profile>`` is
+  defined by ``$NOTMUCH_PROFILE`` or "default"
+- ``<database.path>/.notmuch/hooks``
 
 SEE ALSO
 ========

@@ -5,15 +5,15 @@ notmuch-hooks
 SYNOPSIS
 ========
 
-$DATABASEDIR/.notmuch/hooks/*
+<hook_dir>/{pre-new, post-new, post-insert}
 
 DESCRIPTION
 ===========
 
 Hooks are scripts (or arbitrary executables or symlinks to such) that
 notmuch invokes before and after certain actions. These scripts reside
-in the .notmuch/hooks directory within the database directory and must
-have executable permissions.
+in a directory defined as described in **notmuch-config(1)**. They
+must have executable permissions.
 
 The currently available hooks are described below.
 
