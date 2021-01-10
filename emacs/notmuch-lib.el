@@ -23,6 +23,7 @@
 
 (require 'cl-lib)
 (require 'pcase)
+(require 'subr-x)
 
 (require 'mm-util)
 (require 'mm-view)

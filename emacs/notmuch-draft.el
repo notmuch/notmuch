@@ -27,6 +27,7 @@
 
 (require 'cl-lib)
 (require 'pcase)
+(require 'subr-x)
 
 (require 'notmuch-maildir-fcc)
 (require 'notmuch-tag)
