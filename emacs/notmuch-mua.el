@@ -266,8 +266,8 @@ Typically this is added to `notmuch-mua-send-hook'."
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the reply.
       (when notmuch-message-replied-tags
-	(setq-local notmuch-message-queued-tag-changes
-		    (list (cons query-string notmuch-message-replied-tags))))
+	(setq notmuch-message-queued-tag-changes
+	      (list (cons query-string notmuch-message-replied-tags))))
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
       ;; message*setup-hooks may have added to the message body already.
@@ -507,10 +507,10 @@ the From: address."
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the message.
       (when notmuch-message-forwarded-tags
-	(setq-local notmuch-message-queued-tag-changes
-		    (cl-loop for id in forward-queries
-			     collect
-			     (cons id notmuch-message-forwarded-tags))))
+	(setq notmuch-message-queued-tag-changes
+	      (cl-loop for id in forward-queries
+		       collect
+		       (cons id notmuch-message-forwarded-tags))))
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.
       (message-hide-headers)
