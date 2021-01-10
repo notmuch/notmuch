@@ -896,42 +896,19 @@ when the process exits, or nil for none.  The caller must *not*
 invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
-  (let (err-file err-buffer proc err-proc
-		 ;; Find notmuch using Emacs' `exec-path'
-		 (command (or (executable-find notmuch-command)
-			      (error "Command not found: %s" notmuch-command))))
-    (if (fboundp 'make-process)
-	(progn
-	  (setq err-buffer (generate-new-buffer " *notmuch-stderr*"))
-	  ;; Emacs 25 and newer has `make-process', which allows
-	  ;; redirecting stderr independently from stdout to a
-	  ;; separate buffer. As this allows us to avoid using a
-	  ;; temporary file and shell invocation, use it when
-	  ;; available.
-	  (setq proc (make-process
-		      :name name
-		      :buffer buffer
-		      :command (cons command args)
-		      :connection-type 'pipe
-		      :stderr err-buffer))
-	  (setq err-proc (get-buffer-process err-buffer))
-	  (process-put proc 'err-buffer err-buffer)
-
-	  (process-put err-proc 'err-file err-file)
-	  (process-put err-proc 'err-buffer err-buffer)
-	  (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel))
-      ;; On Emacs versions before 25, there is no way to capture
-      ;; stdout and stderr separately for asynchronous processes, or
-      ;; even to redirect stderr to a file, so we use a trivial shell
-      ;; wrapper to send stderr to a temporary file and clean things
-      ;; up in the sentinel.
-      (setq err-file (make-temp-file "nmerr"))
-      (let ((process-connection-type nil)) ;; Use a pipe
-	(setq proc (apply #'start-process name buffer
-			  "/bin/sh" "-c"
-			  "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
-			  command err-file args)))
-      (process-put proc 'err-file err-file))
+  (let* ((command (or (executable-find notmuch-command)
+		      (error "Command not found: %s" notmuch-command)))
+	 (err-buffer (generate-new-buffer " *notmuch-stderr*"))
+	 (proc (make-process
+		:name name
+		:buffer buffer
+		:command (cons command args)
+		:connection-type 'pipe
+		:stderr err-buffer))
+	 (err-proc (get-buffer-process err-buffer)))
+    (process-put err-proc 'err-buffer err-buffer)
+    (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel)
+    (process-put proc 'err-buffer err-buffer)
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
@@ -939,9 +916,7 @@ status."
 
 (defun notmuch-start-notmuch-sentinel (proc event)
   "Process sentinel function used by `notmuch-start-notmuch'."
-  (let* ((err-file (process-get proc 'err-file))
-	 (err-buffer (or (process-get proc 'err-buffer)
-			 (find-file-noselect err-file)))
+  (let* ((err-buffer (process-get proc 'err-buffer))
 	 (err (and (not (zerop (buffer-size err-buffer)))
 		   (with-current-buffer err-buffer (buffer-string))))
 	 (sub-sentinel (process-get proc 'sub-sentinel))
@@ -977,16 +952,11 @@ status."
       (error
        ;; Emacs behaves strangely if an error escapes from a sentinel,
        ;; so turn errors into messages.
-       (message "%s" (error-message-string err))))
-    (when err-file (ignore-errors (delete-file err-file)))))
+       (message "%s" (error-message-string err))))))
 
 (defun notmuch-start-notmuch-error-sentinel (proc event)
-  (let* ((err-file (process-get proc 'err-file))
-	 ;; When `make-process' is available, use the error buffer
-	 ;; associated with the process, otherwise the error file.
-	 (err-buffer (or (process-get proc 'err-buffer)
-			 (find-file-noselect err-file))))
-    (when err-buffer (kill-buffer err-buffer))))
+  (let ((buffer (process-get proc 'err-buffer)))
+    (kill-buffer buffer)))
 
 (defvar-local notmuch-show-process-crypto nil)
 
