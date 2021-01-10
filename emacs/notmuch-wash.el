@@ -30,7 +30,7 @@
 		  (msg part depth &optional hide))
 (defvar notmuch-show-indent-messages-width)
 
-;;
+;;; Options
 
 (defgroup notmuch-wash nil
   "Cleaning up messages for display."
@@ -130,6 +130,8 @@ or at the window width (whichever one is lower)."
 		 (integer :tag "number of characters"))
   :group 'notmuch-wash)
 
+;;; Faces
+
 (defface notmuch-wash-toggle-button
   '((t (:inherit font-lock-comment-face)))
   "Face used for buttons toggling the visibility of washed away
@@ -142,6 +144,8 @@ message parts."
   "Face used for cited text."
   :group 'notmuch-wash
   :group 'notmuch-faces)
+
+;;; Buttons
 
 (defun notmuch-wash-toggle-invisible-action (cite-button)
   ;; Toggle overlay visibility
@@ -225,6 +229,8 @@ that PREFIX should not include a newline."
 				   :type button-type)))
 	  (overlay-put overlay 'notmuch-wash-button button))))))
 
+;;; Hook functions
+
 (defun notmuch-wash-excerpt-citations (msg depth)
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
@@ -270,8 +276,6 @@ that PREFIX should not include a newline."
 	   msg sig-start-marker sig-end-marker
 	   "signature"))))))
 
-;;
-
 (defun notmuch-wash-elide-blank-lines (msg depth)
   "Elide leading, trailing and successive blank lines."
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
@@ -292,8 +296,6 @@ that PREFIX should not include a newline."
   (goto-char (point-max))
   (when (looking-at "\n")
     (delete-region (match-beginning 0) (match-end 0))))
-
-;;
 
 (defun notmuch-wash-tidy-citations (msg depth)
   "Improve the display of cited regions of a message.
@@ -319,8 +321,6 @@ Perform several transformations on the message body:
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
     (replace-match "\\2")))
 
-;;
-
 (defun notmuch-wash-wrap-long-lines (msg depth)
   "Wrap long lines in the message.
 
@@ -342,7 +342,7 @@ the wrapped text are maintained."
 			 2)))
     (coolj-wrap-region (point-min) (point-max))))
 
-;;
+;;;; Convert Inline Patches
 
 (require 'diff-mode)
 
@@ -417,7 +417,7 @@ for error."
 	(delete-region (point-min) (point-max))
 	(notmuch-show-insert-bodypart nil part depth)))))
 
-;;
+;;; _
 
 (provide 'notmuch-wash)
 

@@ -37,6 +37,8 @@
 (declare-function notmuch-tree-tag "notmuch-tree" (tag-changes))
 (declare-function notmuch-jump "notmuch-jump" (action-map prompt))
 
+;;; Keys
+
 (define-widget 'notmuch-tag-key-type 'list
   "A single key tagging binding."
   :format "%v"
@@ -83,6 +85,8 @@ from TAGGING-OPERATIONS."
   :tag "List of tagging bindings"
   :type '(repeat notmuch-tag-key-type)
   :group 'notmuch-tag)
+
+;;; Faces and Formats
 
 (define-widget 'notmuch-tag-format-type 'lazy
   "Customize widget for notmuch-tag-format and friends."
@@ -217,6 +221,8 @@ See `notmuch-tag-formats' for full documentation."
   :group 'notmuch-faces
   :type 'notmuch-tag-format-type)
 
+;;; Icons
+
 (defun notmuch-tag-format-image-data (tag data)
   "Replace TAG with image DATA, if available.
 
@@ -269,6 +275,8 @@ This can be used with `notmuch-tag-format-image-data'."
        style=\"fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1\" />
   </g>
 </svg>")
+
+;;; Format Handling
 
 (defvar notmuch-tag--format-cache (make-hash-table :test 'equal)
   "Cache of tag format lookup.  Internal to `notmuch-tag-format-tag'.")
@@ -347,6 +355,8 @@ changed (the normal case) are shown using formats from
      face
      t)))
 
+;;; Hooks
+
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
 
@@ -368,6 +378,8 @@ the messages that were tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
+
+;;; User Input
 
 (defvar notmuch-select-tag-history nil
   "Variable to store minibuffer history for
@@ -428,6 +440,8 @@ initial input in the minibuffer."
 		(mapcar (lambda (tag-op) (concat tag-op crm-separator)) tag-list)
 		nil nil initial-input
 		'notmuch-read-tag-changes-history))))
+
+;;; Tagging
 
 (defun notmuch-update-tags (tags tag-changes)
   "Return a copy of TAGS with additions and removals from TAG-CHANGES.
@@ -547,7 +561,7 @@ and vice versa."
     (setq action-map (nreverse action-map))
     (notmuch-jump action-map "Tag: ")))
 
-;;
+;;; _
 
 (provide 'notmuch-tag)
 

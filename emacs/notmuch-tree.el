@@ -54,6 +54,8 @@
 (defvar-local notmuch-tree-unthreaded nil
   "A buffer local copy of argument unthreaded to the function notmuch-tree.")
 
+;;; Options
+
 (defgroup notmuch-tree nil
   "Showing message and thread structure."
   :group 'notmuch)
@@ -118,7 +120,9 @@ For example:
       notmuch-unthreaded-result-format
     notmuch-tree-result-format))
 
-;; Faces for messages that match the query.
+;;; Faces
+;;;; Faces for messages that match the query
+
 (defface notmuch-tree-match-face
   '((t :inherit default))
   "Default face used in tree mode face for matching messages"
@@ -169,7 +173,8 @@ For example:
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
-;; Faces for messages that do not match the query.
+;;;; Faces for messages that do not match the query
+
 (defface notmuch-tree-no-match-face
   '((t (:foreground "gray")))
   "Default face used in tree mode face for non-matching messages."
@@ -206,6 +211,8 @@ For example:
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
+;;; Variables
+
 (defvar-local notmuch-tree-previous-subject
   "The subject of the most recent result shown during the async display.")
 
@@ -237,6 +244,8 @@ or the child show buffer.")
 This is used to try and make sure we don't close the message pane
 if the user has loaded a different buffer in that window.")
 (put 'notmuch-tree-message-buffer 'permanent-local t)
+
+;;; Tree wrapper commands
 
 (defmacro notmuch-tree--define-do-in-message-window (name cmd)
   "Define NAME as a command that calls CMD interactively in the message window.
@@ -305,6 +314,8 @@ then NAME behaves like CMD."
  notmuch-tree-view-raw-message
  notmuch-show-view-raw-message)
 
+;;; Keymap
+
 (defvar notmuch-tree-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
@@ -363,6 +374,8 @@ then NAME behaves like CMD."
     map)
   "Keymap for \"notmuch tree\" buffers.")
 
+;;; Message properties
+
 (defun notmuch-tree-get-message-properties ()
   "Return the properties of the current message as a plist.
 
@@ -414,6 +427,8 @@ Some useful entries are:
   (interactive)
   (notmuch-tree-get-prop :match))
 
+;;; Update display
+
 (defun notmuch-tree-refresh-result ()
   "Redisplay the current message line.
 
@@ -455,6 +470,8 @@ NOT change the database."
 	(with-selected-window notmuch-tree-message-window
 	  (when (string= tree-msg-id (notmuch-show-get-message-id))
 	    (notmuch-show-update-tags new-tags)))))))
+
+;;; Commands (and some helper functions used by them)
 
 (defun notmuch-tree-tag (tag-changes)
   "Change tags for the current message."
@@ -835,7 +852,7 @@ buffer."
     (notmuch-tree-tag-thread
      (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
-;; Functions below here display the tree buffer itself.
+;;; Functions for displaying the tree buffer itself
 
 (defun notmuch-tree-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return
@@ -1142,7 +1159,7 @@ The arguments are:
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
 
-;;
+;;; _
 
 (provide 'notmuch-tree)
 

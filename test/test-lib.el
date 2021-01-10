@@ -1,4 +1,4 @@
-;; test-lib.el --- auxiliary stuff for Notmuch Emacs tests.
+;;; test-lib.el --- auxiliary stuff for Notmuch Emacs tests
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -19,6 +19,8 @@
 ;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
+
+;;; Code:
 
 (require 'cl-lib)
 

@@ -29,6 +29,8 @@
 
 (defvar notmuch-maildir-fcc-count 0)
 
+;;; Options
+
 (defcustom notmuch-fcc-dirs "sent"
   "Determines the Fcc Header which says where to save outgoing mail.
 
@@ -83,8 +85,7 @@ directory if it does not exist yet when sending a mail."
 		 (const :tag "Use simple fcc" nil))
   :group 'notmuch-send)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions which set up the fcc header in the message buffer.
+;;; Functions which set up the fcc header in the message buffer.
 
 (defun notmuch-fcc-header-setup ()
   "Add an Fcc header to the current message buffer.
@@ -142,9 +143,7 @@ Insert header anyway? " subdir)))
 		subdir
 	      (concat (notmuch-database-path) "/" subdir))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message either using notmuch insert or file
-;; fcc. First functions common to the two cases.
+;;; Functions for saving a message using either method.
 
 (defmacro with-temporary-notmuch-message-buffer (&rest body)
   "Set-up a temporary copy of the current message-mode buffer."
@@ -204,8 +203,7 @@ normal fcc."
       (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
     (notmuch-maildir-fcc-file-fcc fcc-header)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message using notmuch insert.
+;;; Functions for saving a message using notmuch insert.
 
 (defun notmuch-maildir-notmuch-insert-current-buffer (folder &optional create tags)
   "Use notmuch insert to put the current buffer in the database.
@@ -251,9 +249,7 @@ If CREATE is non-nil then create the folder if necessary."
 	   (?e (notmuch-maildir-fcc-with-notmuch-insert
 		(read-from-minibuffer "Fcc header: " fcc-header)))))))))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message using file fcc.
+;;; Functions for saving a message using file fcc.
 
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
@@ -361,6 +357,8 @@ return t if successful, and nil otherwise."
 		      (throw 'link-error nil))))))
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
+
+;;; _
 
 (provide 'notmuch-maildir-fcc)
 

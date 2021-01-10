@@ -25,8 +25,10 @@
 (require 'notmuch-parser)
 (require 'notmuch-lib)
 (require 'notmuch-company)
-;;
+
 (declare-function company-manual-begin "company")
+
+;;; Cache internals
 
 (defvar notmuch-address-last-harvest 0
   "Time of last address harvest.")
@@ -46,6 +48,8 @@ a saved hash if necessary (and available).")
 If the hash is not present it attempts to load a saved hash."
   (or notmuch-address-full-harvest-finished
       (notmuch-address--load-address-hash)))
+
+;;; Options
 
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
@@ -133,6 +137,14 @@ matching `notmuch-address-completion-headers-regexp'."
   :group 'notmuch-address
   :group 'notmuch-hooks)
 
+(defcustom notmuch-address-use-company t
+  "If available, use company mode for address completion."
+  :type 'boolean
+  :group 'notmuch-send
+  :group 'notmuch-address)
+
+;;; Setup
+
 (defun notmuch-address-selection-function (prompt collection initial-input)
   "Call (`completing-read'
       PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
@@ -146,12 +158,6 @@ matching `notmuch-address-completion-headers-regexp'."
 
 (defun notmuch-address-message-insinuate ()
   (message "calling notmuch-address-message-insinuate is no longer needed"))
-
-(defcustom notmuch-address-use-company t
-  "If available, use company mode for address completion."
-  :type 'boolean
-  :group 'notmuch-send
-  :group 'notmuch-address)
 
 (defun notmuch-address-setup ()
   (let* ((setup-company (and notmuch-address-use-company
@@ -177,6 +183,8 @@ toggles the setting in this buffer."
     (if (local-variable-p 'company-idle-delay)
 	(kill-local-variable 'company-idle-delay)
       (setq-local company-idle-delay nil))))
+
+;;; Completion
 
 (defun notmuch-address-matching (substring)
   "Returns a list of completion candidates matching SUBSTRING.
@@ -249,6 +257,8 @@ requiring external commands."
 	(message "No matches.")
 	(ding))))
    (t nil)))
+
+;;; Harvest
 
 (defun notmuch-address-harvest-addr (result)
   (let ((name-addr (plist-get result :name-addr)))
@@ -406,7 +416,7 @@ appear to be an address savefile.  Not overwriting."
 	       (setq notmuch-address-full-harvest-finished t))
 	   (setq notmuch-address-last-harvest 0)))))))
 
-;;
+;;; Standalone completion
 
 (defun notmuch-address-from-minibuffer (prompt)
   (if (not notmuch-address-command)
@@ -425,7 +435,7 @@ appear to be an address savefile.  Not overwriting."
       (let ((minibuffer-local-map rmap))
 	(read-string prompt)))))
 
-;;
+;;; _
 
 (provide 'notmuch-address)
 

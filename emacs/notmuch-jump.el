@@ -198,8 +198,6 @@ buffer."
 		 (exit-minibuffer)))))))
     map))
 
-;;
-
 (provide 'notmuch-jump)
 
 ;;; notmuch-jump.el ends here

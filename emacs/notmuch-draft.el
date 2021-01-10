@@ -31,6 +31,8 @@
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-message-mode "notmuch-mua")
 
+;;; Options
+
 (defgroup notmuch-draft nil
   "Saving and editing drafts in Notmuch."
   :group 'notmuch)
@@ -84,6 +86,8 @@ like they are intended to be sent encrypted
 	  (const :tag "Always" t))
   :group 'notmuch-draft
   :group 'notmuch-crypto)
+
+;;; Internal
 
 (defvar notmuch-draft-encryption-tag-regex
   "<#\\(part encrypt\\|secure.*mode=.*encrypt>\\)"
@@ -169,6 +173,8 @@ Really save and index an unencrypted copy? ")
   ;; but notmuch doesn't want that form, so remove them.
   (concat "draft-" (substring (message-make-message-id) 1 -1)))
 
+;;; Commands
+
 (defun notmuch-draft-save ()
   "Save the current draft message in the notmuch database.
 
@@ -226,6 +232,7 @@ applied to newly inserted messages)."
 
 (defun notmuch-draft-resume (id)
   "Resume editing of message with id ID."
+  ;; Used by command `notmuch-show-resume-message'.
   (let* ((tags (process-lines notmuch-command "search" "--output=tags"
 			      "--exclude=false" id))
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
@@ -265,9 +272,9 @@ applied to newly inserted messages)."
       ;; message is resaved or sent.
       (setq notmuch-draft-id (and draft id)))))
 
+;;; _
 
 (add-hook 'message-send-hook 'notmuch-draft--mark-deleted)
-
 
 (provide 'notmuch-draft)
 

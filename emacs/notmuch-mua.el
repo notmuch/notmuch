@@ -38,7 +38,7 @@
 (declare-function notmuch-draft-postpone "notmuch-draft" ())
 (declare-function notmuch-draft-save "notmuch-draft" ())
 
-;;
+;;; Options
 
 (defcustom notmuch-mua-send-hook nil
   "Hook run before sending messages."
@@ -120,7 +120,7 @@ to `notmuch-mua-send-hook'."
   :type 'regexp
   :group 'notmuch-send)
 
-;;
+;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
   "Signal an error if the message text indicates that an
@@ -214,6 +214,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-insert-references (original-func header references)
   (funcall original-func header references)
   (unless (bolp) (insert "\n")))
+
+;;; Mua reply
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let ((args '("reply" "--format=sexp" "--format-version=4"))
@@ -318,6 +320,8 @@ Typically this is added to `notmuch-mua-send-hook'."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
+;;; Mode and keymap
+
 (defvar notmuch-message-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
@@ -332,6 +336,8 @@ Typically this is added to `notmuch-mua-send-hook'."
   (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
+
+;;; New messages
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is modified.
@@ -528,6 +534,8 @@ will be addressed to all recipients of the source message."
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
 
+;;; Checks
+
 (defun notmuch-mua-check-no-misplaced-secure-tag ()
   "Query user if there is a misplaced secure mml tag.
 
@@ -570,6 +578,8 @@ The <#secure> tag at the start of the body is not followed by a
 newline. It is likely that the message will be sent unsigned and
 unencrypted.  Really send? "))))
 
+;;; Finishing commands
+
 (defun notmuch-mua-send-common (arg &optional exit)
   (interactive "P")
   (run-hooks 'notmuch-mua-send-hook)
@@ -593,7 +603,7 @@ unencrypted.  Really send? "))))
   (interactive)
   (message-kill-buffer))
 
-;;
+;;; _
 
 (define-mail-user-agent 'notmuch-user-agent
   'notmuch-mua-mail 'notmuch-mua-send-and-exit
@@ -602,8 +612,6 @@ unencrypted.  Really send? "))))
 ;; Add some more headers to the list that `message-mode' hides when
 ;; composing a message.
 (notmuch-mua-add-more-hidden-headers)
-
-;;
 
 (provide 'notmuch-mua)
 

@@ -33,6 +33,8 @@
   (defconst notmuch-emacs-version "unknown"
     "Placeholder variable when notmuch-version.el[c] is not available."))
 
+;;; Groups
+
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
   :group 'mail)
@@ -77,6 +79,8 @@
 (defgroup notmuch-faces nil
   "Graphical attributes for displaying text"
   :group 'notmuch)
+
+;;; Options
 
 (defcustom notmuch-command "notmuch"
   "Name of the notmuch binary.
@@ -125,11 +129,6 @@ the user's needs:
 		 (string :tag "Custom script"))
   :group 'notmuch-external)
 
-;;
-
-(defvar notmuch-search-history nil
-  "Variable to store notmuch searches history.")
-
 (defcustom notmuch-archive-tags '("-inbox")
   "List of tag changes to apply to a message or a thread when it is archived.
 
@@ -143,6 +142,11 @@ For example, if you wanted to remove an \"inbox\" tag and add an
   :type '(repeat string)
   :group 'notmuch-search
   :group 'notmuch-show)
+
+;;; Variables
+
+(defvar notmuch-search-history nil
+  "Variable to store notmuch searches history.")
 
 (defvar notmuch-common-keymap
   (let ((map (make-sparse-keymap)))
@@ -176,6 +180,8 @@ For example, if you wanted to remove an \"inbox\" tag and add an
   'mouse-action (lambda (button)
 		  (select-window (posn-window (event-start last-input-event)))
 		  (button-activate button)))
+
+;;; CLI Utilities
 
 (defun notmuch-command-to-string (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
@@ -234,6 +240,8 @@ displays both values separately."
 	       (concat cli-version
 		       " (emacs mua version " notmuch-emacs-version ")")))))
 
+;;; Notmuch Configuration
+
 (defun notmuch-config-get (item)
   "Return a value from the notmuch configuration."
   (let* ((val (notmuch-command-to-string "config" "get" item))
@@ -263,6 +271,8 @@ displays both values separately."
 (defun notmuch-user-emails ()
   (cons (notmuch-user-primary-email) (notmuch-user-other-email)))
 
+;;; Commands
+
 (defun notmuch-poll ()
   "Run \"notmuch new\" or an external script to import mail.
 
@@ -287,6 +297,8 @@ it, in which case it is killed."
       (bury-buffer)
     (kill-buffer)))
 
+;;; Describe Key Bindings
+
 (defun notmuch-prefix-key-description (key)
   "Given a prefix key code, return a human-readable string representation.
 
@@ -296,7 +308,6 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
     (if (string= desc "ESC")
 	"M-"
       (concat desc " "))))
-
 
 (defun notmuch-describe-key (actual-key binding prefix ua-keys tail)
   "Prepend cons cells describing prefix-arg ACTUAL-KEY and ACTUAL-KEY to TAIL.
@@ -435,6 +446,8 @@ of its command symbol."
 	  (insert desc)))
       (pop-to-buffer (help-buffer)))))
 
+;;; Refreshing Buffers
+
 (defvar-local notmuch-buffer-refresh-function nil
   "Function to call to refresh the current buffer.")
 
@@ -465,6 +478,8 @@ be displayed."
 				notmuch-hello-mode))
 	(with-current-buffer buffer
 	  (notmuch-refresh-this-buffer))))))
+
+;;; String Utilities
 
 (defun notmuch-prettify-subject (subject)
   ;; This function is used by `notmuch-search-process-filter' which
@@ -509,8 +524,6 @@ This replaces spaces, percents, and double quotes in STR with
   (replace-regexp-in-string
    "[ %\"]" (lambda (match) (format "%%%02x" (aref match 0))) str))
 
-;;
-
 (defun notmuch-common-do-stash (text)
   "Common function to stash text in kill ring, and display in minibuffer."
   (if text
@@ -522,7 +535,7 @@ This replaces spaces, percents, and double quotes in STR with
     (kill-new "")
     (message "Nothing to stash!")))
 
-;;
+;;; Generic Utilities
 
 (defun notmuch-plist-delete (plist property)
   (let* ((xplist (cons nil plist))
@@ -532,6 +545,8 @@ This replaces spaces, percents, and double quotes in STR with
 	(setcdr pred (cdddr pred)))
       (setq pred (cddr pred)))
     (cdr xplist)))
+
+;;; MML Utilities
 
 (defun notmuch-match-content-type (t1 t2)
   "Return t if t1 and t2 are matching content types, taking wildcards into account."
@@ -673,6 +688,8 @@ current buffer, if possible."
 	    (mm-display-part handle)
 	    t))))))
 
+;;; Generic Utilities
+
 ;; Converts a plist of headers to an alist of headers. The input plist should
 ;; have symbols of the form :Header as keys, and the resulting alist will have
 ;; symbols of the form 'Header as keys.
@@ -738,6 +755,8 @@ returned by FUNC."
 	  (next (next-single-property-change start prop object end)))
       (put-text-property start next prop (funcall func value) object)
       (setq start next))))
+
+;;; Running Notmuch
 
 (defun notmuch-logged-error (msg &optional extra)
   "Log MSG and EXTRA to *Notmuch errors* and signal MSG.
@@ -967,6 +986,8 @@ status."
 
 (defvar-local notmuch-show-process-crypto nil)
 
+;;; Generic Utilities
+
 (defun notmuch-interactive-region ()
   "Return the bounds of the current interactive region.
 
@@ -980,6 +1001,8 @@ region if the region is active, or both `point' otherwise."
   'notmuch-search-interactive-region
   'notmuch-interactive-region
   "notmuch 0.29")
+
+;;; _
 
 (provide 'notmuch-lib)
 

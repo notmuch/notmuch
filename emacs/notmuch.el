@@ -80,6 +80,8 @@
 (require 'notmuch-message)
 (require 'notmuch-parser)
 
+;;; Options
+
 (defcustom notmuch-search-result-format
   `(("date" . "%12s ")
     ("count" . "%-7s ")
@@ -114,6 +116,8 @@ there will be called at other points of notmuch execution."
 
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries.")
+
+;;; Mime Utilities
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
@@ -151,6 +155,8 @@ there will be called at other points of notmuch execution."
 	    (mm-save-part p))))
    mm-handle))
 
+;;; Integrations
+
 (require 'hl-line)
 
 (defun notmuch-hl-line-mode ()
@@ -158,12 +164,16 @@ there will be called at other points of notmuch execution."
     (when hl-line-overlay
       (overlay-put hl-line-overlay 'priority 1))))
 
+;;; Options
+
 (defcustom notmuch-search-hook '(notmuch-hl-line-mode)
   "List of functions to call when notmuch displays the search results."
   :type 'hook
   :options '(notmuch-hl-line-mode)
   :group 'notmuch-search
   :group 'notmuch-hooks)
+
+;;; Keymap
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
@@ -195,6 +205,8 @@ there will be called at other points of notmuch execution."
     map)
   "Keymap for \"notmuch search\" buffers.")
 
+;;; Stashing
+
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "i" 'notmuch-search-stash-thread-id)
@@ -214,11 +226,15 @@ there will be called at other points of notmuch execution."
   (interactive)
   (notmuch-common-do-stash (notmuch-search-get-query)))
 
+;;; Variables
+
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
 (defvar notmuch-search-target-line)
 
 (defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
+
+;;; Movement
 
 (defun notmuch-search-scroll-up ()
   "Move forward through search results by one window's worth."
@@ -270,6 +286,8 @@ there will be called at other points of notmuch execution."
   "Select the first thread in the search results."
   (interactive)
   (goto-char (point-min)))
+
+;;; Faces
 
 (defface notmuch-message-summary-face
   `((((class color) (background light))
@@ -356,6 +374,8 @@ This face is the default value for the \"unread\" tag in
   :group 'notmuch-search
   :group 'notmuch-faces)
 
+;;; Mode
+
 (define-derived-mode notmuch-search-mode fundamental-mode "notmuch-search"
   "Major mode displaying results of a notmuch search.
 
@@ -399,6 +419,8 @@ Complete list of currently available key bindings:
 	#'notmuch-search-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function
 	#'notmuch-search-imenu-extract-index-name-function))
+
+;;; Search Results
 
 (defun notmuch-search-get-result (&optional pos)
   "Return the result object for the thread at POS (or point).
@@ -558,6 +580,8 @@ thread."
   (let ((message-id (notmuch-search-find-thread-id)))
     (notmuch-mua-new-reply message-id prompt-for-sender nil)))
 
+;;; Tags
+
 (defun notmuch-search-set-tags (tags &optional pos)
   (let ((new-result (plist-put (notmuch-search-get-result pos) :tags tags)))
     (notmuch-search-update-result new-result pos)))
@@ -638,6 +662,8 @@ This function advances the next thread when finished."
      (notmuch-tag-change-list notmuch-archive-tags unarchive) beg end))
   (when (eq beg end)
     (notmuch-search-next-thread)))
+
+;;; Search Results
 
 (defun notmuch-search-update-result (result &optional pos)
   "Replace the result object of the thread at POS (or point) by
@@ -880,6 +906,8 @@ sets the :orig-tag property."
 	  (insert string))
 	(notmuch-sexp-parse-partial-list 'notmuch-search-append-result
 					 results-buf)))))
+
+;;; Commands (and some helper functions used by them)
 
 (defun notmuch-search-tag-all (tag-changes)
   "Add/remove tags from all messages in current search buffer.
@@ -1132,7 +1160,7 @@ notmuch buffers exist, run `notmuch'."
 	  (pop-to-buffer-same-window first))
       (notmuch))))
 
-;;;; Imenu Support
+;;; Imenu Support
 
 (defun notmuch-search-imenu-prev-index-position-function ()
   "Move point to previous message in notmuch-search buffer.
@@ -1148,6 +1176,8 @@ beginning of the line."
   (let ((subject (notmuch-search-find-subject))
 	(author (notmuch-search-find-authors)))
     (format "%s (%s)" subject author)))
+
+;;; _
 
 (setq mail-user-agent 'notmuch-user-agent)
 

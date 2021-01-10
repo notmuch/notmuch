@@ -23,6 +23,8 @@
 
 (require 'notmuch-lib)
 
+;;; Basic query function
+
 (defun notmuch-query-get-threads (search-terms)
   "Return a list of threads of messages matching SEARCH-TERMS.
 
@@ -35,8 +37,7 @@ is a possibly empty forest of replies."
     (setq args (append args search-terms))
     (apply #'notmuch-call-notmuch-sexp args)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Mapping functions across collections of messages.
+;;; Mapping functions across collections of messages
 
 (defun notmuch-query-map-aux  (mapper function seq)
   "Private function to do the actual mapping and flattening."
@@ -64,8 +65,7 @@ Flatten results to a list.  See the function
 `notmuch-query-get-threads' for more information."
   (cons (funcall fn (car tree)) (notmuch-query-map-forest fn (cadr tree))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Predefined queries
+;;; Predefined queries
 
 (defun notmuch-query-get-message-ids (&rest search-terms)
   "Return a list of message-ids of messages that match SEARCH-TERMS."

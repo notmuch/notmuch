@@ -102,7 +102,6 @@
        (run-hook-with-args 'notmuch-address-post-completion-functions arg))
       (no-cache t))))
 
-
 (provide 'notmuch-company)
 
 ;;; notmuch-company.el ends here

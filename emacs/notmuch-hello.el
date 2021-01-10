@@ -37,6 +37,8 @@
 		  (&optional query query-context target buffer-name open-target))
 
 
+;;; Options
+
 (defun notmuch-saved-search-get (saved-search field)
   "Get FIELD from SAVED-SEARCH.
 
@@ -191,6 +193,8 @@ fields of the search."
 
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
+
+(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
@@ -367,23 +371,15 @@ supported for \"Customized queries section\" items."
   :group 'notmuch-hello
   :type 'boolean)
 
+;;; Internal variables
+
 (defvar notmuch-hello-hidden-sections nil
   "List of sections titles whose contents are hidden.")
 
 (defvar notmuch-hello-first-run t
   "True if `notmuch-hello' is run for the first time, set to nil afterwards.")
 
-(defun notmuch-hello-nice-number (n)
-  (let (result)
-    (while (> n 0)
-      (push (% n 1000) result)
-      (setq n (/ n 1000)))
-    (setq result (or result '(0)))
-    (apply #'concat
-	   (number-to-string (car result))
-	   (mapcar (lambda (elem)
-		     (format "%s%03d" notmuch-hello-thousands-separator elem))
-		   (cdr result)))))
+;;; Widgets for inserters
 
 (define-widget 'notmuch-search-item 'item
   "A recent search."
@@ -419,6 +415,8 @@ supported for \"Customized queries section\" items."
 	  1    ; for the space before the [del] button
 	  5))) ; for the [del] button
 
+;;; Widget actions
+
 (defun notmuch-hello-search (widget &rest _event)
   (let ((search (widget-value widget)))
     (when search
@@ -450,6 +448,13 @@ supported for \"Customized queries section\" items."
       (setq notmuch-search-history
 	    (delete search notmuch-search-history)))
     (notmuch-hello-update)))
+
+;;; Button utilities
+
+;; `notmuch-hello-query-counts', `notmuch-hello-nice-number' and
+;; `notmuch-hello-insert-buttons' are used outside this section.
+;; All other functions that are defined in this section are only
+;; used by these two functions.
 
 (defun notmuch-hello-longest-label (searches-alist)
   (or (cl-loop for elem in searches-alist
@@ -585,6 +590,18 @@ the CLI and emacs interface."))
 	   (list (plist-put elem-plist :count message-count)))))
      query-list)))
 
+(defun notmuch-hello-nice-number (n)
+  (let (result)
+    (while (> n 0)
+      (push (% n 1000) result)
+      (setq n (/ n 1000)))
+    (setq result (or result '(0)))
+    (apply #'concat
+	   (number-to-string (car result))
+	   (mapcar (lambda (elem)
+		     (format "%s%03d" notmuch-hello-thousands-separator elem))
+		   (cdr result)))))
+
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
 
@@ -639,7 +656,7 @@ with `notmuch-hello-query-counts'."
     (unless (eq (% count tags-per-line) 0)
       (widget-insert "\n"))))
 
-(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
+;;; Mode
 
 (defun notmuch-hello-update ()
   "Update the notmuch-hello buffer."
@@ -722,6 +739,8 @@ Complete list of currently available key bindings:
   (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
   ;;(setq buffer-read-only t)
   )
+
+;;; Inserters
 
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
@@ -922,6 +941,8 @@ following:
     (let ((fill-column (- (window-width) notmuch-hello-indent)))
       (center-region start (point)))))
 
+;;; Hello!
+
 ;;;###autoload
 (defun notmuch-hello (&optional no-display)
   "Run notmuch and display saved searches, known tags, etc."
@@ -973,7 +994,7 @@ following:
   (run-hooks 'notmuch-hello-refresh-hook)
   (setq notmuch-hello-first-run nil))
 
-;;
+;;; _
 
 (provide 'notmuch-hello)
 

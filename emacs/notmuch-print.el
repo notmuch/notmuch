@@ -25,6 +25,8 @@
 
 (declare-function notmuch-show-get-prop "notmuch-show" (prop &optional props))
 
+;;; Options
+
 (defcustom notmuch-print-mechanism 'notmuch-print-lpr
   "How should printing be done?"
   :group 'notmuch-show
@@ -36,7 +38,7 @@
 	  (function :tag "Use muttprint then evince" notmuch-print-muttprint/evince)
 	  (function :tag "Using a custom function")))
 
-;; Utility functions:
+;;; Utility functions
 
 (defun notmuch-print-run-evince (file)
   "View FILE using 'evince'."
@@ -54,7 +56,7 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 	 "--printed-headers" "Date_To_From_CC_Newsgroups_*Subject*_/Tags/"
 	 output))
 
-;; User-visible functions:
+;;; User-visible functions
 
 (defun notmuch-print-lpr (msg)
   "Print a message buffer using lpr."
@@ -90,6 +92,8 @@ Optional OUTPUT allows passing a list of flags to muttprint."
   "Print a message using the user-selected mechanism."
   (set-buffer-modified-p nil)
   (funcall notmuch-print-mechanism msg))
+
+;;; _
 
 (provide 'notmuch-print)
 

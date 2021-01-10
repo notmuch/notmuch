@@ -26,6 +26,8 @@
 
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
+;;; Options
+
 (defcustom notmuch-crypto-process-mime t
   "Whether to process cryptographic MIME parts.
 
@@ -54,6 +56,8 @@ mode."
   "The gpg executable."
   :type 'string
   :group 'notmuch-crypto)
+
+;;; Faces
 
 (defface notmuch-crypto-part-header
   '((((class color)
@@ -95,6 +99,8 @@ mode."
   "Face used for encryption/decryption status messages."
   :group 'notmuch-crypto
   :group 'notmuch-faces)
+
+;;; Functions
 
 (define-button-type 'notmuch-crypto-status-button-type
   'action (lambda (button) (message (button-get button 'help-echo)))
@@ -259,7 +265,7 @@ corresponding key when the status button is pressed."
    'mouse-face 'notmuch-crypto-decryption)
   (insert "\n"))
 
-;;
+;;; _
 
 (provide 'notmuch-crypto)
 

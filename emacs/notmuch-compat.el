@@ -41,8 +41,6 @@
 (unless (fboundp 'message--fold-long-headers)
   (add-hook 'message-header-hook 'notmuch-message--fold-long-headers))
 
-;; End of compatibility functions
-
 (provide 'notmuch-compat)
 
 ;;; notmuch-compat.el ends here
