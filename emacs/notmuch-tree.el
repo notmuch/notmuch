@@ -791,8 +791,7 @@ search results instead."
       (notmuch-tree-from-search-thread))))
 
 (defun notmuch-tree-next-thread (&optional previous)
-  "Move to the next thread in the current tree or parent search
-results
+  "Move to the next thread in the current tree or parent search results.
 
 If PREVIOUS is non-nil, move to the previous thread in the tree or
 search results instead."
@@ -802,14 +801,13 @@ search results instead."
     (notmuch-tree-next-thread-from-search previous)))
 
 (defun notmuch-tree-prev-thread ()
-  "Move to the previous thread in the current tree or parent search
-results"
+  "Move to the previous thread in the current tree or parent search results."
   (interactive)
   (notmuch-tree-next-thread t))
 
 (defun notmuch-tree-thread-mapcar (function)
-  "Iterate through all messages in the current thread
- and call FUNCTION for side effects."
+  "Call FUNCTION for each message in the current thread.
+FUNCTION is called for side effects only."
   (save-excursion
     (notmuch-tree-thread-top)
     (cl-loop collect (funcall function)

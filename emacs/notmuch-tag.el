@@ -141,20 +141,23 @@ Used in the default value of `notmuch-tag-formats'."
      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
-This is an association list that maps from tag name regexps to
-lists of formatting expressions.  The first entry whose car
-regexp-matches a tag will be used to format that tag.  The regexp
-is implicitly anchored, so to match a literal tag name, just use
-that tag name (if it contains special regexp characters like
-\".\" or \"*\", these have to be escaped).  The cdr of the
-matching entry gives a list of Elisp expressions that modify the
-tag.  If the list is empty, the tag will simply be hidden.
-Otherwise, each expression will be evaluated in order: for the
-first expression, the variable `tag' will be bound to the tag
-name; for each later expression, the variable `tag' will be bound
-to the result of the previous expression.  In this way, each
+This is an association list of the form ((MATCH EXPR...)...),
+mapping tag name regexps to lists of formatting expressions.
+
+The first entry whose MATCH regexp-matches a tag is used to
+format that tag.  The regexp is implicitly anchored, so to match
+a literal tag name, just use that tag name (if it contains
+special regexp characters like \".\" or \"*\", these have to be
+escaped).
+
+The cdr of the matching entry gives a list of Elisp expressions
+that modify the tag.  If the list is empty, the tag is simply
+hidden.  Otherwise, each expression EXPR is evaluated in order:
+for the first expression, the variable `tag' is bound to the tag
+name; for each later expression, the variable `tag' is bound to
+the result of the previous expression.  In this way, each
 expression can build on the formatting performed by the previous
-expression.  The result of the last expression will displayed in
+expression.  The result of the last expression is displayed in
 place of the tag.
 
 For example, to replace a tag with another string, simply use
@@ -384,17 +387,15 @@ the messages that were tagged."
 ;;; User Input
 
 (defvar notmuch-select-tag-history nil
-  "Variable to store minibuffer history for
-`notmuch-select-tag-with-completion' function.")
+  "Minibuffer history of `notmuch-select-tag-with-completion' function.")
 
 (defvar notmuch-read-tag-changes-history nil
-  "Variable to store minibuffer history for
-`notmuch-read-tag-changes' function.")
+  "Minibuffer history of `notmuch-read-tag-changes' function.")
 
 (defun notmuch-tag-completions (&rest search-terms)
   "Return a list of tags for messages matching SEARCH-TERMS.
 
-Returns all tags if no search terms are given."
+Return all tags if no search terms are given."
   (unless search-terms
     (setq search-terms (list "*")))
   (split-string
@@ -411,8 +412,8 @@ Returns all tags if no search terms are given."
 (defun notmuch-read-tag-changes (current-tags &optional prompt initial-input)
   "Prompt for tag changes in the minibuffer.
 
-CURRENT-TAGS is a list of tags that are present on the message or
-messages to be changed.  These are offered as tag removal
+CURRENT-TAGS is a list of tags that are present on the message
+or messages to be changed.  These are offered as tag removal
 completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
 non-nil, is the query string to present in the minibuffer.  It
 defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the

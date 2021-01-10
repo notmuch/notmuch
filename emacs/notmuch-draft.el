@@ -77,9 +77,11 @@ postponing and resuming a message."
   :group 'notmuch-send)
 
 (defcustom notmuch-draft-save-plaintext 'ask
-  "Should notmuch save/postpone in plaintext messages that seem
-like they are intended to be sent encrypted
-(i.e with an mml encryption tag in it)."
+  "Whether to allow saving plaintext when it seems encryption is intended.
+When a message contains mml tags, then that suggest it is
+intended to be encrypted.  If the user requests that such a
+message is saved locally, then this option controls whether
+that is allowed.  Beside a boolean, this can also be `ask'."
   :type '(radio
 	  (const :tag "Never" nil)
 	  (const :tag "Ask every time" ask)
@@ -146,13 +148,13 @@ Used when a new version is saved, or the message is sent."
 	(insert secure-tag "\n")))))
 
 (defun notmuch-draft--has-encryption-tag ()
-  "Returns t if there is an mml secure tag."
+  "Return non-nil if there is an mml secure tag."
   (save-excursion
     (message-goto-body)
     (re-search-forward notmuch-draft-encryption-tag-regex nil t)))
 
 (defun notmuch-draft--query-encryption ()
-  "Checks if we should save a message that should be encrypted.
+  "Return non-nil if we should save a message that should be encrypted.
 
 `notmuch-draft-save-plaintext' controls the behaviour."
   (cl-case notmuch-draft-save-plaintext

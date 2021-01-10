@@ -494,7 +494,7 @@ If BARE is set then do not prefix with \"thread:\"."
 (defun notmuch-search-find-stable-query ()
   "Return the stable queries for the current thread.
 
-This returns a list (MATCHED-QUERY UNMATCHED-QUERY) for the
+Return a list (MATCHED-QUERY UNMATCHED-QUERY) for the
 matched and unmatched messages in the current thread."
   (plist-get (notmuch-search-get-result) :query))
 
@@ -599,7 +599,7 @@ thread."
 (defun notmuch-search-interactive-tag-changes (&optional initial-input)
   "Prompt for tag changes for the current thread or region.
 
-Returns (TAG-CHANGES REGION-BEGIN REGION-END)."
+Return (TAG-CHANGES REGION-BEGIN REGION-END)."
   (pcase-let ((`(,beg ,end) (notmuch-interactive-region)))
     (list (notmuch-read-tag-changes (notmuch-search-get-tags-region beg end)
 				    (if (= beg end) "Tag thread" "Tag region")
@@ -1101,10 +1101,10 @@ current search results AND the additional query string provided."
 		    notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
-  "Filter the current search results based on a single tag.
+  "Filter the current search results based on a single TAG.
 
-Runs a new search matching only messages that match both the
-current search results AND that are tagged with the given tag."
+Run a new search matching only messages that match the current
+search results and that are also tagged with the given TAG."
   (interactive
    (list (notmuch-select-tag-with-completion "Filter by tag: "
 					     notmuch-search-query-string)))
@@ -1124,7 +1124,7 @@ current search results AND that are tagged with the given tag."
   (notmuch-hello))
 
 (defun notmuch-interesting-buffer (b)
-  "Is the current buffer of interest to a notmuch user?"
+  "Whether the current buffer's major-mode is a notmuch mode."
   (with-current-buffer b
     (memq major-mode '(notmuch-show-mode
 		       notmuch-search-mode
@@ -1136,8 +1136,8 @@ current search results AND that are tagged with the given tag."
 (defun notmuch-cycle-notmuch-buffers ()
   "Cycle through any existing notmuch buffers (search, show or hello).
 
-If the current buffer is the only notmuch buffer, bury it. If no
-notmuch buffers exist, run `notmuch'."
+If the current buffer is the only notmuch buffer, bury it.
+If no notmuch buffers exist, run `notmuch'."
   (interactive)
   (let (start first)
     ;; If the current buffer is a notmuch buffer, remember it and then
@@ -1162,15 +1162,13 @@ notmuch buffers exist, run `notmuch'."
 
 (defun notmuch-search-imenu-prev-index-position-function ()
   "Move point to previous message in notmuch-search buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'."
+Used as`imenu-prev-index-position-function' in notmuch buffers."
   (notmuch-search-previous-thread))
 
 (defun notmuch-search-imenu-extract-index-name-function ()
   "Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line."
+Used as `imenu-extract-index-name-function' in notmuch buffers.
+Point should be at the beginning of the line."
   (let ((subject (notmuch-search-find-subject))
 	(author (notmuch-search-find-authors)))
     (format "%s (%s)" subject author)))

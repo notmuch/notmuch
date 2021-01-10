@@ -90,10 +90,8 @@ directory if it does not exist yet when sending a mail."
 (defun notmuch-fcc-header-setup ()
   "Add an Fcc header to the current message buffer.
 
-Sets the Fcc header based on the values of `notmuch-fcc-dirs'.
-
-Originally intended to be use a hook function, but now called directly
-by notmuch-mua-mail."
+If the Fcc header is already set, then keep it as-is.
+Otherwise set it according to `notmuch-fcc-dirs'."
   (let ((subdir
 	 (cond
 	  ((or (not notmuch-fcc-dirs)
@@ -153,8 +151,9 @@ by notmuch-mua-mail."
        ,@body)))
 
 (defun notmuch-maildir-setup-message-for-saving ()
-  "Setup message for saving. Should be called on a temporary copy.
+  "Setup message for saving.
 
+This should be called on a temporary copy.
 This is taken from the function message-do-fcc."
   (message-encode-message-body)
   (save-restriction
@@ -308,8 +307,8 @@ if successful, nil if not."
 (defun notmuch-maildir-fcc-file-fcc (fcc-header)
   "Write the message to the file specified by FCC-HEADER.
 
-It offers the user a chance to correct the header, or filesystem,
-if needed."
+If that fails, then offer the user a chance to correct the header
+or filesystem."
   (if (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
       (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header t)
     ;; The fcc-header is not a valid maildir see if the user wants to
@@ -329,9 +328,11 @@ if needed."
 	     (read-from-minibuffer "Fcc header: " fcc-header)))))))
 
 (defun notmuch-maildir-fcc-write-buffer-to-maildir (destdir &optional mark-seen)
-  "Writes the current buffer to maildir destdir. If mark-seen is
-non-nil, it will write it to cur/, and mark it as read. It should
-return t if successful, and nil otherwise."
+  "Write the current buffer to maildir destdir.
+
+If mark-seen is non-nil, then write it to \"cur/\", and mark it
+as read, otherwise write it to \"new/\". Return t if successful,
+and nil otherwise."
   (let ((orig-buffer (buffer-name)))
     (with-temp-buffer
       (insert-buffer-substring orig-buffer)

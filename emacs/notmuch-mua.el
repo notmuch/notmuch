@@ -99,7 +99,7 @@ the From: header is already filled in by notmuch."
   :group 'notmuch-send)
 
 (defgroup notmuch-reply nil
-  "Replying to messages in notmuch"
+  "Replying to messages in notmuch."
   :group 'notmuch)
 
 (defcustom notmuch-mua-cite-function 'message-cite-original
@@ -144,9 +144,10 @@ to `notmuch-mua-send-hook'."
 ;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
-  "Signal an error if the message text indicates that an
-attachment is expected but no MML referencing an attachment is
-found.
+  "Signal an error an attachement is expected but missing.
+
+Signal an error if the message text indicates that an attachment
+is expected but no MML referencing an attachment is found.
 
 Typically this is added to `notmuch-mua-send-hook'."
   (when (and
