@@ -103,7 +103,7 @@ mode."
 ;;; Functions
 
 (define-button-type 'notmuch-crypto-status-button-type
-  'action (lambda (button) (message (button-get button 'help-echo)))
+  'action (lambda (button) (message "%s" (button-get button 'help-echo)))
   'follow-link t
   'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts."
   :supertype 'notmuch-button-type)
