@@ -140,15 +140,6 @@ beginning of a list, throw invalid-read-syntax."
 	 (forward-char)
 	 (signal 'invalid-read-syntax (list (string (char-before)))))))
 
-(defun notmuch-sexp-eof (sp)
-  "Signal an error if there is more data in SP's buffer.
-
-Moves point to the beginning of any trailing data or to the end
-of the buffer if there is only trailing whitespace."
-  (skip-chars-forward " \n\r\t")
-  (unless (eobp)
-    (error "Trailing garbage following expression")))
-
 (defvar notmuch-sexp--parser nil
   "The buffer-local notmuch-sexp-parser instance.
 
@@ -187,8 +178,11 @@ move point in the input buffer."
 	     (t     (with-current-buffer result-buffer
 		      (funcall result-function result))))))
 	(end
-	 ;; Any trailing data is unexpected
-	 (notmuch-sexp-eof notmuch-sexp--parser)
+	 ;; Skip over trailing whitespace.
+	 (skip-chars-forward " \n\r\t")
+	 ;; Any trailing data is unexpected.
+	 (unless (eobp)
+	   (error "Trailing garbage following expression"))
 	 (setq done t)))))
   ;; Clear out what we've parsed
   (delete-region (point-min) (point)))
