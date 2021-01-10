@@ -731,9 +731,7 @@ The screen may be customized via `\\[customize]'.
 Complete list of currently available key bindings:
 
 \\{notmuch-hello-mode-map}"
-  (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
-  ;;(setq buffer-read-only t)
-  )
+  (setq notmuch-buffer-refresh-function #'notmuch-hello-update))
 
 ;;; Inserters
 

@@ -247,7 +247,7 @@ displays both values separately."
   (let* ((val (notmuch-command-to-string "config" "get" item))
 	 (len (length val)))
     ;; Trim off the trailing newline (if the value is empty or not
-    ;; configured, there will be no newline)
+    ;; configured, there will be no newline).
     (if (and (> len 0)
 	     (= (aref val (- len 1)) ?\n))
 	(substring val 0 -1)
@@ -483,8 +483,8 @@ be displayed."
 ;;; String Utilities
 
 (defun notmuch-prettify-subject (subject)
-  ;; This function is used by `notmuch-search-process-filter' which
-  ;; requires that we not disrupt its' matching state.
+  ;; This function is used by `notmuch-search-process-filter',
+  ;; which requires that we not disrupt its matching state.
   (save-match-data
     (if (and subject
 	     (string-match "^[ \t]*$" subject))

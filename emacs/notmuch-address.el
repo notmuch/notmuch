@@ -381,7 +381,7 @@ to be a saved address hash."
 (defun notmuch-address--save-address-hash ()
   (when notmuch-address-save-filename
     (if (or (not (file-exists-p notmuch-address-save-filename))
-	    ;; The file exists, check it is a file we saved
+	    ;; The file exists, check it is a file we saved.
 	    (notmuch-address--get-address-hash))
 	(with-temp-file notmuch-address-save-filename
 	  (let ((save-plist
@@ -404,8 +404,7 @@ appear to be an address savefile.  Not overwriting."
        nil nil
        (lambda (_proc event)
 	 ;; If harvest fails, we want to try
-	 ;; again when the trigger is next
-	 ;; called
+	 ;; again when the trigger is next called.
 	 (if (string= event "finished\n")
 	     (progn
 	       (notmuch-address--save-address-hash)
