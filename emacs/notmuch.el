@@ -230,7 +230,7 @@ there will be called at other points of notmuch execution."
 (defun notmuch-stash-query ()
   "Copy current query to kill-ring."
   (interactive)
-  (notmuch-common-do-stash (notmuch-search-get-query)))
+  (notmuch-common-do-stash notmuch-search-query-string))
 
 ;;; Movement
 
