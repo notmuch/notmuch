@@ -599,16 +599,13 @@ This will only find parts from messages that have been inserted
 into the current buffer.  CID must be a raw content ID, without
 enclosing angle brackets, a cid: prefix, or URL encoding.  This
 will return nil if the CID is unknown or cannot be retrieved."
-  (let ((descriptor (cdr (assoc cid notmuch-show--cids))))
-    (when descriptor
-      (let* ((msg (car descriptor))
-	     (part (cadr descriptor))
-	     ;; Request caching for this content, as some messages
-	     ;; reference the same cid: part many times (hundreds!).
-	     (content (notmuch-get-bodypart-binary
-		       msg part notmuch-show-process-crypto 'cache))
-	     (content-type (plist-get part :content-type)))
-	(list content content-type)))))
+  (when-let ((descriptor (cdr (assoc cid notmuch-show--cids))))
+    (pcase-let ((`(,msg ,part) descriptor))
+      ;; Request caching for this content, as some messages
+      ;; reference the same cid: part many times (hundreds!).
+      (list (notmuch-get-bodypart-binary
+	     msg part notmuch-show-process-crypto 'cache)
+	    (plist-get part :content-type)))))
 
 (defun notmuch-show-setup-w3m ()
   "Instruct w3m how to retrieve content from a \"related\" part of a message."
