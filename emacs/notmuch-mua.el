@@ -217,11 +217,10 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-reply-crypto (parts)
   "Add mml sign-encrypt flag if any part of original message is encrypted."
   (cl-loop for part in parts
-	   if (notmuch-match-content-type (plist-get part :content-type)
-					  "multipart/encrypted")
+	   for type = (plist-get part :content-type)
+	   if (notmuch-match-content-type type "multipart/encrypted")
 	   do (mml-secure-message-sign-encrypt)
-	   else if (notmuch-match-content-type (plist-get part :content-type)
-					       "multipart/*")
+	   else if (notmuch-match-content-type type "multipart/*")
 	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
 ;; There is a bug in Emacs' message.el that results in a newline
