@@ -552,16 +552,19 @@ This replaces spaces, percents, and double quotes in STR with
 ;;; MML Utilities
 
 (defun notmuch-match-content-type (t1 t2)
-  "Return t if t1 and t2 are matching content types, taking wildcards into account."
-  (let ((st1 (split-string t1 "/"))
-	(st2 (split-string t2 "/")))
-    (if (or (string= (cadr st1) "*")
-	    (string= (cadr st2) "*"))
-	;; Comparison of content types should be case insensitive.
-	(string= (downcase (car st1))
-		 (downcase (car st2)))
-      (string= (downcase t1)
-	       (downcase t2)))))
+  "Return t if t1 and t2 are matching content types.
+Take wildcards into account."
+  (and (stringp t1)
+       (stringp t2)
+       (let ((st1 (split-string t1 "/"))
+	     (st2 (split-string t2 "/")))
+	 (if (or (string= (cadr st1) "*")
+		 (string= (cadr st2) "*"))
+	     ;; Comparison of content types should be case insensitive.
+	     (string= (downcase (car st1))
+		      (downcase (car st2)))
+	   (string= (downcase t1)
+		    (downcase t2))))))
 
 (defvar notmuch-multipart/alternative-discouraged
   '(;; Avoid HTML parts.

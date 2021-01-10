@@ -581,16 +581,17 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (pcase-let ((`(,type ,subtype)
-	       (split-string (downcase (plist-get part :content-type)) "/")))
-    (cond ((equal type "multipart")
-	   (mapc (apply-partially #'notmuch-show--register-cids msg)
-		 (plist-get part :content)))
-	  ((and (equal type "message")
-		(equal subtype "rfc822"))
-	   (notmuch-show--register-cids
-	    msg
-	    (car (plist-get (car (plist-get part :content)) :body)))))))
+  (when-let ((type (plist-get part :content-type)))
+    (pcase-let ((`(,type ,subtype)
+		 (split-string (downcase type) "/")))
+      (cond ((equal type "multipart")
+	     (mapc (apply-partially #'notmuch-show--register-cids msg)
+		   (plist-get part :content)))
+	    ((and (equal type "message")
+		  (equal subtype "rfc822"))
+	     (notmuch-show--register-cids
+	      msg
+	      (car (plist-get (car (plist-get part :content)) :body))))))))
 
 (defun notmuch-show--get-cid-content (cid)
   "Return a list (CID-content content-type) or nil.
@@ -948,7 +949,8 @@ will return nil if the CID is unknown or cannot be retrieved."
 
 (defun notmuch-show-mime-type (part)
   "Return the correct mime-type to use for PART."
-  (let ((content-type (downcase (plist-get part :content-type))))
+  (when-let ((content-type (plist-get part :content-type)))
+    (setq content-type (downcase content-type))
     (or (and (string= content-type "application/octet-stream")
 	     (notmuch-show-get-mime-type-of-application/octet-stream part))
 	(and (string= content-type "inline patch")
@@ -988,7 +990,7 @@ this part.")
 HIDE determines whether to show or hide the part and the button
 as follows: If HIDE is nil, show the part and the button. If HIDE
 is t, hide the part initially and show the button."
-  (let* ((content-type (downcase (plist-get part :content-type)))
+  (let* ((content-type (plist-get part :content-type))
 	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
@@ -1000,7 +1002,8 @@ is t, hide the part initially and show the button."
 	 ;; the first (or only) part if this is text/plain.
 	 (button (and (funcall notmuch-show-insert-header-p-function part hide)
 		      (notmuch-show-insert-part-header
-		       nth mime-type content-type
+		       nth mime-type
+		       (and content-type (downcase content-type))
 		       (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
 	 ;; and we have a button to allow toggling.
