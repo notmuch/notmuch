@@ -285,12 +285,12 @@ This can be used with `notmuch-tag-format-image-data'."
   "Clear the internal cache of tag formats."
   (clrhash notmuch-tag--format-cache))
 
-(defun notmuch-tag--get-formats (tag format-alist)
+(defun notmuch-tag--get-formats (tag alist)
   "Find the first item whose car regexp-matches TAG."
   (save-match-data
     ;; Don't use assoc-default since there's no way to distinguish a
     ;; missing key from a present key with a null cdr.
-    (cl-assoc tag format-alist
+    (cl-assoc tag alist
 	      :test (lambda (tag key)
 		      (and (eq (string-match key tag) 0)
 			   (= (match-end 0) (length tag)))))))
