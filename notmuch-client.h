@@ -339,7 +339,7 @@ const char *
 _notmuch_config_get_path (notmuch_config_t *config);
 
 int
-notmuch_run_hook (const char *db_path, const char *hook);
+notmuch_run_hook (notmuch_database_t *notmuch, const char *hook);
 
 bool
 debugger_is_active (void);

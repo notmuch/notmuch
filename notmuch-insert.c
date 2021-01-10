@@ -481,7 +481,6 @@ notmuch_insert_command (unused(notmuch_config_t *config),notmuch_database_t *not
     notmuch_process_shared_options (argv[0]);
 
 
-    /* XXX TODO replace this use of DATABASE_PATH with something specific to hooks */
     db_path = notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
 
     if (! db_path)
@@ -570,7 +569,7 @@ notmuch_insert_command (unused(notmuch_config_t *config),notmuch_database_t *not
     status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep, indexing_cli_choices.opts);
 
     /* Commit changes. */
-    close_status = notmuch_database_destroy (notmuch);
+    close_status = notmuch_database_close (notmuch);
     if (close_status) {
 	/* Hold on to the first error, if any. */
 	if (! status)
@@ -595,8 +594,10 @@ notmuch_insert_command (unused(notmuch_config_t *config),notmuch_database_t *not
 
     if (hooks && status == NOTMUCH_STATUS_SUCCESS) {
 	/* Ignore hook failures. */
-	notmuch_run_hook (db_path, "post-insert");
+	notmuch_run_hook (notmuch, "post-insert");
     }
+
+    notmuch_database_destroy (notmuch);
 
     talloc_free (local);
 

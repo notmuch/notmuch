@@ -24,14 +24,15 @@
 #include <sys/wait.h>
 
 int
-notmuch_run_hook (const char *db_path, const char *hook)
+notmuch_run_hook (notmuch_database_t *notmuch, const char *hook)
 {
     char *hook_path;
     int status = 0;
     pid_t pid;
 
-    hook_path = talloc_asprintf (NULL, "%s/%s/%s/%s", db_path, ".notmuch",
-				 "hooks", hook);
+    hook_path = talloc_asprintf (notmuch, "%s/%s",
+				 notmuch_config_get (notmuch, NOTMUCH_CONFIG_HOOK_DIR),
+				 hook);
     if (hook_path == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;

@@ -1105,7 +1105,6 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     struct timeval tv_start;
     int ret = 0;
     const char *db_path;
-    char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
     int opt_index;
@@ -1167,12 +1166,10 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     }
 
     if (hooks) {
-	ret = notmuch_run_hook (db_path, "pre-new");
+	ret = notmuch_run_hook (notmuch, "pre-new");
 	if (ret)
 	    return EXIT_FAILURE;
     }
-
-    dot_notmuch_path = talloc_asprintf (notmuch, "%s/%s", db_path, ".notmuch");
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
@@ -1211,9 +1208,6 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     sigemptyset (&action.sa_mask);
     action.sa_flags = SA_RESTART;
     sigaction (SIGINT, &action, NULL);
-
-    talloc_free (dot_notmuch_path);
-    dot_notmuch_path = NULL;
 
     gettimeofday (&add_files_state.tv_start, NULL);
 
@@ -1284,7 +1278,7 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     notmuch_database_close (notmuch);
 
     if (hooks && ! ret && ! interrupted)
-	ret = notmuch_run_hook (db_path, "post-new");
+	ret = notmuch_run_hook (notmuch, "post-new");
 
     notmuch_database_destroy (notmuch);
 
