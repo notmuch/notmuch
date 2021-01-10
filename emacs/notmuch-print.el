@@ -58,7 +58,7 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 
 ;;; User-visible functions
 
-(defun notmuch-print-lpr (msg)
+(defun notmuch-print-lpr (_msg)
   "Print a message buffer using lpr."
   (lpr-buffer))
 
@@ -78,11 +78,11 @@ Optional OUTPUT allows passing a list of flags to muttprint."
     (ps-print-buffer ps-file)
     (notmuch-print-run-evince ps-file)))
 
-(defun notmuch-print-muttprint (msg)
+(defun notmuch-print-muttprint (_msg)
   "Print a message using muttprint."
   (notmuch-print-run-muttprint))
 
-(defun notmuch-print-muttprint/evince (msg)
+(defun notmuch-print-muttprint/evince (_msg)
   "Preview a message buffer using muttprint and evince."
   (let ((ps-file (make-temp-file "notmuch" nil ".ps")))
     (notmuch-print-run-muttprint (list "--printer" (concat "TO_FILE:" ps-file)))

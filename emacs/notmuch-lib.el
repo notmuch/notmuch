@@ -978,7 +978,7 @@ status."
        ;; so turn errors into messages.
        (message "%s" (error-message-string err))))))
 
-(defun notmuch-start-notmuch-error-sentinel (proc event)
+(defun notmuch-start-notmuch-error-sentinel (proc _event)
   (unless (process-live-p proc)
     (let ((buffer (process-buffer proc)))
       (when (buffer-live-p buffer)

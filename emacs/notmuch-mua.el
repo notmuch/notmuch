@@ -370,7 +370,7 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
     (erase-buffer)
     (notmuch-message-mode)))
 
-(defun notmuch-mua-mail (&optional to subject other-headers continue
+(defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest ignored)
   "Invoke the notmuch mail composition window."

@@ -191,7 +191,7 @@ toggles the setting in this buffer."
 The candidates are taken from `notmuch-address-completions'."
   (let ((candidates)
 	(re (regexp-quote substring)))
-    (maphash (lambda (key val)
+    (maphash (lambda (key _val)
 	       (when (string-match re key)
 		 (push key candidates)))
 	     notmuch-address-completions)
@@ -406,7 +406,7 @@ appear to be an address savefile.  Not overwriting."
       (setq notmuch-address-last-harvest now)
       (notmuch-address-harvest
        nil nil
-       (lambda (proc event)
+       (lambda (_proc event)
 	 ;; If harvest fails, we want to try
 	 ;; again when the trigger is next
 	 ;; called

@@ -517,7 +517,7 @@ message at DEPTH in the current thread."
   'face 'message-mml
   :supertype 'notmuch-button-type)
 
-(defun notmuch-show-insert-part-header (nth content-type declared-type
+(defun notmuch-show-insert-part-header (_nth content-type declared-type
 					    &optional name comment)
   (let ((base-label (concat (and name (concat name ": "))
 			    declared-type
@@ -624,7 +624,7 @@ will return nil if the CID is unknown or cannot be retrieved."
   (setq mm-html-inhibit-images nil))
 
 (defvar w3m-current-buffer) ;; From `w3m.el'.
-(defun notmuch-show--cid-w3m-retrieve (url &rest args)
+(defun notmuch-show--cid-w3m-retrieve (url &rest _args)
   ;; url includes the cid: prefix and is URL encoded (see RFC 2392).
   (let* ((cid (url-unhex-string (substring url 4)))
 	 (content-and-type
@@ -640,7 +640,7 @@ will return nil if the CID is unknown or cannot be retrieved."
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
-(defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/alternative (msg part _content-type _nth depth _button)
   (let ((chosen-type (car (notmuch-multipart/alternative-choose
 			   msg (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
@@ -659,7 +659,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/related (msg part _content-type _nth depth _button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
     ;; Render the primary part.  FIXME: Support RFC 2387 Start header.
@@ -672,7 +672,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/signed (msg part _content-type _nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
   ;; Insert a button detailing the signature status.
@@ -688,7 +688,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/encrypted (msg part _content-type _nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
   ;; Insert a button detailing the encryption status.
@@ -706,10 +706,10 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-application/pgp-encrypted (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-application/pgp-encrypted (_msg _part _content-type _nth _depth _button)
   t)
 
-(defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/* (msg part _content-type _nth depth _button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
     ;; Show all of the parts.
@@ -720,7 +720,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-message/rfc822 (msg part _content-type _nth depth _button)
   (let* ((message (car (plist-get part :content)))
 	 (body (car (plist-get message :body)))
 	 (start (point)))
@@ -737,7 +737,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-text/plain (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-text/plain (msg part _content-type _nth depth button)
   ;; For backward compatibility we want to apply the text/plain hook
   ;; to the whole of the part including the part button if there is
   ;; one.
@@ -751,7 +751,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook msg depth))))
   t)
 
-(defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-text/calendar (msg part _content-type _nth _depth _button)
   (insert (with-temp-buffer
 	    (insert (notmuch-get-bodypart-text msg part notmuch-show-process-crypto))
 	    ;; notmuch-get-bodypart-text does no newline conversion.
@@ -775,8 +775,8 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 ;; For backwards compatibility.
-(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
-  (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
+(defun notmuch-show-insert-part-text/x-vcalendar (msg part _content-type _nth depth _button)
+  (notmuch-show-insert-part-text/calendar msg part nil nil depth nil))
 
 (when (version< emacs-version "25.3")
   ;; https://bugs.gnu.org/28350
@@ -792,7 +792,7 @@ will return nil if the CID is unknown or cannot be retrieved."
     ;; the first time).
     (require 'enriched)
     (cl-letf (((symbol-function 'enriched-decode-display-prop)
-	       (lambda (start end &optional param) (list start end))))
+	       (lambda (start end &optional _param) (list start end))))
       (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
@@ -850,7 +850,7 @@ will return nil if the CID is unknown or cannot be retrieved."
     (shr-insert-document dom)
     t))
 
-(defun notmuch-show-insert-part-*/* (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-*/* (msg part content-type _nth _depth _button)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-mm-display-part-inline msg part content-type notmuch-show-process-crypto)
   t)
@@ -970,13 +970,13 @@ The function should take two parameters, PART and HIDE, and
 should return non-NIL if a header button should be inserted for
 this part.")
 
-(defun notmuch-show-insert-header-p (part hide)
+(defun notmuch-show-insert-header-p (part _hide)
   ;; Show all part buttons except for the first part if it is text/plain.
   (let ((mime-type (notmuch-show-mime-type part)))
     (not (and (string= mime-type "text/plain")
 	      (<= (plist-get part :id) 1)))))
 
-(defun notmuch-show-reply-insert-header-p-never (part hide)
+(defun notmuch-show-reply-insert-header-p-never (_part _hide)
   nil)
 
 (defun notmuch-show-reply-insert-header-p-trimmed (part hide)
@@ -1759,7 +1759,7 @@ marked as unread, i.e. the tag changes in
     (apply 'notmuch-show-tag-message
 	   (notmuch-tag-change-list notmuch-show-mark-read-tags unread))))
 
-(defun notmuch-show-seen-current-message (start end)
+(defun notmuch-show-seen-current-message (_start _end)
   "Mark the current message read if it is open.
 
 We only mark it read once: if it is changed back then that is a
@@ -1777,7 +1777,7 @@ user decision and we should not override it."
     ;; We need to redisplay to get window-start and window-end correct.
     (redisplay)
     (save-excursion
-      (condition-case err
+      (condition-case nil
 	  (funcall notmuch-show-mark-read-function (window-start) (window-end))
 	((debug error)
 	 (unless notmuch-show--seen-has-errored

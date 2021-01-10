@@ -480,7 +480,7 @@ diagonal."
     (cl-loop for row from 0 to (- nrows 1)
 	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
-(defun notmuch-hello-widget-search (widget &rest ignore)
+(defun notmuch-hello-widget-search (widget &rest _ignore)
   (cond
    ((eq (widget-get widget :notmuch-search-type) 'tree)
     (notmuch-tree (widget-get widget
@@ -775,14 +775,14 @@ Complete list of currently available key bindings:
   (let ((widget-link-prefix "")
 	(widget-link-suffix ""))
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (browse-url notmuch-hello-url))
 		   :help-echo "Visit the notmuch website."
 		   "notmuch")
     (widget-insert ". ")
     (widget-insert "You have ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (notmuch-hello-update))
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
@@ -801,7 +801,7 @@ Complete list of currently available key bindings:
     (when searches
       (widget-insert "Saved searches: ")
       (widget-create 'push-button
-		     :notify (lambda (&rest ignore)
+		     :notify (lambda (&rest _ignore)
 			       (customize-variable 'notmuch-saved-searches))
 		     "edit")
       (widget-insert "\n\n")
@@ -873,13 +873,13 @@ Supports the following entries in OPTIONS as a plist:
 	(start (point)))
     (if is-hidden
 	(widget-create 'push-button
-		       :notify `(lambda (widget &rest ignore)
+		       :notify `(lambda (widget &rest _ignore)
 				  (setq notmuch-hello-hidden-sections
 					(delete ,title notmuch-hello-hidden-sections))
 				  (notmuch-hello-update))
 		       "show")
       (widget-create 'push-button
-		     :notify `(lambda (widget &rest ignore)
+		     :notify `(lambda (widget &rest _ignore)
 				(add-to-list 'notmuch-hello-hidden-sections
 					     ,title)
 				(notmuch-hello-update))
@@ -928,13 +928,13 @@ following:
     (widget-insert "Hit `?' for context-sensitive help in any Notmuch screen.\n")
     (widget-insert "Customize ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (customize-group 'notmuch))
 		   :button-prefix "" :button-suffix ""
 		   "Notmuch")
     (widget-insert " or ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (customize-variable 'notmuch-hello-sections))
 		   :button-prefix "" :button-suffix ""
 		   "this page.")

@@ -346,12 +346,12 @@ return t if successful, and nil otherwise."
 	(let ((msg-id (notmuch-maildir-fcc-save-buffer-to-tmp destdir)))
 	  (when msg-id
 	    (cond (mark-seen
-		   (condition-case err
+		   (condition-case nil
 		       (notmuch-maildir-fcc-move-tmp-to-cur destdir msg-id t)
 		     (file-already-exists
 		      (throw 'link-error nil))))
 		  (t
-		   (condition-case err
+		   (condition-case nil
 		       (notmuch-maildir-fcc-move-tmp-to-new destdir msg-id)
 		     (file-already-exists
 		      (throw 'link-error nil))))))

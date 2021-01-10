@@ -120,7 +120,7 @@ ACTION-MAP.  These strings can be inserted into a tabular
 buffer."
   ;; Compute the maximum key description width
   (let ((key-width 1))
-    (pcase-dolist (`(,key ,desc) action-map)
+    (pcase-dolist (`(,key ,_desc) action-map)
       (setq key-width
 	    (max key-width
 		 (string-width (format-kbd-macro key)))))
@@ -164,7 +164,7 @@ buffer."
   "Translate ACTION-MAP into a minibuffer keymap."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-jump-minibuffer-map)
-    (pcase-dolist (`(,key ,name ,fn) action-map)
+    (pcase-dolist (`(,key ,_name ,fn) action-map)
       (when (= (length key) 1)
 	(define-key map key
 	  `(lambda () (interactive)
@@ -173,7 +173,7 @@ buffer."
     ;; By doing this in two passes (and checking if we already have a
     ;; binding) we avoid problems if the user specifies a binding which
     ;; is a prefix of another binding.
-    (pcase-dolist (`(,key ,name ,fn) action-map)
+    (pcase-dolist (`(,key ,_name ,_fn) action-map)
       (when (> (length key) 1)
 	(let* ((key (elt key 0))
 	       (keystr (string key))

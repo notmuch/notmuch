@@ -693,7 +693,7 @@ of the result."
 			  (min init-point (- new-end 1)))))
 	(goto-char new-point)))))
 
-(defun notmuch-search-process-sentinel (proc msg)
+(defun notmuch-search-process-sentinel (proc _msg)
   "Add a message to let user know when \"notmuch search\" exits."
   (let ((buffer (process-buffer proc))
 	(status (process-status proc))
@@ -896,8 +896,7 @@ sets the :orig-tag property."
   "Process and filter the output of \"notmuch search\"."
   (let ((results-buf (process-buffer proc))
 	(parse-buf (process-get proc 'parse-buf))
-	(inhibit-read-only t)
-	done)
+	(inhibit-read-only t))
     (when (buffer-live-p results-buf)
       (with-current-buffer parse-buf
 	;; Insert new data

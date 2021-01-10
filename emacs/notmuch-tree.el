@@ -598,8 +598,7 @@ NOT change the database."
   "Show the current message (in whole window)."
   (interactive)
   (let ((id (notmuch-tree-get-message-id))
-	(inhibit-read-only t)
-	buffer)
+	(inhibit-read-only t))
     (when id
       ;; We close the window to kill off un-needed buffers.
       (notmuch-tree-close-message-window)
@@ -1033,19 +1032,17 @@ Complete list of currently available key bindings:
   (setq buffer-read-only t)
   (setq truncate-lines t))
 
-(defun notmuch-tree-process-sentinel (proc msg)
+(defun notmuch-tree-process-sentinel (proc _msg)
   "Add a message to let user know when \"notmuch tree\" exits."
   (let ((buffer (process-buffer proc))
 	(status (process-status proc))
-	(exit-status (process-exit-status proc))
-	(never-found-target-thread nil))
+	(exit-status (process-exit-status proc)))
     (when (memq status '(exit signal))
       (kill-buffer (process-get proc 'parse-buf))
       (when (buffer-live-p buffer)
 	(with-current-buffer buffer
 	  (save-excursion
-	    (let ((inhibit-read-only t)
-		  (atbob (bobp)))
+	    (let ((inhibit-read-only t))
 	      (goto-char (point-max))
 	      (when (eq status 'signal)
 		(insert "Incomplete search results (tree view process was killed).\n"))
@@ -1059,8 +1056,7 @@ Complete list of currently available key bindings:
   "Process and filter the output of \"notmuch show\" for tree view."
   (let ((results-buf (process-buffer proc))
 	(parse-buf (process-get proc 'parse-buf))
-	(inhibit-read-only t)
-	done)
+	(inhibit-read-only t))
     (if (not (buffer-live-p results-buf))
 	(delete-process proc)
       (with-current-buffer parse-buf

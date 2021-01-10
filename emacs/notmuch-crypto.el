@@ -171,7 +171,7 @@ mode."
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
-(defun notmuch-crypto--async-key-sentinel (process event)
+(defun notmuch-crypto--async-key-sentinel (process _event)
   "When the user asks for a GPG key to be retrieved
 asynchronously, handle completion of that task.
 
