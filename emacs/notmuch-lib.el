@@ -906,12 +906,11 @@ status."
 		:connection-type 'pipe
 		:stderr err-buffer))
 	 (err-proc (get-buffer-process err-buffer)))
-    (process-put err-proc 'err-buffer err-buffer)
-    (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel)
     (process-put proc 'err-buffer err-buffer)
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
+    (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel)
     proc))
 
 (defun notmuch-start-notmuch-sentinel (proc event)
@@ -956,7 +955,7 @@ status."
        (message "%s" (error-message-string err))))))
 
 (defun notmuch-start-notmuch-error-sentinel (proc event)
-  (let ((buffer (process-get proc 'err-buffer)))
+  (let ((buffer (process-buffer proc)))
     (when (buffer-live-p buffer)
       (kill-buffer buffer))))
 
