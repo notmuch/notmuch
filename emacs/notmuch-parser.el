@@ -21,7 +21,8 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
+(require 'pcase)
 
 (defun notmuch-sexp-create-parser ()
   "Return a new streaming S-expression parser.

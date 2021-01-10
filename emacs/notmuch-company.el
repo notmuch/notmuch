@@ -32,8 +32,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'notmuch-lib)
 
 (defvar-local notmuch-company-last-prefix nil)

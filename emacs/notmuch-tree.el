@@ -24,8 +24,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'mail-parse)
 
 (require 'notmuch-lib)

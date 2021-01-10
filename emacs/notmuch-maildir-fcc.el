@@ -21,8 +21,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'message)
 
 (require 'notmuch-lib)

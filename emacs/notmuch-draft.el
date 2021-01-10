@@ -25,6 +25,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'pcase)
+
 (require 'notmuch-maildir-fcc)
 (require 'notmuch-tag)
 

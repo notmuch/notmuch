@@ -22,10 +22,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl-lib)
-  (require 'pcase))
-
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 

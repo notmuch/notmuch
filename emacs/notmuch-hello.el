@@ -21,7 +21,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
 

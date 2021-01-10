@@ -23,10 +23,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl-lib)
-  (require 'pcase))
-
 (require 'mm-view)
 (require 'message)
 (require 'mm-decode)

@@ -65,8 +65,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'mm-view)
 (require 'message)
 

@@ -21,6 +21,9 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'pcase)
+
 (require 'message)
 (require 'notmuch-tag)
 

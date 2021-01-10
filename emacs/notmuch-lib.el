@@ -22,6 +22,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'pcase)
 
 (require 'mm-util)
 (require 'mm-view)
