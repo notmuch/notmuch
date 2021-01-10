@@ -1133,7 +1133,7 @@ The arguments are:
 	(inhibit-read-only t))
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
-  (set 'buffer-undo-list t)
+  (setq buffer-undo-list t)
   (notmuch-tree-worker query query-context target open-target unthreaded)
   (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))

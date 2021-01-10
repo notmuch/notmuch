@@ -693,7 +693,7 @@ of the result."
 		    (throw 'return nil))
 		  (when (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
-		    (set 'never-found-target-thread t)))))
+		    (setq never-found-target-thread t)))))
 	    (when (and never-found-target-thread
 		       notmuch-search-target-line)
 	      (goto-char (point-min))
@@ -996,11 +996,11 @@ the configured default sort order."
       (pop-to-buffer-same-window buffer))
     (notmuch-search-mode)
     ;; Don't track undo information for this buffer
-    (set 'buffer-undo-list t)
-    (set 'notmuch-search-query-string query)
-    (set 'notmuch-search-oldest-first oldest-first)
-    (set 'notmuch-search-target-thread target-thread)
-    (set 'notmuch-search-target-line target-line)
+    (setq buffer-undo-list t)
+    (setq notmuch-search-query-string query)
+    (setq notmuch-search-oldest-first oldest-first)
+    (setq notmuch-search-target-thread target-thread)
+    (setq notmuch-search-target-line target-line)
     (notmuch-tag-clear-cache)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
@@ -1048,7 +1048,7 @@ same relative position within the new buffer."
 This command toggles the sort order for the current search. The
 default sort order is defined by `notmuch-search-oldest-first'."
   (interactive)
-  (set 'notmuch-search-oldest-first (not notmuch-search-oldest-first))
+  (setq notmuch-search-oldest-first (not notmuch-search-oldest-first))
   (notmuch-search-refresh-view))
 
 (defun notmuch-group-disjunctive-query-string (query-string)
