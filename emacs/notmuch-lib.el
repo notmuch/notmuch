@@ -917,7 +917,8 @@ status."
 (defun notmuch-start-notmuch-sentinel (proc event)
   "Process sentinel function used by `notmuch-start-notmuch'."
   (let* ((err-buffer (process-get proc 'err-buffer))
-	 (err (and (not (zerop (buffer-size err-buffer)))
+	 (err (and (buffer-live-p err-buffer)
+		   (not (zerop (buffer-size err-buffer)))
 		   (with-current-buffer err-buffer (buffer-string))))
 	 (sub-sentinel (process-get proc 'sub-sentinel))
 	 (real-command (process-get proc 'real-command)))
