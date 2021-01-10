@@ -800,20 +800,27 @@ You may need to restart Emacs or upgrade your notmuch Emacs package."))
 Emacs requested a newer output format than supported by the notmuch CLI.
 You may need to restart Emacs or upgrade your notmuch package."))
    (t
-    (let* ((command-string
-	    (mapconcat (lambda (arg)
-			 (shell-quote-argument
-			  (cond ((stringp arg) arg)
-				((symbolp arg) (symbol-name arg))
-				(t "*UNKNOWN ARGUMENT*"))))
-		       command " "))
-	   (extra
-	    (concat "command: " command-string "\n"
-		    (if (integerp exit-status)
-			(format "exit status: %s\n" exit-status)
-		      (format "exit signal: %s\n" exit-status))
-		    (and err    (concat "stderr:\n" err))
-		    (and output (concat "stdout:\n" output)))))
+    (pcase-let*
+	((`(,command . ,args) command)
+	 (command (if (equal (file-name-nondirectory command)
+			     notmuch-command)
+		      notmuch-command
+		    command))
+	 (command-string
+	  (mapconcat (lambda (arg)
+		       (shell-quote-argument
+			(cond ((stringp arg) arg)
+			      ((symbolp arg) (symbol-name arg))
+			      (t "*UNKNOWN ARGUMENT*"))))
+		     (cons command args)
+		     " "))
+	 (extra
+	  (concat "command: " command-string "\n"
+		  (if (integerp exit-status)
+		      (format "exit status: %s\n" exit-status)
+		    (format "exit signal: %s\n" exit-status))
+		  (and err    (concat "stderr:\n" err))
+		  (and output (concat "stdout:\n" output)))))
       (if err
 	  ;; We have an error message straight from the CLI.
 	  (notmuch-logged-error
@@ -821,7 +828,7 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	;; We only have combined output from the CLI; don't inundate
 	;; the user with it.  Mimic `process-lines'.
 	(notmuch-logged-error (format "%s exited with status %s"
-				      (car command) exit-status)
+				      command exit-status)
 			      extra))
       ;; `notmuch-logged-error' does not return.
       ))))
@@ -908,7 +915,6 @@ status."
 	 (err-proc (get-buffer-process err-buffer)))
     (process-put proc 'err-buffer err-buffer)
     (process-put proc 'sub-sentinel sentinel)
-    (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
     (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel)
     proc))
@@ -919,8 +925,7 @@ status."
 	 (err (and (buffer-live-p err-buffer)
 		   (not (zerop (buffer-size err-buffer)))
 		   (with-current-buffer err-buffer (buffer-string))))
-	 (sub-sentinel (process-get proc 'sub-sentinel))
-	 (real-command (process-get proc 'real-command)))
+	 (sub-sentinel (process-get proc 'sub-sentinel)))
     (condition-case err
 	(progn
 	  ;; Invoke the sub-sentinel, if any
@@ -932,7 +937,7 @@ status."
 	  ;; and there's no point in telling the user that (but we
 	  ;; still check for and report stderr output below).
 	  (when (buffer-live-p (process-buffer proc))
-	    (notmuch-check-async-exit-status proc event real-command err))
+	    (notmuch-check-async-exit-status proc event nil err))
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
