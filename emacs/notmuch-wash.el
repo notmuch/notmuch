@@ -24,6 +24,7 @@
 ;;; Code:
 
 (require 'coolj)
+(require 'diff-mode)
 (require 'notmuch-lib)
 
 (declare-function notmuch-show-insert-bodypart "notmuch-show"
@@ -340,10 +341,6 @@ the wrapped text are maintained."
     (coolj-wrap-region (point-min) (point-max))))
 
 ;;;; Convert Inline Patches
-
-(require 'diff-mode)
-
-(defvar diff-file-header-re) ; From `diff-mode.el'.
 
 (defun notmuch-wash-subject-to-filename (subject &optional maxlen)
   "Convert a mail SUBJECT into a filename.
