@@ -260,8 +260,8 @@ requiring external commands."
 ;;; Harvest
 
 (defun notmuch-address-harvest-addr (result)
-  (let ((name-addr (plist-get result :name-addr)))
-    (puthash name-addr t notmuch-address-completions)))
+  (puthash (plist-get result :name-addr)
+	   t notmuch-address-completions))
 
 (defun notmuch-address-harvest-filter (proc string)
   (when (buffer-live-p (process-buffer proc))

@@ -416,9 +416,9 @@ A command that supports a prefix argument can explicitly document
 its prefixed behavior by setting the 'notmuch-prefix-doc property
 of its command symbol."
   (interactive)
-  (let* ((mode major-mode)
-	 (doc (substitute-command-keys
-	       (notmuch-substitute-command-keys (documentation mode t)))))
+  (let ((doc (substitute-command-keys
+	      (notmuch-substitute-command-keys
+	       (documentation major-mode t)))))
     (with-current-buffer (generate-new-buffer "*notmuch-help*")
       (insert doc)
       (goto-char (point-min))

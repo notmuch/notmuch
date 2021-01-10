@@ -401,9 +401,8 @@ Some useful entries are:
     (notmuch-tree-set-message-properties props)))
 
 (defun notmuch-tree-get-prop (prop &optional props)
-  (let ((props (or props
-		   (notmuch-tree-get-message-properties))))
-    (plist-get props prop)))
+  (plist-get (or props (notmuch-tree-get-message-properties))
+	     prop))
 
 (defun notmuch-tree-set-tags (tags)
   "Set the tags of the current message."

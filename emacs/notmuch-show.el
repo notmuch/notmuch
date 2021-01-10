@@ -1666,13 +1666,13 @@ It gets property PROP from PROPS or, if PROPS is nil, the current
 message in either tree or show. This means that several utility
 functions in notmuch-show can be used directly by notmuch-tree as
 they just need the correct message properties."
-  (let ((props (or props
-		   (cond ((eq major-mode 'notmuch-show-mode)
-			  (notmuch-show-get-message-properties))
-			 ((eq major-mode 'notmuch-tree-mode)
-			  (notmuch-tree-get-message-properties))
-			 (t nil)))))
-    (plist-get props prop)))
+  (plist-get (or props
+		 (cond ((eq major-mode 'notmuch-show-mode)
+			(notmuch-show-get-message-properties))
+		       ((eq major-mode 'notmuch-tree-mode)
+			(notmuch-tree-get-message-properties))
+		       (t nil)))
+	     prop))
 
 (defun notmuch-show-get-message-id (&optional bare)
   "Return an id: query for the Message-Id of the current message.

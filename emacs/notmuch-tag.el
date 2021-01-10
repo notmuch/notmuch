@@ -406,8 +406,9 @@ Return all tags if no search terms are given."
    "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list (apply #'notmuch-tag-completions search-terms)))
-    (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
+  (completing-read prompt
+		   (apply #'notmuch-tag-completions search-terms)
+		   nil nil nil 'notmuch-select-tag-history))
 
 (defun notmuch-read-tag-changes (current-tags &optional prompt initial-input)
   "Prompt for tag changes in the minibuffer.
@@ -455,10 +456,9 @@ present or a \"-\" to indicate that the tag should be removed
 from TAGS if present."
   (let ((result-tags (copy-sequence tags)))
     (dolist (tag-change tag-changes)
-      (let ((op (aref tag-change 0))
-	    (tag (and (not (string= tag-change ""))
+      (let ((tag (and (not (string= tag-change ""))
 		      (substring tag-change 1))))
-	(cl-case op
+	(cl-case (aref tag-change 0)
 	  (?+ (unless (member tag result-tags)
 		(push tag result-tags)))
 	  (?- (setq result-tags (delete tag result-tags)))

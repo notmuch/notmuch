@@ -521,17 +521,16 @@ With a prefix argument, invert the default value of
 `notmuch-show-only-matching-messages' when displaying the
 thread."
   (interactive "P")
-  (let ((thread-id (notmuch-search-find-thread-id))
-	(subject (notmuch-search-find-subject)))
-    (if (> (length thread-id) 0)
+  (let ((thread-id (notmuch-search-find-thread-id)))
+    (if thread-id
 	(notmuch-show thread-id
 		      elide-toggle
 		      (current-buffer)
 		      notmuch-search-query-string
 		      ;; Name the buffer based on the subject.
-		      (concat "*"
-			      (truncate-string-to-width subject 30 nil nil t)
-			      "*"))
+		      (format "*%s*" (truncate-string-to-width
+				      (notmuch-search-find-subject)
+				      30 nil nil t)))
       (message "End of search results."))))
 
 (defun notmuch-tree-from-search-current-query ()
@@ -556,20 +555,21 @@ thread."
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply-all to the entire current thread in a new buffer."
   (interactive "P")
-  (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-mua-new-reply message-id prompt-for-sender t)))
+  (notmuch-mua-new-reply (notmuch-search-find-thread-id)
+			 prompt-for-sender t))
 
 (defun notmuch-search-reply-to-thread-sender (&optional prompt-for-sender)
   "Begin composing a reply to the entire current thread in a new buffer."
   (interactive "P")
-  (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-mua-new-reply message-id prompt-for-sender nil)))
+  (notmuch-mua-new-reply (notmuch-search-find-thread-id)
+			 prompt-for-sender nil))
 
 ;;; Tags
 
 (defun notmuch-search-set-tags (tags &optional pos)
-  (let ((new-result (plist-put (notmuch-search-get-result pos) :tags tags)))
-    (notmuch-search-update-result new-result pos)))
+  (notmuch-search-update-result
+   (plist-put (notmuch-search-get-result pos) :tags tags)
+   pos))
 
 (defun notmuch-search-get-tags (&optional pos)
   (plist-get (notmuch-search-get-result pos) :tags))
@@ -1013,10 +1013,9 @@ the configured default sort order."
     (setq notmuch-search-target-thread target-thread)
     (setq notmuch-search-target-line target-line)
     (notmuch-tag-clear-cache)
-    (let ((proc (get-buffer-process (current-buffer)))
-	  (inhibit-read-only t))
-      (when proc
-	(error "notmuch search process already running for query `%s'" query))
+    (when (get-buffer-process buffer)
+      (error "notmuch search process already running for query `%s'" query))
+    (let ((inhibit-read-only t))
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
@@ -1045,13 +1044,12 @@ the new search results, then point will be placed on the same
 thread. Otherwise, point will be moved to attempt to be in the
 same relative position within the new buffer."
   (interactive)
-  (let ((target-line (line-number-at-pos))
-	(oldest-first notmuch-search-oldest-first)
-	(target-thread (notmuch-search-find-thread-id 'bare))
-	(query notmuch-search-query-string))
-    ;; notmuch-search erases the current buffer.
-    (notmuch-search query oldest-first target-thread target-line t)
-    (goto-char (point-min))))
+  (notmuch-search notmuch-search-query-string
+		  notmuch-search-oldest-first
+		  (notmuch-search-find-thread-id 'bare)
+		  (line-number-at-pos)
+		  t)
+  (goto-char (point-min)))
 
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.
@@ -1160,9 +1158,9 @@ Used as`imenu-prev-index-position-function' in notmuch buffers."
   "Return imenu name for line at point.
 Used as `imenu-extract-index-name-function' in notmuch buffers.
 Point should be at the beginning of the line."
-  (let ((subject (notmuch-search-find-subject))
-	(author (notmuch-search-find-authors)))
-    (format "%s (%s)" subject author)))
+  (format "%s (%s)"
+	  (notmuch-search-find-subject)
+	  (notmuch-search-find-authors)))
 
 ;;; _
 
