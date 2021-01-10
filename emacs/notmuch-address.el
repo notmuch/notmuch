@@ -54,21 +54,28 @@ If the hash is not present it attempts to load a saved hash."
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
 
-If it is a string then that string should be an external program
-which must take a single argument (searched string) and output a
-list of completion candidates, one per line.
+If this is a string, then that string should be an external
+program, which must take a single argument (searched string)
+and output a list of completion candidates, one per line.
 
-Alternatively, it can be the symbol `internal', in which case
-internal completion is used; the variable
-`notmuch-address-internal-completion' can be used to customize
-this case.
+If this is the symbol `internal', then an implementation is used
+that relies on the \"notmuch address\" command, but does not use
+any third-party (i.e. \"external\") programs.
 
-Finally, if this variable is nil then address completion is
-disabled."
+If this is the symbol `as-is', then Notmuch does not modify the
+value of `message-completion-alist'. This option has to be set to
+this value before `notmuch' is loaded, otherwise the modification
+to `message-completion-alist' may already have taken place. This
+setting obviously does not prevent `message-completion-alist'
+from being modified at all; the user or some third-party package
+may still modify it.
+
+Finally, if this is nil, then address completion is disabled."
   :type '(radio
-	  (const :tag "Use internal address completion" internal)
-	  (const :tag "Disable address completion" nil)
-	  (string :tag "Use external completion command"))
+	  (const  :tag "Use internal address completion" internal)
+	  (string :tag "Use external completion command")
+	  (const  :tag "Disable address completion" nil)
+	  (const  :tag "Use default or third-party mechanism" as-is))
   :group 'notmuch-send
   :group 'notmuch-address
   :group 'notmuch-external)
@@ -160,12 +167,13 @@ matching `notmuch-address-completion-headers-regexp'."
   (message "calling notmuch-address-message-insinuate is no longer needed"))
 
 (defun notmuch-address-setup ()
-  (when (and notmuch-address-use-company
-	     (require 'company nil t))
-    (notmuch-company-setup))
-  (cl-pushnew (cons notmuch-address-completion-headers-regexp
-		    #'notmuch-address-expand-name)
-	      message-completion-alist :test #'equal))
+  (unless (eq notmuch-address-command 'as-is)
+    (when (and notmuch-address-use-company
+	       (require 'company nil t))
+      (notmuch-company-setup))
+    (cl-pushnew (cons notmuch-address-completion-headers-regexp
+		      #'notmuch-address-expand-name)
+		message-completion-alist :test #'equal)))
 
 (defun notmuch-address-toggle-internal-completion ()
   "Toggle use of internal completion for current buffer.
