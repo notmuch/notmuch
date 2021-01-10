@@ -205,6 +205,12 @@ there will be called at other points of notmuch execution."
     map)
   "Keymap for \"notmuch search\" buffers.")
 
+;;; Internal Variables
+
+(defvar-local notmuch-search-query-string nil)
+(defvar-local notmuch-search-target-thread nil)
+(defvar-local notmuch-search-target-line nil)
+
 ;;; Stashing
 
 (defvar notmuch-search-stash-map
@@ -225,12 +231,6 @@ there will be called at other points of notmuch execution."
   "Copy current query to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-search-get-query)))
-
-;;; Variables
-
-(defvar notmuch-search-query-string)
-(defvar notmuch-search-target-thread)
-(defvar notmuch-search-target-line)
 
 ;;; Movement
 
@@ -404,10 +404,6 @@ new, global search.
 Complete list of currently available key bindings:
 
 \\{notmuch-search-mode-map}"
-  (make-local-variable 'notmuch-search-query-string)
-  (make-local-variable 'notmuch-search-oldest-first)
-  (make-local-variable 'notmuch-search-target-thread)
-  (make-local-variable 'notmuch-search-target-line)
   (setq notmuch-buffer-refresh-function #'notmuch-search-refresh-view)
   (setq-local scroll-preserve-screen-position t)
   (add-to-invisibility-spec (cons 'ellipsis t))

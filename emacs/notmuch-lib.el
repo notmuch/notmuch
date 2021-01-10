@@ -101,6 +101,7 @@ search results. Note that any filtered searches created by
 search."
   :type 'boolean
   :group 'notmuch-search)
+(make-variable-buffer-local 'notmuch-search-oldest-first)
 
 (defcustom notmuch-poll-script nil
   "[Deprecated] Command to run to incorporate new mail into the notmuch database.
