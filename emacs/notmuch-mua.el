@@ -388,7 +388,7 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (interactive)
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (unless (string= "" user-agent)
+      (unless (string-empty-p user-agent)
 	(push (cons 'User-Agent user-agent) other-headers))))
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from

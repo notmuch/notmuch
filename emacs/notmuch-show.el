@@ -333,7 +333,7 @@ operation on the contents of the current buffer."
 	 (header (concat
 		  "Subject: " subject "\n"
 		  "To: " to "\n"
-		  (if (not (string= cc ""))
+		  (if (not (string-empty-p cc))
 		      (concat "Cc: " cc "\n")
 		    "")
 		  "From: " from "\n"
@@ -1790,7 +1790,7 @@ user decision and we should not override it."
 Reshows the current thread with matches defined by the new query-string."
   (interactive (list (notmuch-read-query "Filter thread: ")))
   (let ((msg-id (notmuch-show-get-message-id)))
-    (setq notmuch-show-query-context (if (string= query "") nil query))
+    (setq notmuch-show-query-context (if (string-empty-p query) nil query))
     (notmuch-show-refresh-view t)
     (notmuch-show-goto-message msg-id)))
 

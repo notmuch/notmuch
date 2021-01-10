@@ -452,7 +452,7 @@ present or a \"-\" to indicate that the tag should be removed
 from TAGS if present."
   (let ((result-tags (copy-sequence tags)))
     (dolist (tag-change tag-changes)
-      (let ((tag (and (not (string= tag-change ""))
+      (let ((tag (and (not (string-empty-p tag-change))
 		      (substring tag-change 1))))
 	(cl-case (aref tag-change 0)
 	  (?+ (unless (member tag result-tags)
