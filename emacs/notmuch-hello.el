@@ -385,6 +385,40 @@ supported for \"Customized queries section\" items."
 		     (format "%s%03d" notmuch-hello-thousands-separator elem))
 		   (cdr result)))))
 
+(define-widget 'notmuch-search-item 'item
+  "A recent search."
+  :format "%v\n"
+  :value-create 'notmuch-search-item-value-create)
+
+(defun notmuch-search-item-value-create (widget)
+  (let ((value (widget-get widget :value)))
+    (widget-insert (make-string notmuch-hello-indent ?\s))
+    (widget-create 'editable-field
+		   :size (widget-get widget :size)
+		   :parent widget
+		   :action #'notmuch-hello-search
+		   value)
+    (widget-insert " ")
+    (widget-create 'push-button
+		   :parent widget
+		   :notify #'notmuch-hello-add-saved-search
+		   "save")
+    (widget-insert " ")
+    (widget-create 'push-button
+		   :parent widget
+		   :notify #'notmuch-hello-delete-search-from-history
+		   "del")))
+
+(defun notmuch-search-item-field-width ()
+  (max 8 ; Don't let the search boxes be less than 8 characters wide.
+       (- (window-width)
+	  notmuch-hello-indent ; space at bol
+	  notmuch-hello-indent ; space at eol
+	  1    ; for the space before the [save] button
+	  6    ; for the [save] button
+	  1    ; for the space before the [del] button
+	  5))) ; for the [del] button
+
 (defun notmuch-hello-search (widget &rest _event)
   (let ((search (widget-value widget)))
     (when search
@@ -778,54 +812,18 @@ Complete list of currently available key bindings:
   "Insert recent searches."
   (when notmuch-search-history
     (widget-insert "Recent searches: ")
-    (widget-create 'push-button
-		   :notify (lambda (&rest ignore)
-			     (when (y-or-n-p "Are you sure you want to clear the searches? ")
-			       (setq notmuch-search-history nil)
-			       (notmuch-hello-update)))
-		   "clear")
+    (widget-create
+     'push-button
+     :notify (lambda (&rest _ignore)
+	       (when (y-or-n-p "Are you sure you want to clear the searches? ")
+		 (setq notmuch-search-history nil)
+		 (notmuch-hello-update)))
+     "clear")
     (widget-insert "\n\n")
-    (let ((start (point)))
-      (cl-loop for i from 1 to notmuch-hello-recent-searches-max
-	       for search in notmuch-search-history do
-	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
-		 (set widget-symbol
-		      (widget-create 'editable-field
-				     ;; Don't let the search boxes be
-				     ;; less than 8 characters wide.
-				     :size (max 8
-						(- (window-width)
-						   ;; Leave some space
-						   ;; at the start and
-						   ;; end of the
-						   ;; boxes.
-						   (* 2 notmuch-hello-indent)
-						   ;; 1 for the space
-						   ;; before the
-						   ;; `[save]' button. 6
-						   ;; for the `[save]'
-						   ;; button.
-						   1 6
-						   ;; 1 for the space
-						   ;; before the `[del]'
-						   ;; button. 5 for the
-						   ;; `[del]' button.
-						   1 5))
-				     :action #'notmuch-hello-search
-				     search))
-		 (widget-insert " ")
-		 (widget-create 'push-button
-				:notify #'notmuch-hello-add-saved-search
-				:notmuch-saved-search-widget widget-symbol
-				"save")
-		 (widget-insert " ")
-		 (widget-create 'push-button
-				:notify #'notmuch-hello-delete-search-from-history
-				:notmuch-saved-search-widget widget-symbol
-				"del"))
-	       (widget-insert "\n"))
-      (indent-rigidly start (point) notmuch-hello-indent))
-    nil))
+    (let ((width (notmuch-search-item-field-width)))
+      (dolist (search (seq-take notmuch-search-history
+				notmuch-hello-recent-searches-max))
+	(widget-create 'notmuch-search-item :value search :size width)))))
 
 (defun notmuch-hello-insert-searches (title query-list &rest options)
   "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
