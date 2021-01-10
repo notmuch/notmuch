@@ -421,7 +421,6 @@ Some useful entries are:
 
 (defun notmuch-tree-get-match ()
   "Return whether the current message is a match."
-  (interactive)
   (notmuch-tree-get-prop :match))
 
 ;;; Update display
