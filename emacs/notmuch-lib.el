@@ -960,9 +960,10 @@ status."
        (message "%s" (error-message-string err))))))
 
 (defun notmuch-start-notmuch-error-sentinel (proc event)
-  (let ((buffer (process-buffer proc)))
-    (when (buffer-live-p buffer)
-      (kill-buffer buffer))))
+  (unless (process-live-p proc)
+    (let ((buffer (process-buffer proc)))
+      (when (buffer-live-p buffer)
+	(kill-buffer buffer)))))
 
 (defvar-local notmuch-show-process-crypto nil)
 
