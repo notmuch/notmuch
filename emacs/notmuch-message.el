@@ -62,9 +62,8 @@ applied to the matching messages.")
 (defun notmuch-message-apply-queued-tag-changes ()
   ;; Apply the tag changes queued in the buffer-local variable
   ;; notmuch-message-queued-tag-changes.
-  (dolist (query-and-tags notmuch-message-queued-tag-changes)
-    (notmuch-tag (car query-and-tags)
-		 (cdr query-and-tags))))
+  (pcase-dolist (`(,query . ,tags) notmuch-message-queued-tag-changes)
+    (notmuch-tag query tags)))
 
 (add-hook 'message-send-hook 'notmuch-message-apply-queued-tag-changes)
 
