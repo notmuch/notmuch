@@ -581,13 +581,13 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (pcase-let ((`(,content ,type)
+  (pcase-let ((`(,type ,subtype)
 	       (split-string (downcase (plist-get part :content-type)) "/")))
-    (cond ((equal content "multipart")
+    (cond ((equal type "multipart")
 	   (mapc (apply-partially #'notmuch-show--register-cids msg)
 		 (plist-get part :content)))
-	  ((and (equal content "message")
-		(equal type "rfc822"))
+	  ((and (equal type "message")
+		(equal subtype "rfc822"))
 	   (notmuch-show--register-cids
 	    msg
 	    (car (plist-get (car (plist-get part :content)) :body)))))))
