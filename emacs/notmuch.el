@@ -70,6 +70,8 @@
 (require 'mm-view)
 (require 'message)
 
+(require 'hl-line)
+
 (require 'notmuch-lib)
 (require 'notmuch-tag)
 (require 'notmuch-show)
@@ -114,8 +116,12 @@ there will be called at other points of notmuch execution."
   :type 'file
   :group 'notmuch)
 
-(defvar notmuch-query-history nil
-  "Variable to store minibuffer history for notmuch queries.")
+(defcustom notmuch-search-hook '(notmuch-hl-line-mode)
+  "List of functions to call when notmuch displays the search results."
+  :type 'hook
+  :options '(notmuch-hl-line-mode)
+  :group 'notmuch-search
+  :group 'notmuch-hooks)
 
 ;;; Mime Utilities
 
@@ -155,24 +161,6 @@ there will be called at other points of notmuch execution."
 	    (mm-save-part p))))
    mm-handle))
 
-;;; Integrations
-
-(require 'hl-line)
-
-(defun notmuch-hl-line-mode ()
-  (prog1 (hl-line-mode)
-    (when hl-line-overlay
-      (overlay-put hl-line-overlay 'priority 1))))
-
-;;; Options
-
-(defcustom notmuch-search-hook '(notmuch-hl-line-mode)
-  "List of functions to call when notmuch displays the search results."
-  :type 'hook
-  :options '(notmuch-hl-line-mode)
-  :group 'notmuch-search
-  :group 'notmuch-hooks)
-
 ;;; Keymap
 
 (defvar notmuch-search-mode-map
@@ -206,6 +194,9 @@ there will be called at other points of notmuch execution."
   "Keymap for \"notmuch search\" buffers.")
 
 ;;; Internal Variables
+
+(defvar notmuch-query-history nil
+  "Variable to store minibuffer history for notmuch queries.")
 
 (defvar-local notmuch-search-query-string nil)
 (defvar-local notmuch-search-target-thread nil)
@@ -1150,7 +1141,15 @@ If no notmuch buffers exist, run `notmuch'."
 	  (pop-to-buffer-same-window first))
       (notmuch))))
 
-;;; Imenu Support
+;;; Integrations
+;;;; Hl-line Support
+
+(defun notmuch-hl-line-mode ()
+  (prog1 (hl-line-mode)
+    (when hl-line-overlay
+      (overlay-put hl-line-overlay 'priority 1))))
+
+;;;; Imenu Support
 
 (defun notmuch-search-imenu-prev-index-position-function ()
   "Move point to previous message in notmuch-search buffer.
