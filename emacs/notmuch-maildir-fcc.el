@@ -1,4 +1,4 @@
-;;; notmuch-maildir-fcc.el --- inserting using a fcc handler
+;;; notmuch-maildir-fcc.el --- inserting using a fcc handler  -*- lexical-binding: t -*-
 
 ;; Copyright © Jesse Rosenthal
 ;;

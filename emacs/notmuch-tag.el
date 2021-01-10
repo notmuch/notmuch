@@ -1,4 +1,4 @@
-;;; notmuch-tag.el --- tag messages within emacs
+;;; notmuch-tag.el --- tag messages within emacs  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Damien Cassou
 ;; Copyright © Carl Worth
@@ -295,22 +295,24 @@ This can be used with `notmuch-tag-format-image-data'."
 		      (and (eq (string-match key tag) 0)
 			   (= (match-end 0) (length tag)))))))
 
-(defun notmuch-tag--do-format (tag formatted-tag formats)
+(defun notmuch-tag--do-format (bare-tag tag formats)
   "Apply a tag-formats entry to TAG."
   (cond ((null formats)		;; - Tag not in `formats',
-	 formatted-tag)	       	;;   the format is the tag itself.
+	 tag)			;;   the format is the tag itself.
 	((null (cdr formats))	;; - Tag was deliberately hidden,
 	 nil)			;;   no format must be returned
 	(t
 	 ;; Tag was found and has formats, we must apply all the
 	 ;; formats.  TAG may be null so treat that as a special case.
-	 (let ((bare-tag tag)
-	       (tag (copy-sequence (or formatted-tag ""))))
+	 (let ((return-tag (copy-sequence (or tag ""))))
 	   (dolist (format (cdr formats))
-	     (setq tag (eval format)))
-	   (if (and (null formatted-tag) (equal tag ""))
+	     (setq return-tag
+		   (eval format
+			 `((bare-tag . ,bare-tag)
+			   (tag . ,return-tag)))))
+	   (if (and (null tag) (equal return-tag ""))
 	       nil
-	     tag)))))
+	     return-tag)))))
 
 (defun notmuch-tag-format-tag (tags orig-tags tag)
   "Format TAG according to `notmuch-tag-formats'.

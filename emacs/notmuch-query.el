@@ -1,4 +1,4 @@
-;;; notmuch-query.el --- provide an emacs api to query notmuch
+;;; notmuch-query.el --- provide an emacs api to query notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Bremner
 ;;

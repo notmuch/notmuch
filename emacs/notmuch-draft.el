@@ -1,4 +1,4 @@
-;;; notmuch-draft.el --- functions for postponing and editing drafts
+;;; notmuch-draft.el --- functions for postponing and editing drafts  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Mark Walters
 ;; Copyright © David Bremner

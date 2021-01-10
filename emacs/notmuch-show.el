@@ -1,4 +1,4 @@
-;;; notmuch-show.el --- displaying notmuch forests
+;;; notmuch-show.el --- displaying notmuch forests  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -58,6 +58,10 @@
 		  (&optional query query-context target buffer-name open-target))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))
+
+(defvar shr-blocked-images)
+(defvar gnus-blocked-images)
+(defvar shr-content-function)
 
 ;;; Options
 

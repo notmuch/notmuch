@@ -1,4 +1,4 @@
-;;; notmuch-lib.el --- common variables, functions and function declarations
+;;; notmuch-lib.el --- common variables, functions and function declarations  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;;

@@ -1,4 +1,4 @@
-;;; notmuch-mua.el --- emacs style mail-user-agent
+;;; notmuch-mua.el --- emacs style mail-user-agent  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -37,6 +37,11 @@
 (declare-function notmuch-maildir-message-do-fcc "notmuch-maildir-fcc" ())
 (declare-function notmuch-draft-postpone "notmuch-draft" ())
 (declare-function notmuch-draft-save "notmuch-draft" ())
+
+(defvar notmuch-show-indent-multipart)
+(defvar notmuch-show-insert-header-p-function)
+(defvar notmuch-show-max-text-part-size)
+(defvar notmuch-show-insert-text/plain-hook)
 
 ;;; Options
 

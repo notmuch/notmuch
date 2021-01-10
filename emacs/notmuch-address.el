@@ -1,4 +1,4 @@
-;;; notmuch-address.el --- address completion with notmuch
+;;; notmuch-address.el --- address completion with notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;

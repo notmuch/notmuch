@@ -1,4 +1,4 @@
-;;; notmuch-wash.el --- cleaning up message bodies
+;;; notmuch-wash.el --- cleaning up message bodies  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson

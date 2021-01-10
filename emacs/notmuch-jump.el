@@ -1,4 +1,4 @@
-;;; notmuch-jump.el --- User-friendly shortcut keys
+;;; notmuch-jump.el --- User-friendly shortcut keys  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Austin Clements
 ;;

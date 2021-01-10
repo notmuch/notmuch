@@ -1,4 +1,4 @@
-;;; notmuch-compat.el --- compatibility functions for earlier versions of emacs
+;;; notmuch-compat.el --- compatibility functions for earlier versions of emacs  -*- lexical-binding: t -*-
 ;;
 ;; The functions in this file are copied from more modern versions of
 ;; emacs and are Copyright (C) 1985-1986, 1992, 1994-1995, 1999-2017

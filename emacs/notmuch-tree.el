@@ -1,4 +1,4 @@
-;;; notmuch-tree.el --- displaying notmuch forests
+;;; notmuch-tree.el --- displaying notmuch forests  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson

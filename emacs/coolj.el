@@ -1,4 +1,4 @@
-;;; coolj.el --- automatically wrap long lines  -*- coding:utf-8 -*-
+;;; coolj.el --- automatically wrap long lines  -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2000, 2001, 2004-2009 Free Software Foundation, Inc.
 

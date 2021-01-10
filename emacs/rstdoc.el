@@ -1,4 +1,4 @@
-;;; rstdoc.el --- help generate documentation from docstrings -*-lexical-binding: t-*-
+;;; rstdoc.el --- help generate documentation from docstrings  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 David Bremner
 

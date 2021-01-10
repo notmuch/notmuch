@@ -1,4 +1,4 @@
-;;; notmuch-parser.el --- streaming S-expression parser
+;;; notmuch-parser.el --- streaming S-expression parser  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Austin Clements
 ;;

@@ -1,4 +1,4 @@
-;;; notmuch-message.el --- message-mode functions specific to notmuch
+;;; notmuch-message.el --- message-mode functions specific to notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Jesse Rosenthal
 ;;

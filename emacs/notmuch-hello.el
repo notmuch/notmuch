@@ -1,4 +1,4 @@
-;;; notmuch-hello.el --- welcome to notmuch, a frontend
+;;; notmuch-hello.el --- welcome to notmuch, a frontend  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;

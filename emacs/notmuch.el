@@ -1,4 +1,4 @@
-;;; notmuch.el --- run notmuch within emacs
+;;; notmuch.el --- run notmuch within emacs  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;;
