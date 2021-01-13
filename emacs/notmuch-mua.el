@@ -179,13 +179,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defun notmuch-mua-get-switch-function ()
   "Get a switch function according to `notmuch-mua-compose-in'."
-  (cond ((eq notmuch-mua-compose-in 'current-window)
-	 'switch-to-buffer)
-	((eq notmuch-mua-compose-in 'new-window)
-	 'switch-to-buffer-other-window)
-	((eq notmuch-mua-compose-in 'new-frame)
-	 'switch-to-buffer-other-frame)
-	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
+  (pcase notmuch-mua-compose-in
+    ('current-window 'switch-to-buffer)
+    ('new-window     'switch-to-buffer-other-window)
+    ('new-frame      'switch-to-buffer-other-frame)
+    (_ (error "Invalid value for `notmuch-mua-compose-in'"))))
 
 (defun notmuch-mua-maybe-set-window-dedicated ()
   "Set the selected window as dedicated according to `notmuch-mua-compose-in'."
@@ -375,12 +373,10 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 		(select-window window))
 	    (funcall switch-function buffer)
 	    (set-buffer buffer))
-	  (when (and (buffer-modified-p)
-		     (not (prog1
-			      (y-or-n-p
-			       "Message already being composed; erase? ")
-			    (message nil))))
-	    (error "Message being composed")))
+	  (when (buffer-modified-p)
+	    (if (y-or-n-p "Message already being composed; erase? ")
+		(message nil)
+	      (error "Message being composed"))))
       (funcall switch-function name)
       (set-buffer name))
     (erase-buffer)
@@ -611,8 +607,10 @@ unencrypted.  Really send? "))))
 ;;; _
 
 (define-mail-user-agent 'notmuch-user-agent
-  'notmuch-mua-mail 'notmuch-mua-send-and-exit
-  'notmuch-mua-kill-buffer 'notmuch-mua-send-hook)
+  'notmuch-mua-mail
+  'notmuch-mua-send-and-exit
+  'notmuch-mua-kill-buffer
+  'notmuch-mua-send-hook)
 
 ;; Add some more headers to the list that `message-mode' hides when
 ;; composing a message.

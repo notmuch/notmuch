@@ -454,8 +454,9 @@ present or a \"-\" to indicate that the tag should be removed
 from TAGS if present."
   (let ((result-tags (copy-sequence tags)))
     (dolist (tag-change tag-changes)
-      (let ((op (string-to-char tag-change))
-	    (tag (unless (string= tag-change "") (substring tag-change 1))))
+      (let ((op (aref tag-change 0))
+	    (tag (and (not (string= tag-change ""))
+		      (substring tag-change 1))))
 	(cl-case op
 	  (?+ (unless (member tag result-tags)
 		(push tag result-tags)))
@@ -482,13 +483,12 @@ messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
-  (mapc (lambda (tag-change)
-	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
-	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
-	tag-changes)
+  (dolist (tag-change tag-changes)
+    (unless (string-match-p "^[-+]\\S-+$" tag-change)
+      (error "Tag must be of the form `+this_tag' or `-that_tag'")))
   (unless query
     (error "Nothing to tag!"))
-  (unless (null tag-changes)
+  (when tag-changes
     (run-hooks 'notmuch-before-tag-hook)
     (if (<= (length query) notmuch-tag-argument-limit)
 	(apply 'notmuch-call-notmuch-process "tag"

@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
+
 (require 'message)
 (require 'notmuch-parser)
 (require 'notmuch-lib)
@@ -160,15 +162,12 @@ matching `notmuch-address-completion-headers-regexp'."
   (message "calling notmuch-address-message-insinuate is no longer needed"))
 
 (defun notmuch-address-setup ()
-  (let* ((setup-company (and notmuch-address-use-company
-			     (require 'company nil t)))
-	 (pair (cons notmuch-address-completion-headers-regexp
-		     #'notmuch-address-expand-name)))
-    (when setup-company
-      (notmuch-company-setup))
-    (unless (member pair message-completion-alist)
-      (setq message-completion-alist
-	    (push pair message-completion-alist)))))
+  (when (and notmuch-address-use-company
+	     (require 'company nil t))
+    (notmuch-company-setup))
+  (cl-pushnew (cons notmuch-address-completion-headers-regexp
+		    #'notmuch-address-expand-name)
+	      message-completion-alist :test #'equal))
 
 (defun notmuch-address-toggle-internal-completion ()
   "Toggle use of internal completion for current buffer.
@@ -264,9 +263,6 @@ requiring external commands."
   (let ((name-addr (plist-get result :name-addr)))
     (puthash name-addr t notmuch-address-completions)))
 
-(defun notmuch-address-harvest-handle-result (obj)
-  (notmuch-address-harvest-addr obj))
-
 (defun notmuch-address-harvest-filter (proc string)
   (when (buffer-live-p (process-buffer proc))
     (with-current-buffer (process-buffer proc)
@@ -274,7 +270,7 @@ requiring external commands."
 	(goto-char (point-max))
 	(insert string))
       (notmuch-sexp-parse-partial-list
-       'notmuch-address-harvest-handle-result (process-buffer proc)))))
+       'notmuch-address-harvest-addr (process-buffer proc)))))
 
 (defvar notmuch-address-harvest-procs '(nil . nil)
   "The currently running harvests.

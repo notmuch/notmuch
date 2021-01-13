@@ -179,7 +179,7 @@ there will be called at other points of notmuch execution."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
     (define-key map "x" 'notmuch-bury-or-kill-this-buffer)
-    (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
+    (define-key map (kbd "DEL") 'notmuch-search-scroll-down)
     (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map " " 'notmuch-search-scroll-up)
     (define-key map "<" 'notmuch-search-first-thread)
@@ -232,7 +232,7 @@ there will be called at other points of notmuch execution."
 (defvar notmuch-search-target-thread)
 (defvar notmuch-search-target-line)
 
-(defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
+(defvar notmuch-search-disjunctive-regexp "\\<[oO][rR]\\>")
 
 ;;; Movement
 
@@ -950,40 +950,39 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   "Read a notmuch-query from the minibuffer with completion.
 
 PROMPT is the string to prompt with."
-  (let*
-      ((all-tags
-	(mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
-		(process-lines notmuch-command "search" "--output=tags" "*")))
-       (completions
-	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		      "subject:" "attachment:")
-		(mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
-		(mapcar (lambda (tag) (concat "is:" tag)) all-tags)
-		(mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
-			(mailcap-mime-types)))))
-    (let ((keymap (copy-keymap minibuffer-local-map))
-	  (current-query (cl-case major-mode
-			   (notmuch-search-mode (notmuch-search-get-query))
-			   (notmuch-show-mode (notmuch-show-get-query))
-			   (notmuch-tree-mode (notmuch-tree-get-query))))
-	  (minibuffer-completion-table
-	   (completion-table-dynamic
-	    (lambda (string)
-	      ;; generate a list of possible completions for the current input
-	      (cond
-	       ;; this ugly regexp is used to get the last word of the input
-	       ;; possibly preceded by a '('
-	       ((string-match "\\(^\\|.* (?\\)\\([^ ]*\\)$" string)
-		(mapcar (lambda (compl)
-			  (concat (match-string-no-properties 1 string) compl))
-			(all-completions (match-string-no-properties 2 string)
-					 completions)))
-	       (t (list string)))))))
-      ;; this was simpler than convincing completing-read to accept spaces:
-      (define-key keymap (kbd "TAB") 'minibuffer-complete)
-      (let ((history-delete-duplicates t))
-	(read-from-minibuffer prompt nil keymap nil
-			      'notmuch-search-history current-query nil)))))
+  (let* ((all-tags
+	  (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
+		  (process-lines notmuch-command "search" "--output=tags" "*")))
+	 (completions
+	  (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
+			"subject:" "attachment:")
+		  (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
+		  (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
+		  (mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
+			  (mailcap-mime-types))))
+	 (keymap (copy-keymap minibuffer-local-map))
+	 (current-query (cl-case major-mode
+			  (notmuch-search-mode (notmuch-search-get-query))
+			  (notmuch-show-mode (notmuch-show-get-query))
+			  (notmuch-tree-mode (notmuch-tree-get-query))))
+	 (minibuffer-completion-table
+	  (completion-table-dynamic
+	   (lambda (string)
+	     ;; Generate a list of possible completions for the current input.
+	     (cond
+	      ;; This ugly regexp is used to get the last word of the input
+	      ;; possibly preceded by a '('.
+	      ((string-match "\\(^\\|.* (?\\)\\([^ ]*\\)$" string)
+	       (mapcar (lambda (compl)
+			 (concat (match-string-no-properties 1 string) compl))
+		       (all-completions (match-string-no-properties 2 string)
+					completions)))
+	      (t (list string)))))))
+    ;; This was simpler than convincing completing-read to accept spaces:
+    (define-key keymap (kbd "TAB") 'minibuffer-complete)
+    (let ((history-delete-duplicates t))
+      (read-from-minibuffer prompt nil keymap nil
+			    'notmuch-search-history current-query nil))))
 
 (defun notmuch-search-get-query ()
   "Return the current query in this search buffer."
@@ -1042,12 +1041,12 @@ the configured default sort order."
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")
-		     query))
-	      ;; Use a scratch buffer to accumulate partial output.
-	      ;; This buffer will be killed by the sentinel, which
-	      ;; should be called no matter how the process dies.
-	      (parse-buf (generate-new-buffer " *notmuch search parse*")))
-	  (process-put proc 'parse-buf parse-buf)
+		     query)))
+	  ;; Use a scratch buffer to accumulate partial output.
+	  ;; This buffer will be killed by the sentinel, which
+	  ;; should be called no matter how the process dies.
+	  (process-put proc 'parse-buf
+		       (generate-new-buffer " *notmuch search parse*"))
 	  (set-process-filter proc 'notmuch-search-process-filter)
 	  (set-process-query-on-exit-flag proc nil))))
     (run-hooks 'notmuch-search-hook)))

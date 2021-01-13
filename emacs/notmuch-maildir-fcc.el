@@ -107,16 +107,13 @@ by notmuch-mua-mail."
 	   ;; Old style - no longer works.
 	   (error "Invalid `notmuch-fcc-dirs' setting (old style)"))
 	  ((listp notmuch-fcc-dirs)
-	   (let* ((from (message-field-value "From"))
-		  (match
-		   (catch 'first-match
-		     (dolist (re-folder notmuch-fcc-dirs)
-		       (when (string-match-p (car re-folder) from)
-			 (throw 'first-match re-folder))))))
-	     (if match
-		 (cdr match)
-	       (message "No Fcc header added.")
-	       nil)))
+	   (or (seq-some (let ((from (message-field-value "From")))
+			   (pcase-lambda (`(,regexp . ,folder))
+			     (and (string-match-p regexp from)
+				  folder)))
+			 notmuch-fcc-dirs)
+	       (progn (message "No Fcc header added.")
+		      nil)))
 	  (t
 	   (error "Invalid `notmuch-fcc-dirs' setting (neither string nor list)")))))
     (when subdir
@@ -128,9 +125,9 @@ by notmuch-mua-mail."
   ;; Notmuch insert does not accept absolute paths, so check the user
   ;; really want this header inserted.
   (when (or (not (= (elt subdir 0) ?/))
-	    (y-or-n-p
-	     (format "Fcc header %s is an absolute path and notmuch insert is requested.
-Insert header anyway? " subdir)))
+	    (y-or-n-p (format "Fcc header %s is an absolute path %s %s" subdir
+			      "and notmuch insert is requested."
+			      "Insert header anyway? ")))
     (message-add-header (concat "Fcc: " subdir))))
 
 (defun notmuch-maildir-add-file-style-fcc-header (subdir)
@@ -173,7 +170,7 @@ This is taken from the function message-do-fcc."
   "Process Fcc headers in the current buffer.
 
 This is a rearranged version of message mode's message-do-fcc."
-  (let (list file)
+  (let (files file)
     (save-excursion
       (save-restriction
 	(message-narrow-to-headers)
@@ -183,13 +180,11 @@ This is a rearranged version of message mode's message-do-fcc."
 	 (save-restriction
 	   (message-narrow-to-headers)
 	   (while (setq file (message-fetch-field "fcc" t))
-	     (push file list)
+	     (push file files)
 	     (message-remove-header "fcc" nil t)))
 	 (notmuch-maildir-setup-message-for-saving)
 	 ;; Process FCC operations.
-	 (while list
-	   (setq file (pop list))
-	   (notmuch-fcc-handler file))
+	 (mapc #'notmuch-fcc-handler files)
 	 (kill-buffer (current-buffer)))))))
 
 (defun notmuch-fcc-handler (fcc-header)
@@ -201,7 +196,8 @@ normal fcc."
   (message "Doing Fcc...")
   (if notmuch-maildir-use-notmuch-insert
       (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
-    (notmuch-maildir-fcc-file-fcc fcc-header)))
+    (notmuch-maildir-fcc-file-fcc fcc-header))
+  (message "Doing Fcc...done"))
 
 ;;; Functions for saving a message using notmuch insert.
 
@@ -230,9 +226,8 @@ quoting each space with an immediately preceding backslash
 or surrounding the entire folder name in double quotes.
 
 If CREATE is non-nil then create the folder if necessary."
-  (let* ((args (split-string-and-unquote fcc-header))
-	 (folder (car args))
-	 (tags (cdr args)))
+  (pcase-let ((`(,folder . ,tags)
+	       (split-string-and-unquote fcc-header)))
     (condition-case nil
 	(notmuch-maildir-notmuch-insert-current-buffer folder create tags)
       ;; Since there are many reasons notmuch insert could fail, e.g.,
@@ -265,7 +260,7 @@ If CREATE is non-nil then create the folder if necessary."
   (let* ((ftime (float-time))
 	 (microseconds (mod (* 1000000 ftime) 1000000))
 	 (hostname (notmuch-maildir-fcc-host-fixer (system-name))))
-    (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
+    (cl-incf notmuch-maildir-fcc-count)
     (format "%d.%d_%d_%d.%s"
 	    ftime
 	    (emacs-pid)
@@ -298,9 +293,7 @@ if successful, nil if not."
 	   (write-file (concat destdir "/tmp/" msg-id))
 	   msg-id)
 	  (t
-	   (error (format "Can't write to %s. Not a maildir."
-			  destdir))
-	   nil))))
+	   (error "Can't write to %s. Not a maildir." destdir)))))
 
 (defun notmuch-maildir-fcc-move-tmp-to-new (destdir msg-id)
   (add-name-to-file
@@ -345,16 +338,12 @@ return t if successful, and nil otherwise."
       (catch 'link-error
 	(let ((msg-id (notmuch-maildir-fcc-save-buffer-to-tmp destdir)))
 	  (when msg-id
-	    (cond (mark-seen
-		   (condition-case nil
-		       (notmuch-maildir-fcc-move-tmp-to-cur destdir msg-id t)
-		     (file-already-exists
-		      (throw 'link-error nil))))
-		  (t
-		   (condition-case nil
-		       (notmuch-maildir-fcc-move-tmp-to-new destdir msg-id)
-		     (file-already-exists
-		      (throw 'link-error nil))))))
+	    (condition-case nil
+		(if mark-seen
+		    (notmuch-maildir-fcc-move-tmp-to-cur destdir msg-id t)
+		  (notmuch-maildir-fcc-move-tmp-to-new destdir msg-id))
+	      (file-already-exists
+	       (throw 'link-error nil))))
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
 

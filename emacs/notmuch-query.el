@@ -41,11 +41,9 @@ is a possibly empty forest of replies."
 
 (defun notmuch-query-map-aux  (mapper function seq)
   "Private function to do the actual mapping and flattening."
-  (apply 'append
-	 (mapcar
-	  (lambda (tree)
-	    (funcall mapper function tree))
-	  seq)))
+  (cl-mapcan (lambda (tree)
+	       (funcall mapper function tree))
+	     seq))
 
 (defun notmuch-query-map-threads (fn threads)
   "Apply function FN to every thread in THREADS.
@@ -63,7 +61,8 @@ Flatten results to a list.  See the function
   "Apply function FN to every message in TREE.
 Flatten results to a list.  See the function
 `notmuch-query-get-threads' for more information."
-  (cons (funcall fn (car tree)) (notmuch-query-map-forest fn (cadr tree))))
+  (cons (funcall fn (car tree))
+	(notmuch-query-map-forest fn (cadr tree))))
 
 ;;; Predefined queries
 

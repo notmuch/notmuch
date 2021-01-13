@@ -192,8 +192,8 @@ will be signaled.
 
 Otherwise the output will be returned."
   (with-temp-buffer
-    (let* ((status (apply #'call-process notmuch-command nil t nil args))
-	   (output (buffer-string)))
+    (let ((status (apply #'call-process notmuch-command nil t nil args))
+	  (output (buffer-string)))
       (notmuch-check-exit-status status (cons notmuch-command args) output)
       output)))
 
@@ -248,7 +248,8 @@ displays both values separately."
 	 (len (length val)))
     ;; Trim off the trailing newline (if the value is empty or not
     ;; configured, there will be no newline)
-    (if (and (> len 0) (= (aref val (- len 1)) ?\n))
+    (if (and (> len 0)
+	     (= (aref val (- len 1)) ?\n))
 	(substring val 0 -1)
       val)))
 
@@ -538,13 +539,12 @@ This replaces spaces, percents, and double quotes in STR with
 ;;; Generic Utilities
 
 (defun notmuch-plist-delete (plist property)
-  (let* ((xplist (cons nil plist))
-	 (pred xplist))
-    (while (cdr pred)
-      (when (eq (cadr pred) property)
-	(setcdr pred (cdddr pred)))
-      (setq pred (cddr pred)))
-    (cdr xplist)))
+  (let (p)
+    (while plist
+      (unless (eq property (car plist))
+	(setq p (plist-put p (car plist) (cadr plist))))
+      (setq plist (cddr plist)))
+    p))
 
 ;;; MML Utilities
 
@@ -555,8 +555,10 @@ This replaces spaces, percents, and double quotes in STR with
     (if (or (string= (cadr st1) "*")
 	    (string= (cadr st2) "*"))
 	;; Comparison of content types should be case insensitive.
-	(string= (downcase (car st1)) (downcase (car st2)))
-      (string= (downcase t1) (downcase t2)))))
+	(string= (downcase (car st1))
+		 (downcase (car st2)))
+      (string= (downcase t1)
+	       (downcase t2)))))
 
 (defvar notmuch-multipart/alternative-discouraged
   '(;; Avoid HTML parts.

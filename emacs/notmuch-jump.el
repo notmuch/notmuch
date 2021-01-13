@@ -63,8 +63,8 @@ fast way to jump to a saved search from anywhere in Notmuch."
     (setq action-map (nreverse action-map))
     (if action-map
 	(notmuch-jump action-map "Search: ")
-      (error "To use notmuch-jump, \
-please customize shortcut keys in notmuch-saved-searches."))))
+      (error "To use notmuch-jump, %s"
+	     "please customize shortcut keys in notmuch-saved-searches."))))
 
 (defvar notmuch-jump--action nil)
 
