@@ -973,7 +973,8 @@ PROMPT is the string to prompt with."
 
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
 ;;;###autoload
-(defun notmuch-search (&optional query oldest-first target-thread target-line no-display)
+(defun notmuch-search (&optional query oldest-first target-thread target-line
+				 no-display)
   "Display threads matching QUERY in a notmuch-search buffer.
 
 If QUERY is nil, it is read interactively from the minibuffer.

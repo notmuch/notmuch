@@ -34,8 +34,9 @@
 (require 'notmuch-jump)
 
 (declare-function notmuch-search "notmuch"
-		  (&optional query oldest-first target-thread target-line))
-(declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
+		  (&optional query oldest-first target-thread target-line
+			     no-display))
+(declare-function notmuch-call-notmuch-process "notmuch-lib" (&rest args))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-search-find-thread-id "notmuch" (&optional bare))
 (declare-function notmuch-search-find-subject "notmuch" ())
@@ -1112,7 +1113,8 @@ the same as for the function notmuch-tree."
 	      ")")
     notmuch-tree-basic-query))
 
-(defun notmuch-tree (&optional query query-context target buffer-name open-target unthreaded parent-buffer)
+(defun notmuch-tree (&optional query query-context target buffer-name
+			       open-target unthreaded parent-buffer)
   "Display threads matching QUERY in tree view.
 
 The arguments are:
@@ -1145,7 +1147,8 @@ The arguments are:
   (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))
 
-(defun notmuch-unthreaded (&optional query query-context target buffer-name open-target)
+(defun notmuch-unthreaded (&optional query query-context target buffer-name
+				     open-target)
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
 

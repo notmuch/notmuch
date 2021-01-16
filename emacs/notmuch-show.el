@@ -39,19 +39,20 @@
 (require 'notmuch-print)
 (require 'notmuch-draft)
 
-(declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
+(declare-function notmuch-call-notmuch-process "notmuch-lib" (&rest args))
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-previous-thread "notmuch" nil)
-(declare-function notmuch-search-show-thread "notmuch" nil)
+(declare-function notmuch-search-show-thread "notmuch")
 (declare-function notmuch-foreach-mime-part "notmuch" (function mm-handle))
 (declare-function notmuch-count-attachments "notmuch" (mm-handle))
 (declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target unthreaded))
+			     open-target unthreaded parent-buffer))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
-(declare-function notmuch-unthreaded
-		  (&optional query query-context target buffer-name open-target))
+(declare-function notmuch-unthreaded "notmuch-tree"
+		  (&optional query query-context target buffer-name
+			     open-target))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))
 
