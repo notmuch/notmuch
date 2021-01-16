@@ -389,7 +389,7 @@ Subject: No messages excluded: single match: reply 4
 Subject: No messages excluded: single match: reply 5"
 
 test_begin_subtest "Show, exclude=false"
-output=$(notmuch show --exclude=false tag:test | notmuch_show_sanitize_all  | egrep "Subject:|message{")
+output=$(notmuch show --exclude=false tag:test | notmuch_show_sanitize_all | egrep "Subject:|message{")
 test_expect_equal "$output" "message{ id:XXXXX depth:0 match:1 excluded:1 filename:XXXXX
 Subject: All messages excluded: single match: reply 2
 message{ id:XXXXX depth:0 match:1 excluded:1 filename:XXXXX

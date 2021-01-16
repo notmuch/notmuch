@@ -174,7 +174,7 @@ thread:XXX   2001-01-05 [1/1(3)] Notmuch Test Suite; Duplicated message (inbox r
 test_begin_subtest "Tag changes modify flags of multiple files"
 notmuch tag -replied subject:"Duplicated message"
 (cd $MAIL_DIR/cur/; ls duplicated*) > actual
-test_expect_equal "$(< actual)"  "duplicated-message-another-copy:2,S
+test_expect_equal "$(< actual)" "duplicated-message-another-copy:2,S
 duplicated-message-copy:2,S
 duplicated-message:2,S"
 

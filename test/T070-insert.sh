@@ -247,7 +247,7 @@ notmuch config set new.tags $OLDCONFIG
 
 # DUPLICATE_MESSAGE_ID is not tested here, because it should actually pass.
 # pregenerate all of the test shims
-for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR OUT_OF_MEMORY XAPIAN_EXCEPTION; do
+for code in FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR OUT_OF_MEMORY XAPIAN_EXCEPTION; do
     make_shim shim-$code <<EOF
 #include <notmuch.h>
 #include <stdio.h>
@@ -264,7 +264,7 @@ done
 
 gen_insert_msg
 
-for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
+for code in FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
     test_begin_subtest "EXIT_FAILURE when index_file returns $code"
     test_expect_code 1 "notmuch_with_shim shim-$code insert < \"$gen_msg_filename\""
 

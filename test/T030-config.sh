@@ -76,7 +76,7 @@ test_expect_equal "$(notmuch --config:alt-config config get user.name)" \
     "Another Name"
 
 test_begin_subtest "Top level --config<space>FILE option"
-test_expect_equal "$(notmuch --config  alt-config config get user.name)" \
+test_expect_equal "$(notmuch --config alt-config config get user.name)" \
     "Another Name"
 
 test_begin_subtest "Top level --config=FILE option changed the right file"

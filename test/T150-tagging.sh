@@ -90,7 +90,7 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag5 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag4 tag5 unread)"
 
 # generate a common input file for the next several tests.
-cat > batch.in  <<EOF
+cat > batch.in <<EOF
 # %40 is an @ in tag
 +%40 -tag5 +tag6 -- One
 +tag1 -tag1 -tag4 +tag4 -- Two
@@ -305,9 +305,9 @@ test_begin_subtest "Tag name beginning with -"
 test_expect_code 1 'notmuch tag +- One'
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.*
+chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(notmuch tag +something '*' 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.*
+chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 test_done

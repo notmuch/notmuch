@@ -171,7 +171,7 @@ test_expect_equal_file EXPECTED OUTPUT
 add_email_corpus lkml
 test_begin_subtest "new doesn't run out of file descriptors with many gzipped files"
 ulimit -n 200
-find ${MAIL_DIR} -name .notmuch -prune -o  -type f -print0 | xargs -0 gzip --
+find ${MAIL_DIR} -name .notmuch -prune -o -type f -print0 | xargs -0 gzip --
 test_expect_success "notmuch new"
 
 test_done

@@ -341,9 +341,9 @@ notmuch config set new.tags $OLDCONFIG
 
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.*
+chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.*
+chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 
@@ -385,8 +385,8 @@ test_begin_subtest "reference loop does not crash"
 test_expect_code 0 "notmuch show --format=json id:mid-loop-12@example.org id:mid-loop-21@example.org > OUTPUT"
 
 test_begin_subtest "reference loop ordered by date"
-threadid=$(notmuch search --output=threads  id:mid-loop-12@example.org)
-notmuch show --format=mbox $threadid | grep '^Date'  > OUTPUT
+threadid=$(notmuch search --output=threads id:mid-loop-12@example.org)
+notmuch show --format=mbox $threadid | grep '^Date' > OUTPUT
 cat <<EOF > EXPECTED
 Date: Thu, 16 Jun 2016 22:14:41 -0400
 Date: Fri, 17 Jun 2016 22:14:41 -0400

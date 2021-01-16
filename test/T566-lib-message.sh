@@ -279,7 +279,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_status_t status;
         notmuch_bool_t out;
         status = notmuch_message_has_maildir_flag_st (message, 'S', &out);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -295,7 +295,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_maildir_flags_to_tags (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -311,7 +311,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_remove_all_tags (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -327,7 +327,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_freeze (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_SUCCESS);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -343,7 +343,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_thaw (message);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -358,7 +358,7 @@ test_begin_subtest "Handle destroying message with closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_message_destroy (message);
-        printf("%d\n%d\n", message != NULL,  1);
+        printf("%d\n%d\n", message != NULL, 1);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -374,7 +374,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_database_t *db2;
         db2 = notmuch_message_get_database (message);
-        printf("%d\n%d\n", message != NULL,  db == db2);
+        printf("%d\n%d\n", message != NULL, db == db2);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -390,7 +390,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_reindex (message, NULL);
-        printf("%d\n%d\n", message != NULL,  status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED

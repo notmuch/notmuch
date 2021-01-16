@@ -178,7 +178,7 @@ test_expect_equal_json "$output" "$expected"
 add_email_corpus threading
 
 test_begin_subtest "reply to ghost"
-notmuch show --entire-thread=true id:000-real-root@example.org | grep ^Subject: | head -1  > OUTPUT
+notmuch show --entire-thread=true id:000-real-root@example.org | grep ^Subject: | head -1 > OUTPUT
 cat <<EOF > EXPECTED
 Subject: root message
 EOF

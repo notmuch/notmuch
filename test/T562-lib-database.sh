@@ -325,7 +325,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         notmuch_tags_t *result;
         EXPECT0(notmuch_database_close (db));
         result = notmuch_database_get_all_tags (db);
-        printf("%d\n",  result == NULL);
+        printf("%d\n", result == NULL);
         stat = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 EOF
@@ -343,7 +343,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         char *result;
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_get_config (db, "foo", &result);
-        printf("%d\n",  stat == NOTMUCH_STATUS_SUCCESS);
+        printf("%d\n", stat == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -358,7 +358,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_set_config (db, "foo", "bar");
-        printf("%d\n",  stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -413,7 +413,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         EXPECT0(notmuch_database_close (db));
         notmuch_decryption_policy_t policy = notmuch_indexopts_get_decrypt_policy (result);
         stat = notmuch_indexopts_set_decrypt_policy (result, policy);
-        printf("%d\n%d\n",  policy == NOTMUCH_DECRYPT_AUTO, stat == NOTMUCH_STATUS_SUCCESS);
+        printf("%d\n%d\n", policy == NOTMUCH_DECRYPT_AUTO, stat == NOTMUCH_STATUS_SUCCESS);
     }
 EOF
 cat <<EOF > EXPECTED

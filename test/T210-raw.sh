@@ -61,7 +61,7 @@ for pow in {10..20}; do
     notmuch show --format=raw subject:$size > OUTPUT
     test_expect_equal_file mail/size-$size OUTPUT
     test_begin_subtest "return value, message of size $size"
-    test_expect_success  "notmuch show --format=raw subject:$size > /dev/null"
+    test_expect_success "notmuch show --format=raw subject:$size > /dev/null"
 done
 
 test_done

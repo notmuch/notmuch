@@ -43,7 +43,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="Multiple recipients"'
 
-output=$(notmuch reply  --reply-to=sender  id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
@@ -60,7 +60,7 @@ add_message '[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="From Us, Multiple TO recipients"'
 
-output=$(notmuch reply  --reply-to=sender  id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Recipient <recipient@example.com>, Someone Else <someone@example.com>
@@ -78,7 +78,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="reply with CC"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
@@ -96,7 +96,7 @@ add_message '[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="reply with CC"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Recipient <recipient@example.com>
@@ -113,7 +113,7 @@ add_message '[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="reply with CC"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 Cc: Other Parties <cc@example.com>
@@ -130,7 +130,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="reply from alternate address"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
@@ -148,7 +148,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[body]="support for reply-to"' \
             '[reply-to]="Sender <elsewhere@example.com>"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <elsewhere@example.com>
@@ -166,7 +166,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[body]="support for reply-to with multiple recipients"' \
             '[reply-to]="Sender <elsewhere@example.com>"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <elsewhere@example.com>
@@ -184,7 +184,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[body]="Un-munging Reply-To"' \
             '[reply-to]="Evil Munging List <list@example.com>"'
 
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
@@ -198,7 +198,7 @@ test_begin_subtest "Message with header of exactly 200 bytes"
 add_message '[subject]="This subject is exactly 200 bytes in length. Other than its length there is not much of note here. Note that the length of 200 bytes includes the Subject: and Re: prefixes with two spaces"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="200-byte header"'
-output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
+output=$(notmuch reply --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: This subject is exactly 200 bytes in length. Other than its
  length there is not much of note here. Note that the length of 200 bytes
