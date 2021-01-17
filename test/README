@@ -25,6 +25,7 @@ that you know if you break anything.
   - gdb(1)
   - gpg(1)
   - python(1)
+  - xapian-metadata(1)
 
 If your system lacks these tools or have older, non-upgradable versions
 of these, please (possibly compile and) install these to some other
