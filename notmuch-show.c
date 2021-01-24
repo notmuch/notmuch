@@ -909,7 +909,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	    }
 
 	    if (ssize > 0 && fwrite (buf, ssize, 1, stdout) != 1) {
-		fprintf (stderr, "Error: Write %ld chars to stdout failed\n", ssize);
+		fprintf (stderr, "Error: Write %zd chars to stdout failed\n", ssize);
 		goto DONE;
 	    }
 	}
