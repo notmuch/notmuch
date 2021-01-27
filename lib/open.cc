@@ -192,6 +192,23 @@ _choose_database_path (void *ctx,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+notmuch_database_t *
+_alloc_notmuch ()
+{
+    notmuch_database_t *notmuch;
+
+    notmuch = talloc_zero (NULL, notmuch_database_t);
+    if (! notmuch)
+	return NULL;
+
+    notmuch->exception_reported = false;
+    notmuch->status_string = NULL;
+    notmuch->writable_xapian_db = NULL;
+    notmuch->atomic_nesting = 0;
+    notmuch->view = 1;
+    return notmuch;
+}
+
 notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
@@ -211,9 +228,18 @@ notmuch_database_open_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     static int initialized = 0;
 
-    if ((status = _choose_database_path (local, config_path, profile, &key_file, &database_path,
-					 &message)))
+    notmuch = _alloc_notmuch ();
+    if (! notmuch) {
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
+    }
+
+    if ((status = _choose_database_path (local, config_path, profile,
+					 &key_file, &database_path, &message)))
+	goto DONE;
+
+    notmuch->path = talloc_strdup (notmuch, database_path);
+    strip_trailing (notmuch->path, '/');
 
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
 	message = strdup ("Out of memory\n");
@@ -229,6 +255,12 @@ notmuch_database_open_with_config (const char *database_path,
 	goto DONE;
     }
 
+    if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
+	message = strdup ("Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
     /* Initialize the GLib type system and threads */
 #if ! GLIB_CHECK_VERSION (2, 35, 1)
     g_type_init ();
@@ -238,23 +270,6 @@ notmuch_database_open_with_config (const char *database_path,
     if (! initialized) {
 	g_mime_init ();
 	initialized = 1;
-    }
-
-    notmuch = talloc_zero (NULL, notmuch_database_t);
-    notmuch->exception_reported = false;
-    notmuch->status_string = NULL;
-    notmuch->path = talloc_strdup (notmuch, database_path);
-
-    strip_trailing (notmuch->path, '/');
-
-    notmuch->writable_xapian_db = NULL;
-    notmuch->atomic_nesting = 0;
-    notmuch->view = 1;
-
-    if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
-	message = strdup ("Out of memory\n");
-	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	goto DONE;
     }
 
     try {
@@ -442,8 +457,8 @@ notmuch_database_create_with_config (const char *database_path,
     int err;
     void *local = talloc_new (NULL);
 
-    if ((status = _choose_database_path (local, config_path, profile, &key_file, &database_path,
-					 &message)))
+    if ((status = _choose_database_path (local, config_path, profile,
+					 &key_file, &database_path, &message)))
 	goto DONE;
 
     err = stat (database_path, &st);
