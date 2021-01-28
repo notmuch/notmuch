@@ -255,10 +255,10 @@ func (self *Database) AddMessage(fname string) (*Message, Status) {
 		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	var c_msg *C.notmuch_message_t = new(C.notmuch_message_t)
-	st := Status(C.notmuch_database_add_message(self.db, c_fname, &c_msg))
+	msg := &Message{message: nil}
+	st := Status(C.notmuch_database_add_message(self.db, c_fname, &msg.message))
 
-	return &Message{message: c_msg}, st
+	return msg, st
 }
 
 /* Remove a message from the given notmuch database.
@@ -454,12 +454,13 @@ func (self *Query) GetSort() Sort {
  *
  * If a Xapian exception occurs this function will return NULL.
  */
-func (self *Query) SearchThreads() *Threads {
-	threads := C.notmuch_query_search_threads(self.query)
-	if threads == nil {
-		return nil
+func (self *Query) SearchThreads() (*Threads, Status) {
+	threads := &Threads{threads: nil}
+	st := Status(C.notmuch_query_search_threads(self.query, &threads.threads))
+	if st != STATUS_SUCCESS {
+		return nil, st
 	}
-	return &Threads{threads: threads}
+	return threads, st
 }
 
 /* Execute a query for messages, returning a notmuch_messages_t object
@@ -500,12 +501,13 @@ func (self *Query) SearchThreads() *Threads {
  *
  * If a Xapian exception occurs this function will return NULL.
  */
-func (self *Query) SearchMessages() *Messages {
-	msgs := C.notmuch_query_search_messages(self.query)
-	if msgs == nil {
-		return nil
+func (self *Query) SearchMessages() (*Messages, Status) {
+	msgs := &Messages{messages: nil}
+	st := Status(C.notmuch_query_search_messages(self.query, &msgs.messages))
+	if st != STATUS_SUCCESS {
+		return nil, st
 	}
-	return &Messages{messages: msgs}
+	return msgs, st
 }
 
 /* Destroy a notmuch_query_t along with any associated resources.
@@ -530,8 +532,10 @@ func (self *Query) Destroy() {
  * If a Xapian exception occurs, this function may return 0 (after
  * printing a message).
  */
-func (self *Query) CountMessages() uint {
-	return uint(C.notmuch_query_count_messages(self.query))
+func (self *Query) CountMessages() (uint, Status) {
+	var cnt C.uint
+	st := Status(C.notmuch_query_count_messages(self.query, &cnt))
+	return uint(cnt), st
 }
 
 /* Is the given 'threads' iterator pointing at a valid thread.

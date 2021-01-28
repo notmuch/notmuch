@@ -130,7 +130,12 @@ func search_address_passes(queries [3]*notmuch.Query, name string) []string {
 			//println("**warning: idx [",idx,"] contains a nil query")
 			continue
 		}
-		msgs := query.SearchMessages()
+
+		msgs, status := query.SearchMessages()
+		if status != notmuch.STATUS_SUCCESS {
+			continue
+		}
+
 		ht := addresses_by_frequency(msgs, name, pass, &addr_to_realname)
 		for addr, count := range *ht {
 			freq, ok := addr_freq[addr]
@@ -231,8 +236,21 @@ func (self *address_matcher) run(name string) {
 	}
 	queries[1] = self.db.CreateQuery(query)
 
+	cnt1, cnt2 := uint(0), uint(0)
+	status := notmuch.STATUS_SUCCESS
+
 	// if that leads only to a few hits, we check every from too
-	if queries[0].CountMessages()+queries[1].CountMessages() < 10 {
+	cnt1, status = queries[0].CountMessages()
+	if status != notmuch.STATUS_SUCCESS {
+		log.Fatalf("Failed to count messages: %v.", status)
+	}
+
+	cnt2, status = queries[1].CountMessages()
+	if status != notmuch.STATUS_SUCCESS {
+		log.Fatalf("Failed to count messages: %v.", status)
+	}
+
+	if cnt1+cnt2 < 10 {
 		query = ""
 		if name != "" {
 			query = "from:" + name + "*"
