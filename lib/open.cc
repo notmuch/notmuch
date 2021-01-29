@@ -220,6 +220,24 @@ _set_database_path (notmuch_database_t *notmuch,
     _notmuch_config_cache (notmuch, NOTMUCH_CONFIG_DATABASE_PATH, path);
 }
 
+static void
+_init_libs ()
+{
+
+    static int initialized = 0;
+
+    /* Initialize the GLib type system and threads */
+#if ! GLIB_CHECK_VERSION (2, 35, 1)
+    g_type_init ();
+#endif
+
+    /* Initialize gmime */
+    if (! initialized) {
+	g_mime_init ();
+	initialized = 1;
+    }
+}
+
 notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
@@ -237,7 +255,8 @@ notmuch_database_open_with_config (const char *database_path,
     int err;
     unsigned int version;
     GKeyFile *key_file = NULL;
-    static int initialized = 0;
+
+    _init_libs ();
 
     notmuch = _alloc_notmuch ();
     if (! notmuch) {
@@ -269,17 +288,6 @@ notmuch_database_open_with_config (const char *database_path,
 	message = strdup ("Out of memory\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
-    }
-
-    /* Initialize the GLib type system and threads */
-#if ! GLIB_CHECK_VERSION (2, 35, 1)
-    g_type_init ();
-#endif
-
-    /* Initialize gmime */
-    if (! initialized) {
-	g_mime_init ();
-	initialized = 1;
     }
 
     try {
@@ -466,6 +474,8 @@ notmuch_database_create_with_config (const char *database_path,
     struct stat st;
     int err;
     void *local = talloc_new (NULL);
+
+    _init_libs ();
 
     if ((status = _choose_database_path (local, config_path, profile,
 					 &key_file, &database_path, &message)))
