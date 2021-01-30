@@ -550,12 +550,16 @@ notmuch_database_create_with_config (const char *database_path,
 	goto DONE;
     }
 
-    /* XXX this reads the config file twice, which is a bit wasteful */
-    status = notmuch_database_open_with_config (database_path,
-						NOTMUCH_DATABASE_MODE_READ_WRITE,
-						config_path,
-						profile,
-						&notmuch, &message);
+    if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    status = _finish_open (notmuch,
+			   profile,
+			   NOTMUCH_DATABASE_MODE_READ_WRITE,
+			   key_file,
+			   &message);
     if (status)
 	goto DONE;
 
