@@ -209,6 +209,17 @@ _alloc_notmuch ()
     return notmuch;
 }
 
+static void
+_set_database_path (notmuch_database_t *notmuch,
+		    const char *database_path)
+{
+    char *path = talloc_strdup (notmuch, database_path);
+
+    strip_trailing (path, '/');
+
+    _notmuch_config_cache (notmuch, NOTMUCH_CONFIG_DATABASE_PATH, path);
+}
+
 notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
@@ -238,8 +249,7 @@ notmuch_database_open_with_config (const char *database_path,
 					 &key_file, &database_path, &message)))
 	goto DONE;
 
-    notmuch->path = talloc_strdup (notmuch, database_path);
-    strip_trailing (notmuch->path, '/');
+    _set_database_path (notmuch, database_path);
 
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
 	message = strdup ("Out of memory\n");

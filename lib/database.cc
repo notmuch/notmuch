@@ -752,7 +752,7 @@ notmuch_database_destroy (notmuch_database_t *notmuch)
 const char *
 notmuch_database_get_path (notmuch_database_t *notmuch)
 {
-    return notmuch->path;
+    return notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH);
 }
 
 unsigned int

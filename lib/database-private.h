@@ -189,9 +189,6 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 struct _notmuch_database {
     bool exception_reported;
 
-    /* Path to database parent directory and or/mail root */
-    char *path;
-
     /* Path to actual database */
     const char *xapian_path;
 
