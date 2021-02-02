@@ -724,6 +724,11 @@ _notmuch_config_load_defaults (notmuch_database_t *db);
 void
 _notmuch_config_cache (notmuch_database_t *db, notmuch_config_key_t key, const char *val);
 
+/* open.cc */
+notmuch_status_t
+_notmuch_choose_xapian_path (void *ctx, const char *database_path, const char **xapian_path,
+			     char **message);
+
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus

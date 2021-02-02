@@ -610,11 +610,12 @@ notmuch_database_compact_db (notmuch_database_t *notmuch,
 			     void *closure)
 {
     void *local;
-    char *notmuch_path, *xapian_path, *compact_xapian_path;
+    const char *xapian_path, *compact_xapian_path;
     const char *path;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     struct stat statbuf;
     bool keep_backup;
+    char *message;
 
     ret = _notmuch_database_ensure_writable (notmuch);
     if (ret)
@@ -628,15 +629,9 @@ notmuch_database_compact_db (notmuch_database_t *notmuch,
     if (! local)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
-    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
-	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
+    ret = _notmuch_choose_xapian_path (local, path, &xapian_path, &message);
+    if (ret)
 	goto DONE;
-    }
-
-    if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
-	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	goto DONE;
-    }
 
     if (! (compact_xapian_path = talloc_asprintf (local, "%s.compact", xapian_path))) {
 	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;

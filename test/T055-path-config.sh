@@ -177,6 +177,13 @@ EOF
     cur_msg_filename=$(notmuch search --output=files "subject:insert-subject")
     test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
 
+
+    test_begin_subtest "compact+search ($config)"
+    notmuch search --output=messages '*' | sort > EXPECTED
+    notmuch compact
+    notmuch search --output=messages '*' | sort > OUTPUT
+    test_expect_equal_file EXPECTED OUTPUT
+
     restore_config
 done
 
