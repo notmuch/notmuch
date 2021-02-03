@@ -577,7 +577,7 @@ thread."
     (notmuch-search-foreach-result beg end
       (lambda (pos)
 	(setq output (append output (notmuch-search-get-tags pos)))))
-    output))
+    (delete-dups output)))
 
 (defun notmuch-search-interactive-tag-changes (&optional initial-input)
   "Prompt for tag changes for the current thread or region.
