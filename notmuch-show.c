@@ -1225,10 +1225,9 @@ static const notmuch_show_format_t *formatters[] = {
 };
 
 int
-notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch),
+notmuch_show_command (unused (notmuch_config_t *config), notmuch_database_t *notmuch,
 		      int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
     int opt_index, ret;
@@ -1245,7 +1244,7 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
     bool entire_thread_set = false;
     bool single_message;
     bool unthreaded = FALSE;
-    char *status_string = NULL;
+    notmuch_status_t status;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -1336,25 +1335,14 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 		 "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
     }
 
-    notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-
-    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
-	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
-    if (notmuch_database_open_with_config (NULL,
-					   mode,
-					   _notmuch_config_get_path (config),
-					   NULL,
-					   &notmuch,
-					   &status_string)) {
-	if (status_string) {
-	    fputs (status_string, stderr);
-	    free (status_string);
+    if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE) {
+	status = notmuch_database_reopen (notmuch, NOTMUCH_DATABASE_MODE_READ_WRITE);
+	if (status) {
+	    fprintf (stderr, "Error reopening database for READ_WRITE: %s\n",
+		     notmuch_status_to_string (status));
+	    return EXIT_FAILURE;
 	}
-
-	return EXIT_FAILURE;
     }
-
-    config = NULL;
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 

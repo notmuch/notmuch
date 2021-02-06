@@ -378,7 +378,6 @@ restore_database
 test_expect_equal "$output" "OK"
 
 test_begin_subtest "show with alternate config (xdg)"
-test_subtest_known_broken
 backup_database
 notmuch tag -- +foobar17 '*'
 xdg_config
@@ -389,7 +388,6 @@ restore_config
 test_expect_equal "$output" "OK"
 
 test_begin_subtest "show with alternate config (xdg+profile)"
-test_subtest_known_broken
 backup_database
 notmuch tag -- +foobar17 '*'
 xdg_config foobar17
