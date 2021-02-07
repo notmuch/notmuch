@@ -232,6 +232,51 @@ _alloc_notmuch ()
     return notmuch;
 }
 
+static notmuch_status_t
+_trial_open (const char *xapian_path, char **message_ptr)
+{
+    try {
+	Xapian::Database db (xapian_path);
+    } catch (const Xapian::DatabaseOpeningError &error) {
+	IGNORE_RESULT (asprintf (message_ptr,
+				 "Cannot open Xapian database at %s: %s\n",
+				 xapian_path,
+				 error.get_msg ().c_str ()));
+	return NOTMUCH_STATUS_PATH_ERROR;
+    } catch (const Xapian::Error &error) {
+	IGNORE_RESULT (asprintf (message_ptr,
+				 "A Xapian exception occurred opening database: %s\n",
+				 error.get_msg ().c_str ()));
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_choose_xapian_path (void *ctx, const char *database_path, const char **xapian_path,
+		     char **message_ptr)
+{
+    notmuch_status_t status;
+    const char *trial_path, *notmuch_path;
+
+    status = _db_dir_exists (database_path, message_ptr);
+    if (status)
+	goto DONE;
+
+    notmuch_path = talloc_asprintf (ctx, "%s/.notmuch", database_path);
+    status = _db_dir_exists (notmuch_path, message_ptr);
+    if (status)
+	goto DONE;
+
+    trial_path = talloc_asprintf (ctx, "%s/xapian", notmuch_path);
+    status = _trial_open (trial_path, message_ptr);
+
+  DONE:
+    if (status == NOTMUCH_STATUS_SUCCESS)
+	*xapian_path = trial_path;
+    return status;
+}
+
 static void
 _set_database_path (notmuch_database_t *notmuch,
 		    const char *database_path)
@@ -410,7 +455,6 @@ notmuch_database_open_with_config (const char *database_path,
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path;
     char *message = NULL;
     GKeyFile *key_file = NULL;
 
@@ -426,27 +470,15 @@ notmuch_database_open_with_config (const char *database_path,
 					 &message)))
 	goto DONE;
 
-    _set_database_path (notmuch, database_path);
-
     status = _db_dir_exists (database_path, &message);
     if (status)
 	goto DONE;
 
-    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
-	message = strdup ("Out of memory\n");
-	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	goto DONE;
-    }
+    _set_database_path (notmuch, database_path);
 
-    status = _db_dir_exists (notmuch_path, &message);
+    status = _choose_xapian_path (notmuch, database_path, &notmuch->xapian_path, &message);
     if (status)
 	goto DONE;
-
-    if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
-	message = strdup ("Out of memory\n");
-	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	goto DONE;
-    }
 
     status = _finish_open (notmuch, profile, mode, key_file, &message);
 

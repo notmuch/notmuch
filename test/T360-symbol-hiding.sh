@@ -17,7 +17,7 @@ $TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent 2>&1 \
 	| notmuch_dir_sanitize | sed -e "s,\`,\',g" -e "s,No [^[:space:]]* database,No XXXXXX database,g" > OUTPUT
 
 cat <<EOF > EXPECTED
-A Xapian exception occurred opening database: Couldn't stat 'CWD/fakedb/.notmuch/xapian'
+Cannot open Xapian database at CWD/fakedb/.notmuch/xapian: Couldn't stat 'CWD/fakedb/.notmuch/xapian'
 caught No XXXXXX database found at path 'CWD/nonexistent'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
