@@ -442,6 +442,33 @@ notmuch_database_open_with_config (const char *database_path,
 				   const char *profile,
 				   notmuch_database_t **database,
 				   char **error_message);
+
+
+/**
+ * Loads configuration from config file, database, and/or defaults
+ *
+ * For description of arguments, @see notmuch_database_open_with_config
+ *
+ * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded (some) configuration.
+ *
+ * @retval NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ *
+ * @retval NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
+ *	database or config file (such as permission denied, or file not found,
+ *	etc.)
+ *
+ * @retval NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred.
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ */
+
+notmuch_status_t
+notmuch_database_load_config (const char *database_path,
+			      const char *config_path,
+			      const char *profile,
+			      notmuch_database_t **database,
+			      char **error_message);
+
 /**
  * Create a new notmuch database located at 'database_path', using
  * configuration in 'config_path'.

@@ -738,3 +738,99 @@ notmuch_database_reopen (notmuch_database_t *notmuch,
     notmuch->open = true;
     return NOTMUCH_STATUS_SUCCESS;
 }
+
+notmuch_status_t
+_maybe_load_config_from_database (notmuch_database_t *notmuch,
+				  GKeyFile *key_file,
+				  const char *database_path,
+				  const char *profile)
+{
+    char *message; /* ignored */
+
+    if (_db_dir_exists (database_path, &message))
+	return NOTMUCH_STATUS_SUCCESS;
+
+    _set_database_path (notmuch, database_path);
+
+    if (_notmuch_choose_xapian_path (notmuch, database_path, &notmuch->xapian_path, &message))
+	return NOTMUCH_STATUS_SUCCESS;
+
+    (void) _finish_open (notmuch, profile, NOTMUCH_DATABASE_MODE_READ_ONLY, key_file, &message);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_database_load_config (const char *database_path,
+			      const char *config_path,
+			      const char *profile,
+			      notmuch_database_t **database,
+			      char **status_string)
+{
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS, warning = NOTMUCH_STATUS_SUCCESS;
+    void *local = talloc_new (NULL);
+    notmuch_database_t *notmuch = NULL;
+    char *message = NULL;
+    GKeyFile *key_file = NULL;
+    bool split = false;
+
+    _init_libs ();
+
+    notmuch = _alloc_notmuch ();
+    if (! notmuch) {
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    status = _load_key_file (config_path, profile, &key_file);
+    switch (status) {
+    case NOTMUCH_STATUS_SUCCESS:
+    case NOTMUCH_STATUS_NO_CONFIG:
+	warning = status;
+	break;
+    default:
+	message = strdup ("Error: cannot load config file.\n");
+	goto DONE;
+    }
+
+    status = _choose_database_path (local, profile, key_file,
+				    &database_path, &split, &message);
+    switch (status) {
+    /* weirdly NULL_POINTER is what is returned if we fail to find
+     * a database */
+    case NOTMUCH_STATUS_NULL_POINTER:
+    case NOTMUCH_STATUS_SUCCESS:
+	break;
+    default:
+	goto DONE;
+    }
+
+    if (database_path) {
+	status = _maybe_load_config_from_database (notmuch, key_file, database_path, profile);
+	if (status)
+	    goto DONE;
+    }
+
+    if (key_file) {
+	status = _notmuch_config_load_from_file (notmuch, key_file);
+	if (status)
+	    goto DONE;
+    }
+    status = _notmuch_config_load_defaults (notmuch);
+    if (status)
+	goto DONE;
+
+  DONE:
+    talloc_free (local);
+
+    if (status_string)
+	*status_string = message;
+
+    if (database)
+	*database = notmuch;
+
+    if (status)
+	return status;
+    else
+	return warning;
+}
