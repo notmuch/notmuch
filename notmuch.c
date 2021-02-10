@@ -175,7 +175,7 @@ static command_t commands[] = {
     { "reindex", notmuch_reindex_command, NOTMUCH_COMMAND_DATABASE_EARLY |
       NOTMUCH_COMMAND_DATABASE_WRITE,
       "Re-index all messages matching the search terms." },
-    { "config", notmuch_config_command, NOTMUCH_COMMAND_CONFIG_OPEN,
+    { "config", notmuch_config_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Get or set settings in the notmuch configuration file." },
 #if WITH_EMACS
     { "emacs-mua", NULL, 0,
@@ -471,7 +471,7 @@ main (int argc, char *argv[])
     notmuch_config_t *config = NULL;
     notmuch_database_t *notmuch = NULL;
     int opt_index;
-    int ret;
+    int ret = EXIT_SUCCESS;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_string = &config_file_name, .name = "config" },
@@ -559,7 +559,30 @@ main (int argc, char *argv[])
 		return EXIT_FAILURE;
 	    }
 	}
-    } else {
+    }
+
+    if (command->mode & NOTMUCH_COMMAND_CONFIG_LOAD) {
+	char *status_string = NULL;
+	notmuch_status_t status;
+	status = notmuch_database_load_config (NULL,
+					       config_file_name,
+					       NULL,
+					       &notmuch,
+					       &status_string);
+	if (status) {
+	    if (status_string) {
+		fputs (status_string, stderr);
+		free (status_string);
+	    }
+
+	    if (status == NOTMUCH_STATUS_NO_CONFIG)
+		fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+	    goto DONE;
+	}
+
+    }
+
+    if (command->mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
 	config = notmuch_config_open (local, config_file_name, command->mode);
 	if (! config) {
 	    ret = EXIT_FAILURE;
