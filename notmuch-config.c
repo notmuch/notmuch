@@ -864,89 +864,18 @@ _config_key_info (const char *item)
     return NULL;
 }
 
-static bool
-_stored_in_db (const char *item)
-{
-    config_key_info_t *info;
-
-    info = _config_key_info (item);
-
-    return (info && info->in_db);
-}
-
 static int
-_print_db_config (notmuch_config_t *config, const char *name)
+notmuch_config_command_get (notmuch_database_t *notmuch, char *item)
 {
-    notmuch_database_t *notmuch;
-    char *val;
+    notmuch_config_values_t *list;
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return EXIT_FAILURE;
-
-    /* XXX Handle UUID mismatch? */
-
-    if (print_status_database ("notmuch config", notmuch,
-			       notmuch_database_get_config (notmuch, name, &val)))
-	return EXIT_FAILURE;
-
-    puts (val);
-
-    return EXIT_SUCCESS;
-}
-
-static int
-notmuch_config_command_get (notmuch_config_t *config, char *item)
-{
-    if (strcmp (item, "database.path") == 0) {
-	printf ("%s\n", notmuch_config_get_database_path (config));
-    } else if (strcmp (item, "user.name") == 0) {
-	printf ("%s\n", notmuch_config_get_user_name (config));
-    } else if (strcmp (item, "user.primary_email") == 0) {
-	printf ("%s\n", notmuch_config_get_user_primary_email (config));
-    } else if (strcmp (item, "user.other_email") == 0) {
-	const char **other_email;
-	size_t i, length;
-
-	other_email = notmuch_config_get_user_other_email (config, &length);
-	for (i = 0; i < length; i++)
-	    printf ("%s\n", other_email[i]);
-    } else if (strcmp (item, "new.tags") == 0) {
-	const char **tags;
-	size_t i, length;
-
-	tags = notmuch_config_get_new_tags (config, &length);
-	for (i = 0; i < length; i++)
-	    printf ("%s\n", tags[i]);
-    } else if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
-	printf ("%s\n",
-		notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)) ? "true" : "false");
-    } else if (_stored_in_db (item)) {
-	return _print_db_config (config, item);
-    } else {
-	char **value;
-	size_t i, length;
-	char *group, *key;
-
-	if (_item_split (item, &group, &key))
-	    return 1;
-
-	value = g_key_file_get_string_list (config->key_file,
-					    group, key,
-					    &length, NULL);
-	if (value == NULL) {
-	    fprintf (stderr, "Unknown configuration item: %s.%s\n",
-		     group, key);
-	    return 1;
-	}
-
-	for (i = 0; i < length; i++)
-	    printf ("%s\n", value[i]);
-
-	g_strfreev (value);
+    for (list = notmuch_config_get_values_string (notmuch, item);
+	 notmuch_config_values_valid (list);
+	 notmuch_config_values_move_to_next (list)) {
+	const char *val = notmuch_config_values_get (list);
+	puts (val);
     }
-
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 static int
@@ -1107,7 +1036,7 @@ notmuch_config_command_list (notmuch_config_t *config)
 }
 
 int
-notmuch_config_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch),
+notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 			int argc, char *argv[])
 {
     int ret;
@@ -1136,7 +1065,7 @@ notmuch_config_command (notmuch_config_t *config, unused(notmuch_database_t *not
 		     "one argument.\n");
 	    return EXIT_FAILURE;
 	}
-	ret = notmuch_config_command_get (config, argv[1]);
+	ret = notmuch_config_command_get (notmuch, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
 	if (argc < 2) {
 	    fprintf (stderr, "Error: notmuch config set requires at least "

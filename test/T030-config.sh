@@ -7,9 +7,12 @@ test_begin_subtest "Get string value"
 test_expect_equal "$(notmuch config get user.name)" "Notmuch Test Suite"
 
 test_begin_subtest "Get list value"
-test_expect_equal "$(notmuch config get new.tags)" "\
+cat <<EOF > EXPECTED
+inbox
 unread
-inbox"
+EOF
+notmuch config get new.tags | sort > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Set string value"
 notmuch config set foo.string "this is a string value"
@@ -96,14 +99,32 @@ test_expect_equal "$(notmuch --config=alt-config-link config get user.name)" \
 test_begin_subtest "Writing config file through symlink follows symlink"
 test_expect_equal "$(readlink alt-config-link)" "alt-config"
 
+test_begin_subtest "Round trip arbitrary key"
+key=g${RANDOM}.m${RANDOM}
+value=${RANDOM}
+notmuch config set ${key} ${value}
+output=$(notmuch config get ${key})
+test_expect_equal "${output}" "${value}"
+
+test_begin_subtest "Clear arbitrary key"
+notmuch config set ${key}
+output=$(notmuch config get ${key})
+test_expect_equal "${output}" ""
+
+db_path=${HOME}/database-path
+
 test_begin_subtest "Absolute database path returned"
 notmuch config set database.path ${HOME}/Maildir
 test_expect_equal "$(notmuch config get database.path)" \
 		  "${HOME}/Maildir"
 
-test_begin_subtest "Relative database path properly expanded"
+ln -s `pwd`/mail home/Maildir
+add_email_corpus
+test_begin_subtest "Relative database path expanded in open"
 notmuch config set database.path Maildir
-test_expect_equal "$(notmuch config get database.path)" \
-		  "${HOME}/Maildir"
+path=$(notmuch config get database.path)
+count=$(notmuch count '*')
+test_expect_equal "${path} ${count}" \
+		  "Maildir 52"
 
 test_done
