@@ -255,6 +255,29 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "notmuch_config_get_values_string"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+    notmuch_config_values_t *values;
+    EXPECT0(notmuch_database_set_config (db, "test.list", "x;y;z"));
+    for (values = notmuch_config_get_values_string (db, "test.list");
+	 notmuch_config_values_valid (values);
+	 notmuch_config_values_move_to_next (values))
+    {
+	  puts (notmuch_config_values_get (values));
+    }
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+x
+y
+z
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
 test_begin_subtest "notmuch_config_get_values (restart)"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
 {

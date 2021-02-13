@@ -261,13 +261,19 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 notmuch_config_values_t *
 notmuch_config_get_values (notmuch_database_t *notmuch, notmuch_config_key_t key)
 {
-    notmuch_config_values_t *values = NULL;
-    bool ok = false;
-
     const char *key_str = _notmuch_config_key_to_string (key);
 
     if (! key_str)
-	goto DONE;
+	return NULL;
+
+    return notmuch_config_get_values_string (notmuch, key_str);
+}
+
+notmuch_config_values_t *
+notmuch_config_get_values_string (notmuch_database_t *notmuch, const char *key_str)
+{
+    notmuch_config_values_t *values = NULL;
+    bool ok = false;
 
     values = talloc (notmuch, notmuch_config_values_t);
     if (unlikely (! values))

@@ -2494,7 +2494,6 @@ notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
 void
 notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 
-
 /**
  * Configuration keys known to libnotmuch
  */
@@ -2564,6 +2563,22 @@ notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const
  */
 notmuch_config_values_t *
 notmuch_config_get_values (notmuch_database_t *notmuch, notmuch_config_key_t key);
+
+/**
+ * Returns an iterator for a ';'-delimited list of configuration values
+ *
+ * These values reflect all configuration information given at the
+ * time the database was opened.
+ *
+ * @param[in] notmuch database
+ * @param[in] key configuration key
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval NULL in case of error.
+ */
+notmuch_config_values_t *
+notmuch_config_get_values_string (notmuch_database_t *notmuch, const char *key);
 
 /**
  * Is the given 'config_values' iterator pointing at a valid element.
