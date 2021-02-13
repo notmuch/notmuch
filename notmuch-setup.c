@@ -88,14 +88,17 @@ welcome_message_post_setup (void)
 }
 
 static void
-print_tag_list (const char **tags, size_t tags_len)
+print_tag_list (notmuch_config_values_t *tags)
 {
-    unsigned int i;
+    bool first = false;
 
-    for (i = 0; i < tags_len; i++) {
-	if (i != 0)
+    for (;
+	 notmuch_config_values_valid (tags);
+	 notmuch_config_values_move_to_next (tags)) {
+	if (! first)
 	    printf (" ");
-	printf ("%s", tags[i]);
+	first = false;
+	printf ("%s", notmuch_config_values_get (tags));
     }
 }
 
@@ -122,19 +125,13 @@ parse_tag_list (void *ctx, char *response)
 
 int
 notmuch_setup_command (notmuch_config_t *config,
-		       unused(notmuch_database_t *notmuch),
+		       notmuch_database_t *notmuch,
 		       int argc, char *argv[])
 {
     char *response = NULL;
     size_t response_size = 0;
-    const char **old_other_emails;
-    size_t old_other_emails_len;
     GPtrArray *other_emails;
-    unsigned int i;
-    const char **new_tags;
-    size_t new_tags_len;
-    const char **search_exclude_tags;
-    size_t search_exclude_tags_len;
+    notmuch_config_values_t *new_tags, *search_exclude_tags, *emails;
 
 #define prompt(format, ...)                                     \
     do {                                                        \
@@ -157,26 +154,27 @@ notmuch_setup_command (notmuch_config_t *config,
     if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
 
-    prompt ("Your full name [%s]: ", notmuch_config_get_user_name (config));
+    prompt ("Your full name [%s]: ", notmuch_config_get (notmuch, NOTMUCH_CONFIG_USER_NAME));
     if (strlen (response))
 	notmuch_config_set_user_name (config, response);
 
     prompt ("Your primary email address [%s]: ",
-	    notmuch_config_get_user_primary_email (config));
+	    notmuch_config_get (notmuch, NOTMUCH_CONFIG_PRIMARY_EMAIL));
     if (strlen (response))
 	notmuch_config_set_user_primary_email (config, response);
 
     other_emails = g_ptr_array_new ();
 
-    old_other_emails = notmuch_config_get_user_other_email (config,
-							    &old_other_emails_len);
-    for (i = 0; i < old_other_emails_len; i++) {
-	prompt ("Additional email address [%s]: ", old_other_emails[i]);
+    for (emails = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_OTHER_EMAIL);
+	 notmuch_config_values_valid (emails);
+	 notmuch_config_values_move_to_next (emails)) {
+	const char *email = notmuch_config_values_get (emails);
+
+	prompt ("Additional email address [%s]: ", email);
 	if (strlen (response))
 	    g_ptr_array_add (other_emails, talloc_strdup (config, response));
 	else
-	    g_ptr_array_add (other_emails, talloc_strdup (config,
-							  old_other_emails[i]));
+	    g_ptr_array_add (other_emails, talloc_strdup (config, email));
     }
 
     do {
@@ -192,7 +190,7 @@ notmuch_setup_command (notmuch_config_t *config,
     g_ptr_array_free (other_emails, true);
 
     prompt ("Top-level directory of your email archive [%s]: ",
-	    notmuch_config_get_database_path (config));
+	    notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH));
     if (strlen (response)) {
 	const char *absolute_path;
 
@@ -200,10 +198,10 @@ notmuch_setup_command (notmuch_config_t *config,
 	notmuch_config_set_database_path (config, absolute_path);
     }
 
-    new_tags = notmuch_config_get_new_tags (config, &new_tags_len);
+    new_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_TAGS);
 
     printf ("Tags to apply to all new messages (separated by spaces) [");
-    print_tag_list (new_tags, new_tags_len);
+    print_tag_list (new_tags);
     prompt ("]: ");
 
     if (strlen (response)) {
@@ -215,11 +213,10 @@ notmuch_setup_command (notmuch_config_t *config,
 	g_ptr_array_free (tags, true);
     }
 
-
-    search_exclude_tags = notmuch_config_get_search_exclude_tags (config, &search_exclude_tags_len);
+    search_exclude_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_EXCLUDE_TAGS);
 
     printf ("Tags to exclude when searching messages (separated by spaces) [");
-    print_tag_list (search_exclude_tags, search_exclude_tags_len);
+    print_tag_list (search_exclude_tags);
     prompt ("]: ");
 
     if (strlen (response)) {

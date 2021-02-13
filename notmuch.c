@@ -141,9 +141,11 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
 
 
 static command_t commands[] = {
-    { NULL, notmuch_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE,
+    { NULL, notmuch_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE
+      | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Notmuch main command." },
-    { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE,
+    { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE
+      | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command,
       NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE |
@@ -375,7 +377,7 @@ notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database
  */
 static int
 notmuch_command (notmuch_config_t *config,
-		 unused(notmuch_database_t *notmuch),
+		 notmuch_database_t *notmuch,
 		 unused(int argc), unused(char **argv))
 {
     char *db_path;
@@ -385,7 +387,7 @@ notmuch_command (notmuch_config_t *config,
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
     if (notmuch_config_is_new (config))
-	return notmuch_setup_command (config, NULL, 0, NULL);
+	return notmuch_setup_command (config, notmuch, 0, NULL);
 
     /* Notmuch is already configured, but is there a database? */
     db_path = talloc_asprintf (config, "%s/%s",
@@ -569,14 +571,17 @@ main (int argc, char *argv[])
 					       NULL,
 					       &notmuch,
 					       &status_string);
-	if (status) {
+
+	if (status == NOTMUCH_STATUS_NO_CONFIG && ! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
+	    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+	    goto DONE;
+	}
+
+	if (status && (status != NOTMUCH_STATUS_NO_CONFIG)) {
 	    if (status_string) {
 		fputs (status_string, stderr);
 		free (status_string);
 	    }
-
-	    if (status == NOTMUCH_STATUS_NO_CONFIG)
-		fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
 	    goto DONE;
 	}
 
