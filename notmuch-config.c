@@ -118,19 +118,6 @@ struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
     bool is_new;
-
-    char *database_path;
-    char *user_name;
-    char *user_primary_email;
-    const char **user_other_email;
-    size_t user_other_email_length;
-    const char **new_tags;
-    size_t new_tags_length;
-    const char **new_ignore;
-    size_t new_ignore_length;
-    bool maildir_synchronize_flags;
-    const char **search_exclude_tags;
-    size_t search_exclude_tags_length;
 };
 
 static int
@@ -141,7 +128,6 @@ notmuch_config_destructor (notmuch_config_t *config)
 
     return 0;
 }
-
 
 static bool
 get_config_from_file (notmuch_config_t *config, bool create_new)
@@ -275,9 +261,6 @@ notmuch_config_open (notmuch_database_t *notmuch,
 
     talloc_set_destructor (config, notmuch_config_destructor);
 
-    /* non-zero defaults */
-    config->maildir_synchronize_flags = true;
-
     if (filename) {
 	config->filename = talloc_strdup (config, filename);
     } else if ((notmuch_config_env = getenv ("NOTMUCH_CONFIG"))) {
@@ -391,48 +374,40 @@ notmuch_config_is_new (notmuch_config_t *config)
 }
 
 static void
-_config_set (notmuch_config_t *config, char **field,
+_config_set (notmuch_config_t *config,
 	     const char *group, const char *key, const char *value)
 {
     g_key_file_set_string (config->key_file, group, key, value);
-
-    /* drop the cached value */
-    talloc_free (*field);
-    *field = NULL;
 }
 
 static void
 _config_set_list (notmuch_config_t *config,
 		  const char *group, const char *key,
 		  const char *list[],
-		  size_t length, const char ***config_var )
+		  size_t length)
 {
     g_key_file_set_string_list (config->key_file, group, key, list, length);
-
-    /* drop the cached value */
-    talloc_free (*config_var);
-    *config_var = NULL;
 }
 
 void
 notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path)
 {
-    _config_set (config, &config->database_path, "database", "path", database_path);
+    _config_set (config, "database", "path", database_path);
 }
 
 void
 notmuch_config_set_user_name (notmuch_config_t *config,
 			      const char *user_name)
 {
-    _config_set (config, &config->user_name, "user", "name", user_name);
+    _config_set (config, "user", "name", user_name);
 }
 
 void
 notmuch_config_set_user_primary_email (notmuch_config_t *config,
 				       const char *primary_email)
 {
-    _config_set (config, &config->user_primary_email, "user", "primary_email", primary_email);
+    _config_set (config, "user", "primary_email", primary_email);
 }
 
 void
@@ -440,8 +415,7 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
 				     const char *list[],
 				     size_t length)
 {
-    _config_set_list (config, "user", "other_email", list, length,
-		      &(config->user_other_email));
+    _config_set_list (config, "user", "other_email", list, length);
 }
 
 void
@@ -449,8 +423,7 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 			     const char *list[],
 			     size_t length)
 {
-    _config_set_list (config, "new", "tags", list, length,
-		      &(config->new_tags));
+    _config_set_list (config, "new", "tags", list, length);
 }
 
 void
@@ -458,8 +431,7 @@ notmuch_config_set_new_ignore (notmuch_config_t *config,
 			       const char *list[],
 			       size_t length)
 {
-    _config_set_list (config, "new", "ignore", list, length,
-		      &(config->new_ignore));
+    _config_set_list (config, "new", "ignore", list, length);
 }
 
 void
@@ -467,8 +439,7 @@ notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
 					const char *list[],
 					size_t length)
 {
-    _config_set_list (config, "search", "exclude_tags", list, length,
-		      &(config->search_exclude_tags));
+    _config_set_list (config, "search", "exclude_tags", list, length);
 }
 
 
@@ -745,5 +716,4 @@ notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
 {
     g_key_file_set_boolean (config->key_file,
 			    "maildir", "synchronize_flags", synchronize_flags);
-    config->maildir_synchronize_flags = synchronize_flags;
 }
