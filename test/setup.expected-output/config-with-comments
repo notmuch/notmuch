@@ -49,7 +49,6 @@ other_email=another.suite@example.com;
 #
 [new]
 tags=foo;bar;
-ignore=
 
 # Search configuration
 #
@@ -85,4 +84,3 @@ exclude_tags=baz;
 #	commands will notice tag changes and update flags in filenames
 #
 [maildir]
-synchronize_flags=true

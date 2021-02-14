@@ -276,7 +276,7 @@ typedef enum {
 } notmuch_command_mode_t;
 
 notmuch_config_t *
-notmuch_config_open (void *ctx,
+notmuch_config_open (notmuch_database_t *notmuch,
 		     const char *filename,
 		     notmuch_command_mode_t config_mode);
 

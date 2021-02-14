@@ -31,87 +31,88 @@ static const char toplevel_config_comment[] =
     "\n"
     " For more information about notmuch, see https://notmuchmail.org";
 
-static const char database_config_comment[] =
-    " Database configuration\n"
-    "\n"
-    " The only value supported here is 'path' which should be the top-level\n"
-    " directory where your mail currently exists and to where mail will be\n"
-    " delivered in the future. Files should be individual email messages.\n"
-    " Notmuch will store its database within a sub-directory of the path\n"
-    " configured here named \".notmuch\".\n";
-
-static const char new_config_comment[] =
-    " Configuration for \"notmuch new\"\n"
-    "\n"
-    " The following options are supported here:\n"
-    "\n"
-    "\ttags	A list (separated by ';') of the tags that will be\n"
-    "\t	added to all messages incorporated by \"notmuch new\".\n"
-    "\n"
-    "\tignore	A list (separated by ';') of file and directory names\n"
-    "\t	that will not be searched for messages by \"notmuch new\".\n"
-    "\n"
-    "\t	NOTE: *Every* file/directory that goes by one of those\n"
-    "\t	names will be ignored, independent of its depth/location\n"
-    "\t	in the mail store.\n";
-
-static const char user_config_comment[] =
-    " User configuration\n"
-    "\n"
-    " Here is where you can let notmuch know how you would like to be\n"
-    " addressed. Valid settings are\n"
-    "\n"
-    "\tname		Your full name.\n"
-    "\tprimary_email	Your primary email address.\n"
-    "\tother_email	A list (separated by ';') of other email addresses\n"
-    "\t		at which you receive email.\n"
-    "\n"
-    " Notmuch will use the various email addresses configured here when\n"
-    " formatting replies. It will avoid including your own addresses in the\n"
-    " recipient list of replies, and will set the From address based on the\n"
-    " address to which the original email was addressed.\n";
-
-static const char maildir_config_comment[] =
-    " Maildir compatibility configuration\n"
-    "\n"
-    " The following option is supported here:\n"
-    "\n"
-    "\tsynchronize_flags      Valid values are true and false.\n"
-    "\n"
-    "\tIf true, then the following maildir flags (in message filenames)\n"
-    "\twill be synchronized with the corresponding notmuch tags:\n"
-    "\n"
-    "\t\tFlag	Tag\n"
-    "\t\t----	-------\n"
-    "\t\tD	draft\n"
-    "\t\tF	flagged\n"
-    "\t\tP	passed\n"
-    "\t\tR	replied\n"
-    "\t\tS	unread (added when 'S' flag is not present)\n"
-    "\n"
-    "\tThe \"notmuch new\" command will notice flag changes in filenames\n"
-    "\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
-    "\tcommands will notice tag changes and update flags in filenames\n";
-
-static const char search_config_comment[] =
-    " Search configuration\n"
-    "\n"
-    " The following option is supported here:\n"
-    "\n"
-    "\texclude_tags\n"
-    "\t\tA ;-separated list of tags that will be excluded from\n"
-    "\t\tsearch results by default.  Using an excluded tag in a\n"
-    "\t\tquery will override that exclusion.\n";
-
-static const char crypto_config_comment[] =
-    " Cryptography related configuration\n"
-    "\n"
-    " The following old option is now ignored:\n"
-    "\n"
-    "\tgpgpath\n"
-    "\t\tThis option was used by older builds of notmuch to choose\n"
-    "\t\tthe version of gpg to use.\n"
-    "\t\tSetting $PATH is a better approach.\n";
+struct config_group {
+    const char *group_name;
+    const char *comment;
+} group_comment_table [] = {
+    {
+	"database",
+	" Database configuration\n"
+	"\n"
+	" The only value supported here is 'path' which should be the top-level\n"
+	" directory where your mail currently exists and to where mail will be\n"
+	" delivered in the future. Files should be individual email messages.\n"
+	" Notmuch will store its database within a sub-directory of the path\n"
+	" configured here named \".notmuch\".\n"
+    },
+    {
+	"user",
+	" User configuration\n"
+	"\n"
+	" Here is where you can let notmuch know how you would like to be\n"
+	" addressed. Valid settings are\n"
+	"\n"
+	"\tname		Your full name.\n"
+	"\tprimary_email	Your primary email address.\n"
+	"\tother_email	A list (separated by ';') of other email addresses\n"
+	"\t		at which you receive email.\n"
+	"\n"
+	" Notmuch will use the various email addresses configured here when\n"
+	" formatting replies. It will avoid including your own addresses in the\n"
+	" recipient list of replies, and will set the From address based on the\n"
+	" address to which the original email was addressed.\n"
+    },
+    {
+	"new",
+	" Configuration for \"notmuch new\"\n"
+	"\n"
+	" The following options are supported here:\n"
+	"\n"
+	"\ttags	A list (separated by ';') of the tags that will be\n"
+	"\t	added to all messages incorporated by \"notmuch new\".\n"
+	"\n"
+	"\tignore	A list (separated by ';') of file and directory names\n"
+	"\t	that will not be searched for messages by \"notmuch new\".\n"
+	"\n"
+	"\t	NOTE: *Every* file/directory that goes by one of those\n"
+	"\t	names will be ignored, independent of its depth/location\n"
+	"\t	in the mail store.\n"
+    },
+    {
+	"search",
+	" Search configuration\n"
+	"\n"
+	" The following option is supported here:\n"
+	"\n"
+	"\texclude_tags\n"
+	"\t\tA ;-separated list of tags that will be excluded from\n"
+	"\t\tsearch results by default.  Using an excluded tag in a\n"
+	"\t\tquery will override that exclusion.\n"
+    },
+    {
+	"maildir",
+	" Maildir compatibility configuration\n"
+	"\n"
+	" The following option is supported here:\n"
+	"\n"
+	"\tsynchronize_flags      Valid values are true and false.\n"
+	"\n"
+	"\tIf true, then the following maildir flags (in message filenames)\n"
+	"\twill be synchronized with the corresponding notmuch tags:\n"
+	"\n"
+	"\t\tFlag	Tag\n"
+	"\t\t----	-------\n"
+	"\t\tD	draft\n"
+	"\t\tF	flagged\n"
+	"\t\tP	passed\n"
+	"\t\tR	replied\n"
+	"\t\tS	unread (added when 'S' flag is not present)\n"
+	"\n"
+	"\tThe \"notmuch new\" command will notice flag changes in filenames\n"
+	"\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
+	"\tcommands will notice tag changes and update flags in filenames\n"
+    },
+};
 
 struct _notmuch_config {
     char *filename;
@@ -141,69 +142,6 @@ notmuch_config_destructor (notmuch_config_t *config)
     return 0;
 }
 
-static char *
-get_name_from_passwd_file (void *ctx)
-{
-    long pw_buf_size;
-    char *pw_buf;
-    struct passwd passwd, *ignored;
-    char *name;
-    int e;
-
-    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
-    if (pw_buf_size == -1) pw_buf_size = 64;
-    pw_buf = talloc_size (ctx, pw_buf_size);
-
-    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
-			    pw_buf_size, &ignored)) == ERANGE) {
-	pw_buf_size = pw_buf_size * 2;
-	pw_buf = talloc_zero_size (ctx, pw_buf_size);
-    }
-
-    if (e == 0) {
-	char *comma = strchr (passwd.pw_gecos, ',');
-	if (comma)
-	    name = talloc_strndup (ctx, passwd.pw_gecos,
-				   comma - passwd.pw_gecos);
-	else
-	    name = talloc_strdup (ctx, passwd.pw_gecos);
-    } else {
-	name = talloc_strdup (ctx, "");
-    }
-
-    talloc_free (pw_buf);
-
-    return name;
-}
-
-static char *
-get_username_from_passwd_file (void *ctx)
-{
-    long pw_buf_size;
-    char *pw_buf;
-    struct passwd passwd, *ignored;
-    char *name;
-    int e;
-
-    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
-    if (pw_buf_size == -1) pw_buf_size = 64;
-    pw_buf = talloc_zero_size (ctx, pw_buf_size);
-
-    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
-			    pw_buf_size, &ignored)) == ERANGE) {
-	pw_buf_size = pw_buf_size * 2;
-	pw_buf = talloc_zero_size (ctx, pw_buf_size);
-    }
-
-    if (e == 0)
-	name = talloc_strdup (ctx, passwd.pw_name);
-    else
-	name = talloc_strdup (ctx, "");
-
-    talloc_free (pw_buf);
-
-    return name;
-}
 
 static bool
 get_config_from_file (notmuch_config_t *config, bool create_new)
@@ -322,21 +260,13 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
  *	user in editing the file directly.
  */
 notmuch_config_t *
-notmuch_config_open (void *ctx,
+notmuch_config_open (notmuch_database_t *notmuch,
 		     const char *filename,
 		     notmuch_command_mode_t config_mode)
 {
-    GError *error = NULL;
-    size_t tmp;
     char *notmuch_config_env = NULL;
-    int file_had_database_group;
-    int file_had_new_group;
-    int file_had_user_group;
-    int file_had_maildir_group;
-    int file_had_search_group;
-    int file_had_crypto_group;
 
-    notmuch_config_t *config = talloc_zero (ctx, notmuch_config_t);
+    notmuch_config_t *config = talloc_zero (notmuch, notmuch_config_t);
 
     if (config == NULL) {
 	fprintf (stderr, "Out of memory.\n");
@@ -368,133 +298,20 @@ notmuch_config_open (void *ctx,
 	}
     }
 
-    /* Whenever we know of configuration sections that don't appear in
-     * the configuration file, we add some comments to help the user
-     * understand what can be done.
-     *
-     * It would be convenient to just add those comments now, but
-     * apparently g_key_file will clear any comments when keys are
-     * added later that create the groups. So we have to check for the
-     * groups now, but add the comments only after setting all of our
-     * values.
-     */
-    file_had_database_group = g_key_file_has_group (config->key_file,
-						    "database");
-    file_had_new_group = g_key_file_has_group (config->key_file, "new");
-    file_had_user_group = g_key_file_has_group (config->key_file, "user");
-    file_had_maildir_group = g_key_file_has_group (config->key_file, "maildir");
-    file_had_search_group = g_key_file_has_group (config->key_file, "search");
-    file_had_crypto_group = g_key_file_has_group (config->key_file, "crypto");
-
-    if (notmuch_config_get_database_path (config) == NULL) {
-	char *path = getenv ("MAILDIR");
-	if (path)
-	    path = talloc_strdup (config, path);
-	else
-	    path = talloc_asprintf (config, "%s/mail",
-				    getenv ("HOME"));
-	notmuch_config_set_database_path (config, path);
-	talloc_free (path);
-    }
-
-    if (notmuch_config_get_user_name (config) == NULL) {
-	char *name = getenv ("NAME");
-	if (name)
-	    name = talloc_strdup (config, name);
-	else
-	    name = get_name_from_passwd_file (config);
-	notmuch_config_set_user_name (config, name);
-	talloc_free (name);
-    }
-
-    if (notmuch_config_get_user_primary_email (config) == NULL) {
-	char *email = getenv ("EMAIL");
-	if (email) {
-	    notmuch_config_set_user_primary_email (config, email);
-	} else {
-	    char hostname[256];
-	    struct hostent *hostent;
-	    const char *domainname;
-
-	    char *username = get_username_from_passwd_file (config);
-
-	    gethostname (hostname, 256);
-	    hostname[255] = '\0';
-
-	    hostent = gethostbyname (hostname);
-	    if (hostent && (domainname = strchr (hostent->h_name, '.')))
-		domainname += 1;
-	    else
-		domainname = "(none)";
-
-	    email = talloc_asprintf (config, "%s@%s.%s",
-				     username, hostname, domainname);
-
-	    notmuch_config_set_user_primary_email (config, email);
-
-	    talloc_free (username);
-	    talloc_free (email);
-	}
-    }
-
-    if (notmuch_config_get_new_tags (config, &tmp) == NULL) {
-	const char *tags[] = { "unread", "inbox" };
-	notmuch_config_set_new_tags (config, tags, 2);
-    }
-
-    if (notmuch_config_get_new_ignore (config, &tmp) == NULL) {
-	notmuch_config_set_new_ignore (config, NULL, 0);
-    }
-
-    if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
-	if (config->is_new) {
-	    const char *tags[] = { "deleted", "spam" };
-	    notmuch_config_set_search_exclude_tags (config, tags, 2);
-	} else {
-	    notmuch_config_set_search_exclude_tags (config, NULL, 0);
-	}
-    }
-
-    error = NULL;
-    config->maildir_synchronize_flags =
-	g_key_file_get_boolean (config->key_file,
-				"maildir", "synchronize_flags", &error);
-    if (error) {
-	notmuch_config_set_maildir_synchronize_flags (config, true);
-	g_error_free (error);
-    }
-
-    /* Whenever we know of configuration sections that don't appear in
-     * the configuration file, we add some comments to help the user
-     * understand what can be done. */
     if (config->is_new)
 	g_key_file_set_comment (config->key_file, NULL, NULL,
 				toplevel_config_comment, NULL);
 
-    if (! file_had_database_group)
-	g_key_file_set_comment (config->key_file, "database", NULL,
-				database_config_comment, NULL);
-
-    if (! file_had_new_group)
-	g_key_file_set_comment (config->key_file, "new", NULL,
-				new_config_comment, NULL);
-
-    if (! file_had_user_group)
-	g_key_file_set_comment (config->key_file, "user", NULL,
-				user_config_comment, NULL);
-
-    if (! file_had_maildir_group)
-	g_key_file_set_comment (config->key_file, "maildir", NULL,
-				maildir_config_comment, NULL);
-
-    if (! file_had_search_group)
-	g_key_file_set_comment (config->key_file, "search", NULL,
-				search_config_comment, NULL);
-
-    if (! file_had_crypto_group)
-	g_key_file_set_comment (config->key_file, "crypto", NULL,
-				crypto_config_comment, NULL);
-
+    for (size_t i = 0; i < ARRAY_SIZE (group_comment_table); i++) {
+	const char *name = group_comment_table[i].group_name;
+	if (! g_key_file_has_group (config->key_file,  name)) {
+	    /* Force group to exist before adding comment */
+	    g_key_file_set_value (config->key_file, name, "dummy_key", "dummy_val");
+	    g_key_file_remove_key (config->key_file, name, "dummy_key", NULL);
+	    g_key_file_set_comment (config->key_file, name, NULL,
+				    group_comment_table[i].comment, NULL);
+	}
+    }
     return config;
 }
 

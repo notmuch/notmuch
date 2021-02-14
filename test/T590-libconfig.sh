@@ -394,8 +394,8 @@ MAIL_DIR
 MAIL_DIR/.notmuch/hooks
 MAIL_DIR/.notmuch/backups
 
-inbox;unread
-NULL
+unread;inbox
+
 true
 USERNAME@FQDN
 NULL
@@ -705,7 +705,7 @@ MAIL_DIR
 MAIL_DIR/.notmuch/hooks
 MAIL_DIR/.notmuch/backups
 foo;bar;fub
-unread;inbox;
+unread;inbox
 sekrit_junk
 true
 test_suite@notmuchmail.org
@@ -736,8 +736,8 @@ MAIL_DIR
 MAIL_DIR/.notmuch/hooks
 MAIL_DIR/.notmuch/backups
 
-inbox;unread
-NULL
+unread;inbox
+
 true
 USERNAME@FQDN
 NULL
@@ -815,7 +815,7 @@ database.path MAIL_DIR
 key with spaces value, with, spaces!
 maildir.synchronize_flags true
 new.ignore sekrit_junk
-new.tags unread;inbox;
+new.tags unread;inbox
 search.exclude_tags foo;bar;fub
 test.key1 testvalue1
 test.key2 testvalue2

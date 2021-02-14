@@ -598,7 +598,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
     case NOTMUCH_CONFIG_EXCLUDE_TAGS:
 	return "";
     case NOTMUCH_CONFIG_NEW_TAGS:
-	return "inbox;unread";
+	return "unread;inbox";
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
 	return "true";
     case NOTMUCH_CONFIG_USER_NAME:
@@ -615,9 +615,10 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	else
 	    email = _get_email_from_passwd_file (notmuch);
 	return email;
+    case NOTMUCH_CONFIG_NEW_IGNORE:
+	return "";
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
-    case NOTMUCH_CONFIG_NEW_IGNORE:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
 	return NULL;
     default:

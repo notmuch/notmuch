@@ -588,7 +588,7 @@ main (int argc, char *argv[])
     }
 
     if (command->mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
-	config = notmuch_config_open (local, config_file_name, command->mode);
+	config = notmuch_config_open (notmuch, config_file_name, command->mode);
 	if (! config) {
 	    ret = EXIT_FAILURE;
 	    goto DONE;
