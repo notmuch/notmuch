@@ -141,7 +141,6 @@ main (int argc, char **argv)
     void *ctx = talloc_new (NULL);
 
     const char *config_path = NULL;
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
 
     int num_messages = 500;
@@ -179,12 +178,12 @@ main (int argc, char **argv)
 	exit (1);
     }
 
-    config = notmuch_config_open (ctx, config_path, false);
-    if (config == NULL)
-	return 1;
-
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
+    if (notmuch_database_open_with_config (NULL,
+					   NOTMUCH_DATABASE_MODE_READ_WRITE,
+					   config_path,
+					   NULL,
+					   &notmuch,
+					   NULL))
 	return 1;
 
     srandom (seed);
