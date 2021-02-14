@@ -327,11 +327,6 @@ notmuch_config_close (notmuch_config_t *config)
     talloc_free (config);
 }
 
-const char *
-_notmuch_config_get_path (notmuch_config_t *config)
-{
-    return config->filename;
-}
 /* Save any changes made to the notmuch configuration.
  *
  * Any comments originally in the file will be preserved.
@@ -395,22 +390,6 @@ notmuch_config_is_new (notmuch_config_t *config)
     return config->is_new;
 }
 
-static const char *
-_config_get (notmuch_config_t *config, char **field,
-	     const char *group, const char *key)
-{
-    /* read from config file and cache value, if not cached already */
-    if (*field == NULL) {
-	char *value;
-	value = g_key_file_get_string (config->key_file, group, key, NULL);
-	if (value) {
-	    *field = talloc_strdup (config, value);
-	    free (value);
-	}
-    }
-    return *field;
-}
-
 static void
 _config_set (notmuch_config_t *config, char **field,
 	     const char *group, const char *key, const char *value)
@@ -420,38 +399,6 @@ _config_set (notmuch_config_t *config, char **field,
     /* drop the cached value */
     talloc_free (*field);
     *field = NULL;
-}
-
-static const char **
-_config_get_list (notmuch_config_t *config,
-		  const char *section, const char *key,
-		  const char ***outlist, size_t *list_length, size_t *ret_length)
-{
-    assert (outlist);
-
-    /* read from config file and cache value, if not cached already */
-    if (*outlist == NULL) {
-
-	char **inlist = g_key_file_get_string_list (config->key_file,
-						    section, key, list_length, NULL);
-	if (inlist) {
-	    unsigned int i;
-
-	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
-
-	    for (i = 0; i < *list_length; i++)
-		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
-
-	    (*outlist)[i] = NULL;
-
-	    g_strfreev (inlist);
-	}
-    }
-
-    if (ret_length)
-	*ret_length = *list_length;
-
-    return *outlist;
 }
 
 static void
@@ -467,35 +414,11 @@ _config_set_list (notmuch_config_t *config,
     *config_var = NULL;
 }
 
-const char *
-notmuch_config_get_database_path (notmuch_config_t *config)
-{
-    char *db_path = (char *) _config_get (config, &config->database_path, "database", "path");
-
-    if (db_path && *db_path != '/') {
-	/* If the path in the configuration file begins with any
-	 * character other than /, presume that it is relative to
-	 * $HOME and update as appropriate.
-	 */
-	char *abs_path = talloc_asprintf (config, "%s/%s", getenv ("HOME"), db_path);
-	talloc_free (db_path);
-	db_path = config->database_path = abs_path;
-    }
-
-    return db_path;
-}
-
 void
 notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path)
 {
     _config_set (config, &config->database_path, "database", "path", database_path);
-}
-
-const char *
-notmuch_config_get_user_name (notmuch_config_t *config)
-{
-    return _config_get (config, &config->user_name, "user", "name");
 }
 
 void
@@ -505,41 +428,11 @@ notmuch_config_set_user_name (notmuch_config_t *config,
     _config_set (config, &config->user_name, "user", "name", user_name);
 }
 
-const char *
-notmuch_config_get_user_primary_email (notmuch_config_t *config)
-{
-    return _config_get (config, &config->user_primary_email, "user", "primary_email");
-}
-
 void
 notmuch_config_set_user_primary_email (notmuch_config_t *config,
 				       const char *primary_email)
 {
     _config_set (config, &config->user_primary_email, "user", "primary_email", primary_email);
-}
-
-const char **
-notmuch_config_get_user_other_email (notmuch_config_t *config,   size_t *length)
-{
-    return _config_get_list (config, "user", "other_email",
-			     &(config->user_other_email),
-			     &(config->user_other_email_length), length);
-}
-
-const char **
-notmuch_config_get_new_tags (notmuch_config_t *config,   size_t *length)
-{
-    return _config_get_list (config, "new", "tags",
-			     &(config->new_tags),
-			     &(config->new_tags_length), length);
-}
-
-const char **
-notmuch_config_get_new_ignore (notmuch_config_t *config, size_t *length)
-{
-    return _config_get_list (config, "new", "ignore",
-			     &(config->new_ignore),
-			     &(config->new_ignore_length), length);
 }
 
 void
@@ -567,14 +460,6 @@ notmuch_config_set_new_ignore (notmuch_config_t *config,
 {
     _config_set_list (config, "new", "ignore", list, length,
 		      &(config->new_ignore));
-}
-
-const char **
-notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length)
-{
-    return _config_get_list (config, "search", "exclude_tags",
-			     &(config->search_exclude_tags),
-			     &(config->search_exclude_tags_length), length);
 }
 
 void
@@ -852,12 +737,6 @@ notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 
-}
-
-bool
-notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config)
-{
-    return config->maildir_synchronize_flags;
 }
 
 void
