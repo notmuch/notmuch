@@ -696,9 +696,8 @@ notmuch_config_command_get (notmuch_database_t *notmuch, char *item)
 }
 
 static int
-_set_db_config (notmuch_config_t *config, const char *key, int argc, char **argv)
+_set_db_config (notmuch_database_t *notmuch, const char *key, int argc, char **argv)
 {
-    notmuch_database_t *notmuch;
     const char *val = "";
 
     if (argc > 1) {
@@ -711,11 +710,10 @@ _set_db_config (notmuch_config_t *config, const char *key, int argc, char **argv
 	val = argv[0];
     }
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
+    if (print_status_database ("notmuch config", notmuch,
+			       notmuch_database_reopen (notmuch,
+							NOTMUCH_DATABASE_MODE_READ_WRITE)))
 	return EXIT_FAILURE;
-
-    /* XXX Handle UUID mismatch? */
 
     if (print_status_database ("notmuch config", notmuch,
 			       notmuch_database_set_config (notmuch, key, val)))
@@ -729,7 +727,8 @@ _set_db_config (notmuch_config_t *config, const char *key, int argc, char **argv
 }
 
 static int
-notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char *argv[])
+notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuch, char *item,
+			    int argc, char *argv[])
 {
     char *group, *key;
     config_key_info_t *key_info;
@@ -744,7 +743,7 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
 	return 1;
 
     if (key_info && key_info->in_db) {
-	return _set_db_config (config, item, argc, argv);
+	return _set_db_config (notmuch, item, argc, argv);
     }
 
     if (_item_split (item, &group, &key))
@@ -842,7 +841,7 @@ notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 		     "one argument.\n");
 	    return EXIT_FAILURE;
 	}
-	ret = notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
+	ret = notmuch_config_command_set (config, notmuch, argv[1], argc - 2, argv + 2);
     } else if (strcmp (argv[0], "list") == 0) {
 	ret = notmuch_config_command_list (notmuch);
     } else {

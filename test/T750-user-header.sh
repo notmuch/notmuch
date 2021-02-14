@@ -5,7 +5,8 @@ test_description='indexing user specified headers'
 test_begin_subtest "error adding user header before initializing DB"
 notmuch config set index.header.List List-Id 2>&1 | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
-Error: Cannot open database at MAIL_DIR/.notmuch: No such file or directory.
+notmuch config: Illegal argument for function
+Cannot reopen closed or nonexistent database
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
