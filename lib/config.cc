@@ -23,6 +23,7 @@
 #include "database-private.h"
 
 #include <pwd.h>
+#include <netdb.h>
 
 static const std::string CONFIG_PREFIX = "C";
 
@@ -488,6 +489,63 @@ _get_name_from_passwd_file (void *ctx)
     return name;
 }
 
+static char *
+_get_username_from_passwd_file (void *ctx)
+{
+    long pw_buf_size;
+    char *pw_buf;
+    struct passwd passwd, *ignored;
+    char *name;
+    int e;
+
+    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
+    if (pw_buf_size == -1) pw_buf_size = 64;
+    pw_buf = (char *) talloc_zero_size (ctx, pw_buf_size);
+
+    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
+			    pw_buf_size, &ignored)) == ERANGE) {
+	pw_buf_size = pw_buf_size * 2;
+	pw_buf = (char *) talloc_zero_size (ctx, pw_buf_size);
+    }
+
+    if (e == 0)
+	name = talloc_strdup (ctx, passwd.pw_name);
+    else
+	name = talloc_strdup (ctx, "");
+
+    talloc_free (pw_buf);
+
+    return name;
+}
+
+static const char *
+_get_email_from_passwd_file (void *ctx)
+{
+
+    char hostname[256];
+    struct hostent *hostent;
+    const char *domainname;
+    char *email;
+
+    char *username = _get_username_from_passwd_file (ctx);
+
+    gethostname (hostname, 256);
+    hostname[255] = '\0';
+
+    hostent = gethostbyname (hostname);
+    if (hostent && (domainname = strchr (hostent->h_name, '.')))
+	domainname += 1;
+    else
+	domainname = "(none)";
+
+    email = talloc_asprintf (ctx, "%s@%s.%s",
+			     username, hostname, domainname);
+
+    talloc_free (username);
+    talloc_free (email);
+    return email;
+}
+
 static const char *
 _notmuch_config_key_to_string (notmuch_config_key_t key)
 {
@@ -523,7 +581,7 @@ static const char *
 _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 {
     char *path;
-    const char *name;
+    const char *name, *email;
 
     switch (key) {
     case NOTMUCH_CONFIG_DATABASE_PATH:
@@ -549,13 +607,17 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	    name = talloc_strdup (notmuch, name);
 	else
 	    name = _get_name_from_passwd_file (notmuch);
-
 	return name;
-	break;
+    case NOTMUCH_CONFIG_PRIMARY_EMAIL:
+	email = getenv ("EMAIL");
+	if (email)
+	    email = talloc_strdup (notmuch, email);
+	else
+	    email = _get_email_from_passwd_file (notmuch);
+	return email;
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
     case NOTMUCH_CONFIG_NEW_IGNORE:
-    case NOTMUCH_CONFIG_PRIMARY_EMAIL:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
 	return NULL;
     default:

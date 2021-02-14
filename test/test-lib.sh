@@ -107,6 +107,9 @@ unset GREP_OPTIONS
 # For emacsclient
 unset ALTERNATE_EDITOR
 
+# for reproducibility
+unset EMAIL
+
 add_gnupg_home ()
 {
     [ -e "${GNUPGHOME}/gpg.conf" ] && return
@@ -697,8 +700,9 @@ notmuch_built_with_sanitize ()
 notmuch_passwd_sanitize ()
 {
     local user=$(id -un)
+    local fqdn=$(hostname -f)
     local full_name=$(getent passwd $user | cut -d: -f 5 | cut -d, -f1)
-    sed "s/$full_name/USER_FULL_NAME/"
+    sed -e "s/$user/USERNAME/" -e "s/$fqdn/FQDN/" -e "s/$full_name/USER_FULL_NAME/"
 }
 
 notmuch_config_sanitize ()
