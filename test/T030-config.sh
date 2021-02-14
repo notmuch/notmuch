@@ -46,25 +46,22 @@ notmuch config set foo.nonexistent
 test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
-notmuch config list > STDOUT 2> STDERR
-printf "%s\n====\n%s\n" "$(< STDOUT)" "$(< STDERR)" | notmuch_config_sanitize > OUTPUT
-
+notmuch config list 2>&1 | notmuch_config_sanitize > OUTPUT
 cat <<EOF > EXPECTED
-database.path=MAIL_DIR
-user.name=Notmuch Test Suite
-user.primary_email=test_suite@notmuchmail.org
-user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
-new.tags=unread;inbox;
-new.ignore=
-search.exclude_tags=
-maildir.synchronize_flags=true
-foo.string=this is another string value
-foo.list=this;is another;list value;
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
-====
-Error: Cannot open database at MAIL_DIR/.notmuch: No such file or directory.
+database.mail_root=MAIL_DIR
+database.path=MAIL_DIR
+foo.list=this;is another;list value;
+foo.string=this is another string value
+maildir.synchronize_flags=true
+new.ignore=
+new.tags=unread;inbox;
+search.exclude_tags=
+user.name=Notmuch Test Suite
+user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
+user.primary_email=test_suite@notmuchmail.org
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

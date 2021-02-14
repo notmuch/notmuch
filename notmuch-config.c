@@ -972,67 +972,20 @@ _notmuch_config_list_built_with ()
 }
 
 static int
-_list_db_config (notmuch_config_t *config)
+notmuch_config_command_list (notmuch_database_t *notmuch)
 {
-    notmuch_database_t *notmuch;
-    notmuch_config_list_t *list;
-
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return EXIT_FAILURE;
-
-    /* XXX Handle UUID mismatch? */
-
-
-    if (print_status_database ("notmuch config", notmuch,
-			       notmuch_database_get_config_list (notmuch, "", &list)))
-	return EXIT_FAILURE;
-
-    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
-	printf ("%s=%s\n", notmuch_config_list_key (list), notmuch_config_list_value (list));
-    }
-    notmuch_config_list_destroy (list);
-
-    return EXIT_SUCCESS;
-}
-
-static int
-notmuch_config_command_list (notmuch_config_t *config)
-{
-    char **groups;
-    size_t g, groups_length;
-
-    groups = g_key_file_get_groups (config->key_file, &groups_length);
-    if (groups == NULL)
-	return 1;
-
-    for (g = 0; g < groups_length; g++) {
-	char **keys;
-	size_t k, keys_length;
-
-	keys = g_key_file_get_keys (config->key_file,
-				    groups[g], &keys_length, NULL);
-	if (keys == NULL)
-	    continue;
-
-	for (k = 0; k < keys_length; k++) {
-	    char *value;
-
-	    value = g_key_file_get_string (config->key_file,
-					   groups[g], keys[k], NULL);
-	    if (value != NULL) {
-		printf ("%s.%s=%s\n", groups[g], keys[k], value);
-		free (value);
-	    }
-	}
-
-	g_strfreev (keys);
-    }
-
-    g_strfreev (groups);
+    notmuch_config_pairs_t *list;
 
     _notmuch_config_list_built_with ();
-    return _list_db_config (config);
+    for (list = notmuch_config_get_pairs (notmuch, "");
+	 notmuch_config_pairs_valid (list);
+	 notmuch_config_pairs_move_to_next (list)) {
+	const char *value = notmuch_config_pairs_value (list);
+	if (value)
+	    printf ("%s=%s\n", notmuch_config_pairs_key (list), value);
+    }
+    notmuch_config_pairs_destroy (list);
+    return EXIT_SUCCESS;
 }
 
 int
@@ -1074,7 +1027,7 @@ notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 	}
 	ret = notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
     } else if (strcmp (argv[0], "list") == 0) {
-	ret = notmuch_config_command_list (config);
+	ret = notmuch_config_command_list (notmuch);
     } else {
 	fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
 		 argv[0]);
