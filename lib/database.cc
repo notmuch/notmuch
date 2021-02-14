@@ -293,12 +293,20 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Operation requires a database upgrade";
     case NOTMUCH_STATUS_PATH_ERROR:
 	return "Path supplied is illegal for this function";
+    case NOTMUCH_STATUS_IGNORED:
+	return "Argument was ignored";
+    case NOTMUCH_STATUS_ILLEGAL_ARGUMENT:
+	return "Illegal argument for function";
     case NOTMUCH_STATUS_MALFORMED_CRYPTO_PROTOCOL:
 	return "Crypto protocol missing, malformed, or unintelligible";
     case NOTMUCH_STATUS_FAILED_CRYPTO_CONTEXT_CREATION:
 	return "Crypto engine initialization failure";
     case NOTMUCH_STATUS_UNKNOWN_CRYPTO_PROTOCOL:
 	return "Unknown crypto protocol";
+    case NOTMUCH_STATUS_NO_CONFIG:
+	return "No configuration file found";
+    case NOTMUCH_STATUS_DATABASE_EXISTS:
+	return "Database exists, not recreated";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
