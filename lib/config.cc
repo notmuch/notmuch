@@ -38,6 +38,10 @@ struct _notmuch_config_values {
     void *children; /* talloc_context */
 };
 
+struct _notmuch_config_pairs {
+    notmuch_string_map_iterator_t *iter;
+};
+
 static const char *_notmuch_config_key_to_string (notmuch_config_key_t key);
 
 static int
@@ -337,6 +341,47 @@ void
 notmuch_config_values_destroy (notmuch_config_values_t *values)
 {
     talloc_free (values);
+}
+
+notmuch_config_pairs_t *
+notmuch_config_get_pairs (notmuch_database_t *notmuch,
+			  const char *prefix)
+{
+    notmuch_config_pairs_t *pairs = talloc (notmuch, notmuch_config_pairs_t);
+
+    pairs->iter = _notmuch_string_map_iterator_create (notmuch->config, prefix, false);
+    return pairs;
+}
+
+notmuch_bool_t
+notmuch_config_pairs_valid (notmuch_config_pairs_t *pairs)
+{
+    return _notmuch_string_map_iterator_valid (pairs->iter);
+}
+
+void
+notmuch_config_pairs_move_to_next (notmuch_config_pairs_t *pairs)
+{
+    _notmuch_string_map_iterator_move_to_next (pairs->iter);
+}
+
+const char *
+notmuch_config_pairs_key (notmuch_config_pairs_t *pairs)
+{
+    return _notmuch_string_map_iterator_key (pairs->iter);
+}
+
+const char *
+notmuch_config_pairs_value (notmuch_config_pairs_t *pairs)
+{
+    return _notmuch_string_map_iterator_value (pairs->iter);
+}
+
+void
+notmuch_config_pairs_destroy (notmuch_config_pairs_t *pairs)
+{
+    _notmuch_string_map_iterator_destroy (pairs->iter);
+    talloc_free (pairs);
 }
 
 notmuch_status_t

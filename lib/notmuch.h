@@ -245,6 +245,7 @@ typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
 typedef struct _notmuch_config_list notmuch_config_list_t;
 typedef struct _notmuch_config_values notmuch_config_values_t;
+typedef struct _notmuch_config_pairs notmuch_config_pairs_t;
 typedef struct _notmuch_indexopts notmuch_indexopts_t;
 #endif /* __DOXYGEN__ */
 
@@ -2638,6 +2639,80 @@ notmuch_config_values_start (notmuch_config_values_t *values);
  */
 void
 notmuch_config_values_destroy (notmuch_config_values_t *values);
+
+
+/**
+ * Returns an iterator for a (key, value) configuration pairs
+ *
+ * @param[in] notmuch database
+ * @param[in] prefix prefix for keys. Pass "" for all keys.
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval NULL in case of error.
+ */
+notmuch_config_pairs_t *
+notmuch_config_get_pairs (notmuch_database_t *notmuch,
+			  const char *prefix);
+
+/**
+ * Is the given 'config_pairs' iterator pointing at a valid element.
+ *
+ * @param[in] pairs iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval FALSE if passed a NULL pointer, or the iterator is exhausted.
+ *
+ */
+notmuch_bool_t
+notmuch_config_pairs_valid (notmuch_config_pairs_t *pairs);
+
+/**
+ * Move the 'config_pairs' iterator to the next element
+ *
+ * @param[in,out] pairs iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ */
+void
+notmuch_config_pairs_move_to_next (notmuch_config_pairs_t *pairs);
+
+/**
+ * Get the current key from the 'config_pairs' iterator
+ *
+ * @param[in] pairs iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval a string with the same lifetime as the iterator
+ */
+const char *
+notmuch_config_pairs_key (notmuch_config_pairs_t *pairs);
+
+/**
+ * Get the current value from the 'config_pairs' iterator
+ *
+ * @param[in] pairs iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ *
+ * @retval a string with the same lifetime as the iterator
+ */
+const char *
+notmuch_config_pairs_value (notmuch_config_pairs_t *pairs);
+
+/**
+ * Destroy a config_pairs iterator, along with any associated
+ * resources.
+ *
+ * @param[in,out] pairs iterator
+ *
+ * @since libnotmuch 5.4 (notmuch 0.32)
+ */
+void
+notmuch_config_pairs_destroy (notmuch_config_pairs_t *pairs);
 
 /**
  * get a configuration value from an open database as Boolean

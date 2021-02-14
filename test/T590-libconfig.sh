@@ -770,5 +770,59 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "notmuch_config_get_pairs: prefix (ndlc)"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+   notmuch_config_pairs_t *list;
+   for (list =  notmuch_config_get_pairs (db, "user.");
+        notmuch_config_pairs_valid (list);
+        notmuch_config_pairs_move_to_next (list)) {
+     printf("%s %s\n", notmuch_config_pairs_key (list), notmuch_config_pairs_value(list));
+   }
+   notmuch_config_pairs_destroy (list);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+user.name Notmuch Test Suite
+user.other_email test_suite_other@notmuchmail.org;test_suite@otherdomain.org
+user.primary_email test_suite@notmuchmail.org
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "notmuch_config_get_pairs: all pairs (ndlc)"
+cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+   notmuch_config_pairs_t *list;
+   for (list =  notmuch_config_get_pairs (db, "");
+        notmuch_config_pairs_valid (list);
+        notmuch_config_pairs_move_to_next (list)) {
+     printf("%s %s\n", notmuch_config_pairs_key (list), notmuch_config_pairs_value(list));
+   }
+   notmuch_config_pairs_destroy (list);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+aaabefore beforeval
+database.backup_dir MAIL_DIR/.notmuch/backups
+database.hook_dir MAIL_DIR/.notmuch/hooks
+database.mail_root MAIL_DIR
+database.path MAIL_DIR
+key with spaces value, with, spaces!
+maildir.synchronize_flags true
+new.ignore sekrit_junk
+new.tags unread;inbox;
+search.exclude_tags foo;bar;fub
+test.key1 testvalue1
+test.key2 testvalue2
+user.name Notmuch Test Suite
+user.other_email test_suite_other@notmuchmail.org;test_suite@otherdomain.org
+user.primary_email test_suite@notmuchmail.org
+zzzafter afterval
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done
