@@ -384,6 +384,9 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} '' %NULL%
     }
 }
 EOF
+
+notmuch_passwd_sanitize < OUTPUT > OUTPUT.clean
+
 cat <<'EOF' >EXPECTED
 == stdout ==
 MAIL_DIR
@@ -396,11 +399,11 @@ NULL
 true
 NULL
 NULL
-NULL
+USER_FULL_NAME
 == stderr ==
 EOF
 unset MAILDIR
-test_expect_equal_file EXPECTED OUTPUT
+test_expect_equal_file EXPECTED OUTPUT.clean
 
 backup_database
 test_begin_subtest "override config from \${NOTMUCH_CONFIG}"
@@ -727,6 +730,8 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} /nonexistent %NULL%
     }
 }
 EOF
+
+notmuch_passwd_sanitize < OUTPUT > OUTPUT.clean
 cat <<'EOF' >EXPECTED
 == stdout ==
 MAIL_DIR
@@ -739,10 +744,10 @@ NULL
 true
 NULL
 NULL
-NULL
+USER_FULL_NAME
 == stderr ==
 EOF
-test_expect_equal_file EXPECTED OUTPUT
+test_expect_equal_file EXPECTED OUTPUT.clean
 
 backup_database
 test_begin_subtest "override config from \${HOME}/.notmuch-config (ndlc)"

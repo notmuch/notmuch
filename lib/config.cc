@@ -22,6 +22,8 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
+#include <pwd.h>
+
 static const std::string CONFIG_PREFIX = "C";
 
 struct _notmuch_config_list {
@@ -452,6 +454,41 @@ notmuch_config_get_bool (notmuch_database_t *notmuch, notmuch_config_key_t key, 
 }
 
 static const char *
+_get_name_from_passwd_file (void *ctx)
+{
+    long pw_buf_size;
+    char *pw_buf;
+    struct passwd passwd, *ignored;
+    const char *name;
+    int e;
+
+    pw_buf_size = sysconf (_SC_GETPW_R_SIZE_MAX);
+    if (pw_buf_size == -1) pw_buf_size = 64;
+    pw_buf = (char *) talloc_size (ctx, pw_buf_size);
+
+    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
+			    pw_buf_size, &ignored)) == ERANGE) {
+	pw_buf_size = pw_buf_size * 2;
+	pw_buf = (char *) talloc_zero_size (ctx, pw_buf_size);
+    }
+
+    if (e == 0) {
+	char *comma = strchr (passwd.pw_gecos, ',');
+	if (comma)
+	    name = talloc_strndup (ctx, passwd.pw_gecos,
+				   comma - passwd.pw_gecos);
+	else
+	    name = talloc_strdup (ctx, passwd.pw_gecos);
+    } else {
+	name = talloc_strdup (ctx, "");
+    }
+
+    talloc_free (pw_buf);
+
+    return name;
+}
+
+static const char *
 _notmuch_config_key_to_string (notmuch_config_key_t key)
 {
     switch (key) {
@@ -486,6 +523,7 @@ static const char *
 _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 {
     char *path;
+    const char *name;
 
     switch (key) {
     case NOTMUCH_CONFIG_DATABASE_PATH:
@@ -505,10 +543,18 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	return "inbox;unread";
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
 	return "true";
+    case NOTMUCH_CONFIG_USER_NAME:
+	name = getenv ("NAME");
+	if (name)
+	    name = talloc_strdup (notmuch, name);
+	else
+	    name = _get_name_from_passwd_file (notmuch);
+
+	return name;
+	break;
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
     case NOTMUCH_CONFIG_NEW_IGNORE:
-    case NOTMUCH_CONFIG_USER_NAME:
     case NOTMUCH_CONFIG_PRIMARY_EMAIL:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
 	return NULL;

@@ -694,6 +694,13 @@ notmuch_built_with_sanitize ()
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
+notmuch_passwd_sanitize ()
+{
+    local user=$(id -un)
+    local full_name=$(getent passwd $user | cut -d: -f 5 | cut -d, -f1)
+    sed "s/$full_name/USER_FULL_NAME/"
+}
+
 notmuch_config_sanitize ()
 {
     notmuch_dir_sanitize | notmuch_built_with_sanitize
