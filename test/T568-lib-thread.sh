@@ -8,6 +8,11 @@ add_email_corpus
 test_begin_subtest "building database"
 test_expect_success "NOTMUCH_NEW"
 
+test_begin_subtest "finding thread"
+THREAD=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+count=$(notmuch count $THREAD)
+test_expect_equal "$count" "7"
+
 cat <<'EOF' > c_tail
    if (stat) {
        const char *stat_str = notmuch_database_status_string (db);
@@ -30,7 +35,7 @@ int main (int argc, char** argv)
    notmuch_thread_t *thread = NULL;
    notmuch_threads_t *threads = NULL;
    notmuch_query_t *query = NULL;
-   const char *id = "thread:0000000000000009";
+   const char *id = "${THREAD}";
 
    stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
@@ -52,10 +57,11 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         printf("%d\n%s\n", thread != NULL, id2);
     }
 EOF
+thread_num=${THREAD#thread:}
 cat <<EOF > EXPECTED
 == stdout ==
 1
-0000000000000009
+${thread_num}
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
