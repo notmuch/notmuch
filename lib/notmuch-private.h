@@ -76,7 +76,7 @@ NOTMUCH_BEGIN_DECLS
 #define NOTMUCH_CLEAR_BIT(valp,  bit) \
     (_NOTMUCH_VALID_BIT (bit) ? (*(valp) &= ~(1ull << (bit))) : *(valp))
 
-#define unused(x) x __attribute__ ((unused))
+#define unused(x) x ## _unused __attribute__ ((unused))
 
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
