@@ -186,7 +186,7 @@ notmuch_status_t
 notmuch_database_open_with_config (const char *database_path,
 				   notmuch_database_mode_t mode,
 				   const char *config_path,
-				   unused(const char *profile),
+				   const char *profile,
 				   notmuch_database_t **database,
 				   char **status_string)
 {
