@@ -317,6 +317,9 @@ ruby << EOF
 	$curbuf.render do |b|
 		q = $curbuf.query(get_cur_view)
 		q.sort = Notmuch::SORT_OLDEST_FIRST
+		$exclude_tags.each { |t|
+			q.add_tag_exclude(t)
+		}
 		msgs = q.search_messages
 		msgs.each do |msg|
 			m = Mail.read(msg.filename)

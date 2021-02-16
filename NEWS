@@ -1,3 +1,11 @@
+Notmuch 0.33 (UNRELEASED)
+=========================
+
+Vim
+---
+
+Respect excluded tags when showing a thread.
+
 Notmuch 0.32 (UNRELEASED)
 =========================
 
