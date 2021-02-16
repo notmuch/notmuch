@@ -954,7 +954,8 @@ unchanged ADDRESS if parsing fails."
       (goto-char (point-max))
       (forward-line -1)
       (when notmuch-tree-open-target
-	(notmuch-tree-show-message-in)))))
+	(notmuch-tree-show-message-in)
+	(notmuch-tree-command-hook)))))
 
 (defun notmuch-tree-insert-tree (tree depth tree-status first last)
   "Insert the message tree TREE at depth DEPTH in the current thread.
