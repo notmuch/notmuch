@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <libgen.h>
+
 #include "database-private.h"
 #include "parse-time-vrp.h"
 
@@ -92,8 +94,8 @@ _choose_hook_dir (notmuch_database_t *notmuch,
     err = stat (hook_dir, &st);
     if (err) {
 	if (errno == ENOENT) {
-	    const char *database_path = notmuch_database_get_path (notmuch);
-	    hook_dir = talloc_asprintf (notmuch, "%s/.notmuch/hooks", database_path);
+	    char *notmuch_path = dirname (talloc_strdup (notmuch, notmuch->xapian_path));
+	    hook_dir = talloc_asprintf (notmuch, "%s/hooks", notmuch_path);
 	} else {
 	    IGNORE_RESULT (asprintf (message, "Error: Cannot stat %s: %s.\n",
 				     hook_dir, strerror (errno)));
