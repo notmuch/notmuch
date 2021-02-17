@@ -71,39 +71,43 @@ _xdg_dir (void *ctx,
 }
 
 static notmuch_status_t
-_choose_hook_dir (notmuch_database_t *notmuch,
-		  const char *profile,
-		  char **message)
+_choose_dir (notmuch_database_t *notmuch,
+	     const char *profile,
+	     notmuch_config_key_t key,
+	     const char *xdg_var,
+	     const char *xdg_subdir,
+	     const char *subdir,
+	     char **message = NULL)
 {
-    const char *config;
-    const char *hook_dir;
+    const char *parent;
+    const char *dir;
     struct stat st;
     int err;
 
-    hook_dir = notmuch_config_get (notmuch, NOTMUCH_CONFIG_HOOK_DIR);
+    dir = notmuch_config_get (notmuch, key);
 
-    if (hook_dir)
+    if (dir)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    config = _xdg_dir (notmuch, "XDG_CONFIG_HOME", ".config", profile);
-    if (! config)
+    parent = _xdg_dir (notmuch, xdg_var, xdg_subdir, profile);
+    if (! parent)
 	return NOTMUCH_STATUS_PATH_ERROR;
 
-    hook_dir = talloc_asprintf (notmuch, "%s/hooks", config);
+    dir = talloc_asprintf (notmuch, "%s/%s", parent, subdir);
 
-    err = stat (hook_dir, &st);
+    err = stat (dir, &st);
     if (err) {
 	if (errno == ENOENT) {
 	    char *notmuch_path = dirname (talloc_strdup (notmuch, notmuch->xapian_path));
-	    hook_dir = talloc_asprintf (notmuch, "%s/hooks", notmuch_path);
+	    dir = talloc_asprintf (notmuch, "%s/%s", notmuch_path, subdir);
 	} else {
 	    IGNORE_RESULT (asprintf (message, "Error: Cannot stat %s: %s.\n",
-				     hook_dir, strerror (errno)));
+				     dir, strerror (errno)));
 	    return NOTMUCH_STATUS_FILE_ERROR;
 	}
     }
 
-    _notmuch_config_cache (notmuch, NOTMUCH_CONFIG_HOOK_DIR, hook_dir);
+    _notmuch_config_cache (notmuch, key, dir);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -428,10 +432,23 @@ _finish_open (notmuch_database_t *notmuch,
 	if (status)
 	    goto DONE;
 
-	status = _choose_hook_dir (notmuch, profile, &message);
+	status = _choose_dir (notmuch, profile,
+			      NOTMUCH_CONFIG_HOOK_DIR,
+			      "XDG_CONFIG_HOME",
+			      ".config",
+			      "hooks",
+			      &message);
 	if (status)
 	    goto DONE;
 
+	status = _choose_dir (notmuch, profile,
+			      NOTMUCH_CONFIG_BACKUP_DIR,
+			      "XDG_DATA_HOME",
+			      ".local/share",
+			      "backups",
+			      &message);
+	if (status)
+	    goto DONE;
 	status = _notmuch_config_load_defaults (notmuch);
 	if (status)
 	    goto DONE;

@@ -366,6 +366,7 @@ cat <<'EOF' >EXPECTED
 MAIL_DIR
 MAIL_DIR
 MAIL_DIR/.notmuch/hooks
+MAIL_DIR/.notmuch/backups
 
 inbox;unread
 NULL

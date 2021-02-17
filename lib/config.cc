@@ -410,6 +410,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 	return "database.mail_root";
     case NOTMUCH_CONFIG_HOOK_DIR:
 	return "database.hook_dir";
+    case NOTMUCH_CONFIG_BACKUP_DIR:
+	return "database.backup_dir";
     case NOTMUCH_CONFIG_EXCLUDE_TAGS:
 	return "search.exclude_tags";
     case NOTMUCH_CONFIG_NEW_TAGS:
@@ -453,6 +455,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
 	return "true";
     case NOTMUCH_CONFIG_HOOK_DIR:
+    case NOTMUCH_CONFIG_BACKUP_DIR:
     case NOTMUCH_CONFIG_NEW_IGNORE:
     case NOTMUCH_CONFIG_USER_NAME:
     case NOTMUCH_CONFIG_PRIMARY_EMAIL:
