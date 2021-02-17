@@ -1051,28 +1051,22 @@ _maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state)
     if (notmuch_database_needs_upgrade (notmuch)) {
 	time_t now = time (NULL);
 	struct tm *gm_time = gmtime (&now);
-	struct stat st;
 	int err;
 	notmuch_status_t status;
-	char *dot_notmuch_path = talloc_asprintf (notmuch, "%s/%s", state->db_path, ".notmuch");
-
+	const char *backup_dir = notmuch_config_get (notmuch, NOTMUCH_CONFIG_BACKUP_DIR);
 	const char *backup_name;
 
-	err = stat (dot_notmuch_path, &st);
-	if (err) {
-	    if (errno == ENOENT) {
-		dot_notmuch_path = NULL;
-	    } else {
-		fprintf (stderr, "Failed to stat %s: %s\n", dot_notmuch_path, strerror (errno));
-		return EXIT_FAILURE;
-	    }
+	err = mkdir (backup_dir, 0755);
+	if (err && errno != EEXIST) {
+	    fprintf (stderr, "Failed to create %s: %s\n", backup_dir, strerror (errno));
+	    return EXIT_FAILURE;
 	}
 
 	/* since dump files are written atomically, the amount of
 	 * harm from overwriting one within a second seems
 	 * relatively small. */
 	backup_name = talloc_asprintf (notmuch, "%s/dump-%04d%02d%02dT%02d%02d%02d.gz",
-				       dot_notmuch_path ? dot_notmuch_path : state->db_path,
+				       backup_dir,
 				       gm_time->tm_year + 1900,
 				       gm_time->tm_mon + 1,
 				       gm_time->tm_mday,

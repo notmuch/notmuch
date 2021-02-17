@@ -5,7 +5,7 @@ test_description='database upgrades'
 test_require_external_prereq xapian-metadata
 
 XAPIAN_PATH=$MAIL_DIR/.notmuch/xapian
-BACKUP_PATH=$MAIL_DIR/.notmuch
+BACKUP_PATH=$MAIL_DIR/.notmuch/backups
 
 delete_feature () {
     local key=$1

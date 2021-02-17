@@ -2,6 +2,8 @@
 test_description='Configuration of mail-root and database path'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_require_external_prereq xapian-metdata
+
 backup_config () {
     local test_name=$(basename $0 .sh)
     cp ${NOTMUCH_CONFIG} notmuch-config-backup.${test_name}
@@ -13,6 +15,7 @@ restore_config () {
     unset CONFIG_PATH
     unset DATABASE_PATH
     unset NOTMUCH_PROFILE
+    unset XAPIAN_PATH
     cp notmuch-config-backup.${test_name} ${NOTMUCH_CONFIG}
 }
 
@@ -25,6 +28,7 @@ split_config () {
     notmuch config set database.path $dir
     notmuch config set database.mail_root $MAIL_DIR
     DATABASE_PATH=$dir
+    XAPIAN_PATH="$dir/xapian"
 }
 
 symlink_config () {
@@ -34,6 +38,7 @@ symlink_config () {
     ln -s $MAIL_DIR $dir
     notmuch config set database.path $dir
     notmuch config set database.mail_root $MAIL_DIR
+    XAPIAN_PATH="$MAIL_DIR/.notmuch/xapian"
     unset DATABASE_PATH
 }
 
@@ -56,6 +61,7 @@ xdg_config () {
     mv ${NOTMUCH_CONFIG} $CONFIG_PATH
     unset NOTMUCH_CONFIG
 
+    XAPIAN_PATH="${DATABASE_PATH}/xapian"
     notmuch --config=${CONFIG_PATH} config set database.mail_root ${TMP_DIRECTORY}/mail
     notmuch --config=${CONFIG_PATH} config set database.path
 }
@@ -67,6 +73,7 @@ for config in traditional split XDG XDG+profile symlink; do
     case $config in
 	traditional)
 	    backup_config
+	    XAPIAN_PATH="$MAIL_DIR/.notmuch/xapian"
 	    ;;
 	split)
 	    split_config
@@ -183,6 +190,14 @@ EOF
     notmuch compact
     notmuch search --output=messages '*' | sort > OUTPUT
     test_expect_equal_file EXPECTED OUTPUT
+
+    test_begin_subtest "upgrade backup ($config)"
+    features=$(xapian-metadata get $XAPIAN_PATH features | grep -v "^relative directory paths")
+    xapian-metadata set $XAPIAN_PATH features "$features"
+    output=$(notmuch new | grep Welcome)
+    test_expect_equal \
+	"$output" \
+	"Welcome to a new version of notmuch! Your database will now be upgraded."
 
     restore_config
 done
