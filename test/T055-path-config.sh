@@ -27,9 +27,17 @@ split_config () {
     DATABASE_PATH=$dir
 }
 
+symlink_config () {
+    local dir
+    backup_config
+    dir="$TMP_DIRECTORY/link.$test_count"
+    ln -s $MAIL_DIR $dir
+    notmuch config set database.path $dir
+    notmuch config set database.mail_root $MAIL_DIR
+    unset DATABASE_PATH
+}
 
-
-for config in traditional split; do
+for config in traditional split symlink; do
     # start each set of tests with a known set of messages
     add_email_corpus
 
@@ -40,6 +48,9 @@ for config in traditional split; do
 	split)
 	    split_config
 	    mv mail/.notmuch/xapian $DATABASE_PATH
+	    ;;
+	symlink)
+	    symlink_config
 	    ;;
     esac
 

@@ -545,11 +545,12 @@ notmuch_database_create_with_config (const char *database_path,
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path = NULL;
+    const char *notmuch_path = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
     void *local = talloc_new (NULL);
     int err;
+    bool split = false;
 
     _init_libs ();
 
@@ -571,24 +572,50 @@ notmuch_database_create_with_config (const char *database_path,
 
     _set_database_path (notmuch, database_path);
 
-    notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch");
+    if (key_file && ! split) {
+	char *mail_root = canonicalize_file_name (
+	    g_key_file_get_value (key_file, "database", "mail_root", NULL));
+	char *db_path = canonicalize_file_name (database_path);
 
-    err = mkdir (notmuch_path, 0755);
-    if (err) {
-	if (errno == EEXIST) {
-	    status = NOTMUCH_STATUS_DATABASE_EXISTS;
-	    talloc_free (notmuch);
-	    notmuch = NULL;
-	} else {
-	    IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
-				     notmuch_path, strerror (errno)));
-	    status = NOTMUCH_STATUS_FILE_ERROR;
+	split = (mail_root && (0 != strcmp (mail_root, db_path)));
+
+	free (mail_root);
+	free (db_path);
+    }
+
+    if (split) {
+	notmuch_path = database_path;
+    } else {
+	if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
+	    status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	    goto DONE;
 	}
-	goto DONE;
+
+	err = mkdir (notmuch_path, 0755);
+	if (err) {
+	    if (errno == EEXIST) {
+		status = NOTMUCH_STATUS_DATABASE_EXISTS;
+		talloc_free (notmuch);
+		notmuch = NULL;
+	    } else {
+		IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
+					 notmuch_path, strerror (errno)));
+		status = NOTMUCH_STATUS_FILE_ERROR;
+	    }
+	    goto DONE;
+	}
     }
 
     if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    status = _trial_open (notmuch->xapian_path, &message);
+    if (status == NOTMUCH_STATUS_SUCCESS) {
+	notmuch_database_destroy (notmuch);
+	notmuch = NULL;
+	status = NOTMUCH_STATUS_DATABASE_EXISTS;
 	goto DONE;
     }
 
