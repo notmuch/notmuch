@@ -1,3 +1,11 @@
+notmuch (0.31.4-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+    - Fix include bug triggered by glib 2.67
+    - Fix race condition in T568-lib-thread
+
+ -- David Bremner <bremner@debian.org>  Thu, 18 Feb 2021 07:23:00 -0400
+
 notmuch (0.31.3-2) unstable; urgency=medium
 
   * Don't install gdb on hppa (skip gdb based tests)

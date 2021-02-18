@@ -31,6 +31,12 @@
 
 #include "notmuch.h"
 
+#include "xutil.h"
+#include "error_util.h"
+#include "string-util.h"
+#include "crypto.h"
+#include "repair.h"
+
 NOTMUCH_BEGIN_DECLS
 
 #include <stdlib.h>
@@ -46,14 +52,6 @@ NOTMUCH_BEGIN_DECLS
 #include <assert.h>
 
 #include <talloc.h>
-
-#include "gmime-extra.h"
-
-#include "xutil.h"
-#include "error_util.h"
-#include "string-util.h"
-#include "crypto.h"
-#include "repair.h"
 
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
