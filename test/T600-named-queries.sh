@@ -4,13 +4,13 @@ test_description='named queries'
 
 QUERYSTR="date:2009-11-18..2009-11-18 and tag:unread"
 
-test_begin_subtest "error adding named query before initializing DB"
-test_expect_code 1 "notmuch config set query.test \"$QUERYSTR\""
+test_begin_subtest "error adding named query to DB before initialization"
+test_expect_code 1 "notmuch config set --database query.test \"$QUERYSTR\""
 
 add_email_corpus
 
-test_begin_subtest "adding named query"
-test_expect_success "notmuch config set query.test \"$QUERYSTR\""
+test_begin_subtest "adding named query (database)"
+test_expect_success "notmuch config set --database query.test \"$QUERYSTR\""
 
 test_begin_subtest "adding nested named query"
 QUERYSTR2="query:test and subject:Maildir"
@@ -32,7 +32,6 @@ test_begin_subtest "dump named queries"
 notmuch dump | grep '^#@' > OUTPUT
 cat<<EOF > QUERIES.BEFORE
 #@ query.test date%3a2009-11-18..2009-11-18%20and%20tag%3aunread
-#@ query.test2 query%3atest%20and%20subject%3aMaildir
 EOF
 test_expect_equal_file QUERIES.BEFORE OUTPUT
 
@@ -40,23 +39,21 @@ test_begin_subtest 'dumping large queries'
 # This value is just large enough to trigger a limitation of gzprintf
 # to 8191 bytes in total (by default).
 repeat=1329
-notmuch config set query.big "$(seq -s' ' $repeat)"
+notmuch config set --database query.big "$(seq -s' ' $repeat)"
 notmuch dump --include=config > OUTPUT
-notmuch config set query.big ''
+notmuch config set --database query.big
 printf "#notmuch-dump batch-tag:3 config\n#@ query.big " > EXPECTED
 seq -s'%20' $repeat >> EXPECTED
 cat <<EOF >> EXPECTED
 #@ query.test date%3a2009-11-18..2009-11-18%20and%20tag%3aunread
-#@ query.test2 query%3atest%20and%20subject%3aMaildir
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "delete named queries"
 notmuch dump > BEFORE
-notmuch config set query.test
+notmuch config set --database query.test
 notmuch dump | grep '^#@' > OUTPUT
 cat<<EOF > EXPECTED
-#@ query.test2 query%3atest%20and%20subject%3aMaildir
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

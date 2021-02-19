@@ -2,14 +2,6 @@
 test_description='indexing user specified headers'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-test_begin_subtest "error adding user header before initializing DB"
-notmuch config set index.header.List List-Id 2>&1 | notmuch_dir_sanitize > OUTPUT
-cat <<EOF > EXPECTED
-notmuch config: Illegal argument for function
-Cannot reopen closed or nonexistent database
-EOF
-test_expect_equal_file EXPECTED OUTPUT
-
 add_email_corpus
 
 notmuch search '*' | notmuch_search_sanitize > initial-threads

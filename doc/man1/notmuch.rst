@@ -48,7 +48,9 @@ Supported global options for ``notmuch`` include
 
 ``--config=FILE``
     Specify the configuration file to use. This overrides any
-    configuration file specified by ${NOTMUCH\_CONFIG}.
+    configuration file specified by ${NOTMUCH\_CONFIG}. The empty
+    string is a permitted and sometimes useful value of *FILE*, which
+    tells ``notmuch`` to use only configuration metadata from the database.
 
 ``--uuid=HEX``
     Enforce that the database UUID (a unique identifier which persists

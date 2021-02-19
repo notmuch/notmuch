@@ -7,7 +7,7 @@ SYNOPSIS
 
 **notmuch** **config** **get** <*section*>.<*item*>
 
-**notmuch** **config** **set** <*section*>.<*item*> [*value* ...]
+**notmuch** **config** **set** [--database] <*section*>.<*item*> [*value* ...]
 
 **notmuch** **config** **list**
 
@@ -29,6 +29,10 @@ configuration file and corresponding database.
 
     If no values are provided, the specified configuration item will
     be removed from the configuration file.
+
+    With the `--database` option, updates configuration metadata
+    stored in the database, rather than the default (text)
+    configuration file.
 
 **list**
     Every configuration item is printed to stdout, each on a separate

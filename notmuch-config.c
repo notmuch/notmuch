@@ -511,16 +511,15 @@ validate_field_name (const char *str)
 
 typedef struct config_key {
     const char *name;
-    bool in_db;
     bool prefix;
     bool (*validate)(const char *);
 } config_key_info_t;
 
 static struct config_key
     config_key_table[] = {
-    { "index.decrypt",   true,   false,  NULL },
-    { "index.header.",   true,   true,   validate_field_name },
-    { "query.",          true,   true,   NULL },
+    { "index.decrypt",   false,  NULL },
+    { "index.header.",   true,   validate_field_name },
+    { "query.",          true,   NULL },
 };
 
 static config_key_info_t *
@@ -583,11 +582,36 @@ _set_db_config (notmuch_database_t *notmuch, const char *key, int argc, char **a
 }
 
 static int
-notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuch, char *item,
+notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuch,
 			    int argc, char *argv[])
 {
     char *group, *key;
     config_key_info_t *key_info;
+    bool update_database = false;
+    int opt_index;
+    char *item;
+
+    notmuch_opt_desc_t options[] = {
+	{ .opt_bool = &update_database, .name = "database" },
+	{ }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    argc -= opt_index;
+    argv += opt_index;
+
+    if (argc < 1) {
+	fprintf (stderr, "Error: notmuch config set requires at least "
+		 "one argument.\n");
+	return EXIT_FAILURE;
+    }
+
+    item = argv[0];
+    argv++;
+    argc--;
 
     if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
 	fprintf (stderr, "Error: read only option: %s\n", item);
@@ -598,7 +622,7 @@ notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuc
     if (key_info && key_info->validate && (! key_info->validate (item)))
 	return 1;
 
-    if (key_info && key_info->in_db) {
+    if (update_database) {
 	return _set_db_config (notmuch, item, argc, argv);
     }
 
@@ -692,12 +716,7 @@ notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 	}
 	ret = notmuch_config_command_get (notmuch, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
-	if (argc < 2) {
-	    fprintf (stderr, "Error: notmuch config set requires at least "
-		     "one argument.\n");
-	    return EXIT_FAILURE;
-	}
-	ret = notmuch_config_command_set (config, notmuch, argv[1], argc - 2, argv + 2);
+	ret = notmuch_config_command_set (config, notmuch, argc, argv);
     } else if (strcmp (argv[0], "list") == 0) {
 	ret = notmuch_config_command_list (notmuch);
     } else {
