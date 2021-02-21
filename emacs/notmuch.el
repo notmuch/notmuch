@@ -834,6 +834,8 @@ non-authors is found, assume that all of the authors match."
 
 (defun notmuch-search-insert-field (field format-string result)
   (pcase field
+    ((pred functionp)
+     (insert (funcall field format-string result)))
     ("date"
      (insert (propertize (format format-string (plist-get result :date_relative))
 			 'face 'notmuch-search-date)))
