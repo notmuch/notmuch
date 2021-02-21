@@ -833,26 +833,26 @@ non-authors is found, assume that all of the authors match."
       (insert padding))))
 
 (defun notmuch-search-insert-field (field format-string result)
-  (cond
-   ((string-equal field "date")
-    (insert (propertize (format format-string (plist-get result :date_relative))
-			'face 'notmuch-search-date)))
-   ((string-equal field "count")
-    (insert (propertize (format format-string
-				(format "[%s/%s]" (plist-get result :matched)
-					(plist-get result :total)))
-			'face 'notmuch-search-count)))
-   ((string-equal field "subject")
-    (insert (propertize (format format-string
-				(notmuch-sanitize (plist-get result :subject)))
-			'face 'notmuch-search-subject)))
-   ((string-equal field "authors")
-    (notmuch-search-insert-authors
-     format-string (notmuch-sanitize (plist-get result :authors))))
-   ((string-equal field "tags")
-    (let ((tags (plist-get result :tags))
-	  (orig-tags (plist-get result :orig-tags)))
-      (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
+  (pcase field
+    ("date"
+     (insert (propertize (format format-string (plist-get result :date_relative))
+			 'face 'notmuch-search-date)))
+    ("count"
+     (insert (propertize (format format-string
+				 (format "[%s/%s]" (plist-get result :matched)
+					 (plist-get result :total)))
+			 'face 'notmuch-search-count)))
+    ("subject"
+     (insert (propertize (format format-string
+				 (notmuch-sanitize (plist-get result :subject)))
+			 'face 'notmuch-search-subject)))
+    ("authors"
+     (notmuch-search-insert-authors format-string
+				    (notmuch-sanitize (plist-get result :authors))))
+    ("tags"
+     (let ((tags (plist-get result :tags))
+	   (orig-tags (plist-get result :orig-tags)))
+       (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
 
 (defun notmuch-search-show-result (result pos)
   "Insert RESULT at POS."
