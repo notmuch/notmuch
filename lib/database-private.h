@@ -192,6 +192,9 @@ struct _notmuch_database {
     /* Path to actual database */
     const char *xapian_path;
 
+    /* Path to config loaded, if any */
+    const char *config_path;
+
     int atomic_nesting;
     /* true if changes have been made in this atomic section */
     bool atomic_dirty;

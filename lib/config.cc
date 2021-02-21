@@ -654,6 +654,12 @@ notmuch_config_get (notmuch_database_t *notmuch, notmuch_config_key_t key)
     return _notmuch_string_map_get (notmuch->config, _notmuch_config_key_to_string (key));
 }
 
+const char *
+notmuch_config_path (notmuch_database_t *notmuch)
+{
+    return notmuch->config_path;
+}
+
 notmuch_status_t
 notmuch_config_set (notmuch_database_t *notmuch, notmuch_config_key_t key, const char *val)
 {

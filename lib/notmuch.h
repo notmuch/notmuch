@@ -454,7 +454,12 @@ notmuch_database_open_with_config (const char *database_path,
  *
  * For description of arguments, @see notmuch_database_open_with_config
  *
- * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded (some) configuration.
+ * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded configuration.
+ *
+ * @retval NOTMUCH_STATUS_NO_CONFIG: No config file was loaded. Not fatal.
+ *
+ * @retval NOTMUCH_STATUS_NO_DATABASE: No config information was
+ *	loaded from a database. Not fatal.
  *
  * @retval NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
@@ -2737,6 +2742,15 @@ notmuch_status_t
 notmuch_config_get_bool (notmuch_database_t *notmuch,
 			 notmuch_config_key_t key,
 			 notmuch_bool_t *val);
+
+/**
+ * return the path of the config file loaded, if any
+ *
+ * @retval NULL if no config file was loaded
+ */
+const char *
+notmuch_config_path (notmuch_database_t *notmuch);
+
 /**
  * get the current default indexing options for a given database.
  *
