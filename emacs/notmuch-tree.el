@@ -885,6 +885,9 @@ unchanged ADDRESS if parsing fails."
      ((listp field)
       (format format-string (notmuch-tree-format-field-list field msg)))
 
+     ((functionp field)
+      (funcall field format-string msg))
+
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-tree-match-date-face
