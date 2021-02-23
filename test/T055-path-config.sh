@@ -199,6 +199,22 @@ EOF
 	"$output" \
 	"Welcome to a new version of notmuch! Your database will now be upgraded."
 
+    test_begin_subtest "notmuch +config -database suggests notmuch new ($config)"
+    mv "$XAPIAN_PATH" "${XAPIAN_PATH}.bak"
+    notmuch > OUTPUT
+cat <<EOF > EXPECTED
+Notmuch is configured, but no database was found.
+You probably want to run "notmuch new" now to create a database.
+
+Note that the first run of "notmuch new" can take a very long time
+and that the resulting database will use roughly the same amount of
+storage space as the email being indexed.
+
+EOF
+    mv "${XAPIAN_PATH}.bak" "$XAPIAN_PATH"
+
+   test_expect_equal_file EXPECTED OUTPUT
+
     restore_config
 done
 

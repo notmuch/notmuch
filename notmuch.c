@@ -380,33 +380,11 @@ notmuch_command (notmuch_config_t *config,
 		 notmuch_database_t *notmuch,
 		 unused(int argc), unused(char **argv))
 {
-    char *db_path;
-    struct stat st;
-
     /* If the user has never configured notmuch, then run
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
     if (notmuch_config_is_new (config))
 	return notmuch_setup_command (config, notmuch, 0, NULL);
-
-    /* Notmuch is already configured, but is there a database? */
-    db_path = talloc_asprintf (config, "%s/%s",
-			       notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH),
-			       ".notmuch");
-    if (stat (db_path, &st)) {
-	if (errno != ENOENT) {
-	    fprintf (stderr, "Error looking for notmuch database at %s: %s\n",
-		     db_path, strerror (errno));
-	    return EXIT_FAILURE;
-	}
-	printf ("Notmuch is configured, but there's not yet a database at\n\n\t%s\n\n",
-		db_path);
-	printf ("You probably want to run \"notmuch new\" now to create that database.\n\n"
-		"Note that the first run of \"notmuch new\" can take a very long time\n"
-		"and that the resulting database will use roughly the same amount of\n"
-		"storage space as the email being indexed.\n\n");
-	return EXIT_SUCCESS;
-    }
 
     printf ("Notmuch is configured and appears to have a database. Excellent!\n\n"
 	    "At this point you can start exploring the functionality of notmuch by\n"
@@ -576,12 +554,27 @@ main (int argc, char *argv[])
 	    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
 	    goto DONE;
 	}
-
-	if (status && (status != NOTMUCH_STATUS_NO_CONFIG)) {
-	    if (status_string) {
-		fputs (status_string, stderr);
-		free (status_string);
+	switch (status) {
+	case NOTMUCH_STATUS_NO_CONFIG:
+	    if (! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
+		fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+		goto DONE;
 	    }
+	    break;
+	case NOTMUCH_STATUS_NO_DATABASE:
+	    if (! command_name) {
+		printf ("Notmuch is configured, but no database was found.\n");
+		printf ("You probably want to run \"notmuch new\" now to create a database.\n\n"
+			"Note that the first run of \"notmuch new\" can take a very long time\n"
+			"and that the resulting database will use roughly the same amount of\n"
+			"storage space as the email being indexed.\n\n");
+		status = NOTMUCH_STATUS_SUCCESS;
+		goto DONE;
+	    }
+	    break;
+	case NOTMUCH_STATUS_SUCCESS:
+	    break;
+	default:
 	    goto DONE;
 	}
 

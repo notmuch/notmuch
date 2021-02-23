@@ -26,11 +26,8 @@ test_expect_equal_file ${expected_dir}/config-with-comments new-notmuch-config
 test_begin_subtest "notmuch with a config but without a database suggests notmuch new"
 notmuch 2>&1 | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
-Notmuch is configured, but there's not yet a database at
-
-	MAIL_DIR/.notmuch
-
-You probably want to run "notmuch new" now to create that database.
+Notmuch is configured, but no database was found.
+You probably want to run "notmuch new" now to create a database.
 
 Note that the first run of "notmuch new" can take a very long time
 and that the resulting database will use roughly the same amount of
