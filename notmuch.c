@@ -391,7 +391,7 @@ notmuch_command (notmuch_config_t *config,
 
     /* Notmuch is already configured, but is there a database? */
     db_path = talloc_asprintf (config, "%s/%s",
-			       notmuch_config_get_database_path (config),
+			       notmuch_config_get (notmuch, NOTMUCH_CONFIG_DATABASE_PATH),
 			       ".notmuch");
     if (stat (db_path, &st)) {
 	if (errno != ENOENT) {
@@ -422,8 +422,8 @@ notmuch_command (notmuch_config_t *config,
 	    "or any other interface described at https://notmuchmail.org\n\n"
 	    "And don't forget to run \"notmuch new\" whenever new mail arrives.\n\n"
 	    "Have fun, and may your inbox never have much mail.\n\n",
-	    notmuch_config_get_user_name (config),
-	    notmuch_config_get_user_primary_email (config));
+	    notmuch_config_get (notmuch, NOTMUCH_CONFIG_USER_NAME),
+	    notmuch_config_get (notmuch, NOTMUCH_CONFIG_PRIMARY_EMAIL));
 
     return EXIT_SUCCESS;
 }
