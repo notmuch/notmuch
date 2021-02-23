@@ -213,6 +213,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_NO_CONFIG,
     /**
+     * Unable to load a database
+     */
+    NOTMUCH_STATUS_NO_DATABASE,
+    /**
      * Database exists, so not (re)-created
      */
     NOTMUCH_STATUS_DATABASE_EXISTS,

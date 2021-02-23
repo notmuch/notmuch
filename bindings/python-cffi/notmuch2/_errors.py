@@ -52,6 +52,8 @@ class NotmuchError(Exception):
                 IllegalArgumentError,
             capi.lib.NOTMUCH_STATUS_NO_CONFIG:
                 NoConfigError,
+            capi.lib.NOTMUCH_STATUS_NO_DATABASE:
+                NoDatabaseError,
             capi.lib.NOTMUCH_STATUS_DATABASE_EXISTS:
                 DatabaseExistsError,
         }
@@ -99,6 +101,7 @@ class UpgradeRequiredError(NotmuchError): pass
 class PathError(NotmuchError): pass
 class IllegalArgumentError(NotmuchError): pass
 class NoConfigError(NotmuchError): pass
+class NoDatabaseError(NotmuchError): pass
 class DatabaseExistsError(NotmuchError): pass
 
 class ObjectDestroyedError(NotmuchError):
