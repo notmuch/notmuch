@@ -454,7 +454,7 @@ main (int argc, char *argv[])
     int ret = EXIT_SUCCESS;
 
     notmuch_opt_desc_t options[] = {
-	{ .opt_string = &config_file_name, .name = "config" },
+	{ .opt_string = &config_file_name, .name = "config", .allow_empty = TRUE },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -581,6 +581,9 @@ main (int argc, char *argv[])
     }
 
     if (command->mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
+	if (! config_file_name)
+	    config_file_name = notmuch_config_path (notmuch);
+
 	config = notmuch_config_open (notmuch, config_file_name, command->mode);
 	if (! config) {
 	    ret = EXIT_FAILURE;

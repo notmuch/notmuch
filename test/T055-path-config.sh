@@ -215,7 +215,65 @@ EOF
 
    test_expect_equal_file EXPECTED OUTPUT
 
-    restore_config
+   test_begin_subtest "Set config value ($config)"
+   name=${RANDOM}
+   value=${RANDOM}
+   notmuch config set test${test_count}.${name} ${value}
+   output=$(notmuch config get test${test_count}.${name})
+   notmuch config set test${test_count}.${name}
+   output2=$(notmuch config get test${test_count}.${name})
+   test_expect_equal "${output}+${output2}" "${value}+"
+
+   test_begin_subtest "Set config value in database ($config)"
+   name=${RANDOM}
+   value=${RANDOM}
+   notmuch config set --database test${test_count}.${name} ${value}
+   output=$(notmuch config get test${test_count}.${name})
+   notmuch config set --database test${test_count}.${name}
+   output2=$(notmuch config get test${test_count}.${name})
+   test_expect_equal "${output}+${output2}" "${value}+"
+
+   test_begin_subtest "Config list ($config)"
+   notmuch config list | notmuch_dir_sanitize | sed -e "s/^database.backup_dir=.*$/database.backup_dir/"  \
+						    -e "s/^database.hook_dir=.*$/database.hook_dir/" \
+						    -e "s/^database.path=.*$/database.path/" > OUTPUT
+   cat <<EOF > EXPECTED
+built_with.compact=true
+built_with.field_processor=true
+built_with.retry_lock=true
+database.backup_dir
+database.hook_dir
+database.mail_root=MAIL_DIR
+database.path
+maildir.synchronize_flags=true
+new.ignore=
+new.tags=unread;inbox
+search.exclude_tags=
+user.name=Notmuch Test Suite
+user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
+user.primary_email=test_suite@notmuchmail.org
+EOF
+   test_expect_equal_file EXPECTED OUTPUT
+
+   case $config in
+       XDG*)
+	   test_begin_subtest "Set shadowed config value in database ($config)"
+	   test_subtest_known_broken
+	   name=${RANDOM}
+	   value=${RANDOM}
+	   key=test${test_count}.${name}
+	   notmuch config set --database ${key}  ${value}
+	   notmuch config set ${key} shadow${value}
+	   output=$(notmuch --config='' config get ${key})
+	   notmuch config set --database ${key}
+	   output2=$(notmuch --config='' config get ${key})
+	   notmuch config set ${key}
+	   test_expect_equal "${output}+${output2}" "${value}+"
+	   ;;
+   esac
+   restore_config
+   rm -rf home/.local
+   rm -rf home/.config
 done
 
 test_done
