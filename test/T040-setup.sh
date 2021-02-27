@@ -10,7 +10,7 @@ Error: cannot load config file.
 Try running 'notmuch setup' to create a configuration."
 
 test_begin_subtest "Create a new config interactively"
-notmuch --config=new-notmuch-config > /dev/null <<EOF
+notmuch --config=new-notmuch-config > log.${test_count} <<EOF
 Test Suite
 test.suite@example.com
 another.suite@example.com
@@ -20,19 +20,8 @@ foo bar
 baz
 EOF
 
-output=$(notmuch --config=new-notmuch-config config list | notmuch_built_with_sanitize)
-test_expect_equal "$output" "\
-database.path=/path/to/maildir
-user.name=Test Suite
-user.primary_email=test.suite@example.com
-user.other_email=another.suite@example.com;
-new.tags=foo;bar;
-new.ignore=
-search.exclude_tags=baz;
-maildir.synchronize_flags=true
-built_with.compact=something
-built_with.field_processor=something
-built_with.retry_lock=something"
+expected_dir=$NOTMUCH_SRCDIR/test/setup.expected-output
+test_expect_equal_file ${expected_dir}/config-with-comments new-notmuch-config
 
 test_begin_subtest "notmuch with a config but without a database suggests notmuch new"
 notmuch 2>&1 | notmuch_dir_sanitize > OUTPUT
