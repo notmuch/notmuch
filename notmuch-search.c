@@ -794,8 +794,7 @@ static const notmuch_opt_desc_t common_options[] = {
 };
 
 int
-notmuch_search_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-			int argc, char *argv[])
+notmuch_search_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     search_context_t *ctx = &search_context;
     int opt_index, ret;
@@ -862,8 +861,7 @@ notmuch_search_command (unused(notmuch_config_t *config), notmuch_database_t *no
 }
 
 int
-notmuch_address_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-			 int argc, char *argv[])
+notmuch_address_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     search_context_t *ctx = &search_context;
     int opt_index, ret;

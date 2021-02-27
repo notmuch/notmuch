@@ -361,8 +361,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 }
 
 int
-notmuch_dump_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-		      int argc, char *argv[])
+notmuch_dump_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     const char *query_str = NULL;
     int ret;

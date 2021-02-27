@@ -151,8 +151,7 @@ count_file (notmuch_database_t *notmuch, FILE *input, notmuch_config_values_t *e
 }
 
 int
-notmuch_count_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-		       int argc, char *argv[])
+notmuch_count_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     char *query_str;
     int opt_index;

@@ -124,8 +124,7 @@ parse_tag_list (void *ctx, char *response)
 }
 
 int
-notmuch_setup_command (unused(notmuch_config_t *config),
-		       notmuch_database_t *notmuch,
+notmuch_setup_command (notmuch_database_t *notmuch,
 		       int argc, char *argv[])
 {
     char *response = NULL;

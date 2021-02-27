@@ -219,8 +219,7 @@ parse_sup_line (void *ctx, char *line,
 }
 
 int
-notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-			 int argc, char *argv[])
+notmuch_restore_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     bool accumulate = false;
     tag_op_flag_t flags = 0;

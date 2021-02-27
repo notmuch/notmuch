@@ -705,8 +705,7 @@ do_reply (notmuch_database_t *notmuch,
 }
 
 int
-notmuch_reply_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-		       int argc, char *argv[])
+notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     notmuch_query_t *query;
     char *query_string;

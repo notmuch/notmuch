@@ -578,7 +578,7 @@ _set_db_config (notmuch_database_t *notmuch, const char *key, int argc, char **a
 }
 
 static int
-notmuch_config_command_set (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+notmuch_config_command_set (notmuch_database_t *notmuch,
 			    int argc, char *argv[])
 {
     char *group, *key;
@@ -691,8 +691,7 @@ notmuch_config_command_list (notmuch_database_t *notmuch)
 }
 
 int
-notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
-			int argc, char *argv[])
+notmuch_config_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     int ret;
     int opt_index;
@@ -722,7 +721,7 @@ notmuch_config_command (notmuch_config_t *config, notmuch_database_t *notmuch,
 	}
 	ret = notmuch_config_command_get (notmuch, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
-	ret = notmuch_config_command_set (config, notmuch, argc, argv);
+	ret = notmuch_config_command_set (notmuch, argc, argv);
     } else if (strcmp (argv[0], "list") == 0) {
 	ret = notmuch_config_command_list (notmuch);
     } else {

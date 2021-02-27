@@ -31,8 +31,7 @@
  * Each subcommand should be passed either a config object, or an open
  * database
  */
-typedef int (*command_function_t) (notmuch_config_t *config, notmuch_database_t *notmuch,
-				   int argc, char *argv[]);
+typedef int (*command_function_t) (notmuch_database_t *notmuch, int argc, char *argv[]);
 
 typedef struct command {
     const char *name;
@@ -42,10 +41,10 @@ typedef struct command {
 } command_t;
 
 static int
-notmuch_help_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
+notmuch_help_command (notmuch_database_t *notmuch, int argc, char *argv[]);
 
 static int
-notmuch_command (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
+notmuch_command (notmuch_database_t *notmuch, int argc, char *argv[]);
 
 static int
 _help_for (const char *topic);
@@ -349,8 +348,7 @@ _help_for (const char *topic_name)
 }
 
 static int
-notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database_t *notmuch), int
-		      argc, char *argv[])
+notmuch_help_command (unused(notmuch_database_t *notmuch), int argc, char *argv[])
 {
     int opt_index;
 
@@ -374,8 +372,7 @@ notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database
  * to be more clever about this in the future.
  */
 static int
-notmuch_command (unused(notmuch_config_t *config),
-		 notmuch_database_t *notmuch,
+notmuch_command (notmuch_database_t *notmuch,
 		 unused(int argc), unused(char **argv))
 {
 
@@ -391,7 +388,7 @@ notmuch_command (unused(notmuch_config_t *config),
 		     strerror (errno));
 	    return EXIT_FAILURE;
 	} else {
-	    return notmuch_setup_command (NULL, notmuch, 0, NULL);
+	    return notmuch_setup_command (notmuch, 0, NULL);
 	}
     }
 
@@ -457,7 +454,6 @@ main (int argc, char *argv[])
     const char *command_name = NULL;
     command_t *command;
     const char *config_file_name = NULL;
-    notmuch_config_t *config = NULL;
     notmuch_database_t *notmuch = NULL;
     int opt_index;
     int ret = EXIT_SUCCESS;
@@ -589,7 +585,7 @@ main (int argc, char *argv[])
 
     }
 
-    ret = (command->function)(config, notmuch, argc - opt_index, argv + opt_index);
+    ret = (command->function)(notmuch, argc - opt_index, argv + opt_index);
 
   DONE:
     talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");

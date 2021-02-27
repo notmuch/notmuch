@@ -1104,8 +1104,7 @@ _maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state)
 }
 
 int
-notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
-		     int argc, char *argv[])
+notmuch_new_command (notmuch_database_t *notmuch, int argc, char *argv[])
 {
     add_files_state_t add_files_state = {
 	.verbosity = VERBOSITY_NORMAL,
