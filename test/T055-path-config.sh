@@ -258,7 +258,6 @@ EOF
    case $config in
        XDG*)
 	   test_begin_subtest "Set shadowed config value in database ($config)"
-	   test_subtest_known_broken
 	   name=${RANDOM}
 	   value=${RANDOM}
 	   key=test${test_count}.${name}

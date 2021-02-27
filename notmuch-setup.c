@@ -124,7 +124,7 @@ parse_tag_list (void *ctx, char *response)
 }
 
 int
-notmuch_setup_command (notmuch_config_t *config,
+notmuch_setup_command (unused(notmuch_config_t *config),
 		       notmuch_database_t *notmuch,
 		       int argc, char *argv[])
 {
@@ -132,6 +132,7 @@ notmuch_setup_command (notmuch_config_t *config,
     size_t response_size = 0;
     GPtrArray *other_emails;
     notmuch_config_values_t *new_tags, *search_exclude_tags, *emails;
+    notmuch_config_t *config;
 
 #define prompt(format, ...)                                     \
     do {                                                        \
@@ -150,6 +151,11 @@ notmuch_setup_command (notmuch_config_t *config,
     if (notmuch_requested_db_uuid)
 	fprintf (stderr, "Warning: ignoring --uuid=%s\n",
 		 notmuch_requested_db_uuid);
+
+    config = notmuch_config_open (notmuch,
+				  notmuch_config_path (notmuch), true);
+    if (! config)
+	return EXIT_FAILURE;
 
     if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
@@ -231,6 +237,9 @@ notmuch_setup_command (notmuch_config_t *config,
 
     if (notmuch_config_save (config))
 	return EXIT_FAILURE;
+
+    if (config)
+	notmuch_config_close (config);
 
     if (notmuch_config_is_new (config))
 	welcome_message_post_setup ();

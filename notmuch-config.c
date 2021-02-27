@@ -248,7 +248,7 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
 notmuch_config_t *
 notmuch_config_open (notmuch_database_t *notmuch,
 		     const char *filename,
-		     notmuch_command_mode_t config_mode)
+		     bool create)
 {
     char *notmuch_config_env = NULL;
 
@@ -272,13 +272,9 @@ notmuch_config_open (notmuch_database_t *notmuch,
 
     config->key_file = g_key_file_new ();
 
-    if (config_mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
-	bool create_new = (config_mode & NOTMUCH_COMMAND_CONFIG_CREATE) != 0;
-
-	if (! get_config_from_file (config, create_new)) {
-	    talloc_free (config);
-	    return NULL;
-	}
+    if (! get_config_from_file (config, create)) {
+	talloc_free (config);
+	return NULL;
     }
 
     if (config->is_new)
@@ -582,13 +578,14 @@ _set_db_config (notmuch_database_t *notmuch, const char *key, int argc, char **a
 }
 
 static int
-notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuch,
+notmuch_config_command_set (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
 			    int argc, char *argv[])
 {
     char *group, *key;
     config_key_info_t *key_info;
+    notmuch_config_t *config;
     bool update_database = false;
-    int opt_index;
+    int opt_index, ret;
     char *item;
 
     notmuch_opt_desc_t options[] = {
@@ -629,6 +626,11 @@ notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuc
     if (_item_split (item, &group, &key))
 	return 1;
 
+    config = notmuch_config_open (notmuch,
+				  notmuch_config_path (notmuch), false);
+    if (! config)
+	return 1;
+
     /* With only the name of an item, we clear it from the
      * configuration file.
      *
@@ -649,7 +651,11 @@ notmuch_config_command_set (notmuch_config_t *config, notmuch_database_t *notmuc
 	break;
     }
 
-    return notmuch_config_save (config);
+    ret = notmuch_config_save (config);
+
+    notmuch_config_close (config);
+
+    return ret;
 }
 
 static

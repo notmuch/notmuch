@@ -141,11 +141,9 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
 
 
 static command_t commands[] = {
-    { NULL, notmuch_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE
-      | NOTMUCH_COMMAND_CONFIG_LOAD,
+    { NULL, notmuch_command, NOTMUCH_COMMAND_CONFIG_CREATE | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Notmuch main command." },
-    { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE
-      | NOTMUCH_COMMAND_CONFIG_LOAD,
+    { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_CREATE | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command,
       NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE |
@@ -177,7 +175,7 @@ static command_t commands[] = {
     { "reindex", notmuch_reindex_command, NOTMUCH_COMMAND_DATABASE_EARLY |
       NOTMUCH_COMMAND_DATABASE_WRITE,
       "Re-index all messages matching the search terms." },
-    { "config", notmuch_config_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_LOAD,
+    { "config", notmuch_config_command, NOTMUCH_COMMAND_CONFIG_LOAD,
       "Get or set settings in the notmuch configuration file." },
 #if WITH_EMACS
     { "emacs-mua", NULL, 0,
@@ -376,15 +374,26 @@ notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database
  * to be more clever about this in the future.
  */
 static int
-notmuch_command (notmuch_config_t *config,
+notmuch_command (unused(notmuch_config_t *config),
 		 notmuch_database_t *notmuch,
 		 unused(int argc), unused(char **argv))
 {
-    /* If the user has never configured notmuch, then run
+
+    const char *config_path;
+
+    /* If the user has not created a configuration file, then run
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
-    if (notmuch_config_is_new (config))
-	return notmuch_setup_command (config, notmuch, 0, NULL);
+    config_path = notmuch_config_path (notmuch);
+    if (access (config_path, R_OK | F_OK) == -1) {
+	if (errno != ENOENT) {
+	    fprintf (stderr, "Error: %s config file access failed: %s\n", config_path,
+		     strerror (errno));
+	    return EXIT_FAILURE;
+	} else {
+	    return notmuch_setup_command (NULL, notmuch, 0, NULL);
+	}
+    }
 
     printf ("Notmuch is configured and appears to have a database. Excellent!\n\n"
 	    "At this point you can start exploring the functionality of notmuch by\n"
@@ -580,22 +589,9 @@ main (int argc, char *argv[])
 
     }
 
-    if (command->mode & NOTMUCH_COMMAND_CONFIG_OPEN) {
-	if (! config_file_name)
-	    config_file_name = notmuch_config_path (notmuch);
-
-	config = notmuch_config_open (notmuch, config_file_name, command->mode);
-	if (! config) {
-	    ret = EXIT_FAILURE;
-	    goto DONE;
-	}
-    }
     ret = (command->function)(config, notmuch, argc - opt_index, argv + opt_index);
 
   DONE:
-    if (config)
-	notmuch_config_close (config);
-
     talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
     if (talloc_report && strcmp (talloc_report, "") != 0) {
 	/* this relies on the previous call to

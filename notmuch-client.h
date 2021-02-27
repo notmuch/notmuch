@@ -267,7 +267,6 @@ json_quote_str (const void *ctx, const char *str);
 /* notmuch-config.c */
 
 typedef enum {
-    NOTMUCH_COMMAND_CONFIG_OPEN		= 1 << 0,
     NOTMUCH_COMMAND_CONFIG_CREATE	= 1 << 1,
     NOTMUCH_COMMAND_DATABASE_EARLY	= 1 << 2,
     NOTMUCH_COMMAND_DATABASE_WRITE	= 1 << 3,
@@ -278,7 +277,7 @@ typedef enum {
 notmuch_config_t *
 notmuch_config_open (notmuch_database_t *notmuch,
 		     const char *filename,
-		     notmuch_command_mode_t config_mode);
+		     bool create);
 
 void
 notmuch_config_close (notmuch_config_t *config);
