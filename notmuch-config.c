@@ -114,14 +114,14 @@ struct config_group {
     },
 };
 
-struct _notmuch_config {
+struct _notmuch_conffile {
     char *filename;
     GKeyFile *key_file;
     bool is_new;
 };
 
 static int
-notmuch_config_destructor (notmuch_config_t *config)
+notmuch_conffile_destructor (notmuch_conffile_t *config)
 {
     if (config->key_file)
 	g_key_file_free (config->key_file);
@@ -130,7 +130,7 @@ notmuch_config_destructor (notmuch_config_t *config)
 }
 
 static bool
-get_config_from_file (notmuch_config_t *config, bool create_new)
+get_config_from_file (notmuch_conffile_t *config, bool create_new)
 {
     #define BUF_SIZE 4096
     char *config_str = NULL;
@@ -245,21 +245,21 @@ get_config_from_file (notmuch_config_t *config, bool create_new)
  *	The default configuration also contains comments to guide the
  *	user in editing the file directly.
  */
-notmuch_config_t *
-notmuch_config_open (notmuch_database_t *notmuch,
-		     const char *filename,
-		     bool create)
+notmuch_conffile_t *
+notmuch_conffile_open (notmuch_database_t *notmuch,
+		       const char *filename,
+		       bool create)
 {
     char *notmuch_config_env = NULL;
 
-    notmuch_config_t *config = talloc_zero (notmuch, notmuch_config_t);
+    notmuch_conffile_t *config = talloc_zero (notmuch, notmuch_conffile_t);
 
     if (config == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return NULL;
     }
 
-    talloc_set_destructor (config, notmuch_config_destructor);
+    talloc_set_destructor (config, notmuch_conffile_destructor);
 
     if (filename) {
 	config->filename = talloc_strdup (config, filename);
@@ -294,14 +294,14 @@ notmuch_config_open (notmuch_database_t *notmuch,
     return config;
 }
 
-/* Close the given notmuch_config_t object, freeing all resources.
+/* Close the given notmuch_conffile_t object, freeing all resources.
  *
  * Note: Any changes made to the configuration are *not* saved by this
- * function. To save changes, call notmuch_config_save before
- * notmuch_config_close.
+ * function. To save changes, call notmuch_conffile_save before
+ * notmuch_conffile_close.
  */
 void
-notmuch_config_close (notmuch_config_t *config)
+notmuch_conffile_close (notmuch_conffile_t *config)
 {
     talloc_free (config);
 }
@@ -314,7 +314,7 @@ notmuch_config_close (notmuch_config_t *config)
  * printing a description of the error to stderr).
  */
 int
-notmuch_config_save (notmuch_config_t *config)
+notmuch_conffile_save (notmuch_conffile_t *config)
 {
     size_t length;
     char *data, *filename;
@@ -364,20 +364,20 @@ notmuch_config_save (notmuch_config_t *config)
 }
 
 bool
-notmuch_config_is_new (notmuch_config_t *config)
+notmuch_conffile_is_new (notmuch_conffile_t *config)
 {
     return config->is_new;
 }
 
 static void
-_config_set (notmuch_config_t *config,
+_config_set (notmuch_conffile_t *config,
 	     const char *group, const char *key, const char *value)
 {
     g_key_file_set_string (config->key_file, group, key, value);
 }
 
 static void
-_config_set_list (notmuch_config_t *config,
+_config_set_list (notmuch_conffile_t *config,
 		  const char *group, const char *key,
 		  const char *list[],
 		  size_t length)
@@ -386,54 +386,54 @@ _config_set_list (notmuch_config_t *config,
 }
 
 void
-notmuch_config_set_database_path (notmuch_config_t *config,
-				  const char *database_path)
+notmuch_conffile_set_database_path (notmuch_conffile_t *config,
+				    const char *database_path)
 {
     _config_set (config, "database", "path", database_path);
 }
 
 void
-notmuch_config_set_user_name (notmuch_config_t *config,
-			      const char *user_name)
+notmuch_conffile_set_user_name (notmuch_conffile_t *config,
+				const char *user_name)
 {
     _config_set (config, "user", "name", user_name);
 }
 
 void
-notmuch_config_set_user_primary_email (notmuch_config_t *config,
-				       const char *primary_email)
+notmuch_conffile_set_user_primary_email (notmuch_conffile_t *config,
+					 const char *primary_email)
 {
     _config_set (config, "user", "primary_email", primary_email);
 }
 
 void
-notmuch_config_set_user_other_email (notmuch_config_t *config,
-				     const char *list[],
-				     size_t length)
+notmuch_conffile_set_user_other_email (notmuch_conffile_t *config,
+				       const char *list[],
+				       size_t length)
 {
     _config_set_list (config, "user", "other_email", list, length);
 }
 
 void
-notmuch_config_set_new_tags (notmuch_config_t *config,
-			     const char *list[],
-			     size_t length)
+notmuch_conffile_set_new_tags (notmuch_conffile_t *config,
+			       const char *list[],
+			       size_t length)
 {
     _config_set_list (config, "new", "tags", list, length);
 }
 
 void
-notmuch_config_set_new_ignore (notmuch_config_t *config,
-			       const char *list[],
-			       size_t length)
+notmuch_conffile_set_new_ignore (notmuch_conffile_t *config,
+				 const char *list[],
+				 size_t length)
 {
     _config_set_list (config, "new", "ignore", list, length);
 }
 
 void
-notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
-					const char *list[],
-					size_t length)
+notmuch_conffile_set_search_exclude_tags (notmuch_conffile_t *config,
+					  const char *list[],
+					  size_t length)
 {
     _config_set_list (config, "search", "exclude_tags", list, length);
 }
@@ -583,7 +583,7 @@ notmuch_config_command_set (notmuch_database_t *notmuch,
 {
     char *group, *key;
     config_key_info_t *key_info;
-    notmuch_config_t *config;
+    notmuch_conffile_t *config;
     bool update_database = false;
     int opt_index, ret;
     char *item;
@@ -626,8 +626,8 @@ notmuch_config_command_set (notmuch_database_t *notmuch,
     if (_item_split (item, &group, &key))
 	return 1;
 
-    config = notmuch_config_open (notmuch,
-				  notmuch_config_path (notmuch), false);
+    config = notmuch_conffile_open (notmuch,
+				    notmuch_config_path (notmuch), false);
     if (! config)
 	return 1;
 
@@ -651,9 +651,9 @@ notmuch_config_command_set (notmuch_database_t *notmuch,
 	break;
     }
 
-    ret = notmuch_config_save (config);
+    ret = notmuch_conffile_save (config);
 
-    notmuch_config_close (config);
+    notmuch_conffile_close (config);
 
     return ret;
 }
@@ -735,8 +735,8 @@ notmuch_config_command (notmuch_database_t *notmuch, int argc, char *argv[])
 }
 
 void
-notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
-					      bool synchronize_flags)
+notmuch_conffile_set_maildir_synchronize_flags (notmuch_conffile_t *config,
+						bool synchronize_flags)
 {
     g_key_file_set_boolean (config->key_file,
 			    "maildir", "synchronize_flags", synchronize_flags);

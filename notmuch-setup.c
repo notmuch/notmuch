@@ -131,7 +131,7 @@ notmuch_setup_command (notmuch_database_t *notmuch,
     size_t response_size = 0;
     GPtrArray *other_emails;
     notmuch_config_values_t *new_tags, *search_exclude_tags, *emails;
-    notmuch_config_t *config;
+    notmuch_conffile_t *config;
 
 #define prompt(format, ...)                                     \
     do {                                                        \
@@ -151,22 +151,22 @@ notmuch_setup_command (notmuch_database_t *notmuch,
 	fprintf (stderr, "Warning: ignoring --uuid=%s\n",
 		 notmuch_requested_db_uuid);
 
-    config = notmuch_config_open (notmuch,
-				  notmuch_config_path (notmuch), true);
+    config = notmuch_conffile_open (notmuch,
+				    notmuch_config_path (notmuch), true);
     if (! config)
 	return EXIT_FAILURE;
 
-    if (notmuch_config_is_new (config))
+    if (notmuch_conffile_is_new (config))
 	welcome_message_pre_setup ();
 
     prompt ("Your full name [%s]: ", notmuch_config_get (notmuch, NOTMUCH_CONFIG_USER_NAME));
     if (strlen (response))
-	notmuch_config_set_user_name (config, response);
+	notmuch_conffile_set_user_name (config, response);
 
     prompt ("Your primary email address [%s]: ",
 	    notmuch_config_get (notmuch, NOTMUCH_CONFIG_PRIMARY_EMAIL));
     if (strlen (response))
-	notmuch_config_set_user_primary_email (config, response);
+	notmuch_conffile_set_user_primary_email (config, response);
 
     other_emails = g_ptr_array_new ();
 
@@ -188,10 +188,10 @@ notmuch_setup_command (notmuch_database_t *notmuch,
 	    g_ptr_array_add (other_emails, talloc_strdup (config, response));
     } while (strlen (response));
     if (other_emails->len)
-	notmuch_config_set_user_other_email (config,
-					     (const char **)
-					     other_emails->pdata,
-					     other_emails->len);
+	notmuch_conffile_set_user_other_email (config,
+					       (const char **)
+					       other_emails->pdata,
+					       other_emails->len);
     g_ptr_array_free (other_emails, true);
 
     prompt ("Top-level directory of your email archive [%s]: ",
@@ -200,7 +200,7 @@ notmuch_setup_command (notmuch_database_t *notmuch,
 	const char *absolute_path;
 
 	absolute_path = make_path_absolute (config, response);
-	notmuch_config_set_database_path (config, absolute_path);
+	notmuch_conffile_set_database_path (config, absolute_path);
     }
 
     new_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_TAGS);
@@ -212,8 +212,8 @@ notmuch_setup_command (notmuch_database_t *notmuch,
     if (strlen (response)) {
 	GPtrArray *tags = parse_tag_list (config, response);
 
-	notmuch_config_set_new_tags (config, (const char **) tags->pdata,
-				     tags->len);
+	notmuch_conffile_set_new_tags (config, (const char **) tags->pdata,
+				       tags->len);
 
 	g_ptr_array_free (tags, true);
     }
@@ -227,20 +227,20 @@ notmuch_setup_command (notmuch_database_t *notmuch,
     if (strlen (response)) {
 	GPtrArray *tags = parse_tag_list (config, response);
 
-	notmuch_config_set_search_exclude_tags (config,
-						(const char **) tags->pdata,
-						tags->len);
+	notmuch_conffile_set_search_exclude_tags (config,
+						  (const char **) tags->pdata,
+						  tags->len);
 
 	g_ptr_array_free (tags, true);
     }
 
-    if (notmuch_config_save (config))
+    if (notmuch_conffile_save (config))
 	return EXIT_FAILURE;
 
     if (config)
-	notmuch_config_close (config);
+	notmuch_conffile_close (config);
 
-    if (notmuch_config_is_new (config))
+    if (notmuch_conffile_is_new (config))
 	welcome_message_post_setup ();
 
     return EXIT_SUCCESS;

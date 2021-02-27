@@ -156,7 +156,7 @@ chomp_newline (char *str)
  */
 extern int notmuch_format_version;
 
-typedef struct _notmuch_config notmuch_config_t;
+typedef struct _notmuch_conffile notmuch_conffile_t;
 
 /* Commands that support structured output should support the
  * following argument
@@ -260,55 +260,55 @@ typedef enum {
     NOTMUCH_COMMAND_CONFIG_LOAD		= 1 << 5,
 } notmuch_command_mode_t;
 
-notmuch_config_t *
-notmuch_config_open (notmuch_database_t *notmuch,
-		     const char *filename,
-		     bool create);
+notmuch_conffile_t *
+notmuch_conffile_open (notmuch_database_t *notmuch,
+		       const char *filename,
+		       bool create);
 
 void
-notmuch_config_close (notmuch_config_t *config);
+notmuch_conffile_close (notmuch_conffile_t *config);
 
 int
-notmuch_config_save (notmuch_config_t *config);
+notmuch_conffile_save (notmuch_conffile_t *config);
 
 bool
-notmuch_config_is_new (notmuch_config_t *config);
+notmuch_conffile_is_new (notmuch_conffile_t *config);
 
 void
-notmuch_config_set_database_path (notmuch_config_t *config,
-				  const char *database_path);
+notmuch_conffile_set_database_path (notmuch_conffile_t *config,
+				    const char *database_path);
 
 void
-notmuch_config_set_user_name (notmuch_config_t *config,
-			      const char *user_name);
+notmuch_conffile_set_user_name (notmuch_conffile_t *config,
+				const char *user_name);
 
 void
-notmuch_config_set_user_primary_email (notmuch_config_t *config,
-				       const char *primary_email);
+notmuch_conffile_set_user_primary_email (notmuch_conffile_t *config,
+					 const char *primary_email);
 
 void
-notmuch_config_set_user_other_email (notmuch_config_t *config,
-				     const char *other_email[],
-				     size_t length);
+notmuch_conffile_set_user_other_email (notmuch_conffile_t *config,
+				       const char *other_email[],
+				       size_t length);
 
 void
-notmuch_config_set_new_tags (notmuch_config_t *config,
-			     const char *new_tags[],
-			     size_t length);
-
-void
-notmuch_config_set_new_ignore (notmuch_config_t *config,
-			       const char *new_ignore[],
+notmuch_conffile_set_new_tags (notmuch_conffile_t *config,
+			       const char *new_tags[],
 			       size_t length);
 
 void
-notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
-					      bool synchronize_flags);
+notmuch_conffile_set_new_ignore (notmuch_conffile_t *config,
+				 const char *new_ignore[],
+				 size_t length);
 
 void
-notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
-					const char *list[],
-					size_t length);
+notmuch_conffile_set_maildir_synchronize_flags (notmuch_conffile_t *config,
+						bool synchronize_flags);
+
+void
+notmuch_conffile_set_search_exclude_tags (notmuch_conffile_t *config,
+					  const char *list[],
+					  size_t length);
 int
 notmuch_run_hook (notmuch_database_t *notmuch, const char *hook);
 
