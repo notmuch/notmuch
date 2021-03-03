@@ -196,11 +196,13 @@ _choose_database_path (void *ctx,
     if (! *database_path && key_file) {
 	char *path = g_key_file_get_value (key_file, "database", "path", NULL);
 	if (path) {
-	    *database_path = talloc_strdup (ctx, path);
+	    if (path[0] == '/')
+		*database_path = talloc_strdup (ctx, path);
+	    else
+		*database_path = talloc_asprintf (ctx, "%s/%s", getenv ("HOME"), path);
 	    g_free (path);
 	}
     }
-
     if (! *database_path) {
 	*database_path = _xdg_dir (ctx, "XDG_DATA_HOME", ".local/share", profile);
 	*split = true;
