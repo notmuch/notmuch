@@ -76,7 +76,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error opening database at CWD/nonexistent/foo/.notmuch: No such file or directory
+Error: Cannot open database at CWD/nonexistent/foo: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -111,7 +111,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot create database at CWD/nonexistent/foo: No such file or directory.
+Error: Cannot open database at CWD/nonexistent/foo: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

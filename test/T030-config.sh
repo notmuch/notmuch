@@ -61,7 +61,7 @@ built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
 ====
-Error opening database at MAIL_DIR/.notmuch: No such file or directory
+Error: Cannot open database at MAIL_DIR/.notmuch: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
