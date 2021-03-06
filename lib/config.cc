@@ -338,7 +338,7 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 				GKeyFile *file)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-    gchar **groups, **keys, *val;
+    gchar **groups = NULL, **keys, *val;
 
     if (notmuch->config == NULL)
 	notmuch->config = _notmuch_string_map_create (notmuch);
@@ -348,22 +348,29 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    for (groups = g_key_file_get_groups (file, NULL); *groups; groups++) {
-	for (keys = g_key_file_get_keys (file, *groups, NULL, NULL); *keys; keys++) {
-	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *groups,  *keys);
-	    val = g_key_file_get_value (file, *groups, *keys, NULL);
+    groups = g_key_file_get_groups (file, NULL);
+    for (gchar **grp = groups; *grp; grp++) {
+	keys = g_key_file_get_keys (file, *grp, NULL, NULL);
+	for (gchar **keys_p = keys; *keys_p; keys_p++) {
+	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
+	    val = g_key_file_get_value (file, *grp, *keys_p, NULL);
 	    if (! val) {
 		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
 	    }
 	    _notmuch_string_map_set (notmuch->config, absolute_key, val);
+	    g_free (val);
 	    talloc_free (absolute_key);
 	    if (status)
 		goto DONE;
 	}
+	g_strfreev (keys);
     }
 
   DONE:
+    if (groups)
+	g_strfreev (groups);
+
     return status;
 }
 
