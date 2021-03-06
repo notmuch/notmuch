@@ -425,6 +425,7 @@ notmuch_database_create_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     struct stat st;
     int err;
+    void *local = talloc_new (NULL);
 
     if ((status = _choose_database_path (config_path, profile, &key_file, &database_path, &message)))
 	goto DONE;
@@ -445,7 +446,7 @@ notmuch_database_create_with_config (const char *database_path,
 	goto DONE;
     }
 
-    notmuch_path = talloc_asprintf (NULL, "%s/%s", database_path, ".notmuch");
+    notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch");
 
     err = mkdir (notmuch_path, 0755);
     if (err) {
@@ -481,8 +482,7 @@ notmuch_database_create_with_config (const char *database_path,
     }
 
   DONE:
-    if (notmuch_path)
-	talloc_free (notmuch_path);
+    talloc_free (local);
 
     if (message) {
 	if (status_string)
