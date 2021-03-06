@@ -375,6 +375,9 @@ notmuch_database_open_with_config (const char *database_path,
   DONE:
     talloc_free (local);
 
+    if (key_file)
+	g_key_file_free (key_file);
+
     if (message) {
 	if (status_string)
 	    *status_string = message;
@@ -491,6 +494,9 @@ notmuch_database_create_with_config (const char *database_path,
 
   DONE:
     talloc_free (local);
+
+    if (key_file)
+	g_key_file_free (key_file);
 
     if (message) {
 	if (status_string)
