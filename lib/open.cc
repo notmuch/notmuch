@@ -153,7 +153,8 @@ _load_key_file (const char *path,
 }
 
 static notmuch_status_t
-_choose_database_path (const char *config_path,
+_choose_database_path (void *ctx,
+		       const char *config_path,
 		       const char *profile,
 		       GKeyFile **key_file,
 		       const char **database_path,
@@ -167,8 +168,13 @@ _choose_database_path (const char *config_path,
 	return status;
     }
 
-    if (! *database_path && *key_file)
-	*database_path = g_key_file_get_value (*key_file, "database", "path", NULL);
+    if (! *database_path && *key_file) {
+	char *path = g_key_file_get_value (*key_file, "database", "path", NULL);
+	if (path) {
+	    *database_path = talloc_strdup (ctx, path);
+	    g_free (path);
+	}
+    }
 
     if (*database_path == NULL) {
 	*message = strdup ("Error: Cannot open a database for a NULL path.\n");
@@ -201,7 +207,8 @@ notmuch_database_open_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     static int initialized = 0;
 
-    if ((status = _choose_database_path (config_path, profile, &key_file, &database_path, &message)))
+    if ((status = _choose_database_path (local, config_path, profile, &key_file, &database_path,
+					 &message)))
 	goto DONE;
 
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
@@ -427,7 +434,8 @@ notmuch_database_create_with_config (const char *database_path,
     int err;
     void *local = talloc_new (NULL);
 
-    if ((status = _choose_database_path (config_path, profile, &key_file, &database_path, &message)))
+    if ((status = _choose_database_path (local, config_path, profile, &key_file, &database_path,
+					 &message)))
 	goto DONE;
 
     err = stat (database_path, &st);
