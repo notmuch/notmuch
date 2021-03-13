@@ -87,8 +87,9 @@ gz_error_string (util_status_t status, gzFile file)
 }
 
 const char *
-gzerror_str(gzFile file)
+gzerror_str (gzFile file)
 {
     int dummy;
+
     return gzerror (file, &dummy);
 }

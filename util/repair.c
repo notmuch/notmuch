@@ -32,7 +32,8 @@ _notmuch_crypto_payload_has_legacy_display (GMimeObject *payload)
     if (! g_mime_content_type_is_type (g_mime_object_get_content_type (payload),
 				       "multipart", "mixed"))
 	return false;
-    protected_header_parameter = g_mime_object_get_content_type_parameter (payload, "protected-headers");
+    protected_header_parameter = g_mime_object_get_content_type_parameter (payload,
+									   "protected-headers");
     if ((! protected_header_parameter) || strcmp (protected_header_parameter, "v1"))
 	return false;
     if (! GMIME_IS_MULTIPART (payload))
@@ -44,15 +45,16 @@ _notmuch_crypto_payload_has_legacy_display (GMimeObject *payload)
 	return false;
     first = g_mime_multipart_get_part (mpayload, 0);
     /* Early implementations that generated "Legacy Display" parts used
-       Content-Type: text/rfc822-headers, but text/plain is more widely
-       rendered, so it is now the standard choice.  We accept either as a
-       Legacy Display part. */
+     * Content-Type: text/rfc822-headers, but text/plain is more widely
+     * rendered, so it is now the standard choice.  We accept either as a
+     * Legacy Display part. */
     if (! (g_mime_content_type_is_type (g_mime_object_get_content_type (first),
 					"text", "plain") ||
 	   g_mime_content_type_is_type (g_mime_object_get_content_type (first),
 					"text", "rfc822-headers")))
 	return false;
-    protected_header_parameter = g_mime_object_get_content_type_parameter (first, "protected-headers");
+    protected_header_parameter = g_mime_object_get_content_type_parameter (first,
+									   "protected-headers");
     if ((! protected_header_parameter) || strcmp (protected_header_parameter, "v1"))
 	return false;
     if (! GMIME_IS_TEXT_PART (first))
@@ -77,7 +79,7 @@ static bool
 _notmuch_is_mixed_up_mangled (GMimeObject *part)
 {
     GMimeMultipart *mpart = NULL;
-    GMimeObject *parts[3] = {NULL, NULL, NULL};
+    GMimeObject *parts[3] = { NULL, NULL, NULL };
     GMimeContentType *type = NULL;
     char *prelude_string = NULL;
     bool prelude_is_empty;

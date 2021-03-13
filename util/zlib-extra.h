@@ -30,7 +30,7 @@ gz_error_string (util_status_t status, gzFile stream);
 /* Call gzerror with a dummy errno argument, the docs don't promise to
  * support the NULL case */
 const char *
-gzerror_str(gzFile file);
+gzerror_str (gzFile file);
 
 #ifdef __cplusplus
 }

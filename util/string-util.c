@@ -53,7 +53,7 @@ strsplit_len (const char *s, char delim, size_t *len)
 	count++;
     }
 
-    if (count==0)
+    if (count == 0)
 	return NULL;
 
     *len = count;
@@ -183,6 +183,7 @@ parse_boolean_term (void *ctx, const char *str,
     /* Parse prefix */
     str = skip_space (str);
     const char *pos = strchr (str, ':');
+
     if (! pos || pos == str)
 	goto FAIL;
     *prefix_out = talloc_strndup (ctx, str, pos - str);

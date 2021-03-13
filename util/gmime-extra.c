@@ -101,6 +101,7 @@ g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
     if (uid == NULL)
 	return uid;
     GMimeValidity validity = g_mime_certificate_get_id_validity (cert);
+
     if (validity == GMIME_VALIDITY_FULL || validity == GMIME_VALIDITY_ULTIMATE)
 	return uid;
     return NULL;

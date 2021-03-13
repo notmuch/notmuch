@@ -48,7 +48,8 @@ _notmuch_crypto_decrypt (bool *attempted,
 	notmuch_message_properties_t *list = NULL;
 
 	for (list = notmuch_message_get_properties (message, "session-key", TRUE);
-	     notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
+	     notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (
+		 list)) {
 	    if (err && *err) {
 		g_error_free (*err);
 		*err = NULL;
@@ -61,12 +62,13 @@ _notmuch_crypto_decrypt (bool *attempted,
 							  notmuch_message_properties_value (list),
 							  decrypt_result, err);
 	    } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part)) {
-	        GMimeApplicationPkcs7Mime *pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
+		GMimeApplicationPkcs7Mime *pkcs7 = GMIME_APPLICATION_PKCS7_MIME (part);
 		GMimeSecureMimeType type = g_mime_application_pkcs7_mime_get_smime_type (pkcs7);
 		if (type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
 		    ret = g_mime_application_pkcs7_mime_decrypt (pkcs7,
 								 GMIME_DECRYPT_NONE,
-								 notmuch_message_properties_value (list),
+								 notmuch_message_properties_value (
+								     list),
 								 decrypt_result, err);
 		}
 	    }
@@ -90,6 +92,7 @@ _notmuch_crypto_decrypt (bool *attempted,
     if (attempted)
 	*attempted = true;
     GMimeDecryptFlags flags = GMIME_DECRYPT_NONE;
+
     if (decrypt == NOTMUCH_DECRYPT_TRUE && decrypt_result)
 	flags |= GMIME_DECRYPT_EXPORT_SESSION_KEY;
     if (GMIME_IS_MULTIPART_ENCRYPTED (part)) {
@@ -128,7 +131,8 @@ _notmuch_message_crypto_new (void *ctx)
 }
 
 notmuch_status_t
-_notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto, GMimeSignatureList *sigs)
+_notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto,
+					    GMimeSignatureList *sigs)
 {
     if (! msg_crypto)
 	return NOTMUCH_STATUS_NULL_POINTER;
@@ -157,7 +161,8 @@ _notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypt
 
 
 bool
-_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum)
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part,
+					   GMimeObject *parent, int childnum)
 {
     const char *protected_headers = NULL;
     const char *forwarded = NULL;
@@ -175,7 +180,8 @@ _notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto
      * encryption protocol should be "control information" metadata,
      * not payload.  So we skip it. (see
      * https://tools.ietf.org/html/rfc1847#page-8) */
-    if (parent && GMIME_IS_MULTIPART_ENCRYPTED (parent) && childnum == GMIME_MULTIPART_ENCRYPTED_VERSION) {
+    if (parent && GMIME_IS_MULTIPART_ENCRYPTED (parent) && childnum ==
+	GMIME_MULTIPART_ENCRYPTED_VERSION) {
 	const char *enc_type = g_mime_object_get_content_type_parameter (parent, "protocol");
 	GMimeContentType *ct = g_mime_object_get_content_type (part);
 	if (ct && enc_type) {

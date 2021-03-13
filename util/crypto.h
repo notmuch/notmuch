@@ -80,7 +80,8 @@ _notmuch_message_crypto_new (void *ctx);
  * consider a particular signature as relevant for the message.
  */
 notmuch_status_t
-_notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto, GMimeSignatureList *sigs);
+_notmuch_message_crypto_potential_sig_list (_notmuch_message_crypto_t *msg_crypto,
+					    GMimeSignatureList *sigs);
 
 /* call successful_decryption during a depth-first-search on a message
  * to indicate that a part was successfully decrypted.
@@ -95,7 +96,8 @@ _notmuch_message_crypto_successful_decryption (_notmuch_message_crypto_t *msg_cr
  * this message.
  */
 bool
-_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part, GMimeObject *parent, int childnum);
+_notmuch_message_crypto_potential_payload (_notmuch_message_crypto_t *msg_crypto, GMimeObject *part,
+					   GMimeObject *parent, int childnum);
 
 
 #ifdef __cplusplus
