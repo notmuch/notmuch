@@ -639,7 +639,9 @@ do_reply (notmuch_database_t *notmuch,
 	    return 1;
 
 	if (count != 1) {
-	    fprintf (stderr, "Error: search term did not match precisely one message (matched %u messages).\n", count);
+	    fprintf (stderr,
+		     "Error: search term did not match precisely one message (matched %u messages).\n",
+		     count);
 	    return 1;
 	}
 
@@ -703,7 +705,8 @@ do_reply (notmuch_database_t *notmuch,
 }
 
 int
-notmuch_reply_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_reply_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+		       int argc, char *argv[])
 {
     notmuch_query_t *query;
     char *query_string;

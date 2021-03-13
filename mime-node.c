@@ -243,7 +243,8 @@ node_verify (mime_node_t *node, GMimeObject *part)
 
     status = _notmuch_message_crypto_potential_sig_list (node->ctx->msg_crypto, node->sig_list);
     if (status) /* this is a warning, not an error */
-	fprintf (stderr, "Warning: failed to note signature status: %s.\n", notmuch_status_to_string (status));
+	fprintf (stderr, "Warning: failed to note signature status: %s.\n", notmuch_status_to_string (
+		     status));
 }
 
 /* Decrypt and optionally verify an encrypted mime node */
@@ -278,7 +279,8 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
     node->decrypt_success = true;
     status = _notmuch_message_crypto_successful_decryption (node->ctx->msg_crypto);
     if (status) /* this is a warning, not an error */
-	fprintf (stderr, "Warning: failed to note decryption status: %s.\n", notmuch_status_to_string (status));
+	fprintf (stderr, "Warning: failed to note decryption status: %s.\n",
+		 notmuch_status_to_string (status));
 
     if (decrypt_result) {
 	/* This may be NULL if the part is not signed. */
@@ -287,9 +289,11 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part)
 	    node->verify_attempted = true;
 	    g_object_ref (node->sig_list);
 	    set_signature_list_destructor (node);
-	    status = _notmuch_message_crypto_potential_sig_list (node->ctx->msg_crypto, node->sig_list);
+	    status = _notmuch_message_crypto_potential_sig_list (node->ctx->msg_crypto,
+								 node->sig_list);
 	    if (status) /* this is a warning, not an error */
-		fprintf (stderr, "Warning: failed to note signature status: %s.\n", notmuch_status_to_string (status));
+		fprintf (stderr, "Warning: failed to note signature status: %s.\n",
+			 notmuch_status_to_string (status));
 	}
 
 	if (node->ctx->crypto->decrypt == NOTMUCH_DECRYPT_TRUE && message) {
@@ -366,7 +370,8 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
     }
 
     /* Handle PGP/MIME parts (by definition not cryptographic payload parts) */
-    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
+    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && (node->ctx->crypto->decrypt !=
+						NOTMUCH_DECRYPT_FALSE)) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/encrypted "
@@ -385,19 +390,22 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	    node_verify (node, part);
 	}
     } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
-	       GMIME_SECURE_MIME_TYPE_SIGNED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part))) {
+	       GMIME_SECURE_MIME_TYPE_SIGNED_DATA == g_mime_application_pkcs7_mime_get_smime_type (
+		   GMIME_APPLICATION_PKCS7_MIME (part))) {
 	/* If node->ctx->crypto->verify is false, it would be better
 	 * to just unwrap (instead of verifying), but
 	 * https://github.com/jstedfast/gmime/issues/67 */
 	node_verify (node, part);
     } else if (GMIME_IS_APPLICATION_PKCS7_MIME (part) &&
-	       GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA == g_mime_application_pkcs7_mime_get_smime_type (GMIME_APPLICATION_PKCS7_MIME (part)) &&
+	       GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA == g_mime_application_pkcs7_mime_get_smime_type (
+		   GMIME_APPLICATION_PKCS7_MIME (part)) &&
 	       (node->ctx->crypto->decrypt != NOTMUCH_DECRYPT_FALSE)) {
 	node_decrypt_and_verify (node, part);
 	if (node->unwrapped_child && node->nchildren == 0)
 	    node->nchildren = 1;
     } else {
-	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ? node->parent->part : NULL, numchild) &&
+	if (_notmuch_message_crypto_potential_payload (node->ctx->msg_crypto, part, node->parent ?
+						       node->parent->part : NULL, numchild) &&
 	    node->ctx->msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
 	    GMimeObject *clean_payload = _notmuch_repair_crypto_payload_skip_legacy_display (part);
 	    if (clean_payload != part) {

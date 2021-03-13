@@ -39,8 +39,8 @@
  *
  */
 #define MINUTE (60)
-#define HOUR (60 *MINUTE)
-#define DAY (24 *HOUR)
+#define HOUR (60 * MINUTE)
+#define DAY (24 * HOUR)
 #define RELATIVE_DATE_MAX 20
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then)

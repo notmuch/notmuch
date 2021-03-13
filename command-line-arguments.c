@@ -47,17 +47,23 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next,
 		continue;
 
 	    *arg_desc->opt_keyword = keywords->value;
-	    fprintf (stderr, "Warning: No known keyword option given for \"%s\", choosing value \"%s\"."
-		     "  Please specify the argument explicitly!\n", arg_desc->name, arg_desc->keyword_no_arg_value);
+	    fprintf (stderr,
+		     "Warning: No known keyword option given for \"%s\", choosing value \"%s\"."
+		     "  Please specify the argument explicitly!\n", arg_desc->name,
+		     arg_desc->keyword_no_arg_value);
 
 	    return OPT_GIVEBACK;
 	}
-	fprintf (stderr, "No matching keyword for option \"%s\" and default value \"%s\" is invalid.\n", arg_str, arg_desc->name);
+	fprintf (stderr,
+		 "No matching keyword for option \"%s\" and default value \"%s\" is invalid.\n",
+		 arg_str,
+		 arg_desc->name);
 	return OPT_FAILED;
     }
 
     if (next != '\0')
-	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str, arg_desc->name);
+	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str,
+		 arg_desc->name);
     else
 	fprintf (stderr, "Option \"%s\" needs a keyword argument.\n", arg_desc->name);
     return OPT_FAILED;
@@ -74,7 +80,8 @@ _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next,
     } else if (strcmp (arg_str, "false") == 0) {
 	value = false;
     } else {
-	fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
+	fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str,
+		 arg_desc->name);
 	return OPT_FAILED;
     }
 
@@ -202,6 +209,7 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
     const notmuch_opt_desc_t *try;
 
     const char *next_arg = NULL;
+
     if (opt_index < argc - 1  && strncmp (argv[opt_index + 1], "--", 2) != 0)
 	next_arg = argv[opt_index + 1];
 

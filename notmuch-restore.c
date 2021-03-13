@@ -219,7 +219,8 @@ parse_sup_line (void *ctx, char *line,
 }
 
 int
-notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+			 int argc, char *argv[])
 {
     bool accumulate = false;
     tag_op_flag_t flags = 0;
@@ -343,7 +344,8 @@ notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *n
 	    if (ret)
 		goto DONE;
 	}
-	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] == '=') {
+	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] ==
+	    '=') {
 	    ret = process_properties_line (notmuch, line + 2);
 	    if (ret)
 		goto DONE;
@@ -360,6 +362,7 @@ notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *n
     }
 
     char *p;
+
     for (p = line; (input_format == DUMP_FORMAT_AUTO) && *p; p++) {
 	if (*p == '(')
 	    input_format = DUMP_FORMAT_SUP;
@@ -382,7 +385,8 @@ notmuch_restore_command (unused(notmuch_config_t *config), notmuch_database_t *n
 
 	line_ctx = talloc_new (notmuch);
 
-	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] == '=') {
+	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] ==
+	    '=') {
 	    ret = process_properties_line (notmuch, line + 2);
 	    if (ret)
 		goto DONE;

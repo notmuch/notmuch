@@ -49,7 +49,7 @@ text_integer (struct sprinter *sp, int64_t val)
 {
     struct sprinter_text *sptxt = (struct sprinter_text *) sp;
 
-    fprintf (sptxt->stream, "%"PRId64, val);
+    fprintf (sptxt->stream, "%" PRId64, val);
 }
 
 static void

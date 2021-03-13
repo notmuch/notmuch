@@ -510,7 +510,9 @@ notmuch_config_close (notmuch_config_t *config)
     talloc_free (config);
 }
 
-const char *_notmuch_config_get_path (notmuch_config_t *config) {
+const char *
+_notmuch_config_get_path (notmuch_config_t *config)
+{
     return config->filename;
 }
 /* Save any changes made to the notmuch configuration.
@@ -1105,7 +1107,8 @@ notmuch_config_command_list (notmuch_config_t *config)
 }
 
 int
-notmuch_config_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_config_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch),
+			int argc, char *argv[])
 {
     int ret;
     int opt_index;

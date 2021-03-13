@@ -86,12 +86,12 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 
 	status = notmuch_query_add_tag_exclude (query,
 						notmuch_config_values_get (exclude_tags));
-	    if (status && status != NOTMUCH_STATUS_IGNORED) {
-		print_status_query ("notmuch count", query, status);
-		ret = -1;
-		goto DONE;
-	    }
+	if (status && status != NOTMUCH_STATUS_IGNORED) {
+	    print_status_query ("notmuch count", query, status);
+	    ret = -1;
+	    goto DONE;
 	}
+    }
 
     switch (output) {
     case OUTPUT_MESSAGES:
@@ -151,7 +151,8 @@ count_file (notmuch_database_t *notmuch, FILE *input, notmuch_config_values_t *e
 }
 
 int
-notmuch_count_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_count_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+		       int argc, char *argv[])
 {
     char *query_str;
     int opt_index;

@@ -27,7 +27,8 @@ status_update_cb (const char *msg, unused (void *closure))
 }
 
 int
-notmuch_compact_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_compact_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+			 int argc, char *argv[])
 {
     const char *backup_path = NULL;
     notmuch_status_t ret;

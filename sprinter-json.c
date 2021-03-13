@@ -129,7 +129,7 @@ json_integer (struct sprinter *sp, int64_t val)
 {
     struct sprinter_json *spj = json_begin_value (sp);
 
-    fprintf (spj->stream, "%"PRId64, val);
+    fprintf (spj->stream, "%" PRId64, val);
 }
 
 static void

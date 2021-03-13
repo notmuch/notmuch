@@ -31,7 +31,8 @@
  * Each subcommand should be passed either a config object, or an open
  * database
  */
-typedef int (*command_function_t) (notmuch_config_t *config, notmuch_database_t *notmuch, int argc, char *argv[]);
+typedef int (*command_function_t) (notmuch_config_t *config, notmuch_database_t *notmuch,
+				   int argc, char *argv[]);
 
 typedef struct command {
     const char *name;
@@ -125,7 +126,8 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
 	notmuch_status_t status;
 	if (indexing_cli_choices.opts == NULL)
 	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
-	status = notmuch_indexopts_set_decrypt_policy (indexing_cli_choices.opts, indexing_cli_choices.decrypt_policy);
+	status = notmuch_indexopts_set_decrypt_policy (indexing_cli_choices.opts,
+						       indexing_cli_choices.decrypt_policy);
 	if (status != NOTMUCH_STATUS_SUCCESS) {
 	    fprintf (stderr, "Error: Failed to set index decryption policy to %d. (%s)\n",
 		     indexing_cli_choices.decrypt_policy, notmuch_status_to_string (status));
@@ -144,9 +146,11 @@ static command_t commands[] = {
     { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_OPEN | NOTMUCH_COMMAND_CONFIG_CREATE,
       "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command,
-      NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE | NOTMUCH_COMMAND_DATABASE_CREATE,
+      NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE |
+      NOTMUCH_COMMAND_DATABASE_CREATE,
       "Find and import new messages to the notmuch database." },
-    { "insert", notmuch_insert_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
+    { "insert", notmuch_insert_command, NOTMUCH_COMMAND_DATABASE_EARLY |
+      NOTMUCH_COMMAND_DATABASE_WRITE,
       "Add a new message into the maildir and notmuch database." },
     { "search", notmuch_search_command, NOTMUCH_COMMAND_DATABASE_EARLY,
       "Search for messages matching the given search terms." },
@@ -162,11 +166,14 @@ static command_t commands[] = {
       "Add/remove tags for all messages matching the search terms." },
     { "dump", notmuch_dump_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
       "Create a plain-text dump of the tags for each message." },
-    { "restore", notmuch_restore_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
+    { "restore", notmuch_restore_command, NOTMUCH_COMMAND_DATABASE_EARLY |
+      NOTMUCH_COMMAND_DATABASE_WRITE,
       "Restore the tags from the given dump file (see 'dump')." },
-    { "compact", notmuch_compact_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
+    { "compact", notmuch_compact_command, NOTMUCH_COMMAND_DATABASE_EARLY |
+      NOTMUCH_COMMAND_DATABASE_WRITE,
       "Compact the notmuch database." },
-    { "reindex", notmuch_reindex_command, NOTMUCH_COMMAND_DATABASE_EARLY | NOTMUCH_COMMAND_DATABASE_WRITE,
+    { "reindex", notmuch_reindex_command, NOTMUCH_COMMAND_DATABASE_EARLY |
+      NOTMUCH_COMMAND_DATABASE_WRITE,
       "Re-index all messages matching the search terms." },
     { "config", notmuch_config_command, NOTMUCH_COMMAND_CONFIG_OPEN,
       "Get or set settings in the notmuch configuration file." },
@@ -248,14 +255,16 @@ void
 notmuch_exit_if_unsupported_format (void)
 {
     if (notmuch_format_version > NOTMUCH_FORMAT_CUR) {
-	fprintf (stderr, "\
+	fprintf (stderr,
+		 "\
 A caller requested output format version %d, but the installed notmuch\n\
 CLI only supports up to format version %d.  You may need to upgrade your\n\
 notmuch CLI.\n",
 		 notmuch_format_version, NOTMUCH_FORMAT_CUR);
 	exit (NOTMUCH_EXIT_FORMAT_TOO_NEW);
     } else if (notmuch_format_version < NOTMUCH_FORMAT_MIN) {
-	fprintf (stderr, "\
+	fprintf (stderr,
+		 "\
 A caller requested output format version %d, which is no longer supported\n\
 by the notmuch CLI (it requires at least version %d).  You may need to\n\
 upgrade your notmuch front-end.\n",
@@ -265,7 +274,8 @@ upgrade your notmuch front-end.\n",
 	/* Warn about old version requests so compatibility issues are
 	 * less likely when we drop support for a deprecated format
 	 * versions. */
-	fprintf (stderr, "\
+	fprintf (stderr,
+		 "\
 A caller requested deprecated output format version %d, which may not\n\
 be supported in the future.\n", notmuch_format_version);
     }
@@ -339,7 +349,8 @@ _help_for (const char *topic_name)
 }
 
 static int
-notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_help_command (unused (notmuch_config_t *config), unused(notmuch_database_t *notmuch), int
+		      argc, char *argv[])
 {
     int opt_index;
 

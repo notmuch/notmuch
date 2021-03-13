@@ -673,8 +673,9 @@ add_files (notmuch_database_t *notmuch,
 		char *absolute = talloc_asprintf (state->removed_directories,
 						  "%s/%s", path, filename);
 		if (state->debug)
-		    printf ("(D) add_files, pass 2: queuing passed directory %s for deletion from database\n",
-			    absolute);
+		    printf (
+			"(D) add_files, pass 2: queuing passed directory %s for deletion from database\n",
+			absolute);
 
 		_filename_list_add (state->removed_directories, absolute);
 	    }
@@ -756,8 +757,9 @@ add_files (notmuch_database_t *notmuch,
 					  notmuch_filenames_get (db_subdirs));
 
 	if (state->debug)
-	    printf ("(D) add_files, pass 3: queuing leftover directory %s for deletion from database\n",
-		    absolute);
+	    printf (
+		"(D) add_files, pass 3: queuing leftover directory %s for deletion from database\n",
+		absolute);
 
 	_filename_list_add (state->removed_directories, absolute);
 
@@ -1043,7 +1045,8 @@ print_results (const add_files_state_t *state)
 }
 
 static int
-_maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state) {
+_maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state)
+{
     if (notmuch_database_needs_upgrade (notmuch)) {
 	time_t now = time (NULL);
 	struct tm *gm_time = gmtime (&now);
@@ -1094,7 +1097,8 @@ _maybe_upgrade (notmuch_database_t *notmuch, add_files_state_t *state) {
 }
 
 int
-notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+		     int argc, char *argv[])
 {
     add_files_state_t add_files_state = {
 	.verbosity = VERBOSITY_NORMAL,
@@ -1155,7 +1159,7 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     for (notmuch_config_values_start (add_files_state.new_tags);
 	 notmuch_config_values_valid (add_files_state.new_tags);
 	 notmuch_config_values_move_to_next (add_files_state.new_tags)) {
-	const char *tag,*error_msg;
+	const char *tag, *error_msg;
 
 	tag = notmuch_config_values_get (add_files_state.new_tags);
 	error_msg = illegal_tag (tag, false);
@@ -1233,7 +1237,8 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
-				    tv_start, add_files_state.removed_messages + add_files_state.renamed_messages,
+				    tv_start, add_files_state.removed_messages +
+				    add_files_state.renamed_messages,
 				    add_files_state.removed_files->count);
 	}
     }

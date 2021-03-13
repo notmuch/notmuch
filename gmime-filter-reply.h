@@ -24,11 +24,17 @@
 G_BEGIN_DECLS
 
 #define GMIME_TYPE_FILTER_REPLY            (g_mime_filter_reply_get_type ())
-#define GMIME_FILTER_REPLY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GMIME_TYPE_FILTER_REPLY, GMimeFilterReply))
-#define GMIME_FILTER_REPLY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GMIME_TYPE_FILTER_REPLY, GMimeFilterReplyClass))
-#define GMIME_IS_FILTER_REPLY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GMIME_TYPE_FILTER_REPLY))
-#define GMIME_IS_FILTER_REPLY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GMIME_TYPE_FILTER_REPLY))
-#define GMIME_FILTER_REPLY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GMIME_TYPE_FILTER_REPLY, GMimeFilterReplyClass))
+#define GMIME_FILTER_REPLY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
+									GMIME_TYPE_FILTER_REPLY, \
+									GMimeFilterReply))
+#define GMIME_FILTER_REPLY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GMIME_TYPE_FILTER_REPLY, \
+								     GMimeFilterReplyClass))
+#define GMIME_IS_FILTER_REPLY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
+									GMIME_TYPE_FILTER_REPLY))
+#define GMIME_IS_FILTER_REPLY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), \
+								     GMIME_TYPE_FILTER_REPLY))
+#define GMIME_FILTER_REPLY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GMIME_TYPE_FILTER_REPLY, \
+								       GMimeFilterReplyClass))
 
 typedef struct _GMimeFilterReply GMimeFilterReply;
 typedef struct _GMimeFilterReplyClass GMimeFilterReplyClass;

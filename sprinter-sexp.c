@@ -166,7 +166,7 @@ sexp_integer (struct sprinter *sp, int64_t val)
 {
     struct sprinter_sexp *sps = sexp_begin_value (sp);
 
-    fprintf (sps->stream, "%"PRId64, val);
+    fprintf (sps->stream, "%" PRId64, val);
 }
 
 static void

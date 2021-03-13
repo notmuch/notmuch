@@ -80,14 +80,16 @@ _get_disposition (GMimeObject *meta)
     return g_mime_content_disposition_get_disposition (disposition);
 }
 
-static bool _get_message_flag (notmuch_message_t *message, notmuch_message_flag_t flag) {
+static bool
+_get_message_flag (notmuch_message_t *message, notmuch_message_flag_t flag)
+{
     notmuch_bool_t is_set;
     notmuch_status_t status;
 
     status = notmuch_message_get_flag_st (message, flag, &is_set);
 
     if (print_status_message ("notmuch show", message, status))
-	INTERNAL_ERROR("unexpected error getting message flag\n");
+	INTERNAL_ERROR ("unexpected error getting message flag\n");
 
     return is_set;
 }
@@ -438,6 +440,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
     }
 
     int i;
+
     for (i = 0; i < g_mime_signature_list_length (siglist); i++) {
 	GMimeSignature *signature = g_mime_signature_list_get_signature (siglist, i);
 
@@ -668,7 +671,8 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		    sp->map_key (sp, "decrypted");
 		    sp->begin_map (sp);
 		    sp->map_key (sp, "status");
-		    sp->string (sp, msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL ? "full" : "partial");
+		    sp->string (sp, msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL ?
+				"full" : "partial");
 
 		    if (msg_crypto->payload_subject) {
 			const char *subject = g_mime_message_get_subject GMIME_MESSAGE (node->part);
@@ -965,7 +969,8 @@ show_message (void *ctx,
     notmuch_status_t session_key_count_error = NOTMUCH_STATUS_SUCCESS;
 
     if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
-	session_key_count_error = notmuch_message_count_properties (message, "session-key", &session_keys);
+	session_key_count_error = notmuch_message_count_properties (message, "session-key",
+								    &session_keys);
 
     status = mime_node_open (local, message, &(params->crypto), &root);
     if (status)
@@ -973,12 +978,15 @@ show_message (void *ctx,
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
     if (part)
 	status = format->part (local, sp, part, indent, params);
-    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE && session_key_count_error == NOTMUCH_STATUS_SUCCESS) {
+    if (params->crypto.decrypt == NOTMUCH_DECRYPT_TRUE && session_key_count_error ==
+	NOTMUCH_STATUS_SUCCESS) {
 	unsigned int new_session_keys = 0;
-	if (notmuch_message_count_properties (message, "session-key", &new_session_keys) == NOTMUCH_STATUS_SUCCESS &&
+	if (notmuch_message_count_properties (message, "session-key", &new_session_keys) ==
+	    NOTMUCH_STATUS_SUCCESS &&
 	    new_session_keys > session_keys) {
 	    /* try a quiet re-indexing */
-	    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (notmuch_message_get_database (message));
+	    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (
+		notmuch_message_get_database (message));
 	    if (indexopts) {
 		notmuch_indexopts_set_decrypt_policy (indexopts, NOTMUCH_DECRYPT_AUTO);
 		print_status_message ("Error re-indexing message with --decrypt=stash",
@@ -1064,7 +1072,9 @@ do_show_single (void *ctx,
 	return 1;
 
     if (count != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message (matched %u messages).\n", count);
+	fprintf (stderr,
+		 "Error: search term did not match precisely one message (matched %u messages).\n",
+		 count);
 	return 1;
     }
 
@@ -1157,9 +1167,9 @@ do_show_unthreaded (void *ctx,
 	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, TRUE);
 	excluded = _get_message_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
 
-	if (!excluded || !params->omit_excluded) {
+	if (! excluded || ! params->omit_excluded) {
 	    status = show_message (ctx, format, sp, message, 0, params);
-	    if (status && !res)
+	    if (status && ! res)
 		res = status;
 	} else {
 	    sp->null (sp);
@@ -1215,7 +1225,8 @@ static const notmuch_show_format_t *formatters[] = {
 };
 
 int
-notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch), int argc, char *argv[])
+notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmuch),
+		      int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
@@ -1321,10 +1332,12 @@ notmuch_show_command (notmuch_config_t *config, unused(notmuch_database_t *notmu
 	(format != NOTMUCH_FORMAT_TEXT &&
 	 format != NOTMUCH_FORMAT_JSON &&
 	 format != NOTMUCH_FORMAT_SEXP)) {
-	fprintf (stderr, "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
+	fprintf (stderr,
+		 "Warning: --include-html only implemented for format=text, format=json and format=sexp\n");
     }
 
     notmuch_database_mode_t mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+
     if (params.crypto.decrypt == NOTMUCH_DECRYPT_TRUE)
 	mode = NOTMUCH_DATABASE_MODE_READ_WRITE;
     if (notmuch_database_open_with_config (NULL,

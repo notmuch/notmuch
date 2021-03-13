@@ -444,7 +444,8 @@ add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
 }
 
 int
-notmuch_insert_command (unused(notmuch_config_t *config),notmuch_database_t *notmuch, int argc, char *argv[])
+notmuch_insert_command (unused(notmuch_config_t *config), notmuch_database_t *notmuch,
+			int argc, char *argv[])
 {
     notmuch_status_t status, close_status;
     struct sigaction action;
