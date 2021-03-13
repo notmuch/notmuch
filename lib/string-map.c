@@ -154,10 +154,10 @@ _notmuch_string_map_set (notmuch_string_map_t *map,
     _notmuch_string_map_sort (map);
     pair = bsearch_first (map->pairs, map->length, key, true);
     if (! pair)
-       _notmuch_string_map_append (map, key, val);
+	_notmuch_string_map_append (map, key, val);
     else {
-       talloc_free (pair->value);
-       pair->value = talloc_strdup (map->pairs, val);
+	talloc_free (pair->value);
+	pair->value = talloc_strdup (map->pairs, val);
     }
 }
 

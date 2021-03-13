@@ -85,7 +85,7 @@ _choose_hook_dir (notmuch_database_t *notmuch,
 
     config = _xdg_dir (notmuch, "XDG_CONFIG_HOME", ".config", profile);
     if (! config)
-	return  NOTMUCH_STATUS_PATH_ERROR;
+	return NOTMUCH_STATUS_PATH_ERROR;
 
     hook_dir = talloc_asprintf (notmuch, "%s/hooks", config);
 
@@ -125,7 +125,7 @@ _load_key_file (const char *path,
 
 	if (dir) {
 	    path = talloc_asprintf (local, "%s/config", dir);
-	    if (access (path, R_OK) !=0)
+	    if (access (path, R_OK) != 0)
 		path = NULL;
 	}
     }
@@ -147,7 +147,7 @@ _load_key_file (const char *path,
 	status = NOTMUCH_STATUS_NO_CONFIG;
     }
 
-DONE:
+  DONE:
     talloc_free (local);
     return status;
 }
@@ -161,7 +161,7 @@ _choose_database_path (const char *config_path,
 {
     notmuch_status_t status;
 
-    status =_load_key_file (config_path, profile, key_file);
+    status = _load_key_file (config_path, profile, key_file);
     if (status) {
 	*message = strdup ("Error: cannot load config file.\n");
 	return status;
@@ -319,8 +319,10 @@ notmuch_database_open_with_config (const char *database_path,
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
-	notmuch->date_range_processor = new ParseTimeRangeProcessor (NOTMUCH_VALUE_TIMESTAMP, "date:");
-	notmuch->last_mod_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
+	notmuch->date_range_processor = new ParseTimeRangeProcessor (NOTMUCH_VALUE_TIMESTAMP,
+								     "date:");
+	notmuch->last_mod_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_LAST_MOD,
+									      "lastmod:");
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
 	notmuch->query_parser->set_stemmer (Xapian::Stem ("english"));

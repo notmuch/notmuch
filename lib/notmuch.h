@@ -1631,7 +1631,7 @@ typedef enum _notmuch_message_flag {
  * @deprecated Deprecated as of libnotmuch 5.3 (notmuch 0.31). Please
  * use notmuch_message_get_flag_st instead.
  */
-NOTMUCH_DEPRECATED(5,3)
+NOTMUCH_DEPRECATED (5, 3)
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag);
@@ -1826,7 +1826,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * @returns FALSE in case of error
  * @deprecated libnotmuch 5.3 (notmuch 0.31)
  */
-NOTMUCH_DEPRECATED(5, 3)
+NOTMUCH_DEPRECATED (5, 3)
 notmuch_bool_t
 notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag);
 
@@ -2403,7 +2403,8 @@ notmuch_database_get_config (notmuch_database_t *db, const char *key, char **val
  * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
-notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix, notmuch_config_list_t **out);
+notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix,
+				  notmuch_config_list_t **out);
 
 /**
  * Is 'config_list' iterator valid (i.e. _key, _value, _move_to_next can be called).

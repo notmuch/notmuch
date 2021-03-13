@@ -35,14 +35,14 @@ ParseTimeRangeProcessor::operator() (const std::string &begin, const std::string
     if (time (&now) == (time_t) -1)
 	throw Xapian::QueryParserError ("unable to get current time");
 
-    if (!begin.empty ()) {
+    if (! begin.empty ()) {
 	if (parse_time_string (begin.c_str (), &parsed_time, &now, PARSE_TIME_ROUND_DOWN))
 	    throw Xapian::QueryParserError ("Didn't understand date specification '" + begin + "'");
 	else
 	    from = (double) parsed_time;
     }
 
-    if (!end.empty ()) {
+    if (! end.empty ()) {
 	if (end == "!" && ! begin.empty ())
 	    str = begin;
 	else

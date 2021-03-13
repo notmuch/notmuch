@@ -52,8 +52,10 @@ struct _notmuch_directory {
 #define LOG_XAPIAN_EXCEPTION(directory, error) _log_xapian_exception (__location__, directory, error)
 
 static void
-_log_xapian_exception (const char *where, notmuch_directory_t *dir,  const Xapian::Error error) {
+_log_xapian_exception (const char *where, notmuch_directory_t *dir,  const Xapian::Error error)
+{
     notmuch_database_t *notmuch = dir->notmuch;
+
     _notmuch_database_log (notmuch,
 			   "A Xapian exception occurred at %s: %s\n",
 			   where,

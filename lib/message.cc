@@ -93,8 +93,10 @@ _notmuch_message_destructor (notmuch_message_t *message)
 #define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
 
 static void
-_log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error) {
+_log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error)
+{
     notmuch_database_t *notmuch = notmuch_message_get_database (message);
+
     _notmuch_database_log (notmuch,
 			   "A Xapian exception occurred at %s: %s\n",
 			   where,
@@ -286,7 +288,8 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log (notmuch_message_get_database (message), "A Xapian exception occurred creating message: %s\n",
+	_notmuch_database_log (notmuch_message_get_database (message),
+			       "A Xapian exception occurred creating message: %s\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
@@ -318,6 +321,7 @@ _notmuch_message_get_term (notmuch_message_t *message,
 	return NULL;
 
     const std::string &term = *i;
+
     if (strncmp (term.c_str (), prefix, prefix_len))
 	return NULL;
 
@@ -1765,6 +1769,7 @@ notmuch_message_has_maildir_flag (notmuch_message_t *message, char flag)
 {
     notmuch_status_t status;
     notmuch_bool_t ret;
+
     status = notmuch_message_has_maildir_flag_st (message, flag, &ret);
     if (status)
 	return FALSE;
@@ -1778,14 +1783,14 @@ notmuch_message_has_maildir_flag_st (notmuch_message_t *message,
 				     notmuch_bool_t *is_set)
 {
     notmuch_status_t status;
-    
+
     if (! is_set)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     status = _ensure_maildir_flags (message, false);
     if (status)
 	return status;
-    
+
     *is_set =  message->maildir_flags && (strchr (message->maildir_flags, flag) != NULL);
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -2079,8 +2084,8 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
 	private_status = _notmuch_message_remove_term (message, "tag", tag);
 	if (private_status) {
 	    return COERCE_STATUS (private_status,
-				   "_notmuch_message_remove_term return unexpected value: %d\n",
-				   private_status);
+				  "_notmuch_message_remove_term return unexpected value: %d\n",
+				  private_status);
 	}
     }
 
@@ -2202,8 +2207,8 @@ notmuch_message_reindex (notmuch_message_t *message,
     orig_thread_id = notmuch_message_get_thread_id (message);
     if (! orig_thread_id) {
 	/* the following is correct as long as there is only one reason
-	   n_m_get_thread_id returns NULL
-	*/
+	 * n_m_get_thread_id returns NULL
+	 */
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 

@@ -43,11 +43,13 @@ notmuch_message_count_properties (notmuch_message_t *message, const char *key, u
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     notmuch_string_map_t *map;
+
     map = _notmuch_message_property_map (message);
     if (! map)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     notmuch_string_map_iterator_t *matcher = _notmuch_string_map_iterator_create (map, key, true);
+
     if (! matcher)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 

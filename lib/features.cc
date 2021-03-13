@@ -64,7 +64,7 @@ _notmuch_database_print_features (const void *ctx, unsigned int features)
  */
 _notmuch_features
 _notmuch_database_parse_features (const void *ctx, const char *features, unsigned int version,
-		 char mode, char **incompat_out)
+				  char mode, char **incompat_out)
 {
     _notmuch_features res = static_cast<_notmuch_features>(0);
     unsigned int namelen, i;

@@ -49,7 +49,8 @@ typedef struct {
 #define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
 
 static void
-_log_xapian_exception (const char *where, notmuch_database_t *notmuch,  const Xapian::Error error) {
+_log_xapian_exception (const char *where, notmuch_database_t *notmuch,  const Xapian::Error error)
+{
     _notmuch_database_log (notmuch,
 			   "A Xapian exception occurred at %s: %s\n",
 			   where,
@@ -506,7 +507,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	} catch (const Xapian::Error &error) {
 	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	    if (! notmuch->exception_reported) {
-		_notmuch_database_log (notmuch, "Error: A Xapian exception occurred closing database: %s\n",
+		_notmuch_database_log (notmuch,
+				       "Error: A Xapian exception occurred closing database: %s\n",
 				       error.get_msg ().c_str ());
 	    }
 	}
@@ -627,10 +629,11 @@ notmuch_status_t
 notmuch_database_compact_db (notmuch_database_t *notmuch,
 			     const char *backup_path,
 			     notmuch_compact_status_cb_t status_cb,
-			     void *closure) {
+			     void *closure)
+{
     void *local;
     char *notmuch_path, *xapian_path, *compact_xapian_path;
-    const char* path;
+    const char *path;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     struct stat statbuf;
     bool keep_backup;
@@ -692,7 +695,8 @@ notmuch_database_compact_db (notmuch_database_t *notmuch,
 
     try {
 	NotmuchCompactor compactor (status_cb, closure);
-	notmuch->xapian_db->compact (compact_xapian_path, Xapian::DBCOMPACT_NO_RENUMBER, 0, compactor);
+	notmuch->xapian_db->compact (compact_xapian_path, Xapian::DBCOMPACT_NO_RENUMBER, 0,
+				     compactor);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg ().c_str ());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -840,8 +844,8 @@ handle_sigalrm (unused (int signal))
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *notmuch,
-			  void (*progress_notify) (void *closure,
-						   double progress),
+			  void (*progress_notify)(void *closure,
+						  double progress),
 			  void *closure)
 {
     void *local = talloc_new (NULL);
@@ -1065,7 +1069,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    if (private_status) {
 		_notmuch_database_log (notmuch,
 				       "Upgrade failed while creating ghost messages.\n");
-		status = COERCE_STATUS (private_status, "Unexpected status from _notmuch_message_initialize_ghost");
+		status = COERCE_STATUS (private_status,
+					"Unexpected status from _notmuch_message_initialize_ghost");
 		goto DONE;
 	    }
 
@@ -1498,7 +1503,8 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 		status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	}
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred finding message by filename: %s\n",
+	_notmuch_database_log (notmuch,
+			       "Error: A Xapian exception occurred finding message by filename: %s\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;

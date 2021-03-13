@@ -40,11 +40,13 @@ ThreadFieldProcessor::operator() (const std::string & str)
 	    std::set<std::string> terms;
 
 	    if (! subquery)
-		throw Xapian::QueryParserError ("failed to create subquery for '" + subquery_str + "'");
+		throw Xapian::QueryParserError ("failed to create subquery for '" + subquery_str +
+						"'");
 
 	    status = notmuch_query_search_messages (subquery, &messages);
 	    if (status)
-		throw Xapian::QueryParserError ("failed to search messages for '" + subquery_str + "'");
+		throw Xapian::QueryParserError ("failed to search messages for '" + subquery_str +
+						"'");
 
 	    for (; notmuch_messages_valid (messages); notmuch_messages_move_to_next (messages)) {
 		std::string term = thread_prefix;

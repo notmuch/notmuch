@@ -65,11 +65,12 @@ _notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
 	return NULL;
 
     const char *prefix = notmuch_database_get_path (notmuch);
+
     if (prefix == NULL)
 	goto FAIL;
 
     if (*filename == '/') {
-	if (strncmp (filename, prefix, strlen(prefix)) != 0) {
+	if (strncmp (filename, prefix, strlen (prefix)) != 0) {
 	    _notmuch_database_log (notmuch, "Error opening %s: path outside mail root\n",
 				   filename);
 	    errno = 0;
@@ -77,7 +78,7 @@ _notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
 	}
 	message->filename = talloc_strdup (message, filename);
     } else {
-	message->filename = talloc_asprintf(message, "%s/%s", prefix, filename);
+	message->filename = talloc_asprintf (message, "%s/%s", prefix, filename);
     }
 
     if (message->filename == NULL)

@@ -505,7 +505,8 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
 	 notmuch_messages_valid (roots);
 	 notmuch_messages_move_to_next (roots)) {
 	notmuch_message_t *message = notmuch_messages_get (roots);
-	if (_notmuch_messages_has_next (roots) || ! _notmuch_message_list_empty (thread->toplevel_list))
+	if (_notmuch_messages_has_next (roots) || ! _notmuch_message_list_empty (
+		thread->toplevel_list))
 	    _parent_or_toplevel (thread, message);
 	else
 	    _notmuch_message_list_add_message (thread->toplevel_list, message);

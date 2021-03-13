@@ -260,7 +260,8 @@ notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 	    .value_table = NULL,
 	};
 
-	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info, (GTypeFlags) 0);
+	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info,
+				       (GTypeFlags) 0);
     }
 
     filter = (NotmuchFilterDiscardNonTerm *) g_object_new (type, NULL);
@@ -455,7 +456,8 @@ _index_mime_part (notmuch_message_t *message,
 		msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
 		toindex = _notmuch_repair_crypto_payload_skip_legacy_display (child);
 		if (toindex != child)
-		    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+		    notmuch_message_add_property (message, "index.repaired",
+						  "skip-protected-headers-legacy-display");
 	    }
 	    _index_mime_part (message, indexopts, toindex, msg_crypto);
 	}
@@ -467,7 +469,8 @@ _index_mime_part (notmuch_message_t *message,
 
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
-	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message), msg_crypto);
+	_index_mime_part (message, indexopts, g_mime_message_get_mime_part (mime_message),
+			  msg_crypto);
 
 	goto DONE;
     }
@@ -567,6 +570,7 @@ _index_encrypted_mime_part (notmuch_message_t *message,
     bool attempted = false;
     GMimeDecryptResult *decrypt_result = NULL;
     bool get_sk = (notmuch_indexopts_get_decrypt_policy (indexopts) == NOTMUCH_DECRYPT_TRUE);
+
     clear = _notmuch_crypto_decrypt (&attempted, notmuch_indexopts_get_decrypt_policy (indexopts),
 				     message, encrypted_data, get_sk ? &decrypt_result : NULL, &err);
     if (! attempted)
@@ -595,7 +599,8 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 					  notmuch_status_to_string (status));
 	if (get_sk) {
 	    status = notmuch_message_add_property (message, "session-key",
-						   g_mime_decrypt_result_get_session_key (decrypt_result));
+						   g_mime_decrypt_result_get_session_key (
+						       decrypt_result));
 	    if (status)
 		_notmuch_database_log (notmuch, "failed to add session-key "
 				       "property (%d)\n", status);
@@ -603,11 +608,14 @@ _index_encrypted_mime_part (notmuch_message_t *message,
 	g_object_unref (decrypt_result);
     }
     GMimeObject *toindex = clear;
-    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, encrypted_data, GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
+
+    if (_notmuch_message_crypto_potential_payload (msg_crypto, clear, encrypted_data,
+						   GMIME_MULTIPART_ENCRYPTED_CONTENT) &&
 	msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
 	toindex = _notmuch_repair_crypto_payload_skip_legacy_display (clear);
 	if (toindex != clear)
-	    notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+	    notmuch_message_add_property (message, "index.repaired",
+					  "skip-protected-headers-legacy-display");
     }
     _index_mime_part (message, indexopts, toindex, msg_crypto);
     g_object_unref (clear);
@@ -640,7 +648,8 @@ _index_pkcs7_part (notmuch_message_t *message,
     if (p7type == GMIME_SECURE_MIME_TYPE_SIGNED_DATA) {
 	sigs = g_mime_application_pkcs7_mime_verify (pkcs7, GMIME_VERIFY_NONE, &mimeobj, &err);
 	if (sigs == NULL) {
-	    _notmuch_database_log (notmuch, "Failed to verify PKCS#7 SignedData during indexing. (%d:%d) [%s]\n",
+	    _notmuch_database_log (notmuch,
+				   "Failed to verify PKCS#7 SignedData during indexing. (%d:%d) [%s]\n",
 				   err->domain, err->code, err->message);
 	    g_error_free (err);
 	    goto DONE;
@@ -651,7 +660,8 @@ _index_pkcs7_part (notmuch_message_t *message,
 	    msg_crypto->decryption_status == NOTMUCH_MESSAGE_DECRYPTED_FULL) {
 	    toindex = _notmuch_repair_crypto_payload_skip_legacy_display (mimeobj);
 	    if (toindex != mimeobj)
-		notmuch_message_add_property (message, "index.repaired", "skip-protected-headers-legacy-display");
+		notmuch_message_add_property (message, "index.repaired",
+					      "skip-protected-headers-legacy-display");
 	}
 	_index_mime_part (message, indexopts, toindex, msg_crypto);
     } else if (p7type == GMIME_SECURE_MIME_TYPE_ENVELOPED_DATA) {
@@ -663,7 +673,7 @@ _index_pkcs7_part (notmuch_message_t *message,
 	_notmuch_database_log (notmuch, "Cannot currently handle PKCS#7 smime-type '%s'\n",
 			       g_mime_object_get_content_type_parameter (part, "smime-type"));
     }
- DONE:
+  DONE:
     if (mimeobj)
 	g_object_unref (mimeobj);
     if (sigs)

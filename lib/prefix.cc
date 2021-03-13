@@ -133,8 +133,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	Xapian::FieldProcessor *fp;
 
 	if (STRNCMP_LITERAL (prefix->name, "date") == 0)
-	    fp = (new DateFieldProcessor(NOTMUCH_VALUE_TIMESTAMP))->release ();
-	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
+	    fp = (new DateFieldProcessor (NOTMUCH_VALUE_TIMESTAMP))->release ();
+	else if (STRNCMP_LITERAL (prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else if (STRNCMP_LITERAL (prefix->name, "thread") == 0)
 	    fp = (new ThreadFieldProcessor (*notmuch->query_parser, notmuch))->release ();
