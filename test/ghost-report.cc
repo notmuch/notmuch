@@ -12,5 +12,6 @@ main (int argc, char **argv)
     }
 
     Xapian::Database db (argv[1]);
+
     std::cout << db.get_termfreq ("Tghost") << std::endl;
 }

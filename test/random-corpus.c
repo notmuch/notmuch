@@ -190,6 +190,7 @@ main (int argc, char **argv)
     srandom (seed);
 
     int count;
+
     for (count = 0; count < num_messages; count++) {
 	int j;
 	/* explicitly allow zero tags */

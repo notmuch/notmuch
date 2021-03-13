@@ -17,6 +17,7 @@ main (int argc, char **argv)
     }
 
     std::string nmpath (argv[1]);
+
     nmpath += "/.notmuch";
     if (mkdir (nmpath.c_str (), 0777) < 0) {
 	perror (("failed to create " + nmpath).c_str ());
