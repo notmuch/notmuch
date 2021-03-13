@@ -1128,7 +1128,7 @@ notmuch_with_shim () {
     base_name="$1"
     shift
     shim_file="${base_name}.so"
-    LD_PRELOAD=./${shim_file}${LD_PRELOAD:+:$LD_PRELOAD} notmuch-shared "$@"
+    LD_PRELOAD=${LD_PRELOAD:+:$LD_PRELOAD}:./${shim_file} notmuch-shared "$@"
 }
 
 # Creates a script that counts how much time it is executed and calls
