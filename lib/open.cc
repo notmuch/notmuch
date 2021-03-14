@@ -199,7 +199,7 @@ notmuch_database_open_with_config (const char *database_path,
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path, *xapian_path, *incompat_features;
+    char *notmuch_path, *incompat_features;
     char *message = NULL;
     struct stat st;
     int err;
@@ -225,12 +225,6 @@ notmuch_database_open_with_config (const char *database_path,
 	goto DONE;
     }
 
-    if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
-	message = strdup ("Out of memory\n");
-	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	goto DONE;
-    }
-
     /* Initialize the GLib type system and threads */
 #if ! GLIB_CHECK_VERSION (2, 35, 1)
     g_type_init ();
@@ -252,16 +246,23 @@ notmuch_database_open_with_config (const char *database_path,
     notmuch->writable_xapian_db = NULL;
     notmuch->atomic_nesting = 0;
     notmuch->view = 1;
+
+    if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
+	message = strdup ("Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
     try {
 	std::string last_thread_id;
 	std::string last_mod;
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
-	    notmuch->writable_xapian_db = new Xapian::WritableDatabase (xapian_path,
+	    notmuch->writable_xapian_db = new Xapian::WritableDatabase (notmuch->xapian_path,
 									DB_ACTION);
 	    notmuch->xapian_db = notmuch->writable_xapian_db;
 	} else {
-	    notmuch->xapian_db = new Xapian::Database (xapian_path);
+	    notmuch->xapian_db = new Xapian::Database (notmuch->xapian_path);
 	}
 
 	/* Check version.  As of database version 3, we represent
