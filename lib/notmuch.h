@@ -882,6 +882,12 @@ notmuch_database_get_all_tags (notmuch_database_t *db);
 /**
  * Reopen an open notmuch database.
  *
+ * @param [in] db	open notmuch database
+ * @param [in] mode	mode (read only or read-write) for reopened database.
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS
+ * @retval #NOTMUCH_STATUS_ILLEGAL_ARGUMENT	The passed database was not open.
+ * @retval #NOTMUCH_STATUS_XAPIAN_EXCEPTION	A Xapian exception occured
  */
 notmuch_status_t
 notmuch_database_reopen (notmuch_database_t *db, notmuch_database_mode_t mode);

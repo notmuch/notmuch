@@ -517,29 +517,6 @@ notmuch_database_close (notmuch_database_t *notmuch)
     return status;
 }
 
-notmuch_status_t
-notmuch_database_reopen (notmuch_database_t *notmuch,
-			 unused(notmuch_database_mode_t mode))
-{
-    if (_notmuch_database_mode (notmuch) != NOTMUCH_DATABASE_MODE_READ_ONLY)
-	return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
-
-    try {
-	notmuch->xapian_db->reopen ();
-    } catch (const Xapian::Error &error) {
-	if (! notmuch->exception_reported) {
-	    _notmuch_database_log (notmuch, "Error: A Xapian exception reopening database: %s\n",
-				   error.get_msg ().c_str ());
-	    notmuch->exception_reported = true;
-	}
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-    }
-
-    notmuch->view++;
-
-    return NOTMUCH_STATUS_SUCCESS;
-}
-
 static int
 unlink_cb (const char *path,
 	   unused (const struct stat *sb),

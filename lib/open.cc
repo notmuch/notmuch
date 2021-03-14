@@ -511,3 +511,49 @@ notmuch_database_create_with_config (const char *database_path,
 	talloc_free (notmuch);
     return status;
 }
+
+notmuch_status_t
+notmuch_database_reopen (notmuch_database_t *notmuch,
+			 notmuch_database_mode_t new_mode)
+{
+    notmuch_database_mode_t cur_mode = _notmuch_database_mode (notmuch);
+
+    if (notmuch->xapian_db == NULL) {
+	_notmuch_database_log (notmuch, "Cannot reopen closed or nonexistent database\n");
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+    }
+
+    try {
+	if (cur_mode == new_mode &&
+	    new_mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
+	    notmuch->xapian_db->reopen ();
+	} else {
+	    notmuch->xapian_db->close ();
+
+	    delete notmuch->xapian_db;
+	    notmuch->xapian_db = NULL;
+	    /* no need to free the same object twice */
+	    notmuch->writable_xapian_db = NULL;
+
+	    if (new_mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
+		notmuch->writable_xapian_db = new Xapian::WritableDatabase (notmuch->xapian_path,
+									    DB_ACTION);
+		notmuch->xapian_db = notmuch->writable_xapian_db;
+	    } else {
+		notmuch->xapian_db = new Xapian::Database (notmuch->xapian_path,
+							   DB_ACTION);
+	    }
+	}
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    _notmuch_database_log (notmuch, "Error: A Xapian exception reopening database: %s\n",
+				   error.get_msg ().c_str ());
+	    notmuch->exception_reported = true;
+	}
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    notmuch->view++;
+    notmuch->open = true;
+    return NOTMUCH_STATUS_SUCCESS;
+}
