@@ -34,4 +34,20 @@ built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something"
 
+test_begin_subtest "notmuch with a config but without a database suggests notmuch new"
+notmuch 2>&1 | notmuch_dir_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+Notmuch is configured, but there's not yet a database at
+
+	MAIL_DIR/.notmuch
+
+You probably want to run "notmuch new" now to create that database.
+
+Note that the first run of "notmuch new" can take a very long time
+and that the resulting database will use roughly the same amount of
+storage space as the email being indexed.
+
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
