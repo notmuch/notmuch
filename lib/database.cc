@@ -518,7 +518,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
 }
 
 notmuch_status_t
-_notmuch_database_reopen (notmuch_database_t *notmuch)
+notmuch_database_reopen (notmuch_database_t *notmuch,
+			 unused(notmuch_database_mode_t mode))
 {
     if (_notmuch_database_mode (notmuch) != NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;

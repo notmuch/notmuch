@@ -204,9 +204,6 @@ _notmuch_message_id_compressed (void *ctx, const char *message_id);
 notmuch_status_t
 _notmuch_database_ensure_writable (notmuch_database_t *notmuch);
 
-notmuch_status_t
-_notmuch_database_reopen (notmuch_database_t *notmuch);
-
 void
 _notmuch_database_log (notmuch_database_t *notmuch,
 		       const char *format, ...);

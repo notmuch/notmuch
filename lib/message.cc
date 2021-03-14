@@ -459,7 +459,8 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 	    /* all the way without an exception */
 	    break;
 	} catch (const Xapian::DatabaseModifiedError &error) {
-	    notmuch_status_t status = _notmuch_database_reopen (message->notmuch);
+	    notmuch_status_t status = notmuch_database_reopen (message->notmuch,
+							       NOTMUCH_DATABASE_MODE_READ_ONLY);
 	    if (status != NOTMUCH_STATUS_SUCCESS)
 		INTERNAL_ERROR ("unhandled error from notmuch_database_reopen: %s\n",
 				notmuch_status_to_string (status));

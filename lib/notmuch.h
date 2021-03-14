@@ -880,6 +880,13 @@ notmuch_tags_t *
 notmuch_database_get_all_tags (notmuch_database_t *db);
 
 /**
+ * Reopen an open notmuch database.
+ *
+ */
+notmuch_status_t
+notmuch_database_reopen (notmuch_database_t *db, notmuch_database_mode_t mode);
+
+/**
  * Create a new query for 'database'.
  *
  * Here, 'database' should be an open database, (see
