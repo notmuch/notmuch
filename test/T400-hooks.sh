@@ -159,7 +159,6 @@ EOF
     test_expect_equal_file write.expected write.output
 
     test_begin_subtest "pre-new with write access [${config}]"
-    test_subtest_known_broken
     rm -rf ${HOOK_DIR}
     create_write_hook "pre-new" write.expected write.output $HOOK_DIR
     NOTMUCH_NEW

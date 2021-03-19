@@ -1170,8 +1170,18 @@ notmuch_new_command (unused(notmuch_config_t *config), notmuch_database_t *notmu
     }
 
     if (hooks) {
+	/* Drop write lock to run hook */
+	status = notmuch_database_reopen (notmuch, NOTMUCH_DATABASE_MODE_READ_ONLY);
+	if (print_status_database ("notmuch new", notmuch, status))
+	    return EXIT_FAILURE;
+
 	ret = notmuch_run_hook (notmuch, "pre-new");
 	if (ret)
+	    return EXIT_FAILURE;
+
+	/* acquire write lock again */
+	status = notmuch_database_reopen (notmuch, NOTMUCH_DATABASE_MODE_READ_WRITE);
+	if (print_status_database ("notmuch new", notmuch, status))
 	    return EXIT_FAILURE;
     }
 
