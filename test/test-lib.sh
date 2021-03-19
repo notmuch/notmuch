@@ -1271,3 +1271,4 @@ test_declare_external_prereq openssl
 test_declare_external_prereq gpgsm
 test_declare_external_prereq ${NOTMUCH_PYTHON}
 test_declare_external_prereq xapian-metadata
+test_declare_external_prereq xapian-delve

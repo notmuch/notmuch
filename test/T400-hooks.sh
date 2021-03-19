@@ -2,12 +2,27 @@
 test_description='hooks'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_require_external_prereq xapian-delve
+
 create_echo_hook () {
     local TOKEN="${RANDOM}"
     mkdir -p ${HOOK_DIR}
     cat <<EOF >"${HOOK_DIR}/${1}"
 #!/bin/sh
 echo "${TOKEN}" > ${3}
+EOF
+    chmod +x "${HOOK_DIR}/${1}"
+    echo "${TOKEN}" > ${2}
+}
+
+create_write_hook () {
+    local TOKEN="${RANDOM}"
+    mkdir -p ${HOOK_DIR}
+    cat <<EOF >"${HOOK_DIR}/${1}"
+#!/bin/sh
+if xapian-delve ${MAIL_DIR}/.notmuch/xapian | grep -q "writing = false"; then
+   echo "${TOKEN}" > ${3}
+fi
 EOF
     chmod +x "${HOOK_DIR}/${1}"
     echo "${TOKEN}" > ${2}
@@ -136,6 +151,19 @@ EOF
 EOF
     chmod +x "${HOOK_DIR}/pre-new"
     test_expect_code 1 "notmuch new"
+
+    test_begin_subtest "post-new with write access [${config}]"
+    rm -rf ${HOOK_DIR}
+    create_write_hook "post-new" write.expected write.output $HOOK_DIR
+    NOTMUCH_NEW
+    test_expect_equal_file write.expected write.output
+
+    test_begin_subtest "pre-new with write access [${config}]"
+    test_subtest_known_broken
+    rm -rf ${HOOK_DIR}
+    create_write_hook "pre-new" write.expected write.output $HOOK_DIR
+    NOTMUCH_NEW
+    test_expect_equal_file write.expected write.output
 
     rm -rf ${HOOK_DIR}
 done
