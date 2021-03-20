@@ -529,7 +529,9 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	    goto DONE;
 	}
 
-	_notmuch_message_add_filename (message, filename);
+	ret = _notmuch_message_add_filename (message, filename);
+	if (ret)
+	    goto DONE;
 
 	if (is_new || is_ghost) {
 	    _notmuch_message_add_term (message, "type", "mail");
