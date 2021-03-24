@@ -339,6 +339,13 @@ test_expect_code 1 "NOTMUCH_NEW --debug 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
 
+test_begin_subtest "RFC822 group names are indexed"
+test_subtest_known_broken
+generate_message [to]="undisclosed-recipients:"
+NOTMUCH_NEW > OUTPUT
+output=$(notmuch search --output=messages to:undisclosed-recipients)
+test_expect_equal "${output}" "${gen_msg_id}"
+
 test_begin_subtest "Long directory names don't cause rescan"
 test_subtest_known_broken
 printf -v name 'z%.0s' {1..234}
