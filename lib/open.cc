@@ -280,6 +280,9 @@ _notmuch_choose_xapian_path (void *ctx, const char *database_path,
     if (status != NOTMUCH_STATUS_PATH_ERROR)
 	goto DONE;
 
+    if (*message_ptr)
+	free (*message_ptr);
+
     notmuch_path = talloc_asprintf (ctx, "%s/.notmuch", database_path);
     status = _db_dir_exists (notmuch_path, message_ptr);
     if (status)
@@ -647,6 +650,9 @@ notmuch_database_create_with_config (const char *database_path,
 	status = NOTMUCH_STATUS_DATABASE_EXISTS;
 	goto DONE;
     }
+
+    if (message)
+	free (message);
 
     status = _finish_open (notmuch,
 			   profile,
