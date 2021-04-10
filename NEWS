@@ -1,3 +1,44 @@
+Notmuch 0.32 (UNRELEASED)
+=========================
+
+General
+-------
+
+This release includes a significant overhaul of the configuration
+management facilities for notmuch.  The previous distinction between
+configuration items that can be modified via plain text configuration
+files and those that must be set in the database via the "notmuch
+config" subcommand is gone, and all configuration items can be set in
+both ways.  The external configuration file overrides configuration
+items in the database. The location of database, hooks, and
+configuration files is now more flexible, with several new
+configuration variables. In particular XDG locations are now supported
+as fallbacks for database, configuration and hooks. For more
+information see `notmuch-config(1)`.
+
+Library
+-------
+
+To support the new configuration facilities, several functions and
+constants have been added to the notmuch API. Most notably:
+
+- `notmuch_database_create_with_config`
+- `notmuch_database_open_with_config`
+- `notmuch_database_load_config`
+- `notmuch_config_get`
+
+A previously requested API change is that `notmuch_database_reopen` is
+now exposed (and generalized).
+
+As always, the canonical source of API documentation is
+`lib/notmuch.h`, or the doxygen formated documentation in `notmuch(3)`
+
+CLI
+---
+
+The `notmuch config set` subcommand gained a `--database` argument to
+specify that the database should be updated, rather than a config file.
+
 Notmuch 0.31.4 (2021-02-18)
 ===========================
 
