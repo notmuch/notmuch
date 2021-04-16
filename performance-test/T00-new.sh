@@ -26,6 +26,16 @@ perl -nle 'rename "$_.renamed", $_' $manifest
 
 time_run "new ($count mv back)" 'notmuch new'
 
+xargs tar cf backup.tar < $manifest
+
+perl -nle 'unlink $_; unlink $_.copy' $manifest
+
+time_run "new ($count rm)" 'notmuch new'
+
+tar xf backup.tar
+
+time_run "new ($count restore)" 'notmuch new'
+
 perl -nle 'link $_, "$_.copy"' $manifest
 
 time_run "new ($count cp)" 'notmuch new'
