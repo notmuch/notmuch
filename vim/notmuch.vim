@@ -666,7 +666,7 @@ ruby << EOF
 				date = Time.at(e.newest_date).strftime(date_fmt)
 				subject = e.messages.first['subject']
 				if $mail_installed
-					subject = Mail::Field.new("Subject: " + subject).to_s
+					subject = Mail::Field.parse("Subject: " + subject).to_s
 				else
 					subject = subject.force_encoding('utf-8')
 				end
