@@ -104,6 +104,9 @@ unset CDPATH
 
 unset GREP_OPTIONS
 
+# For lib/open.cc:_load_key_file
+unset XDG_CONFIG_HOME
+
 # For emacsclient
 unset ALTERNATE_EDITOR
 
