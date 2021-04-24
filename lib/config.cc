@@ -542,7 +542,6 @@ _get_email_from_passwd_file (void *ctx)
 			     username, hostname, domainname);
 
     talloc_free (username);
-    talloc_free (email);
     return email;
 }
 
