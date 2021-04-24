@@ -5,10 +5,6 @@ extra_cflags += -I$(srcdir)/$(dir)
 
 notmuch_compat_srcs :=
 
-ifneq ($(HAVE_CANONICALIZE_FILE_NAME),1)
-notmuch_compat_srcs += $(dir)/canonicalize_file_name.c
-endif
-
 ifneq ($(HAVE_GETLINE),1)
 notmuch_compat_srcs += $(dir)/getline.c $(dir)/getdelim.c
 endif

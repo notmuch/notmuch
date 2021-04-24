@@ -6,7 +6,7 @@ extra_cflags += -I$(srcdir)/$(dir)
 libnotmuch_util_c_srcs := $(dir)/xutil.c $(dir)/error_util.c $(dir)/hex-escape.c \
 		  $(dir)/string-util.c $(dir)/talloc-extra.c $(dir)/zlib-extra.c \
 		$(dir)/util.c $(dir)/gmime-extra.c $(dir)/crypto.c \
-		$(dir)/repair.c \
+		$(dir)/repair.c $(dir)/path-util.c \
 		$(dir)/unicode-util.c
 
 libnotmuch_util_modules := $(libnotmuch_util_c_srcs:.c=.o)

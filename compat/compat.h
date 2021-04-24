@@ -37,14 +37,6 @@ extern "C" {
 #define _POSIX_PTHREAD_SEMANTICS 1
 #endif
 
-#if ! HAVE_CANONICALIZE_FILE_NAME
-/* we only call this function from C, and this makes testing easier */
-#ifndef __cplusplus
-char *
-canonicalize_file_name (const char *path);
-#endif
-#endif
-
 #if ! HAVE_GETLINE
 #include <stdio.h>
 #include <unistd.h>

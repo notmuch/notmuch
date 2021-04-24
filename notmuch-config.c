@@ -24,6 +24,7 @@
 #include <netdb.h>
 #include <assert.h>
 
+#include "path-util.h"
 #include "unicode-util.h"
 
 static const char toplevel_config_comment[] =
@@ -327,7 +328,7 @@ notmuch_conffile_save (notmuch_conffile_t *config)
     }
 
     /* Try not to overwrite symlinks. */
-    filename = canonicalize_file_name (config->filename);
+    filename = notmuch_canonicalize_file_name (config->filename);
     if (! filename) {
 	if (errno == ENOENT) {
 	    filename = strdup (config->filename);

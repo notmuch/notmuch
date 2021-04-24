@@ -3,6 +3,7 @@
 
 #include "database-private.h"
 #include "parse-time-vrp.h"
+#include "path-util.h"
 
 #if HAVE_XAPIAN_DB_RETRY_LOCK
 #define DB_ACTION (Xapian::DB_CREATE_OR_OPEN | Xapian::DB_RETRY_LOCK)
@@ -612,9 +613,9 @@ notmuch_database_create_with_config (const char *database_path,
     _set_database_path (notmuch, database_path);
 
     if (key_file && ! split) {
-	char *mail_root = canonicalize_file_name (
+	char *mail_root = notmuch_canonicalize_file_name (
 	    g_key_file_get_value (key_file, "database", "mail_root", NULL));
-	char *db_path = canonicalize_file_name (database_path);
+	char *db_path = notmuch_canonicalize_file_name (database_path);
 
 	split = (mail_root && (0 != strcmp (mail_root, db_path)));
 
