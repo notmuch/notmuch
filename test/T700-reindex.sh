@@ -83,4 +83,11 @@ notmuch reindex '*'
 notmuch search '*' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+
+test_begin_subtest "reindex after removing corpus"
+tar cf backup.tar mail/cur
+find mail/cur -type f -delete
+test_expect_success "notmuch reindex '*'"
+tar xf backup.tar
+
 test_done
