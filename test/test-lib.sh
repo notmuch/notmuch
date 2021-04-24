@@ -700,12 +700,20 @@ notmuch_built_with_sanitize ()
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
-notmuch_passwd_sanitize ()
+notmuch_passwd_sanitize()
 {
-    local user=$(id -un)
-    local fqdn=$(hostname -f)
-    local full_name=$(getent passwd $user | cut -d: -f 5 | cut -d, -f1)
-    sed -e "s/$user/USERNAME/" -e "s/$fqdn/FQDN/" -e "s/$full_name/USER_FULL_NAME/"
+    ${NOTMUCH_PYTHON} -c'
+import os, sys, pwd, socket
+
+pw = pwd.getpwuid(os.getuid())
+user = pw.pw_name
+name = pw.pw_gecos.partition(",")[0]
+fqdn = socket.getfqdn()
+
+for l in sys.stdin:
+    l = l.replace(user, "USERNAME").replace(fqdn, "FQDN").replace(".(none)","").replace(name, "USER_FULL_NAME")
+    sys.stdout.write(l)
+'
 }
 
 notmuch_config_sanitize ()
