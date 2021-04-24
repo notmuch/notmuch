@@ -37,6 +37,7 @@ Build-Depends:
  ruby,
  ruby-dev (>>1:1.9.3~),
  texinfo,
+ xapian-tools <!nocheck>,
 Standards-Version: 4.4.1
 Homepage: https://notmuchmail.org/
 Vcs-Git: https://git.notmuchmail.org/git/notmuch -b release
