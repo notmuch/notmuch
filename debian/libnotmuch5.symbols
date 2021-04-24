@@ -1,17 +1,36 @@
 libnotmuch.so.5 libnotmuch5 #MINVER#
 * Build-Depends-Package: libnotmuch-dev
  notmuch_built_with@Base 0.23~rc0
+ notmuch_config_get@Base 0.32~rc0
+ notmuch_config_get_bool@Base 0.32~rc0
+ notmuch_config_get_pairs@Base 0.32~rc0
+ notmuch_config_get_values@Base 0.32~rc0
+ notmuch_config_get_values_string@Base 0.32~rc0
  notmuch_config_list_destroy@Base 0.23~rc0
  notmuch_config_list_key@Base 0.23~rc0
  notmuch_config_list_move_to_next@Base 0.23~rc0
  notmuch_config_list_valid@Base 0.23~rc0
  notmuch_config_list_value@Base 0.23~rc0
+ notmuch_config_pairs_destroy@Base 0.32~rc0
+ notmuch_config_pairs_key@Base 0.32~rc0
+ notmuch_config_pairs_move_to_next@Base 0.32~rc0
+ notmuch_config_pairs_valid@Base 0.32~rc0
+ notmuch_config_pairs_value@Base 0.32~rc0
+ notmuch_config_path@Base 0.32~rc0
+ notmuch_config_set@Base 0.32~rc0
+ notmuch_config_values_destroy@Base 0.32~rc0
+ notmuch_config_values_get@Base 0.32~rc0
+ notmuch_config_values_move_to_next@Base 0.32~rc0
+ notmuch_config_values_start@Base 0.32~rc0
+ notmuch_config_values_valid@Base 0.32~rc0
  notmuch_database_add_message@Base 0.3
  notmuch_database_begin_atomic@Base 0.9~rc1
  notmuch_database_close@Base 0.13~rc1
  notmuch_database_compact@Base 0.17~rc1
+ notmuch_database_compact_db@Base 0.32~rc0
  notmuch_database_create@Base 0.3
  notmuch_database_create_verbose@Base 0.20~rc1
+ notmuch_database_create_with_config@Base 0.32~rc0
  notmuch_database_destroy@Base 0.13~rc1
  notmuch_database_end_atomic@Base 0.9~rc1
  notmuch_database_find_message@Base 0.9~rc2
@@ -25,10 +44,13 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_database_get_revision@Base 0.21~rc1
  notmuch_database_get_version@Base 0.3
  notmuch_database_index_file@Base 0.26~rc0
+ notmuch_database_load_config@Base 0.32~rc0
  notmuch_database_needs_upgrade@Base 0.3
  notmuch_database_open@Base 0.3
  notmuch_database_open_verbose@Base 0.20~rc1
+ notmuch_database_open_with_config@Base 0.32~rc0
  notmuch_database_remove_message@Base 0.3
+ notmuch_database_reopen@Base 0.32~rc0
  notmuch_database_set_config@Base 0.23~rc0
  notmuch_database_status_string@Base 0.20~rc1
  notmuch_database_upgrade@Base 0.3
@@ -130,6 +152,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  (c++)"typeinfo for Xapian::Error@Base" 0.6.1
  (c++)"typeinfo for Xapian::DatabaseError@Base" 0.24~rc0
  (c++)"typeinfo for Xapian::DatabaseModifiedError@Base" 0.24~rc0
+ (c++)"typeinfo for Xapian::DatabaseOpeningError@Base" 0.32~rc0
  (c++|optional=present with Xapian 1.4)"typeinfo for Xapian::QueryParserError@Base" 0.23~rc0
  (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
@@ -138,4 +161,5 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  (c++)"typeinfo name for Xapian::Error@Base" 0.6.1
  (c++)"typeinfo name for Xapian::DatabaseError@Base" 0.24~rc0
  (c++)"typeinfo name for Xapian::DatabaseModifiedError@Base" 0.24~rc0
+ (c++)"typeinfo name for Xapian::DatabaseOpeningError@Base" 0.32~rc0
  (c++|optional=present with Xapian 1.4)"typeinfo name for Xapian::QueryParserError@Base" 0.23~rc0
