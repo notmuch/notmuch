@@ -1,12 +1,24 @@
 . $(dirname "$0")/version.sh || exit 1
 
+debug=""
 corpus_size=large
+perf_callgraph=lbr
+use_perf=0
 
 while test "$#" -ne 0
 do
 	case "$1" in
 	-d|--debug)
 		debug=t;
+		shift
+		;;
+	-p|--perf)
+		use_perf=1;
+		shift
+		;;
+	-c|--call-graph)
+		shift
+		perf_callgraph=$1
 		shift
 		;;
 	-s|--small)
@@ -127,9 +139,19 @@ notmuch_new_with_cache ()
     fi
 }
 
+make_log_dir () {
+    local timestamp=$(date +%Y%m%dT%H%M%S)
+    log_dir=${TEST_DIRECTORY}/log.$(basename $0)-$corpus_size-${timestamp}
+    mkdir -p "${log_dir}"
+}
+
 time_start ()
 {
     add_email_corpus
+
+    if [[ "$use_perf" = 1 ]]; then
+	make_log_dir
+    fi
 
     print_header
 
@@ -140,9 +162,7 @@ memory_start ()
 {
     add_email_corpus
 
-    local timestamp=$(date +%Y%m%dT%H%M%S)
-    log_dir="${TEST_DIRECTORY}/log.$(basename $0)-$corpus_size-${timestamp}"
-    mkdir -p ${log_dir}
+    make_log_dir
 
     notmuch_new_with_cache memory_run
 }
@@ -193,7 +213,13 @@ time_run ()
     printf "  %-22s" "$1"
     test_count=$(($test_count+1))
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
-    if ! eval >&3 "/usr/bin/time -f '%e\t%U\t%S\t%M\t%I/%O' $2" ; then
+    if [[ "$use_perf" = 1 ]]; then
+	command_str="perf record --call-graph=${perf_callgraph} -o ${log_dir}/${test_count}.perf $2"
+    else
+	command_str="/usr/bin/time -f '%e\t%U\t%S\t%M\t%I/%O' $2"
+    fi
+
+    if ! eval >&3 "$command_str" ; then
 	test_failure=$(($test_failure + 1))
 	return 1
     fi

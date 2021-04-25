@@ -16,6 +16,7 @@ In addition to having notmuch, you need:
 - xz. Some speedup can be gotten by installing "pixz", but this is
   probably only worthwhile if you are debugging the tests.
 - valgrind (for the memory tests)
+- perf (optional, for more fine-grained timing)
 
 Getting set up to run tests:
 ----------------------------
@@ -56,10 +57,23 @@ supports the following arguments
 
 --small / --medium / --large	Choose corpus size.
 --debug				Enable debugging. In particular don't delete
-				temporary directories.
+                                temporary directories.
+--perf                          Run perf record in place of /usr/bin/time. Perf output can be
+                                found in a log directory.
+--call-graph {fp,lbr,dwarf}     Call graph option for perf record. Default is 'lbr'.
 
 When using the make targets, you can pass arguments to all test
 scripts by defining the make variable OPTIONS.
+
+Log Directory
+-------------
+
+The memory tests, and the time tests when option '--perf' is given
+save their output in a directory named as follows
+
+     log.$test_name-$corpus_size-$timestamp
+
+These directories are removed by "make clean".
 
 Writing tests
 -------------
