@@ -30,6 +30,10 @@ constants have been added to the notmuch API. Most notably:
 A previously requested API change is that `notmuch_database_reopen` is
 now exposed (and generalized).
 
+The previously severe slowdowns from large numbers calls to
+notmuch_database_remove_message or notmuch_message_delete in one
+session has been fixed.
+
 As always, the canonical source of API documentation is
 `lib/notmuch.h`, or the doxygen formated documentation in `notmuch(3)`
 
@@ -38,6 +42,9 @@ CLI
 
 The `notmuch config set` subcommand gained a `--database` argument to
 specify that the database should be updated, rather than a config file.
+
+The speed of `notmuch new` and `notmuch reindex` in dealing with large
+numbers of mail file deletions is significantly improved.
 
 Notmuch 0.31.4 (2021-02-18)
 ===========================
