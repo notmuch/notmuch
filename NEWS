@@ -46,6 +46,30 @@ specify that the database should be updated, rather than a config file.
 The speed of `notmuch new` and `notmuch reindex` in dealing with large
 numbers of mail file deletions is significantly improved.
 
+Emacs
+-----
+
+Completion related updates include: de-duplicating tags offered for
+completion, use the actual initial input in address completion, allow
+users to opt out of notmuch address completion, and do not force Ido
+when prompting for senders.
+
+Some keymaps used to contain bindings for unnamed commands.  These
+lambda expressions have been replaced by named commands (symbols), to
+ease customization.
+
+Lexical binding is now used in all notmuch-emacs libraries.
+
+Fix bug in calling `notmuch-mua-mail` with a non-nil RETURN-ACTION.
+
+Removed, inlined or renamed functions and variables:
+    `notmuch-address-locate-command`,
+    `notmuch-documentation-first-line`, `notmuch-folder`,
+    `notmuch-hello-trim', `notmuch-hello-versions` => `notmuch-version`,
+    `notmuch-remove-if-not`, `notmuch-search-disjunctive-regexp`,
+    `notmuch-sexp-eof`, `notmuch-split-content-type`, and
+    `notmuch-tree-button-activate`.
+
 Notmuch 0.31.4 (2021-02-18)
 ===========================
 
