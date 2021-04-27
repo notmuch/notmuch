@@ -317,6 +317,9 @@ ruby << EOF
 	$curbuf.render do |b|
 		q = $curbuf.query(get_cur_view)
 		q.sort = Notmuch::SORT_OLDEST_FIRST
+		$exclude_tags.each { |t|
+			q.add_tag_exclude(t)
+		}
 		msgs = q.search_messages
 		msgs.each do |msg|
 			m = Mail.read(msg.filename)
@@ -640,6 +643,9 @@ ruby << EOF
 			$searches.clear
 			folders.each do |name, search|
 				q = $curbuf.query(search)
+				$exclude_tags.each { |t|
+					q.add_tag_exclude(t)
+				}
 				$searches << search
 				count = count_threads ? q.count_threads : q.count_messages
 				b << "%9d %-20s (%s)" % [count, name, search]
@@ -651,6 +657,9 @@ ruby << EOF
 		date_fmt = VIM::evaluate('g:notmuch_date_format')
 		q = $curbuf.query(search)
 		q.sort = Notmuch::SORT_NEWEST_FIRST
+		$exclude_tags.each { |t|
+			q.add_tag_exclude(t)
+		}
 		$threads.clear
 		t = q.search_threads
 
@@ -702,9 +711,6 @@ ruby << EOF
 		def query(*args)
 			q = @db.query(*args)
 			@queries << q
-			$exclude_tags.each { |t|
-			    q.add_tag_exclude(t)
-			}
 			q
 		end
 
