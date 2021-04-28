@@ -1,3 +1,9 @@
+notmuch (0.32~rc2-1) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Wed, 28 Apr 2021 07:05:22 -0300
+
 notmuch (0.32~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate
