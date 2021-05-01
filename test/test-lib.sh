@@ -711,7 +711,12 @@ name = pw.pw_gecos.partition(",")[0]
 fqdn = socket.getfqdn()
 
 for l in sys.stdin:
-    l = l.replace(user, "USERNAME").replace(fqdn, "FQDN").replace(".(none)","").replace(name, "USER_FULL_NAME")
+    if user:
+        l = l.replace(user, "USERNAME")
+    if fqdn:
+        l = l.replace(fqdn, "FQDN").replace(".(none)","")
+    if name:
+        l = l.replace(name, "USER_FULL_NAME")
     sys.stdout.write(l)
 '
 }
