@@ -12,7 +12,7 @@ test_ruby() {
     (
 	cat <<-EOF
 	require 'notmuch'
-	@db = Notmuch::Database.new('$MAIL_DIR')
+	db = Notmuch::Database.new('$MAIL_DIR')
 	EOF
 	cat
     ) | $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
@@ -22,9 +22,9 @@ test_ruby() {
 test_begin_subtest "compare thread ids"
 notmuch search --sort=oldest-first --output=threads tag:inbox | sed s/^thread:// > EXPECTED
 test_ruby <<"EOF"
-@q = @db.query('tag:inbox')
-@q.sort = Notmuch::SORT_OLDEST_FIRST
-@q.search_threads.each do |t|
+q = db.query('tag:inbox')
+q.sort = Notmuch::SORT_OLDEST_FIRST
+q.search_threads.each do |t|
   puts t.thread_id
 end
 EOF
@@ -32,9 +32,9 @@ EOF
 test_begin_subtest "compare message ids"
 notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > EXPECTED
 test_ruby <<"EOF"
-@q = @db.query('tag:inbox')
-@q.sort = Notmuch::SORT_OLDEST_FIRST
-@q.search_messages.each do |m|
+q = db.query('tag:inbox')
+q.sort = Notmuch::SORT_OLDEST_FIRST
+q.search_messages.each do |m|
   puts m.message_id
 end
 EOF
@@ -42,25 +42,25 @@ EOF
 test_begin_subtest "get non-existent file"
 echo nil > EXPECTED
 test_ruby <<"EOF"
-p @db.find_message_by_filename('i-dont-exist')
+p db.find_message_by_filename('i-dont-exist')
 EOF
 
 test_begin_subtest "count messages"
 notmuch count --output=messages tag:inbox > EXPECTED
 test_ruby <<"EOF"
-puts @db.query('tag:inbox').count_messages()
+puts db.query('tag:inbox').count_messages()
 EOF
 
 test_begin_subtest "count threads"
 notmuch count --output=threads tag:inbox > EXPECTED
 test_ruby <<"EOF"
-puts @db.query('tag:inbox').count_threads()
+puts db.query('tag:inbox').count_threads()
 EOF
 
 test_begin_subtest "get all tags"
 notmuch search --output=tags '*' > EXPECTED
 test_ruby <<"EOF"
-@db.all_tags.each do |tag|
+db.all_tags.each do |tag|
   puts tag
 end
 EOF
