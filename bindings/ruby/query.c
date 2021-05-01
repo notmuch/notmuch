@@ -102,19 +102,21 @@ notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv)
 }
 
 /*
- * call-seq: QUERY.omit_excluded=(boolean) => nil
+ * call-seq: QUERY.omit_excluded=(fixnum) => nil
  *
  * Specify whether to omit excluded results or simply flag them.
- * By default, this is set to +true+.
+ * By default, this is set to +Notmuch::EXCLUDE_TRUE+.
  */
 VALUE
 notmuch_rb_query_set_omit_excluded (VALUE self, VALUE omitv)
 {
     notmuch_query_t *query;
+    notmuch_exclude_t value;
 
     Data_Get_Notmuch_Query (self, query);
 
-    notmuch_query_set_omit_excluded (query, RTEST (omitv));
+    value = FIXNUM_P (omitv) ? FIX2UINT (omitv) : RTEST(omitv);
+    notmuch_query_set_omit_excluded (query, value);
 
     return Qnil;
 }

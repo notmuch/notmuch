@@ -65,4 +65,21 @@ db.all_tags.each do |tag|
 end
 EOF
 
+notmuch config set search.exclude_tags deleted
+generate_message '[subject]="Good"'
+generate_message '[subject]="Bad"' "[in-reply-to]=\<$gen_msg_id\>"
+notmuch new > /dev/null
+notmuch tag +deleted id:$gen_msg_id
+
+test_begin_subtest "omit excluded all"
+notmuch search --output=threads --exclude=all tag:inbox > EXPECTED
+test_ruby <<"EOF"
+q = db.query('tag:inbox')
+q.add_tag_exclude('deleted')
+q.omit_excluded = Notmuch::EXCLUDE_ALL
+q.search_threads.each do |t|
+  puts 'thread:%s' % t.thread_id
+end
+EOF
+
 test_done

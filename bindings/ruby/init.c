@@ -154,6 +154,30 @@ Init_notmuch (void)
      * Maximum allowed length of a tag
      */
     rb_define_const (mod, "TAG_MAX", INT2FIX (NOTMUCH_TAG_MAX));
+    /*
+     * Document-const: Notmuch::EXCLUDE_FLAG
+     *
+     * Only flag excluded results
+     */
+    rb_define_const (mod, "EXCLUDE_FLAG", INT2FIX (NOTMUCH_EXCLUDE_FLAG));
+    /*
+     * Document-const: Notmuch::EXCLUDE_TRUE
+     *
+     * Exclude messages from the results
+     */
+    rb_define_const (mod, "EXCLUDE_TRUE", INT2FIX (NOTMUCH_EXCLUDE_TRUE));
+    /*
+     * Document-const: Notmuch::EXCLUDE_FALSE
+     *
+     * Don't exclude anything
+     */
+    rb_define_const (mod, "EXCLUDE_FALSE", INT2FIX (NOTMUCH_EXCLUDE_FALSE));
+    /*
+     * Document-const: Notmuch::EXCLUDE_ALL
+     *
+     * Exclude all results
+     */
+    rb_define_const (mod, "EXCLUDE_ALL", INT2FIX (NOTMUCH_EXCLUDE_ALL));
 
     /*
      * Document-class: Notmuch::BaseError
