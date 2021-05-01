@@ -9,17 +9,21 @@ fi
 add_email_corpus
 
 test_ruby() {
-    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
+    (
+	cat <<-\EOF
+	require 'notmuch'
+	$maildir = ENV['MAIL_DIR']
+	if not $maildir then
+	  abort('environment variable MAIL_DIR must be set')
+	end
+	@db = Notmuch::Database.new($maildir)
+	EOF
+	cat
+    ) | MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
 }
 
 test_begin_subtest "compare thread ids"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 @q = @db.query('tag:inbox')
 @q.sort = Notmuch::SORT_OLDEST_FIRST
 for t in @q.search_threads do
@@ -31,12 +35,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "compare message ids"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 @q = @db.query('tag:inbox')
 @q.sort = Notmuch::SORT_OLDEST_FIRST
 for m in @q.search_messages do
@@ -48,12 +46,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get non-existent file"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 result = @db.find_message_by_filename('i-dont-exist')
 print (result == nil)
 EOF
@@ -61,12 +53,6 @@ test_expect_equal "$(cat OUTPUT)" "true"
 
 test_begin_subtest "count messages"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 @q = @db.query('tag:inbox')
 print @q.count_messages(),"\n"
 EOF
@@ -75,12 +61,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "count threads"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 @q = @db.query('tag:inbox')
 print @q.count_threads(),"\n"
 EOF
@@ -89,12 +69,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get all tags"
 test_ruby <<"EOF"
-require 'notmuch'
-$maildir = ENV['MAIL_DIR']
-if not $maildir then
-  abort('environment variable MAIL_DIR must be set')
-end
-@db = Notmuch::Database.new($maildir)
 @t = @db.all_tags()
 for tag in @t do
    print tag,"\n"
