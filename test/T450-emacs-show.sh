@@ -5,6 +5,7 @@ test_description="emacs notmuch-show view"
 
 EXPECTED=$NOTMUCH_SRCDIR/test/emacs-show.expected-output
 
+test_require_emacs
 add_email_corpus
 
 test_begin_subtest "Hiding Original Message region at beginning of a message"

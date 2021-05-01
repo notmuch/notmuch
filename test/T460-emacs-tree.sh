@@ -5,6 +5,7 @@ test_description="emacs tree view interface"
 
 EXPECTED=$NOTMUCH_SRCDIR/test/emacs-tree.expected-output
 
+test_require_emacs
 add_email_corpus
 
 test_begin_subtest "Basic notmuch-tree view in emacs"

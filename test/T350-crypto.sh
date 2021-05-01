@@ -9,6 +9,7 @@ test_description='PGP/MIME signature verification and decryption'
 
 ##################################################
 
+test_require_emacs
 add_gnupg_home
 
 test_begin_subtest "emacs delivery of signed message"

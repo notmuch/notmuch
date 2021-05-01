@@ -5,6 +5,7 @@ test_description="emacs interface"
 
 EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 
+test_require_emacs
 add_email_corpus
 
 # syntax errors in test-lib.el cause mysterious failures

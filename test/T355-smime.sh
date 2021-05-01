@@ -3,6 +3,7 @@
 test_description='S/MIME signature verification and decryption'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_require_emacs
 test_require_external_prereq openssl
 test_require_external_prereq gpgsm
 

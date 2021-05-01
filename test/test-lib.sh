@@ -114,6 +114,12 @@ unset ALTERNATE_EDITOR
 unset EMAIL
 unset NAME
 
+test_require_emacs () {
+    test_require_external_prereq emacs
+    test_require_external_prereq ${TEST_EMACSCLIENT}
+    test_require_external_prereq dtach
+}
+
 add_gnupg_home ()
 {
     [ -e "${GNUPGHOME}/gpg.conf" ] && return

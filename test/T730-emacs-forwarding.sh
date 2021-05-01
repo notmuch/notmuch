@@ -3,6 +3,8 @@
 test_description="emacs forwarding"
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_require_emacs
+
 test_begin_subtest "Forward setting the correct references header"
 # Check that, when forwarding a message, the new message has
 # a References-header pointing to the original (forwarded) message.

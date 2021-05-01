@@ -7,6 +7,7 @@ test_description='indexing decrypted mail'
 
 ##################################################
 
+test_require_emacs
 add_gnupg_home
 
 # create a test encrypted message
