@@ -10,13 +10,12 @@ add_email_corpus
 
 test_ruby() {
     (
-	cat <<-\EOF
+	cat <<-EOF
 	require 'notmuch'
-	$maildir = ENV['MAIL_DIR'] || abort('MAIL_DIR not set')
-	@db = Notmuch::Database.new($maildir)
+	@db = Notmuch::Database.new('$MAIL_DIR')
 	EOF
 	cat
-    ) | MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
+    ) | $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
 }
 
 test_begin_subtest "compare thread ids"
