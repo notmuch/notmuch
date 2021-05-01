@@ -919,7 +919,7 @@ test_expect_success () {
 		test_run_ "$1"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites
-		test_check_missing_external_prereqs_ "$@" ||
+		test_check_missing_external_prereqs_ "$test_subtest_name" ||
 		if [ "$run_ret" = 0 -a "$eval_ret" = 0 ]
 		then
 			test_ok_
@@ -943,7 +943,7 @@ test_expect_code () {
 		test_run_ "$2"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites,
-		test_check_missing_external_prereqs_ "$@" ||
+		test_check_missing_external_prereqs_ "$test_subtest_name" ||
 		if [ "$run_ret" = 0 -a "$eval_ret" = "$1" ]
 		then
 			test_ok_
