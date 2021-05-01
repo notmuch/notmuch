@@ -24,7 +24,7 @@ notmuch search --sort=oldest-first --output=threads tag:inbox | sed s/^thread://
 test_ruby <<"EOF"
 @q = @db.query('tag:inbox')
 @q.sort = Notmuch::SORT_OLDEST_FIRST
-for t in @q.search_threads do
+@q.search_threads.each do |t|
   puts t.thread_id
 end
 EOF
@@ -34,38 +34,34 @@ notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > 
 test_ruby <<"EOF"
 @q = @db.query('tag:inbox')
 @q.sort = Notmuch::SORT_OLDEST_FIRST
-for m in @q.search_messages do
+@q.search_messages.each do |m|
   puts m.message_id
 end
 EOF
 
 test_begin_subtest "get non-existent file"
-echo true > EXPECTED
+echo nil > EXPECTED
 test_ruby <<"EOF"
-result = @db.find_message_by_filename('i-dont-exist')
-puts (result == nil)
+p @db.find_message_by_filename('i-dont-exist')
 EOF
 
 test_begin_subtest "count messages"
 notmuch count --output=messages tag:inbox > EXPECTED
 test_ruby <<"EOF"
-@q = @db.query('tag:inbox')
-puts @q.count_messages()
+puts @db.query('tag:inbox').count_messages()
 EOF
 
 test_begin_subtest "count threads"
 notmuch count --output=threads tag:inbox > EXPECTED
 test_ruby <<"EOF"
-@q = @db.query('tag:inbox')
-puts @q.count_threads()
+puts @db.query('tag:inbox').count_threads()
 EOF
 
 test_begin_subtest "get all tags"
 notmuch search --output=tags '*' > EXPECTED
 test_ruby <<"EOF"
-@t = @db.all_tags()
-for tag in @t do
-   puts tag
+@db.all_tags.each do |tag|
+  puts tag
 end
 EOF
 
