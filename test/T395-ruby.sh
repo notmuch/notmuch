@@ -12,10 +12,7 @@ test_ruby() {
     (
 	cat <<-\EOF
 	require 'notmuch'
-	$maildir = ENV['MAIL_DIR']
-	if not $maildir then
-	  abort('environment variable MAIL_DIR must be set')
-	end
+	$maildir = ENV['MAIL_DIR'] || abort('MAIL_DIR not set')
 	@db = Notmuch::Database.new($maildir)
 	EOF
 	cat
