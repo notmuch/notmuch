@@ -592,6 +592,9 @@ test_emacs_expect_t () {
 		exec 1>&6 2>&7		# Restore stdout and stderr
 		inside_subtest=
 
+		# test_emacs may update missing external prerequisites
+		test_check_missing_external_prereqs_ "$test_subtest_name" && return
+
 		# Report success/failure.
 		result=$(cat OUTPUT)
 		if [ "$result" = t ]
