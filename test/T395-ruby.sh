@@ -20,22 +20,22 @@ test_ruby() {
 }
 
 test_begin_subtest "compare thread ids"
-notmuch search --sort=oldest-first --output=threads tag:inbox | sed s/^thread:// > EXPECTED
+notmuch search --sort=oldest-first --output=threads tag:inbox > EXPECTED
 test_ruby <<"EOF"
 q = db.query('tag:inbox')
 q.sort = Notmuch::SORT_OLDEST_FIRST
 q.search_threads.each do |t|
-  puts t.thread_id
+  puts 'thread:%s' % t.thread_id
 end
 EOF
 
 test_begin_subtest "compare message ids"
-notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > EXPECTED
+notmuch search --sort=oldest-first --output=messages tag:inbox > EXPECTED
 test_ruby <<"EOF"
 q = db.query('tag:inbox')
 q.sort = Notmuch::SORT_OLDEST_FIRST
 q.search_messages.each do |m|
-  puts m.message_id
+  puts 'id:%s' % m.message_id
 end
 EOF
 
