@@ -112,6 +112,7 @@ unset ALTERNATE_EDITOR
 
 # for reproducibility
 unset EMAIL
+unset NAME
 
 add_gnupg_home ()
 {
