@@ -709,7 +709,7 @@ import os, sys, pwd, socket
 pw = pwd.getpwuid(os.getuid())
 user = pw.pw_name
 name = pw.pw_gecos.partition(",")[0]
-fqdn = socket.getfqdn()
+fqdn = socket.getaddrinfo(socket.gethostname(), 0, 0, socket.SOCK_STREAM, 0, socket.AI_CANONNAME)[0][3]
 
 for l in sys.stdin:
     if user:
