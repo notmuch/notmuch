@@ -1124,10 +1124,6 @@ test_python() {
 	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
-test_ruby() {
-    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
-}
-
 test_C () {
     local exec_file test_file
     exec_file="test${test_count}"

@@ -8,6 +8,10 @@ fi
 
 add_email_corpus
 
+test_ruby() {
+    MAIL_DIR=$MAIL_DIR $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
+}
+
 test_begin_subtest "compare thread ids"
 test_ruby <<"EOF"
 require 'notmuch'
