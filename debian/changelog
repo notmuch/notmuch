@@ -1,3 +1,12 @@
+notmuch (0.32-1) experimental; urgency=medium
+
+  * New upstream release
+  * Speedup for handling deleted message files
+  * New configuration features (see /usr/share/doc/notmuch/NEWS.gz) 
+  * Emacs interface codebase cleanup
+
+ -- David Bremner <bremner@debian.org>  Sun, 02 May 2021 07:05:15 -0300
+
 notmuch (0.32~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate
