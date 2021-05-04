@@ -30,7 +30,7 @@ notmuch_rb_directory_destroy (VALUE self)
 {
     notmuch_directory_t *dir;
 
-    Data_Get_Struct (self, notmuch_directory_t, dir);
+    Data_Get_Notmuch_Directory (self, dir);
 
     notmuch_directory_destroy (dir);
     DATA_PTR (self) = NULL;

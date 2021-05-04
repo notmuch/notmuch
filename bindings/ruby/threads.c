@@ -30,7 +30,7 @@ notmuch_rb_threads_destroy (VALUE self)
 {
     notmuch_threads_t *threads;
 
-    Data_Get_Struct (self, notmuch_threads_t, threads);
+    Data_Get_Notmuch_Threads (self, threads);
 
     notmuch_threads_destroy (threads);
     DATA_PTR (self) = NULL;
