@@ -57,10 +57,9 @@ extern ID ID_db_mode;
 
 #define Data_Get_Notmuch_Object(obj, type, message, ptr)	\
     do {							\
-	Check_Type ((obj), T_DATA);				\
-	if (DATA_PTR ((obj)) == NULL)				\
-	rb_raise (rb_eRuntimeError, (message));			\
 	Data_Get_Struct ((obj), type, (ptr));			\
+	if (!(ptr))						\
+	rb_raise (rb_eRuntimeError, (message));			\
     } while (0)
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
