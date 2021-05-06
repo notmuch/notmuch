@@ -193,56 +193,53 @@ do
 done
 
 if test -n "$debug"; then
-    print_subtest () {
-	printf " %-4s" "[$((test_count - 1))]"
-    }
+	fmt_subtest () {
+		printf -v $1 " %-4s" "[$((test_count - 1))]"
+	}
 else
-    print_subtest () {
-	true
-    }
+	fmt_subtest () {
+		printf -v $1 ''
+	}
 fi
 
 test -n "$COLORS_WITHOUT_TTY" || [ -t 1 ] || color=
 
-if [ -n "$color" ] && [ "$ORIGINAL_TERM" != 'dumb' ] && (
-		TERM=$ORIGINAL_TERM &&
-		export TERM &&
-		tput bold
-		tput setaf
-		tput sgr0
-	) >/dev/null 2>&1
+if [ -n "$color" ] && [ "$ORIGINAL_TERM" != 'dumb' ] &&
+	tput -T "$ORIGINAL_TERM" -S <<<$'bold\nsetaf\nsgr0\n' >/dev/null 2>&1
 then
 	color=t
 else
 	color=
 fi
 
-if test -n "$color"; then
+if test -n "$color"
+then
+	# _tput run in subshell (``) only
+	_tput () { exec tput -T "$ORIGINAL_TERM" "$@"; }
+	unset BOLD RED GREEN BROWN SGR0
 	say_color () {
-		(
-		TERM=$ORIGINAL_TERM
-		export TERM
 		case "$1" in
-			error) tput bold; tput setaf 1;; # bold red
-			skip)  tput bold; tput setaf 2;; # bold green
-			pass)  tput setaf 2;;            # green
-			info)  tput setaf 3;;            # brown
-			*) test -n "$quiet" && return;;
+			error)	b=${BOLD=`_tput bold`}
+				c=${RED=`_tput setaf 1`}   ;; # bold red
+			skip)	b=${BOLD=`_tput bold`}
+				c=${GREEN=`_tput setaf 2`} ;; # bold green
+			pass)	b= c=${GREEN=`_tput setaf 2`} ;; # green
+			info)	b= c=${BROWN=`_tput setaf 3`} ;; # brown
+			*) b= c=; test -n "$quiet" && return ;;
 		esac
-		shift
-		printf " "
-		printf "$@"
-		tput sgr0
-		print_subtest
-		)
+		f=$2
+		shift 2
+		sgr0=${SGR0=`_tput sgr0`}
+		fmt_subtest st
+		printf " ${b}${c}${f}${sgr0}${st}" "$@"
 	}
 else
 	say_color() {
 		test -z "$1" && test -n "$quiet" && return
-		shift
-		printf " "
-		printf "$@"
-		print_subtest
+		f=$2
+		shift 2
+		fmt_subtest st
+		printf " ${f}${st}" "$@"
 	}
 fi
 
