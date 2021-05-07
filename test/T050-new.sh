@@ -407,7 +407,6 @@ rm home/Maildir
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Relative mail root (in db) expanded in new"
-test_subtest_known_broken
 ln -s "$PWD/mail" home/Maildir
 notmuch config set --database database.mail_root Maildir
 generate_message

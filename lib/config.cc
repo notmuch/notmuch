@@ -46,6 +46,7 @@ struct _notmuch_config_pairs {
 };
 
 static const char *_notmuch_config_key_to_string (notmuch_config_key_t key);
+static char *_expand_path (void *ctx, const char *key, const char *val);
 
 static int
 _notmuch_config_list_destroy (notmuch_config_list_t *list)
@@ -257,9 +258,10 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 	return status;
 
     for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
-	_notmuch_string_map_append (notmuch->config,
-				    notmuch_config_list_key (list),
-				    notmuch_config_list_value (list));
+	const char *key = notmuch_config_list_key (list);
+	char *normalized_val = _expand_path (list, key, notmuch_config_list_value (list));
+	_notmuch_string_map_append (notmuch->config, key, normalized_val);
+	talloc_free (normalized_val);
     }
 
     return status;
