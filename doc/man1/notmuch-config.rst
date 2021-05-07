@@ -44,7 +44,9 @@ configuration file and corresponding database.
     characters. In a multiple-value item (a list), the values are
     separated by semicolon characters.
 
-The available configuration items are described below.
+The available configuration items are described below. Non-absolute
+paths are presumed relative to `$HOME` for items in section
+**database**.
 
 **database.path**
     Notmuch will store its database here, (in
