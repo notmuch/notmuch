@@ -406,6 +406,19 @@ notmuch config set database.path ${MAIL_DIR}
 rm home/Maildir
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Relative mail root (in db) expanded in new"
+test_subtest_known_broken
+ln -s "$PWD/mail" home/Maildir
+notmuch config set --database database.mail_root Maildir
+generate_message
+NOTMUCH_NEW > OUTPUT
+cat <<EOF >EXPECTED
+Added 1 new message to the database.
+EOF
+notmuch config set database.mail_root
+rm home/Maildir
+test_expect_equal_file EXPECTED OUTPUT
+
 add_email_corpus broken
 test_begin_subtest "reference loop does not crash"
 test_expect_code 0 "notmuch show --format=json id:mid-loop-12@example.org id:mid-loop-21@example.org > OUTPUT"
