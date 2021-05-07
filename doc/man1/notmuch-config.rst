@@ -65,6 +65,14 @@ paths are presumed relative to `$HOME` for items in section
     Default: For compatibility with older configurations, the value of
     database.path is used if **database.mail\_root** is unset.
 
+**database.backup_dir**
+    Directory to store tag dumps when upgrading database.
+
+    History: this configuration value was introduced in notmuch 0.32.
+
+    Default: A sibling directory of the Xapian database called
+    `backups`.
+
 **database.hook_dir**
 
     Directory containing hooks run by notmuch commands. See
