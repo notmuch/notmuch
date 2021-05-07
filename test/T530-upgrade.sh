@@ -54,4 +54,23 @@ for key in 'from/subject/message-ID in database' \
     restore_database
 done
 
+test_begin_subtest "upgrade with configured backup dir"
+notmuch config set database.backup_dir ${HOME}/backups
+delete_feature 'modification tracking'
+notmuch new | grep Backing | notmuch_dir_sanitize | sed 's/dump-[0-9T]*/dump-XXX/' > OUTPUT
+cat <<EOF > EXPECTED
+Backing up tags to CWD/home/backups/dump-XXX.gz...
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "upgrade with relative configured backup dir"
+notmuch config set database.backup_dir ${HOME}/backups
+delete_feature 'modification tracking'
+notmuch new | grep Backing | notmuch_dir_sanitize | sed 's/dump-[0-9T]*/dump-XXX/' > OUTPUT
+cat <<EOF > EXPECTED
+Backing up tags to CWD/home/backups/dump-XXX.gz...
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_done
