@@ -395,7 +395,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Relative database path expanded in new"
-test_subtest_known_broken
 ln -s "$PWD/mail" home/Maildir
 notmuch config set database.path Maildir
 generate_message

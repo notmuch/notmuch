@@ -117,12 +117,12 @@ test_expect_equal "$(notmuch config get database.path)" \
 
 ln -s `pwd`/mail home/Maildir
 add_email_corpus
-test_begin_subtest "Relative database path expanded in open"
+test_begin_subtest "Relative database path expanded"
 notmuch config set database.path Maildir
-path=$(notmuch config get database.path)
+path=$(notmuch config get database.path | notmuch_dir_sanitize)
 count=$(notmuch count '*')
 test_expect_equal "${path} ${count}" \
-		  "Maildir 52"
+		  "CWD/home/Maildir 52"
 
 test_begin_subtest "Add config to database"
 notmuch new
