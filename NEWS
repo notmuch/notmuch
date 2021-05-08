@@ -1,6 +1,9 @@
 Notmuch 0.32.1 (UNRELEASED)
 ===========================
 
+General
+-------
+
 Restore handling of relative values for `database.path` that was
 broken by 0.32. Extend this handling to `database.mail_root`,
 `database.backup_dir`, and `database.hook_dir`.
@@ -8,6 +11,12 @@ broken by 0.32. Extend this handling to `database.mail_root`,
 Reload certain metadata from Xapian database in
 notmuch_database_reopen. This fixes a bug when adding messages to the
 database in a pre-new hook.
+
+Emacs
+-----
+
+Restore the dynamically bound variables `tag-changes` and `query` in
+in `notmuch-before-tag-hook` and `notmuch-after-tag-hook`.
 
 Notmuch 0.32 (2021-05-02)
 =========================
