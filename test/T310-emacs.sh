@@ -162,7 +162,6 @@ output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
 test_begin_subtest "notmuch-show: before-tag-hook is run, variables are defined"
-test_subtest_known_broken
 output=$(test_emacs '(let ((notmuch-test-tag-hook-output nil)
 	          (notmuch-before-tag-hook (function notmuch-test-tag-hook)))
 	       (notmuch-show "id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com")
@@ -174,7 +173,6 @@ test_expect_equal "$output" \
  ("id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com" "+activate-hook"))'
 
 test_begin_subtest "notmuch-show: after-tag-hook is run, variables are defined"
-test_subtest_known_broken
 output=$(test_emacs '(let ((notmuch-test-tag-hook-output nil)
 	          (notmuch-after-tag-hook (function notmuch-test-tag-hook)))
 	       (notmuch-show "id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com")

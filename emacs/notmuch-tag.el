@@ -486,7 +486,9 @@ notmuch-after-tag-hook will be run."
   (unless query
     (error "Nothing to tag!"))
   (when tag-changes
-    (run-hooks 'notmuch-before-tag-hook)
+    (notmuch-dlet ((tag-changes tag-changes)
+		   (query query))
+      (run-hooks 'notmuch-before-tag-hook))
     (if (<= (length query) notmuch-tag-argument-limit)
 	(apply 'notmuch-call-notmuch-process "tag"
 	       (append tag-changes (list "--" query)))
@@ -494,7 +496,9 @@ notmuch-after-tag-hook will be run."
       (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
 			      " -- " query)))
 	(notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
-    (run-hooks 'notmuch-after-tag-hook)))
+    (notmuch-dlet ((tag-changes tag-changes)
+		   (query query))
+      (run-hooks 'notmuch-after-tag-hook))))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.
