@@ -62,7 +62,8 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/thread-fp.cc     \
 	$(dir)/features.cc	\
 	$(dir)/prefix.cc	\
-	$(dir)/open.cc
+	$(dir)/open.cc		\
+	$(dir)/init.cc
 
 libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 

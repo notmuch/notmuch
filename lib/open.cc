@@ -308,24 +308,6 @@ _set_database_path (notmuch_database_t *notmuch,
 }
 
 static void
-_init_libs ()
-{
-
-    static int initialized = 0;
-
-    /* Initialize the GLib type system and threads */
-#if ! GLIB_CHECK_VERSION (2, 35, 1)
-    g_type_init ();
-#endif
-
-    /* Initialize gmime */
-    if (! initialized) {
-	g_mime_init ();
-	initialized = 1;
-    }
-}
-
-static void
 _load_database_state (notmuch_database_t *notmuch)
 {
     std::string last_thread_id;
@@ -498,7 +480,7 @@ notmuch_database_open_with_config (const char *database_path,
     GKeyFile *key_file = NULL;
     bool split = false;
 
-    _init_libs ();
+    _notmuch_init ();
 
     notmuch = _alloc_notmuch ();
     if (! notmuch) {
@@ -595,7 +577,7 @@ notmuch_database_create_with_config (const char *database_path,
     int err;
     bool split = false;
 
-    _init_libs ();
+    _notmuch_init ();
 
     notmuch = _alloc_notmuch ();
     if (! notmuch) {
@@ -791,7 +773,7 @@ notmuch_database_load_config (const char *database_path,
     GKeyFile *key_file = NULL;
     bool split = false;
 
-    _init_libs ();
+    _notmuch_init ();
 
     notmuch = _alloc_notmuch ();
     if (! notmuch) {

@@ -141,7 +141,6 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
 {
     GMimeParser *parser;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-    static int initialized = 0;
     bool is_mbox;
 
     if (message->message)
@@ -149,10 +148,7 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
 
     is_mbox = _is_mbox (message->stream);
 
-    if (! initialized) {
-	g_mime_init ();
-	initialized = 1;
-    }
+    _notmuch_init ();
 
     message->headers = g_hash_table_new_full (strcase_hash, strcase_equal,
 					      free, g_free);

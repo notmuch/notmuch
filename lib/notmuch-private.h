@@ -469,10 +469,17 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					   const char **thread_id);
 /* index.cc */
 
+void
+_notmuch_filter_init ();
+
 notmuch_status_t
 _notmuch_message_index_file (notmuch_message_t *message,
 			     notmuch_indexopts_t *indexopts,
 			     notmuch_message_file_t *message_file);
+
+/* init.cc */
+void
+_notmuch_init ();
 
 /* messages.c */
 

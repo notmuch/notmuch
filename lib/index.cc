@@ -148,8 +148,6 @@ notmuch_filter_discard_non_term_class_init (NotmuchFilterDiscardNonTermClass *kl
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
 
-    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
-
     object_class->finalize = notmuch_filter_discard_non_term_finalize;
 
     filter_class->copy = filter_copy;
@@ -240,29 +238,32 @@ filter_reset (GMimeFilter *gmime_filter)
  *
  * Returns: a new #NotmuchFilterDiscardNonTerm filter.
  **/
+static GType type = 0;
+
+static const GTypeInfo info = {
+    .class_size = sizeof (NotmuchFilterDiscardNonTermClass),
+    .base_init = NULL,
+    .base_finalize = NULL,
+    .class_init = (GClassInitFunc) notmuch_filter_discard_non_term_class_init,
+    .class_finalize = NULL,
+    .class_data = NULL,
+    .instance_size = sizeof (NotmuchFilterDiscardNonTerm),
+    .n_preallocs = 0,
+    .instance_init = NULL,
+    .value_table = NULL,
+};
+
+void
+_notmuch_filter_init () {
+    type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info,
+				   (GTypeFlags) 0);
+    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
+}
+
 static GMimeFilter *
 notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 {
-    static GType type = 0;
     NotmuchFilterDiscardNonTerm *filter;
-
-    if (! type) {
-	static const GTypeInfo info = {
-	    .class_size = sizeof (NotmuchFilterDiscardNonTermClass),
-	    .base_init = NULL,
-	    .base_finalize = NULL,
-	    .class_init = (GClassInitFunc) notmuch_filter_discard_non_term_class_init,
-	    .class_finalize = NULL,
-	    .class_data = NULL,
-	    .instance_size = sizeof (NotmuchFilterDiscardNonTerm),
-	    .n_preallocs = 0,
-	    .instance_init = NULL,
-	    .value_table = NULL,
-	};
-
-	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardNonTerm", &info,
-				       (GTypeFlags) 0);
-    }
 
     filter = (NotmuchFilterDiscardNonTerm *) g_object_new (type, NULL);
     filter->content_type = content_type;
