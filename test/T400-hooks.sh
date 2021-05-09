@@ -187,7 +187,6 @@ EOF
     test_expect_equal_file write.expected write.output
 
     test_begin_subtest "add message in pre-new [${config}]"
-    test_subtest_known_broken
     rm -rf ${HOOK_DIR}
     generate_message '[subject]="add msg in pre-new"'
     id1=$gen_msg_id
