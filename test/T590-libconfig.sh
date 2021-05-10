@@ -546,8 +546,8 @@ cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
 error opening database
-Something went wrong trying to read or write a file
-Error: Cannot open database at CWD/home/.local/share/notmuch/default: No such file or directory.
+No database found
+Error: could not locate database.
 
 EOF
 test_expect_equal_file EXPECTED OUTPUT

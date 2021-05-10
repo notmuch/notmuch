@@ -209,8 +209,25 @@ _choose_database_path (void *ctx,
 	}
     }
     if (! *database_path) {
+	notmuch_status_t status;
+
 	*database_path = _xdg_dir (ctx, "XDG_DATA_HOME", ".local/share", profile);
-	*split = true;
+	status = _db_dir_exists (*database_path, message);
+	if (status) {
+	    *database_path = NULL;
+	} else {
+	    *split = true;
+	}
+    }
+
+    if (! *database_path) {
+	notmuch_status_t status;
+
+	*database_path = talloc_asprintf (ctx, "%s/mail", getenv ("HOME"));
+	status = _db_dir_exists (*database_path, message);
+	if (status) {
+	    *database_path = NULL;
+	}
     }
 
     if (*database_path == NULL) {
