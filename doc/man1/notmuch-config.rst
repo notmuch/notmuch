@@ -44,7 +44,9 @@ configuration file and corresponding database.
     characters. In a multiple-value item (a list), the values are
     separated by semicolon characters.
 
-The available configuration items are described below.
+The available configuration items are described below. Non-absolute
+paths are presumed relative to `$HOME` for items in section
+**database**.
 
 **database.path**
     Notmuch will store its database here, (in
@@ -62,6 +64,14 @@ The available configuration items are described below.
 
     Default: For compatibility with older configurations, the value of
     database.path is used if **database.mail\_root** is unset.
+
+**database.backup_dir**
+    Directory to store tag dumps when upgrading database.
+
+    History: this configuration value was introduced in notmuch 0.32.
+
+    Default: A sibling directory of the Xapian database called
+    `backups`.
 
 **database.hook_dir**
 

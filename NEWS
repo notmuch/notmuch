@@ -6,6 +6,13 @@ Vim
 
 Respect excluded tags when showing a thread.
 
+Notmuch 0.32.1 (UNRELEASED)
+===========================
+
+Restore handling of relative values for `database.path` that was
+broken by 0.32. Extend this handling to `database.mail_root`,
+`database.backup_dir`, and `database.hook_dir`.
+
 Notmuch 0.32 (2021-05-02)
 =========================
 

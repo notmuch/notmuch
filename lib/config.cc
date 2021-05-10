@@ -46,6 +46,7 @@ struct _notmuch_config_pairs {
 };
 
 static const char *_notmuch_config_key_to_string (notmuch_config_key_t key);
+static char *_expand_path (void *ctx, const char *key, const char *val);
 
 static int
 _notmuch_config_list_destroy (notmuch_config_list_t *list)
@@ -257,9 +258,10 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 	return status;
 
     for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
-	_notmuch_string_map_append (notmuch->config,
-				    notmuch_config_list_key (list),
-				    notmuch_config_list_value (list));
+	const char *key = notmuch_config_list_key (list);
+	char *normalized_val = _expand_path (list, key, notmuch_config_list_value (list));
+	_notmuch_string_map_append (notmuch->config, key, normalized_val);
+	talloc_free (normalized_val);
     }
 
     return status;
@@ -387,6 +389,23 @@ notmuch_config_pairs_destroy (notmuch_config_pairs_t *pairs)
     talloc_free (pairs);
 }
 
+static char *
+_expand_path (void *ctx, const char *key, const char *val)
+{
+    char *expanded_val;
+
+    if ((strcmp (key, "database.path") == 0 ||
+	 strcmp (key, "database.mail_root") == 0 ||
+	 strcmp (key, "database.hook_dir") == 0 ||
+	 strcmp (key, "database.backup_path") == 0 ) &&
+	val[0] != '/')
+	expanded_val = talloc_asprintf (ctx, "%s/%s", getenv ("HOME"), val);
+    else
+	expanded_val = talloc_strdup (ctx, val);
+
+    return expanded_val;
+}
+
 notmuch_status_t
 _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 				GKeyFile *file)
@@ -407,14 +426,17 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	keys = g_key_file_get_keys (file, *grp, NULL, NULL);
 	for (gchar **keys_p = keys; *keys_p; keys_p++) {
 	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
+	    char *normalized_val;
 	    val = g_key_file_get_value (file, *grp, *keys_p, NULL);
 	    if (! val) {
 		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
 	    }
-	    _notmuch_string_map_set (notmuch->config, absolute_key, val);
+	    normalized_val = _expand_path (notmuch, absolute_key, val);
+	    _notmuch_string_map_set (notmuch->config, absolute_key, normalized_val);
 	    g_free (val);
 	    talloc_free (absolute_key);
+	    talloc_free (normalized_val);
 	    if (status)
 		goto DONE;
 	}

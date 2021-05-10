@@ -43,7 +43,7 @@ add_message
 # create maildir structure for notmuch-insert
 mkdir -p "$MAIL_DIR"/{cur,new,tmp}
 
-for config in traditional profile explicit XDG split; do
+for config in traditional profile explicit relative XDG split; do
     unset NOTMUCH_PROFILE
     notmuch config set database.hook_dir
     notmuch config set database.path ${MAIL_DIR}
@@ -62,6 +62,11 @@ for config in traditional profile explicit XDG split; do
 	    HOOK_DIR=${HOME}/.notmuch-hooks
 	    mkdir -p $HOOK_DIR
 	    notmuch config set database.hook_dir $HOOK_DIR
+	    ;;
+	relative)
+	    HOOK_DIR=${HOME}/.notmuch-hooks
+	    mkdir -p $HOOK_DIR
+	    notmuch config set database.hook_dir .notmuch-hooks
 	    ;;
 	XDG)
 	    HOOK_DIR=${HOME}/.config/notmuch/default/hooks
