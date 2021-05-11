@@ -40,17 +40,14 @@ parse_references (void *ctx,
 static const char *
 _notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
 {
-    /* 16 bytes (+ terminator) for hexadecimal representation of
-     * a 64-bit integer. */
-    static char thread_id[17];
 
     notmuch->last_thread_id++;
 
-    sprintf (thread_id, "%016" PRIx64, notmuch->last_thread_id);
+    sprintf (notmuch->thread_id_str, "%016" PRIx64, notmuch->last_thread_id);
 
-    notmuch->writable_xapian_db->set_metadata ("last_thread_id", thread_id);
+    notmuch->writable_xapian_db->set_metadata ("last_thread_id", notmuch->thread_id_str);
 
-    return thread_id;
+    return notmuch->thread_id_str;
 }
 
 static char *

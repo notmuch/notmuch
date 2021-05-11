@@ -206,6 +206,10 @@ struct _notmuch_database {
     enum _notmuch_features features;
 
     unsigned int last_doc_id;
+
+    /* 16 bytes (+ terminator) for hexadecimal representation of
+     * a 64-bit integer. */
+    char thread_id_str[17];
     uint64_t last_thread_id;
 
     /* error reporting; this value persists only until the
