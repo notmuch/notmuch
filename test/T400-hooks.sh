@@ -28,6 +28,16 @@ EOF
     echo "${TOKEN}" > ${2}
 }
 
+create_change_hook () {
+    mkdir -p ${HOOK_DIR}
+    cat <<EOF >"${HOOK_DIR}/${1}"
+#!/bin/sh
+notmuch insert --no-hooks < ${2} > /dev/null
+rm -f ${2}
+EOF
+    chmod +x "${HOOK_DIR}/${1}"
+}
+
 create_failing_hook () {
     local HOOK_DIR=${2}
     mkdir -p ${HOOK_DIR}
@@ -175,6 +185,21 @@ EOF
     create_write_hook "pre-new" write.expected write.output $HOOK_DIR
     NOTMUCH_NEW
     test_expect_equal_file write.expected write.output
+
+    test_begin_subtest "add message in pre-new [${config}]"
+    test_subtest_known_broken
+    rm -rf ${HOOK_DIR}
+    generate_message '[subject]="add msg in pre-new"'
+    id1=$gen_msg_id
+    create_change_hook "pre-new" $gen_msg_filename $HOOK_DIR
+    generate_message '[subject]="add msg in new"'
+    NOTMUCH_NEW
+    notmuch search id:$id1 or id:$gen_msg_id | notmuch_search_sanitize > OUTPUT
+    cat <<EOF | sed s'/^[ \t]*//' > EXPECTED
+    thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; add msg in pre-new (inbox unread)
+    thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; add msg in new (inbox unread)
+EOF
+    test_expect_equal_file EXPECTED OUTPUT
 
     rm -rf ${HOOK_DIR}
 done
