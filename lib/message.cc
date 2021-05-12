@@ -68,7 +68,7 @@ struct maildir_flag_tag {
 };
 
 /* ASCII ordered table of Maildir flags and associated tags */
-static struct maildir_flag_tag flag2tag[] = {
+static const struct maildir_flag_tag flag2tag[] = {
     { 'D', "draft",   false },
     { 'F', "flagged", false },
     { 'P', "passed",  false },
