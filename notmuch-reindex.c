@@ -26,7 +26,7 @@ static volatile sig_atomic_t interrupted;
 static void
 handle_sigint (unused (int sig))
 {
-    static char msg[] = "Stopping...         \n";
+    static const char msg[] = "Stopping...         \n";
 
     /* This write is "opportunistic", so it's okay to ignore the
      * result.  It is not required for correctness, and if it does
