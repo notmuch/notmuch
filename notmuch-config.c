@@ -32,7 +32,7 @@ static const char toplevel_config_comment[] =
     "\n"
     " For more information about notmuch, see https://notmuchmail.org";
 
-struct config_group {
+static const struct config_group {
     const char *group_name;
     const char *comment;
 } group_comment_table [] = {
@@ -512,14 +512,14 @@ typedef struct config_key {
     bool (*validate)(const char *);
 } config_key_info_t;
 
-static struct config_key
+static const struct config_key
     config_key_table[] = {
     { "index.decrypt",   false,  NULL },
     { "index.header.",   true,   validate_field_name },
     { "query.",          true,   NULL },
 };
 
-static config_key_info_t *
+static const config_key_info_t *
 _config_key_info (const char *item)
 {
     for (size_t i = 0; i < ARRAY_SIZE (config_key_table); i++) {
@@ -583,7 +583,7 @@ notmuch_config_command_set (notmuch_database_t *notmuch,
 			    int argc, char *argv[])
 {
     char *group, *key;
-    config_key_info_t *key_info;
+    const config_key_info_t *key_info;
     notmuch_conffile_t *config;
     bool update_database = false;
     int opt_index, ret;
