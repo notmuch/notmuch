@@ -43,29 +43,31 @@ static void filter_reset (GMimeFilter *filter);
 
 
 static GMimeFilterClass *parent_class = NULL;
+static GType type = 0;
+static const GTypeInfo info = {
+    .class_size = sizeof (GMimeFilterReplyClass),
+    .base_init = NULL,
+    .base_finalize = NULL,
+    .class_init = (GClassInitFunc) g_mime_filter_reply_class_init,
+    .class_finalize = NULL,
+    .class_data = NULL,
+    .instance_size = sizeof (GMimeFilterReply),
+    .n_preallocs = 0,
+    .instance_init = (GInstanceInitFunc) g_mime_filter_reply_init,
+    .value_table = NULL,
+};
+
+
+void
+g_mime_filter_reply_module_init (void)
+{
+    type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterReply", &info, (GTypeFlags) 0);
+    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
+}
 
 GType
 g_mime_filter_reply_get_type (void)
 {
-    static GType type = 0;
-
-    if (! type) {
-	static const GTypeInfo info = {
-	    .class_size = sizeof (GMimeFilterReplyClass),
-	    .base_init = NULL,
-	    .base_finalize = NULL,
-	    .class_init = (GClassInitFunc) g_mime_filter_reply_class_init,
-	    .class_finalize = NULL,
-	    .class_data = NULL,
-	    .instance_size = sizeof (GMimeFilterReply),
-	    .n_preallocs = 0,
-	    .instance_init = (GInstanceInitFunc) g_mime_filter_reply_init,
-	    .value_table = NULL,
-	};
-
-	type = g_type_register_static (GMIME_TYPE_FILTER, "GMimeFilterReply", &info, (GTypeFlags) 0);
-    }
-
     return type;
 }
 
@@ -75,8 +77,6 @@ g_mime_filter_reply_class_init (GMimeFilterReplyClass *klass, unused (void *clas
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
-
-    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
 
     object_class->finalize = g_mime_filter_reply_finalize;
 

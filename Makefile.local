@@ -231,6 +231,7 @@ notmuch_client_srcs =		\
 	gmime-filter-reply.c	\
 	hooks.c			\
 	notmuch.c		\
+	notmuch-client-init.c	\
 	notmuch-compact.c	\
 	notmuch-config.c	\
 	notmuch-count.c		\

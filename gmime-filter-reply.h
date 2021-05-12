@@ -21,6 +21,8 @@
 
 #include <gmime/gmime-filter.h>
 
+void g_mime_filter_reply_module_init (void);
+
 G_BEGIN_DECLS
 
 #define GMIME_TYPE_FILTER_REPLY            (g_mime_filter_reply_get_type ())

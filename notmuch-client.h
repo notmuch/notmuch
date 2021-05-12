@@ -250,6 +250,10 @@ json_quote_chararray (const void *ctx, const char *str, const size_t len);
 char *
 json_quote_str (const void *ctx, const char *str);
 
+/* notmuch-client-init.c */
+
+void notmuch_client_init (void);
+
 /* notmuch-config.c */
 
 typedef enum {

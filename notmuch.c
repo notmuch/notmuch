@@ -464,14 +464,9 @@ main (int argc, char *argv[])
 	{ }
     };
 
-    talloc_enable_null_tracking ();
+    notmuch_client_init ();
 
     local = talloc_new (NULL);
-
-    g_mime_init ();
-#if ! GLIB_CHECK_VERSION (2, 35, 1)
-    g_type_init ();
-#endif
 
     /* Globally default to the current output format version. */
     notmuch_format_version = NOTMUCH_FORMAT_CUR;
