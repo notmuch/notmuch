@@ -139,7 +139,7 @@ notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
 }
 
 
-static command_t commands[] = {
+static const command_t commands[] = {
     { NULL, notmuch_command, NOTMUCH_COMMAND_CONFIG_CREATE | NOTMUCH_COMMAND_CONFIG_LOAD,
       "Notmuch main command." },
     { "setup", notmuch_setup_command, NOTMUCH_COMMAND_CONFIG_CREATE | NOTMUCH_COMMAND_CONFIG_LOAD,
@@ -189,7 +189,7 @@ typedef struct help_topic {
     const char *summary;
 } help_topic_t;
 
-static help_topic_t help_topics[] = {
+static const help_topic_t help_topics[] = {
     { "search-terms",
       "Common search term syntax." },
     { "hooks",
@@ -198,7 +198,7 @@ static help_topic_t help_topics[] = {
       "Message property conventions and documentation." },
 };
 
-static command_t *
+static const command_t *
 find_command (const char *name)
 {
     size_t i;
@@ -216,8 +216,8 @@ int notmuch_format_version;
 static void
 usage (FILE *out)
 {
-    command_t *command;
-    help_topic_t *topic;
+    const command_t *command;
+    const help_topic_t *topic;
     unsigned int i;
 
     fprintf (out,
@@ -308,8 +308,8 @@ exec_man (const char *page)
 static int
 _help_for (const char *topic_name)
 {
-    command_t *command;
-    help_topic_t *topic;
+    const command_t *command;
+    const help_topic_t *topic;
     unsigned int i;
 
     if (! topic_name) {
@@ -452,7 +452,7 @@ main (int argc, char *argv[])
     void *local;
     char *talloc_report;
     const char *command_name = NULL;
-    command_t *command;
+    const command_t *command;
     const char *config_file_name = NULL;
     notmuch_database_t *notmuch = NULL;
     int opt_index;
