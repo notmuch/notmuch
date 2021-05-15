@@ -10,7 +10,6 @@ add_message '[id]="duplicate"' '[subject]="message 2" [filename]=copy2'
 add_message '[id]="duplicate"' '[subject]="message 0" [filename]=copy0'
 
 test_begin_subtest 'at most 1 thread-id per xapian document'
-test_subtest_known_broken
 db=${MAIL_DIR}/.notmuch/xapian
 for doc in $(xapian-delve -1 -t '' "$db" | grep '^[1-9]'); do
     xapian-delve -1 -r "$doc" "$db" | grep -c '^G'

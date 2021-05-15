@@ -407,14 +407,17 @@ static notmuch_status_t
 _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
 				notmuch_message_file_t *message_file,
-				bool is_ghost)
+				bool is_ghost,
+				bool is_new)
 {
     void *local = talloc_new (NULL);
     notmuch_status_t status;
     const char *thread_id = NULL;
 
     /* Check if the message already had a thread ID */
-    if (notmuch->features & NOTMUCH_FEATURE_GHOSTS) {
+    if (! is_new) {
+	thread_id = notmuch_message_get_thread_id (message);
+    } else if (notmuch->features & NOTMUCH_FEATURE_GHOSTS) {
 	if (is_ghost)
 	    thread_id = notmuch_message_get_thread_id (message);
     } else {
@@ -541,7 +544,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	}
 
 	ret = _notmuch_database_link_message (notmuch, message,
-					      message_file, is_ghost);
+					      message_file, is_ghost, is_new);
 	if (ret)
 	    goto DONE;
 
