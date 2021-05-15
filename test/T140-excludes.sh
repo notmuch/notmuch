@@ -5,8 +5,7 @@ test_description='"notmuch search, count and show" with excludes in several vari
 # Generates a thread consisting of a top level message and 'length'
 # replies. The subject of the top message 'subject: top message"
 # and the subject of the nth reply in the thread is "subject: reply n"
-generate_thread ()
-{
+generate_thread () {
     local subject="$1"
     local length="$2"
     generate_message '[subject]="'"${subject}: top message"'"' '[body]="'"body of top message"'"'

@@ -120,8 +120,7 @@ test_require_emacs () {
     test_require_external_prereq dtach
 }
 
-add_gnupg_home ()
-{
+add_gnupg_home () {
     [ -e "${GNUPGHOME}/gpg.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
@@ -141,8 +140,7 @@ add_gnupg_home ()
     printf '%s:6:\n' "$FINGERPRINT" | gpg --quiet --batch --no-tty --import-ownertrust
 }
 
-add_gpgsm_home ()
-{
+add_gpgsm_home () {
     local fpr
     [ -e "$GNUPGHOME/gpgsm.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
@@ -274,8 +272,7 @@ then
 fi
 
 test_description_printed=
-print_test_description ()
-{
+print_test_description () {
 	test -z "$test_description_printed" || return 0
 	echo
 	echo $this_test: "Testing ${test_description}"
@@ -355,8 +352,7 @@ trap 'trap_signal' HUP INT TERM
 # Accepts arbitrary extra emacs/elisp functions to modify the message
 # before sending, which is useful to doing things like attaching files
 # to the message and encrypting/signing.
-emacs_deliver_message ()
-{
+emacs_deliver_message () {
     local subject body smtp_dummy_pid smtp_dummy_port
     subject="$1"
     body="$2"
@@ -402,8 +398,7 @@ emacs_deliver_message ()
 # If any GNU-style long-arguments (like --quiet or --decrypt=true) are
 # at the head of the argument list, they are sent directly to "notmuch
 # new" after message delivery
-emacs_fcc_message ()
-{
+emacs_fcc_message () {
     local nmn_args subject body
     nmn_args=''
     while [[ "$1" =~ ^-- ]]; do
@@ -441,8 +436,7 @@ emacs_fcc_message ()
 # history of the notmuch mailing list, which allows for reliably
 # testing commands that need to operate on a not-totally-trivial
 # number of messages.
-add_email_corpus ()
-{
+add_email_corpus () {
     local corpus
     corpus=${1:-default}
 
@@ -451,8 +445,7 @@ add_email_corpus ()
     notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
 }
 
-test_begin_subtest ()
-{
+test_begin_subtest () {
     if [ -n "$inside_subtest" ]; then
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
@@ -472,8 +465,7 @@ test_begin_subtest ()
 # not accept a test name. Instead, the caller should call
 # test_begin_subtest before calling this function in order to set the
 # name.
-test_expect_equal ()
-{
+test_expect_equal () {
 	local output expected testname
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
@@ -499,8 +491,7 @@ test_expect_equal ()
 }
 
 # Like test_expect_equal, but takes two filenames.
-test_expect_equal_file ()
-{
+test_expect_equal_file () {
 	local file1 file2 testname basename1 basename2
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
@@ -616,19 +607,16 @@ test_emacs_expect_t () {
 	fi
 }
 
-NOTMUCH_NEW ()
-{
+NOTMUCH_NEW () {
     notmuch new "${@}" | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
-NOTMUCH_DUMP_TAGS ()
-{
+NOTMUCH_DUMP_TAGS () {
     # this relies on the default format being batch-tag, otherwise some tests will break
     notmuch dump --include=tags "${@}" | sed '/^#/d' | sort
 }
 
-notmuch_drop_mail_headers ()
-{
+notmuch_drop_mail_headers () {
     $NOTMUCH_PYTHON -c '
 import email, sys
 msg = email.message_from_file(sys.stdin)
@@ -637,41 +625,34 @@ print(msg.as_string(False))
 ' "$@"
 }
 
-notmuch_exception_sanitize ()
-{
+notmuch_exception_sanitize () {
     perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
 }
 
-notmuch_search_sanitize ()
-{
+notmuch_search_sanitize () {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
-notmuch_search_files_sanitize ()
-{
+notmuch_search_files_sanitize () {
     notmuch_dir_sanitize
 }
 
-notmuch_dir_sanitize ()
-{
+notmuch_dir_sanitize () {
     sed -e "s,$MAIL_DIR,MAIL_DIR," -e "s,${PWD},CWD,g" "$@"
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
-notmuch_show_sanitize ()
-{
+notmuch_show_sanitize () {
     sed -e "$NOTMUCH_SHOW_FILENAME_SQUELCH"
 }
-notmuch_show_sanitize_all ()
-{
+notmuch_show_sanitize_all () {
     sed \
 	-e 's| filename:.*| filename:XXXXX|' \
 	-e 's| id:[^ ]* | id:XXXXX |' | \
 	notmuch_date_sanitize
 }
 
-notmuch_json_show_sanitize ()
-{
+notmuch_json_show_sanitize () {
     sed \
 	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
 	-e 's|"Date": "Fri, 05 Jan 2001 [^"]*0000"|"Date": "GENERATED_DATE"|g' \
@@ -681,8 +662,7 @@ notmuch_json_show_sanitize ()
 	-e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
 }
 
-notmuch_emacs_error_sanitize ()
-{
+notmuch_emacs_error_sanitize () {
     local command
     command=$1
     shift
@@ -694,24 +674,20 @@ notmuch_emacs_error_sanitize ()
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
 }
 
-notmuch_date_sanitize ()
-{
+notmuch_date_sanitize () {
     sed \
 	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
 
-notmuch_uuid_sanitize ()
-{
+notmuch_uuid_sanitize () {
     sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }
 
-notmuch_built_with_sanitize ()
-{
+notmuch_built_with_sanitize () {
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
-notmuch_passwd_sanitize ()
-{
+notmuch_passwd_sanitize () {
     ${NOTMUCH_PYTHON} -c'
 import os, sys, pwd, socket
 
@@ -731,13 +707,11 @@ for l in sys.stdin:
 '
 }
 
-notmuch_config_sanitize ()
-{
+notmuch_config_sanitize () {
     notmuch_dir_sanitize | notmuch_built_with_sanitize
 }
 
-notmuch_show_part ()
-{
+notmuch_show_part () {
     awk '/^\014part}/{ f=0 }; { if (f) { print $0 } } /^\014part{ ID: '"$1"'/{ f=1 }'
 }
 

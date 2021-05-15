@@ -4,13 +4,11 @@ test_description="date/time parser module"
 
 # Sanity/smoke tests for the date/time parser independent of notmuch
 
-_date ()
-{
+_date () {
     date -d "$*" +%s
 }
 
-_parse_time ()
-{
+_parse_time () {
     ${TEST_DIRECTORY}/parse-time --format=%s "$*"
 }
 

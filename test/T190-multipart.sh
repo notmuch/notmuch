@@ -725,8 +725,7 @@ EOF
 
 notmuch new > /dev/null
 
-cat_expected_head ()
-{
+cat_expected_head () {
         cat <<EOF
 [[[{"id": "htmlmessage", "match":true, "excluded": false, "date_relative":"2000-01-01",
    "crypto": {},

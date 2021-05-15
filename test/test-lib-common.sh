@@ -105,8 +105,7 @@ fi
 gen_msg_cnt=0
 gen_msg_filename=""
 gen_msg_id=""
-generate_message ()
-{
+generate_message () {
     # This is our (bash-specific) magic for doing named parameters
     local -A template="($@)"
     local additional_headers
@@ -225,8 +224,7 @@ EOF
 #
 # All of the arguments and return values supported by generate_message
 # are also supported here, so see that function for details.
-add_message ()
-{
+add_message () {
     generate_message "$@" &&
     notmuch new > /dev/null
 }
