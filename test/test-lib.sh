@@ -116,8 +116,8 @@ unset NAME
 
 test_require_emacs () {
     local ret=0
-    test_require_external_prereq ${TEST_EMACS} || ret=1
-    test_require_external_prereq ${TEST_EMACSCLIENT} || ret=1
+    test_require_external_prereq "$TEST_EMACS" || ret=1
+    test_require_external_prereq "$TEST_EMACSCLIENT" || ret=1
     test_require_external_prereq dtach || ret=1
     return $ret
 }
