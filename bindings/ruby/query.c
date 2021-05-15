@@ -142,7 +142,7 @@ notmuch_rb_query_search_threads (VALUE self)
     if (status)
 	notmuch_rb_status_raise (status);
 
-    return Data_Wrap_Struct (notmuch_rb_cThreads, NULL, NULL, threads);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cThreads, threads);
 }
 
 /*
@@ -163,7 +163,7 @@ notmuch_rb_query_search_messages (VALUE self)
     if (status)
 	notmuch_rb_status_raise (status);
 
-    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cMessages, messages);
 }
 
 /*

@@ -53,7 +53,7 @@ notmuch_rb_messages_each (VALUE self)
 
     for (; notmuch_messages_valid (messages); notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
-	rb_yield (Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message));
+	rb_yield (Data_Wrap_Notmuch_Object (notmuch_rb_cMessage, message));
     }
 
     return self;
@@ -76,5 +76,5 @@ notmuch_rb_messages_collect_tags (VALUE self)
     if (!tags)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, tags);
 }

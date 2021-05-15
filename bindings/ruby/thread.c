@@ -88,7 +88,7 @@ notmuch_rb_thread_get_toplevel_messages (VALUE self)
     if (!messages)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cMessages, messages);
 }
 
 /*
@@ -108,7 +108,7 @@ notmuch_rb_thread_get_messages (VALUE self)
     if (!messages)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cMessages, messages);
 }
 
 /*
@@ -209,5 +209,5 @@ notmuch_rb_thread_get_tags (VALUE self)
     if (!tags)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, tags);
 }

@@ -23,7 +23,7 @@
 VALUE
 notmuch_rb_database_alloc (VALUE klass)
 {
-    return Data_Wrap_Struct (klass, NULL, NULL, NULL);
+    return Data_Wrap_Notmuch_Object (klass, NULL);
 }
 
 /*
@@ -266,7 +266,7 @@ notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
     ret = notmuch_database_get_directory (db, path, &dir);
     notmuch_rb_status_raise (ret);
     if (dir)
-	return Data_Wrap_Struct (notmuch_rb_cDirectory, NULL, NULL, dir);
+	return Data_Wrap_Notmuch_Object (notmuch_rb_cDirectory, dir);
     return Qnil;
 }
 
@@ -293,7 +293,7 @@ notmuch_rb_database_add_message (VALUE self, VALUE pathv)
 
     ret = notmuch_database_index_file (db, path, NULL, &message);
     notmuch_rb_status_raise (ret);
-    return rb_assoc_new (Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message),
+    return rb_assoc_new (Data_Wrap_Notmuch_Object (notmuch_rb_cMessage, message),
         (ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) ? Qtrue : Qfalse);
 }
 
@@ -344,7 +344,7 @@ notmuch_rb_database_find_message (VALUE self, VALUE idv)
     notmuch_rb_status_raise (ret);
 
     if (message)
-        return Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message);
+        return Data_Wrap_Notmuch_Object (notmuch_rb_cMessage, message);
     return Qnil;
 }
 
@@ -370,7 +370,7 @@ notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv)
     notmuch_rb_status_raise (ret);
 
     if (message)
-        return Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message);
+        return Data_Wrap_Notmuch_Object (notmuch_rb_cMessage, message);
     return Qnil;
 }
 
@@ -395,7 +395,7 @@ notmuch_rb_database_get_all_tags (VALUE self)
 
 	rb_raise (notmuch_rb_eBaseError, "%s", msg);
     }
-    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, tags);
 }
 
 /*
@@ -419,5 +419,5 @@ notmuch_rb_database_query_create (VALUE self, VALUE qstrv)
     if (!query)
         rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct (notmuch_rb_cQuery, NULL, NULL, query);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cQuery, query);
 }

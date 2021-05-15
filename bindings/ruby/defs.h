@@ -64,6 +64,9 @@ extern ID ID_db_mode;
 	}									    \
     } while (0)
 
+#define Data_Wrap_Notmuch_Object(klass, ptr)	\
+    Data_Wrap_Struct ((klass), NULL, NULL, (ptr))
+
 #define Data_Get_Notmuch_Database(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), (ptr))
 
