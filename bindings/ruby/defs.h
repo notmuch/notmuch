@@ -55,39 +55,39 @@ extern ID ID_db_mode;
 # define RSTRING_PTR(v) (RSTRING((v))->ptr)
 #endif /* !defined (RSTRING_PTR) */
 
-#define Data_Get_Notmuch_Object(obj, type, message, ptr)	\
+#define Data_Get_Notmuch_Object(obj, message, ptr)		\
     do {							\
-	Data_Get_Struct ((obj), type, (ptr));			\
+	(ptr) = rb_data_object_get ((obj));			\
 	if (!(ptr))						\
 	rb_raise (rb_eRuntimeError, (message));			\
     } while (0)
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_database_t, "database closed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "database closed", (ptr))
 
 #define Data_Get_Notmuch_Directory(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_directory_t, "directory destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "directory destroyed", (ptr))
 
 #define Data_Get_Notmuch_FileNames(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_filenames_t, "filenames destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "filenames destroyed", (ptr))
 
 #define Data_Get_Notmuch_Query(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_query_t, "query destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "query destroyed", (ptr))
 
 #define Data_Get_Notmuch_Threads(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_threads_t, "threads destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "threads destroyed", (ptr))
 
 #define Data_Get_Notmuch_Messages(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_messages_t, "messages destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "messages destroyed", (ptr))
 
 #define Data_Get_Notmuch_Thread(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_thread_t, "thread destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "thread destroyed", (ptr))
 
 #define Data_Get_Notmuch_Message(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_message_t, "message destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "message destroyed", (ptr))
 
 #define Data_Get_Notmuch_Tags(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), notmuch_tags_t, "tags destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), "tags destroyed", (ptr))
 
 /* status.c */
 void
