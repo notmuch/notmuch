@@ -74,7 +74,7 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
 	mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
     }
 
-    Check_Type (self, T_DATA);
+    rb_check_typeddata (self, &notmuch_rb_object_type);
     if (create)
 	ret = notmuch_database_create (path, &database);
     else

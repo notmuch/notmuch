@@ -46,6 +46,10 @@ ID ID_call;
 ID ID_db_create;
 ID ID_db_mode;
 
+const rb_data_type_t notmuch_rb_object_type = {
+    .wrap_struct_name = "notmuch_object",
+};
+
 /*
  * Document-module: Notmuch
  *

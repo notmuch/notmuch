@@ -55,9 +55,11 @@ extern ID ID_db_mode;
 # define RSTRING_PTR(v) (RSTRING((v))->ptr)
 #endif /* !defined (RSTRING_PTR) */
 
+extern const rb_data_type_t notmuch_rb_object_type;
+
 #define Data_Get_Notmuch_Object(obj, ptr)					    \
     do {									    \
-	(ptr) = rb_data_object_get ((obj));					    \
+	(ptr) = rb_check_typeddata ((obj), &notmuch_rb_object_type);		    \
 	if (RB_UNLIKELY (!(ptr))) {						    \
 	    VALUE cname = rb_class_name (CLASS_OF ((obj)));			    \
 	    rb_raise (rb_eRuntimeError, "%"PRIsVALUE" object destroyed", cname);    \
@@ -65,7 +67,7 @@ extern ID ID_db_mode;
     } while (0)
 
 #define Data_Wrap_Notmuch_Object(klass, ptr)	\
-    Data_Wrap_Struct ((klass), NULL, NULL, (ptr))
+    TypedData_Wrap_Struct ((klass), &notmuch_rb_object_type, (ptr))
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), (ptr))
