@@ -99,6 +99,9 @@ running, quit if it terminated."
 (add-hook 'notmuch-hello-refresh-hook
 	  (lambda () (cl-incf notmuch-hello-refresh-hook-counter)))
 
+(defvar notmuch-test-tag-hook-output nil)
+(defun notmuch-test-tag-hook () (push (cons query tag-changes) notmuch-test-tag-hook-output))
+
 (defun notmuch-test-mark-links ()
   "Enclose links in the current buffer with << and >>."
   ;; Links are often created by jit-lock functions

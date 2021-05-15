@@ -41,6 +41,18 @@
 (unless (fboundp 'message--fold-long-headers)
   (add-hook 'message-header-hook 'notmuch-message--fold-long-headers))
 
+;; `dlet' isn't available until Emacs 28.1.  Below is a copy, with the
+;; addition of `with-no-warnings'.
+(defmacro notmuch-dlet (binders &rest body)
+  "Like `let*' but using dynamic scoping."
+  (declare (indent 1) (debug let))
+  `(let (_)
+     (with-no-warnings  ; Quiet "lacks a prefix" warning.
+       ,@(mapcar (lambda (binder)
+		   `(defvar ,(if (consp binder) (car binder) binder)))
+		 binders))
+     (let* ,binders ,@body)))
+
 (provide 'notmuch-compat)
 
 ;;; notmuch-compat.el ends here

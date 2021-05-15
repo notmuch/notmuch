@@ -16,6 +16,7 @@ restore_config () {
     unset DATABASE_PATH
     unset NOTMUCH_PROFILE
     unset XAPIAN_PATH
+    rm -f "$HOME/mail"
     cp notmuch-config-backup.${test_name} ${NOTMUCH_CONFIG}
 }
 
@@ -38,6 +39,18 @@ symlink_config () {
     ln -s $MAIL_DIR $dir
     notmuch config set database.path $dir
     notmuch config set database.mail_root $MAIL_DIR
+    XAPIAN_PATH="$MAIL_DIR/.notmuch/xapian"
+    unset DATABASE_PATH
+}
+
+
+home_mail_config () {
+    local dir
+    backup_config
+    dir="${HOME}/mail"
+    ln -s $MAIL_DIR $dir
+    notmuch config set database.path
+    notmuch config set database.mail_root
     XAPIAN_PATH="$MAIL_DIR/.notmuch/xapian"
     unset DATABASE_PATH
 }
@@ -66,7 +79,7 @@ xdg_config () {
     notmuch --config=${CONFIG_PATH} config set database.path
 }
 
-for config in traditional split XDG XDG+profile symlink; do
+for config in traditional split XDG XDG+profile symlink home_mail; do
     #start each set of tests with an known set of messages
     add_email_corpus
 
@@ -89,6 +102,9 @@ for config in traditional split XDG XDG+profile symlink; do
 	    ;;
 	symlink)
 	    symlink_config
+	    ;;
+	home_mail)
+	    home_mail_config
 	    ;;
     esac
 
@@ -236,7 +252,9 @@ EOF
    test_begin_subtest "Config list ($config)"
    notmuch config list | notmuch_dir_sanitize | sed -e "s/^database.backup_dir=.*$/database.backup_dir/"  \
 						    -e "s/^database.hook_dir=.*$/database.hook_dir/" \
-						    -e "s/^database.path=.*$/database.path/" > OUTPUT
+						    -e "s/^database.path=.*$/database.path/"  \
+						    -e "s,^database.mail_root=CWD/home/mail,database.mail_root=MAIL_DIR," \
+						    > OUTPUT
    cat <<EOF > EXPECTED
 built_with.compact=true
 built_with.field_processor=true
