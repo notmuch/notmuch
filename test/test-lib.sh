@@ -115,9 +115,11 @@ unset EMAIL
 unset NAME
 
 test_require_emacs () {
-    test_require_external_prereq emacs
-    test_require_external_prereq ${TEST_EMACSCLIENT}
-    test_require_external_prereq dtach
+    local ret=0
+    test_require_external_prereq emacs || ret=1
+    test_require_external_prereq ${TEST_EMACSCLIENT} || ret=1
+    test_require_external_prereq dtach || ret=1
+    return $ret
 }
 
 add_gnupg_home () {
@@ -1048,11 +1050,7 @@ EOF
 
 test_emacs () {
 	# test dependencies beforehand to avoid the waiting loop below
-	missing_dependencies=
-	test_require_external_prereq dtach || missing_dependencies=1
-	test_require_external_prereq emacs || missing_dependencies=1
-	test_require_external_prereq ${TEST_EMACSCLIENT} || missing_dependencies=1
-	test -z "$missing_dependencies" || return
+	test_require_emacs || return
 
 	if [ -z "$EMACS_SERVER" ]; then
 		emacs_tests="$NOTMUCH_SRCDIR/test/${this_test_bare}.el"
