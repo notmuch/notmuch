@@ -58,7 +58,7 @@ extern ID ID_db_mode;
 #define Data_Get_Notmuch_Object(obj, ptr)					    \
     do {									    \
 	(ptr) = rb_data_object_get ((obj));					    \
-	if (!(ptr)) {								    \
+	if (RB_UNLIKELY (!(ptr))) {						    \
 	    VALUE cname = rb_class_name (CLASS_OF ((obj)));			    \
 	    rb_raise (rb_eRuntimeError, "%"PRIsVALUE" object destroyed", cname);    \
 	}									    \
