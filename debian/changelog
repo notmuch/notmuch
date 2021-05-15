@@ -1,3 +1,12 @@
+notmuch (0.32.1-1) experimental; urgency=medium
+
+  * New upstream bugfix release
+  * Configuration bug fixes (see /usr/share/doc/notmuch/NEWS.gz)
+  * Bug fix for {pre,after}-tag hooks in emacs, related to lexical scope
+    transition.
+
+ -- David Bremner <bremner@debian.org>  Sat, 15 May 2021 09:01:27 -0300
+
 notmuch (0.32-1) experimental; urgency=medium
 
   * New upstream release
