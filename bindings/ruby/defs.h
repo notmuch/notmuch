@@ -56,45 +56,54 @@ extern ID ID_db_mode;
 #endif /* !defined (RSTRING_PTR) */
 
 extern const rb_data_type_t notmuch_rb_object_type;
+extern const rb_data_type_t notmuch_rb_database_type;
+extern const rb_data_type_t notmuch_rb_directory_type;
+extern const rb_data_type_t notmuch_rb_filenames_type;
+extern const rb_data_type_t notmuch_rb_query_type;
+extern const rb_data_type_t notmuch_rb_threads_type;
+extern const rb_data_type_t notmuch_rb_thread_type;
+extern const rb_data_type_t notmuch_rb_messages_type;
+extern const rb_data_type_t notmuch_rb_message_type;
+extern const rb_data_type_t notmuch_rb_tags_type;
 
-#define Data_Get_Notmuch_Object(obj, ptr)					    \
+#define Data_Get_Notmuch_Object(obj, type, ptr)					    \
     do {									    \
-	(ptr) = rb_check_typeddata ((obj), &notmuch_rb_object_type);		    \
+	(ptr) = rb_check_typeddata ((obj), (type));				    \
 	if (RB_UNLIKELY (!(ptr))) {						    \
 	    VALUE cname = rb_class_name (CLASS_OF ((obj)));			    \
 	    rb_raise (rb_eRuntimeError, "%"PRIsVALUE" object destroyed", cname);    \
 	}									    \
     } while (0)
 
-#define Data_Wrap_Notmuch_Object(klass, ptr)	\
-    TypedData_Wrap_Struct ((klass), &notmuch_rb_object_type, (ptr))
+#define Data_Wrap_Notmuch_Object(klass, type, ptr) \
+    TypedData_Wrap_Struct ((klass), (type), (ptr))
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_database_type, (ptr))
 
 #define Data_Get_Notmuch_Directory(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_directory_type, (ptr))
 
 #define Data_Get_Notmuch_FileNames(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_filenames_type, (ptr))
 
 #define Data_Get_Notmuch_Query(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_query_type, (ptr))
 
 #define Data_Get_Notmuch_Threads(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_threads_type, (ptr))
 
 #define Data_Get_Notmuch_Messages(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_messages_type, (ptr))
 
 #define Data_Get_Notmuch_Thread(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_thread_type, (ptr))
 
 #define Data_Get_Notmuch_Message(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_message_type, (ptr))
 
 #define Data_Get_Notmuch_Tags(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), (ptr))
+    Data_Get_Notmuch_Object ((obj), &notmuch_rb_tags_type, (ptr))
 
 /* status.c */
 void

@@ -89,7 +89,7 @@ notmuch_rb_message_get_replies (VALUE self)
 
     messages = notmuch_message_get_replies (message);
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cMessages, messages);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cMessages, &notmuch_rb_messages_type, messages);
 }
 
 /*
@@ -125,7 +125,7 @@ notmuch_rb_message_get_filenames (VALUE self)
 
     fnames = notmuch_message_get_filenames (message);
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, fnames);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, &notmuch_rb_filenames_type, fnames);
 }
 
 /*
@@ -226,7 +226,7 @@ notmuch_rb_message_get_tags (VALUE self)
     if (!tags)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, tags);
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, &notmuch_rb_tags_type, tags);
 }
 
 /*

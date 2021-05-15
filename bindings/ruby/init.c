@@ -50,6 +50,22 @@ const rb_data_type_t notmuch_rb_object_type = {
     .wrap_struct_name = "notmuch_object",
 };
 
+#define define_type(id) \
+    const rb_data_type_t notmuch_rb_ ## id ## _type = { \
+	.wrap_struct_name = "notmuch_" #id, \
+	.parent = &notmuch_rb_object_type, \
+    }
+
+define_type (database);
+define_type (directory);
+define_type (filenames);
+define_type (query);
+define_type (threads);
+define_type (thread);
+define_type (messages);
+define_type (message);
+define_type (tags);
+
 /*
  * Document-module: Notmuch
  *

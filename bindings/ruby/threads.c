@@ -53,7 +53,7 @@ notmuch_rb_threads_each (VALUE self)
 
     for (; notmuch_threads_valid (threads); notmuch_threads_move_to_next (threads)) {
 	thread = notmuch_threads_get (threads);
-	rb_yield (Data_Wrap_Notmuch_Object (notmuch_rb_cThread, thread));
+	rb_yield (Data_Wrap_Notmuch_Object (notmuch_rb_cThread, &notmuch_rb_thread_type, thread));
     }
 
     return self;
