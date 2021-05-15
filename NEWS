@@ -12,6 +12,9 @@ Reload certain metadata from Xapian database in
 notmuch_database_reopen. This fixes a bug when adding messages to the
 database in a pre-new hook.
 
+Fix default of `$HOME/mail` for `database.path`. In release 0.32, this
+default worked only in "notmuch config".
+
 Emacs
 -----
 
