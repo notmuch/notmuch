@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 test_description="Emacs Draft Handling"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
+test_require_emacs
 add_email_corpus
 
 notmuch config set search.exclude_tags deleted

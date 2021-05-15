@@ -2,6 +2,9 @@
 
 test_description="emacs: mail subject to filename"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
+
+test_require_emacs
 
 # emacs server can't be started in a child process with $(test_emacs ...)
 test_emacs '(ignore)' > /dev/null

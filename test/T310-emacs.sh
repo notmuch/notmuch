@@ -2,6 +2,7 @@
 
 test_description="emacs interface"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
 EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 

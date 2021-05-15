@@ -2,10 +2,13 @@
 
 test_description="emacs notmuch-show charset handling"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
 
 UTF8_YEN=$'\xef\xbf\xa5'
 BIG5_YEN=$'\xa2\x44'
+
+test_require_emacs
 
 # Add four messages with unusual encoding requirements:
 #

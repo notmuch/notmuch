@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 test_description="--format=json output"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
 test_begin_subtest "Show message: json"
 add_message "[subject]=\"json-show-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[bcc]=\"test_suite+bcc@notmuchmail.org\"" "[reply-to]=\"test_suite+replyto@notmuchmail.org\"" "[body]=\"json-show-message\""

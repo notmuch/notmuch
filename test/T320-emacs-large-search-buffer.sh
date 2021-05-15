@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 test_description="Emacs with large search results buffer"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
 x=xxxxxxxxxx # 10
 x=$x$x$x$x$x$x$x$x$x$x # 100
 x=$x$x$x$x$x$x$x$x$x # 900
+
+test_require_emacs
 
 # We generate a long subject here (over 900 bytes) so that the emacs
 # search results get large quickly. With 30 such messages we should

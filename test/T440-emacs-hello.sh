@@ -2,9 +2,11 @@
 
 test_description="emacs notmuch-hello view"
 . $(dirname "$0")/test-lib.sh || exit 1
+. $(dirname "$0")/test-lib-emacs.sh || exit 1
 
 EXPECTED=$NOTMUCH_SRCDIR/test/emacs.expected-output
 
+test_require_emacs
 add_email_corpus
 
 test_begin_subtest "User-defined section with inbox tag"
