@@ -55,39 +55,41 @@ extern ID ID_db_mode;
 # define RSTRING_PTR(v) (RSTRING((v))->ptr)
 #endif /* !defined (RSTRING_PTR) */
 
-#define Data_Get_Notmuch_Object(obj, message, ptr)		\
-    do {							\
-	(ptr) = rb_data_object_get ((obj));			\
-	if (!(ptr))						\
-	rb_raise (rb_eRuntimeError, (message));			\
+#define Data_Get_Notmuch_Object(obj, ptr)					    \
+    do {									    \
+	(ptr) = rb_data_object_get ((obj));					    \
+	if (!(ptr)) {								    \
+	    VALUE cname = rb_class_name (CLASS_OF ((obj)));			    \
+	    rb_raise (rb_eRuntimeError, "%"PRIsVALUE" object destroyed", cname);    \
+	}									    \
     } while (0)
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "database closed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Directory(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "directory destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_FileNames(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "filenames destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Query(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "query destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Threads(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "threads destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Messages(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "messages destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Thread(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "thread destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Message(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "message destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 #define Data_Get_Notmuch_Tags(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), "tags destroyed", (ptr))
+    Data_Get_Notmuch_Object ((obj), (ptr))
 
 /* status.c */
 void
