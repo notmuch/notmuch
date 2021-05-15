@@ -33,7 +33,7 @@ test_begin_subtest 'failure to clean up causes the test to fail'
 test_expect_code 2 'test_when_finished "(exit 2)"'
 
 EXPECTED=$NOTMUCH_SRCDIR/test/test.expected-output
-suppress_diff_date() {
+suppress_diff_date () {
     sed -e 's/\(.*\-\-\- test-verbose\.4\.\expected\).*/\1/' \
 	-e 's/\(.*\+\+\+ test-verbose\.4\.\output\).*/\1/'
 }

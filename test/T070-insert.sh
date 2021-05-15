@@ -15,7 +15,7 @@ notmuch new > /dev/null
 # They happen to be in the mail directory already but that is okay
 # since we do not call notmuch new hereafter.
 
-gen_insert_msg() {
+gen_insert_msg () {
     generate_message \
 	"[subject]=\"insert-subject\"" \
 	"[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \

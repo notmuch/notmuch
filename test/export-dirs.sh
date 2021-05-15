@@ -9,7 +9,7 @@ if [[ -z "${NOTMUCH_SRCDIR}" ]]; then
 	export NOTMUCH_SRCDIR="$(cd "$(dirname "$0")"/.. && pwd)"
 fi
 
-find_builddir()
+find_builddir ()
 {
 	local dir="$1"
 

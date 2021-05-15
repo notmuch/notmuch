@@ -710,7 +710,7 @@ notmuch_built_with_sanitize ()
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
-notmuch_passwd_sanitize()
+notmuch_passwd_sanitize ()
 {
     ${NOTMUCH_PYTHON} -c'
 import os, sys, pwd, socket
@@ -992,7 +992,7 @@ test_must_fail () {
 # - cmp's output is not nearly as easy to read as diff -u
 # - not all diff versions understand "-u"
 
-test_cmp() {
+test_cmp () {
 	$GIT_TEST_CMP "$@"
 }
 
@@ -1117,7 +1117,7 @@ test_emacs () {
 	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(notmuch-test-progn $*)"
 }
 
-test_python() {
+test_python () {
     # Note: if there is need to print debug information from python program,
     # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
     PYTHONPATH="$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \

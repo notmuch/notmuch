@@ -21,7 +21,7 @@ test_description='thread breakage during reindexing'
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
-message_a() {
+message_a () {
     mkdir -p ${MAIL_DIR}/cur
     cat > ${MAIL_DIR}/cur/a <<EOF
 Subject: First message
@@ -35,7 +35,7 @@ Apple
 EOF
 }
 
-message_b() {
+message_b () {
     mkdir -p ${MAIL_DIR}/cur
     cat > ${MAIL_DIR}/cur/b <<EOF
 Subject: Second message
@@ -52,19 +52,19 @@ EOF
 }
 
 
-test_content_count() {
+test_content_count () {
     test_begin_subtest "${3:-looking for $2 instance of '$1'}"
     count=$(notmuch count --output=threads "$1")
     test_expect_equal "$count" "$2"
 }
 
-test_thread_count() {
+test_thread_count () {
     test_begin_subtest "${2:-Expecting $1 thread(s)}"
     count=$(notmuch count --output=threads)
     test_expect_equal "$count" "$1"
 }
 
-test_ghost_count() {
+test_ghost_count () {
     test_begin_subtest "${2:-Expecting $1 ghosts(s)}"
     ghosts=$($NOTMUCH_BUILDDIR/test/ghost-report ${MAIL_DIR}/.notmuch/xapian)
     test_expect_equal "$ghosts" "$1"
