@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_thread_destroy (VALUE self)
 {
-    notmuch_thread_t *thread;
-
-    Data_Get_Notmuch_Thread (self, thread);
-
-    notmuch_thread_destroy (thread);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_thread_type);
 
     return Qnil;
 }

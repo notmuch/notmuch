@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_directory_destroy (VALUE self)
 {
-    notmuch_directory_t *dir;
-
-    Data_Get_Notmuch_Directory (self, dir);
-
-    notmuch_directory_destroy (dir);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_directory_type);
 
     return Qnil;
 }

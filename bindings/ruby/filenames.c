@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_filenames_destroy (VALUE self)
 {
-    notmuch_filenames_t *fnames;
-
-    Data_Get_Notmuch_FileNames (self, fnames);
-
-    notmuch_filenames_destroy (fnames);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_filenames_type);
 
     return Qnil;
 }

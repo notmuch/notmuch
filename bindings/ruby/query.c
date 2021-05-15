@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_query_destroy (VALUE self)
 {
-    notmuch_query_t *query;
-
-    Data_Get_Notmuch_Query (self, query);
-
-    notmuch_query_destroy (query);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_query_type);
 
     return Qnil;
 }

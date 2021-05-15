@@ -114,11 +114,7 @@ VALUE
 notmuch_rb_database_close (VALUE self)
 {
     notmuch_status_t ret;
-    notmuch_database_t *db;
-
-    Data_Get_Notmuch_Database (self, db);
-    ret = notmuch_database_destroy (db);
-    DATA_PTR (self) = NULL;
+    ret = notmuch_rb_object_destroy (self, &notmuch_rb_database_type);
     notmuch_rb_status_raise (ret);
 
     return Qnil;

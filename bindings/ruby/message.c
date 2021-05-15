@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_message_destroy (VALUE self)
 {
-    notmuch_message_t *message;
-
-    Data_Get_Notmuch_Message (self, message);
-
-    notmuch_message_destroy (message);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_message_type);
 
     return Qnil;
 }

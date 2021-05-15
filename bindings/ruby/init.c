@@ -54,6 +54,7 @@ const rb_data_type_t notmuch_rb_object_type = {
     const rb_data_type_t notmuch_rb_ ## id ## _type = { \
 	.wrap_struct_name = "notmuch_" #id, \
 	.parent = &notmuch_rb_object_type, \
+	.data = &notmuch_ ## id ## _destroy, \
     }
 
 define_type (database);

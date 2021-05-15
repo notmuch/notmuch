@@ -28,12 +28,7 @@
 VALUE
 notmuch_rb_tags_destroy (VALUE self)
 {
-    notmuch_tags_t *tags;
-
-    Data_Get_Notmuch_Tags (self, tags);
-
-    notmuch_tags_destroy (tags);
-    DATA_PTR (self) = NULL;
+    notmuch_rb_object_destroy (self, &notmuch_rb_tags_type);
 
     return Qnil;
 }

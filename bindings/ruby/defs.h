@@ -105,6 +105,21 @@ extern const rb_data_type_t notmuch_rb_tags_type;
 #define Data_Get_Notmuch_Tags(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_tags_type, (ptr))
 
+static inline notmuch_status_t
+notmuch_rb_object_destroy (VALUE rb_object, const rb_data_type_t *type)
+{
+    void *nm_object;
+    notmuch_status_t ret;
+
+    Data_Get_Notmuch_Object (rb_object, type, nm_object);
+
+    /* Call the corresponding notmuch_*_destroy function */
+    ret = ((notmuch_status_t (*)(void *)) type->data) (nm_object);
+    DATA_PTR (rb_object) = NULL;
+
+    return ret;
+}
+
 /* status.c */
 void
 notmuch_rb_status_raise (notmuch_status_t status);
