@@ -1059,7 +1059,6 @@ End of search results.
 === MESSAGES ===
 YYY/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
 === ERROR ===
-[XXX]
 YYY/notmuch_fail exited with status 1
 command: YYY/notmuch_fail search --format\=sexp --format-version\=4 --sort\=newest-first tag\:inbox
 exit status: 1"

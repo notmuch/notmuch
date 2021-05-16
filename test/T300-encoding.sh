@@ -31,18 +31,18 @@ test_expect_equal "$output" "thread:0000000000000002   2001-01-05 [1/1] Notmuch 
 
 test_begin_subtest "RFC 2047 encoded word with spaces"
 add_message '[subject]="=?utf-8?q?encoded word with spaces?="'
-output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
-test_expect_equal "$output" "thread:0000000000000003   2001-01-05 [1/1] Notmuch Test Suite; encoded word with spaces (inbox unread)"
+output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; encoded word with spaces (inbox unread)"
 
 test_begin_subtest "RFC 2047 encoded words back to back"
 add_message '[subject]="=?utf-8?q?encoded-words-back?==?utf-8?q?to-back?="'
-output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
-test_expect_equal "$output" "thread:0000000000000004   2001-01-05 [1/1] Notmuch Test Suite; encoded-words-backto-back (inbox unread)"
+output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; encoded-words-backto-back (inbox unread)"
 
 test_begin_subtest "RFC 2047 encoded words without space before or after"
 add_message '[subject]="=?utf-8?q?encoded?=word without=?utf-8?q?space?=" '
-output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
-test_expect_equal "$output" "thread:0000000000000005   2001-01-05 [1/1] Notmuch Test Suite; encodedword withoutspace (inbox unread)"
+output=$(notmuch search id:${gen_msg_id} 2>&1 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; encodedword withoutspace (inbox unread)"
 
 test_begin_subtest "Mislabeled Windows-1252 encoding"
 add_message '[content-type]="text/plain; charset=iso-8859-1"'                           \

@@ -191,7 +191,6 @@ test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES E
 === MESSAGES ===
 This is an error (see *Notmuch errors* for more details)
 === ERROR ===
-[XXX]
 This is an error
 command: YYY/notmuch_fail show --format\\=sexp --format-version\\=4 --decrypt\\=true --exclude\\=false \\' \\* \\'
 exit status: 1

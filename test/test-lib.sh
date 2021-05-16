@@ -502,12 +502,16 @@ print(msg.as_string(False))
 ' "$@"
 }
 
+notmuch_debug_sanitize () {
+    grep -v '^D.:'
+}
+
 notmuch_exception_sanitize () {
     perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
 }
 
 notmuch_search_sanitize () {
-    perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
+    notmuch_debug_sanitize | perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
 notmuch_search_files_sanitize () {
@@ -523,6 +527,7 @@ notmuch_show_sanitize () {
     sed -e "$NOTMUCH_SHOW_FILENAME_SQUELCH"
 }
 notmuch_show_sanitize_all () {
+    notmuch_debug_sanitize | \
     sed \
 	-e 's| filename:.*| filename:XXXXX|' \
 	-e 's| id:[^ ]* | id:XXXXX |' | \
@@ -545,9 +550,10 @@ notmuch_emacs_error_sanitize () {
     shift
     for file in "$@"; do
 	echo "=== $file ==="
-	cat "$file"
+	notmuch_debug_sanitize < "$file"
     done | sed \
-	-e 's/^\[.*\]$/[XXX]/' \
+	-e '/^$/d' \
+	-e '/^\[.*\]$/d' \
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
 }
 
@@ -893,7 +899,7 @@ test_C () {
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
-    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr | notmuch_exception_sanitize > OUTPUT
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr | notmuch_exception_sanitize | notmuch_debug_sanitize > OUTPUT
 }
 
 make_shim () {
