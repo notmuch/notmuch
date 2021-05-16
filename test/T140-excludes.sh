@@ -21,7 +21,7 @@ generate_thread () {
     done
     notmuch new > /dev/null
     # We cannot retrieve the thread_id until after we have run notmuch new.
-    gen_thread_id=`notmuch search --output=threads id:${gen_thread_msg_id[0]}`
+    gen_thread_id=$(notmuch search --output=threads id:${gen_thread_msg_id[0]} 2>/dev/null)
 }
 
 #############################################

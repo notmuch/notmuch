@@ -67,7 +67,7 @@ if test_require_external_prereq gdb; then
     ${TEST_GDB} -tty /dev/null -batch -x $NOTMUCH_SRCDIR/test/atomicity.py notmuch 1>gdb.out 2>&1
 
     # Get the final, golden output
-    notmuch search '*' > expected
+    notmuch search '*' 2>/dev/null > expected
 
     # Check output against golden output
     outcount=$(cat outcount)
