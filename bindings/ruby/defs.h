@@ -66,7 +66,7 @@ extern const rb_data_type_t notmuch_rb_messages_type;
 extern const rb_data_type_t notmuch_rb_message_type;
 extern const rb_data_type_t notmuch_rb_tags_type;
 
-#define Data_Get_Notmuch_Object(obj, type, ptr)					    \
+#define Data_Get_Notmuch_Rb_Object(obj, type, ptr)		    		    \
     do {									    \
 	(ptr) = rb_check_typeddata ((obj), (type));				    \
 	if (RB_UNLIKELY (!(ptr))) {						    \
@@ -75,8 +75,15 @@ extern const rb_data_type_t notmuch_rb_tags_type;
 	}									    \
     } while (0)
 
+#define Data_Get_Notmuch_Object(obj, type, ptr)			\
+    do {							\
+	notmuch_rb_object_t *rb_wrapper;			\
+	Data_Get_Notmuch_Rb_Object ((obj), (type), rb_wrapper);	\
+	(ptr) = rb_wrapper->nm_object;				\
+    } while (0)
+
 #define Data_Wrap_Notmuch_Object(klass, type, ptr) \
-    TypedData_Wrap_Struct ((klass), (type), (ptr))
+    TypedData_Wrap_Struct ((klass), (type), notmuch_rb_object_create ((ptr)))
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_database_type, (ptr))
@@ -105,16 +112,38 @@ extern const rb_data_type_t notmuch_rb_tags_type;
 #define Data_Get_Notmuch_Tags(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_tags_type, (ptr))
 
+typedef struct {
+    void *nm_object;
+} notmuch_rb_object_t;
+
+static inline void *
+notmuch_rb_object_create (void *nm_object)
+{
+    notmuch_rb_object_t *rb_wrapper = malloc (sizeof (*rb_wrapper));
+    if (RB_UNLIKELY (!rb_wrapper))
+	return NULL;
+
+    rb_wrapper->nm_object = nm_object;
+    return rb_wrapper;
+}
+
+static inline void
+notmuch_rb_object_free (void *rb_wrapper)
+{
+    free (rb_wrapper);
+}
+
 static inline notmuch_status_t
 notmuch_rb_object_destroy (VALUE rb_object, const rb_data_type_t *type)
 {
-    void *nm_object;
+    notmuch_rb_object_t *rb_wrapper;
     notmuch_status_t ret;
 
-    Data_Get_Notmuch_Object (rb_object, type, nm_object);
+    Data_Get_Notmuch_Rb_Object (rb_object, type, rb_wrapper);
 
     /* Call the corresponding notmuch_*_destroy function */
-    ret = ((notmuch_status_t (*)(void *)) type->data) (nm_object);
+    ret = ((notmuch_status_t (*)(void *)) type->data) (rb_wrapper->nm_object);
+    notmuch_rb_object_free (rb_wrapper);
     DATA_PTR (rb_object) = NULL;
 
     return ret;

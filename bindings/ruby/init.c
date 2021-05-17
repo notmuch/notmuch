@@ -48,6 +48,9 @@ ID ID_db_mode;
 
 const rb_data_type_t notmuch_rb_object_type = {
     .wrap_struct_name = "notmuch_object",
+    .function = {
+	.dfree = notmuch_rb_object_free,
+    },
 };
 
 #define define_type(id) \
@@ -55,6 +58,9 @@ const rb_data_type_t notmuch_rb_object_type = {
 	.wrap_struct_name = "notmuch_" #id, \
 	.parent = &notmuch_rb_object_type, \
 	.data = &notmuch_ ## id ## _destroy, \
+	.function = { \
+	    .dfree = notmuch_rb_object_free, \
+	}, \
     }
 
 define_type (database);
