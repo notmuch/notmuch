@@ -19,6 +19,7 @@ if not ENV['LIBNOTMUCH']
 end
 
 $LOCAL_LIBS += ENV['LIBNOTMUCH']
+$LIBS += " -ltalloc"
 
 # Create Makefile
 dir_config('notmuch')

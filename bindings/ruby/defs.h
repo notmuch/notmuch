@@ -23,6 +23,7 @@
 
 #include <notmuch.h>
 #include <ruby.h>
+#include <talloc.h>
 
 extern VALUE notmuch_rb_cDatabase;
 extern VALUE notmuch_rb_cDirectory;
@@ -83,7 +84,7 @@ extern const rb_data_type_t notmuch_rb_tags_type;
     } while (0)
 
 #define Data_Wrap_Notmuch_Object(klass, type, ptr) \
-    TypedData_Wrap_Struct ((klass), (type), notmuch_rb_object_create ((ptr)))
+    TypedData_Wrap_Struct ((klass), (type), notmuch_rb_object_create ((ptr), "notmuch_rb_object: " __location__))
 
 #define Data_Get_Notmuch_Database(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_database_type, (ptr))
@@ -117,20 +118,22 @@ typedef struct {
 } notmuch_rb_object_t;
 
 static inline void *
-notmuch_rb_object_create (void *nm_object)
+notmuch_rb_object_create (void *nm_object, const char *name)
 {
-    notmuch_rb_object_t *rb_wrapper = malloc (sizeof (*rb_wrapper));
+    notmuch_rb_object_t *rb_wrapper = talloc_named_const (NULL, sizeof (*rb_wrapper), name);
+
     if (RB_UNLIKELY (!rb_wrapper))
 	return NULL;
 
     rb_wrapper->nm_object = nm_object;
+    talloc_steal (rb_wrapper, nm_object);
     return rb_wrapper;
 }
 
 static inline void
 notmuch_rb_object_free (void *rb_wrapper)
 {
-    free (rb_wrapper);
+    talloc_free (rb_wrapper);
 }
 
 static inline notmuch_status_t

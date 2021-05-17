@@ -81,7 +81,7 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
 	ret = notmuch_database_open (path, mode, &database);
     notmuch_rb_status_raise (ret);
 
-    DATA_PTR (self) = notmuch_rb_object_create (database);
+    DATA_PTR (self) = notmuch_rb_object_create (database, "notmuch_rb_database");
 
     return self;
 }
