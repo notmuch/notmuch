@@ -858,15 +858,16 @@ test_when_finished () {
 test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
-	mkdir -p "$test_results_dir"
+	test -d "$test_results_dir" || mkdir "$test_results_dir"
 	test_results_path="$test_results_dir/$this_test"
 
-	echo "total $test_count" >> $test_results_path
-	echo "success $test_success" >> $test_results_path
-	echo "fixed $test_fixed" >> $test_results_path
-	echo "broken $test_broken" >> $test_results_path
-	echo "failed $test_failure" >> $test_results_path
-	echo "" >> $test_results_path
+	printf %s\\n \
+		"success $test_success" \
+		"fixed $test_fixed" \
+		"broken $test_broken" \
+		"failed $test_failure" \
+		"total $test_count" \
+	    > $test_results_path
 
 	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
 

@@ -18,12 +18,14 @@ fi
 # Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
 . $(dirname "$0")/export-dirs.sh || exit 1
 
+set -eu
+
 TESTS=
-for test in $NOTMUCH_TESTS; do
+for test in ${NOTMUCH_TESTS-}; do
     TESTS="$TESTS $NOTMUCH_SRCDIR/test/$test"
 done
 
-if [[ -z "$TESTS" ]]; then
+if [ -z "$TESTS" ]; then
     TESTS="$NOTMUCH_SRCDIR/test/T[0-9][0-9][0-9]-*.sh"
 fi
 
@@ -44,43 +46,46 @@ else
     TEST_TIMEOUT_CMD=""
 fi
 
-trap 'e=$?; kill $!; exit $e' HUP INT TERM
-
 META_FAILURE=
+RES=0
 # Run the tests
-if test -z "$NOTMUCH_TEST_SERIALIZE" && command -v parallel >/dev/null ; then
+if test -z "${NOTMUCH_TEST_SERIALIZE-}" && command -v parallel >/dev/null ; then
     test -t 1 && export COLORS_WITHOUT_TTY=t || :
     if parallel --version 2>&1 | grep -q GNU ; then
         echo "INFO: running tests with GNU parallel"
-        printf '%s\n' $TESTS | $TEST_TIMEOUT_CMD parallel
+        printf '%s\n' $TESTS | $TEST_TIMEOUT_CMD parallel || RES=$?
     else
         echo "INFO: running tests with moreutils parallel"
-        $TEST_TIMEOUT_CMD parallel -- $TESTS
+        $TEST_TIMEOUT_CMD parallel -- $TESTS || RES=$?
     fi
-    RES=$?
-    if [[ $RES != 0 ]]; then
+    if [ $RES != 0 ]; then
         META_FAILURE="parallel test suite returned error code $RES"
     fi
 else
+    trap 'e=$?; trap - 0; kill ${!-}; exit $e' 0 HUP INT TERM
     for test in $TESTS; do
         $TEST_TIMEOUT_CMD $test "$@" &
-        wait $!
-        # If the test failed without producing results, then it aborted,
-        # so we should abort, too.
-        RES=$?
-        testname=$(basename $test .sh)
-        if [[ $RES != 0 && ! -e "$NOTMUCH_BUILDDIR/test/test-results/$testname" ]]; then
-            META_FAILURE="Aborting on $testname (returned $RES)"
-            break
-        fi
+        wait $! && ev=0 || ev=$?
+        test $ev = 0 || RES=$ev
     done
+    trap - 0 HUP INT TERM
+    if [ $RES != 0 ]; then
+        META_FAILURE="some tests failed; first failed returned error code $RES"
+    fi
 fi
-trap - HUP INT TERM
 
 # Report results
+RESULT_FILES=
+for file in $TESTS
+do
+    file=${file##*/} # drop leading path components
+    file=${file%.sh} # drop trailing '.sh'
+    RESULT_FILES="$RESULT_FILES $NOTMUCH_BUILDDIR/test/test-results/$file"
+done
+
 echo
-$NOTMUCH_SRCDIR/test/aggregate-results.sh $NOTMUCH_BUILDDIR/test/test-results/*
-ev=$?
+$NOTMUCH_SRCDIR/test/aggregate-results.sh $RESULT_FILES && ev=0 || ev=$?
+
 if [ -n "$META_FAILURE" ]; then
     printf 'ERROR: %s\n' "$META_FAILURE"
     if [ $ev = 0 ]; then
