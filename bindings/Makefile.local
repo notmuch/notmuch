@@ -10,7 +10,7 @@ ifeq ($(HAVE_RUBY_DEV),1)
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
 		NOTMUCH_SRCDIR='$(NOTMUCH_SRCDIR)' \
 		$(RUBY) extconf.rb --vendor
-	$(MAKE) -C $(dir)/ruby
+	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC"
 endif
 
 python-cffi-bindings: lib/$(LINKER_NAME)
