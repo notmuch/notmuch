@@ -502,17 +502,9 @@ notmuch_database_close (notmuch_database_t *notmuch)
      * close it.  Thus, we explicitly close it here. */
     if (notmuch->open) {
 	try {
-	    /* If there's an outstanding transaction, it's unclear if
-	     * closing the Xapian database commits everything up to
-	     * that transaction, or may discard committed (but
-	     * unflushed) transactions.  To be certain, explicitly
-	     * cancel any outstanding transaction before closing. */
-	    if (_notmuch_database_mode (notmuch) == NOTMUCH_DATABASE_MODE_READ_WRITE &&
-		notmuch->atomic_nesting)
-		notmuch->writable_xapian_db->cancel_transaction ();
-
 	    /* Close the database.  This implicitly flushes
-	     * outstanding changes. */
+	     * outstanding changes. If there is an open (non-flushed)
+	     * transaction, ALL pending changes will be discarded */
 	    notmuch->xapian_db->close ();
 	} catch (const Xapian::Error &error) {
 	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
