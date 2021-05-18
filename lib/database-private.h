@@ -212,6 +212,11 @@ struct _notmuch_database {
     char thread_id_str[17];
     uint64_t last_thread_id;
 
+    /* How many transactions have successfully completed since we last committed */
+    int transaction_count;
+    /* when to commit and reset the counter */
+    int transaction_threshold;
+
     /* error reporting; this value persists only until the
      * next library call. May be NULL */
     char *status_string;

@@ -26,7 +26,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Some changes saved with open transaction"
-test_subtest_known_broken
 notmuch config set database.autocommit 1000
 rm -r ${MAIL_DIR}/.notmuch
 notmuch_with_shim no-close new

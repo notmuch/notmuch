@@ -256,6 +256,8 @@ _alloc_notmuch ()
     notmuch->writable_xapian_db = NULL;
     notmuch->config_path = NULL;
     notmuch->atomic_nesting = 0;
+    notmuch->transaction_count = 0;
+    notmuch->transaction_threshold = 0;
     notmuch->view = 1;
     return notmuch;
 }
@@ -365,6 +367,8 @@ _finish_open (notmuch_database_t *notmuch,
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     char *incompat_features;
     char *message = NULL;
+    const char *autocommit_str;
+    char *autocommit_end;
     unsigned int version;
     const char *database_path = notmuch_database_get_path (notmuch);
 
@@ -460,6 +464,14 @@ _finish_open (notmuch_database_t *notmuch,
 	status = _notmuch_config_load_defaults (notmuch);
 	if (status)
 	    goto DONE;
+
+	autocommit_str = notmuch_config_get (notmuch, NOTMUCH_CONFIG_AUTOCOMMIT);
+	if (unlikely (! autocommit_str)) {
+	    INTERNAL_ERROR ("missing configuration for autocommit");
+	}
+	notmuch->transaction_threshold = strtoul (autocommit_str, &autocommit_end, 10);
+	if (*autocommit_end != '\0')
+	    INTERNAL_ERROR ("Malformed database database.autocommit value: %s", autocommit_str);
 
 	status = _notmuch_database_setup_standard_query_fields (notmuch);
 	if (status)

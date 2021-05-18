@@ -1134,13 +1134,21 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
     db = notmuch->writable_xapian_db;
     try {
 	db->commit_transaction ();
+	notmuch->transaction_count++;
 
-	/* This is a hack for testing.  Xapian never flushes on a
-	 * non-flushed commit, even if the flush threshold is 1.
-	 * However, we rely on flushing to test atomicity. */
+	/* Xapian never flushes on a non-flushed commit, even if the
+	 * flush threshold is 1.  However, we rely on flushing to test
+	 * atomicity. On the other hand, we can't straight replace
+	 * XAPIAN_FLUSH_THRESHOLD with our autocommit counter, because
+	 * the former also applies outside notmuch atomic
+	 * commits. Hence the follow complicated  test */
 	const char *thresh = getenv ("XAPIAN_FLUSH_THRESHOLD");
-	if (thresh && atoi (thresh) == 1)
+	if ((notmuch->transaction_threshold > 0 &&
+	     notmuch->transaction_count >= notmuch->transaction_threshold) ||
+	    (thresh && atoi (thresh) == 1)) {
 	    db->commit ();
+	    notmuch->transaction_count = 0;
+	}
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
 			       error.get_msg ().c_str ());
