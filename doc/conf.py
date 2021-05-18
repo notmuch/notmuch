@@ -87,6 +87,8 @@ html_use_smartypants = False
 
 notmuch_authors = u'Carl Worth and many others'
 
+man_make_section_directory = False
+
 man_pages = [
     ('man1/notmuch', 'notmuch',
      u'thread-based email index, search, and tagging',
