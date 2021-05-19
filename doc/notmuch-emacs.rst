@@ -100,7 +100,7 @@ unread mail, but there are several options for customization:
     The list of saved searches, including names, queries, and
     additional per-query options.
 
-:index:`notmuch-saved-searches-sort-function`
+:index:`notmuch-saved-search-sort-function`
     This variable controls how saved searches should be sorted. A value
     of ``nil`` displays the saved searches in the order they are stored
     in ‘notmuch-saved-searches’.
