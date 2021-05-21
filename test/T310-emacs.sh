@@ -869,7 +869,7 @@ test_emacs '(notmuch-show "id:\"bought\"")
 	(notmuch-show-stash-message-id-stripped)
 	(notmuch-show-stash-tags)
 	(notmuch-show-stash-filename)
-	(notmuch-show-stash-mlarchive-link "Gmane")
+	(notmuch-show-stash-mlarchive-link "Notmuch")
 	(notmuch-show-stash-mlarchive-link "MARC")
 	(notmuch-show-stash-mlarchive-link "Mail Archive, The")
 	(switch-to-buffer
@@ -890,7 +890,7 @@ id:bought
 bought
 inbox,stashtest
 ${gen_msg_filename}
-https://mid.gmane.org/bought
+https://nmbug.notmuchmail.org/nmweb/show/bought
 https://marc.info/?i=bought
 https://mid.mail-archive.com/bought
 EOF

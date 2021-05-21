@@ -190,10 +190,10 @@ each attachment handler is logged in buffers with names beginning
 ;;; Options
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
-  '(("Gmane" . "https://mid.gmane.org/")
-    ("MARC" . "https://marc.info/?i=")
+  '(("MARC" . "https://marc.info/?i=")
     ("Mail Archive, The" . "https://mid.mail-archive.com/")
-    ("LKML" . "https://lkml.kernel.org/r/")
+    ("Lore" . "https://lore.kernel.org/r/")
+    ("Notmuch" . "https://nmbug.notmuchmail.org/nmweb/show/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
     ;; ("Nabble" . "http://nabble.com/")
@@ -218,7 +218,7 @@ return the ML archive reference URI."
 			     (function :tag "Function returning the URL")))
   :group 'notmuch-show)
 
-(defcustom notmuch-show-stash-mlarchive-link-default "Gmane"
+(defcustom notmuch-show-stash-mlarchive-link-default "MARC"
   "Default Mailing List Archive to use when stashing links.
 
 This is used when `notmuch-show-stash-mlarchive-link' isn't
