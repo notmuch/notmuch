@@ -1,3 +1,5 @@
+.. _notmuch-search-terms(7):
+
 ====================
 notmuch-search-terms
 ====================
@@ -71,8 +73,9 @@ mimetype:<word>
 
 tag:<tag> or tag:/<regex>/ or is:<tag> or is:/<regex>/
     For **tag:** and **is:** valid tag values include **inbox** and
-    **unread** by default for new messages added by **notmuch new** as
-    well as any other tag values added manually with **notmuch tag**.
+    **unread** by default for new messages added by
+    :any:`notmuch-new(1)` as well as any other tag values added
+    manually with :any:`notmuch-tag(1)`.
 
 id:<message-id> or mid:<message-id> or mid:/<regex>/
     For **id:** and **mid:**, message ID values are the literal
@@ -83,7 +86,7 @@ thread:<thread-id>
     The **thread:** prefix can be used with the thread ID values that
     are generated internally by notmuch (and do not appear in email
     messages). These thread ID values can be seen in the first column
-    of output from **notmuch search**
+    of output from :any:`notmuch-search(1)`
 
 thread:{<notmuch query>}
     Threads may be searched for indirectly by providing an arbitrary
@@ -151,21 +154,22 @@ lastmod:<initial-revision>..<final-revision>
     The **lastmod:** prefix can be used to restrict the result by the
     database revision number of when messages were last modified (tags
     were added/removed or filenames changed). This is usually used in
-    conjunction with the ``--uuid`` argument to **notmuch search** to
-    find messages that have changed since an earlier query.
+    conjunction with the ``--uuid`` argument to
+    :any:`notmuch-search(1)` to find messages that have changed since
+    an earlier query.
 
 query:<name>
     The **query:** prefix allows queries to refer to previously saved
-    queries added with **notmuch-config(1)**.
+    queries added with :any:`notmuch-config(1)`.
 
 property:<key>=<value>
     The **property:** prefix searches for messages with a particular
     <key>=<value> property pair. Properties are used internally by
     notmuch (and extensions) to add metadata to messages. A given key
     can be present on a given message with several different values.
-    See **notmuch-properties(7)** for more details.
+    See :any:`notmuch-properties(7)` for more details.
 
-User defined prefixes are also supported, see **notmuch-config(1)** for
+User defined prefixes are also supported, see :any:`notmuch-config(1)` for
 details.
 
 Operators
@@ -443,17 +447,17 @@ Some time zone codes, e.g. UTC, EET.
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reindex(1)**,
-**notmuch-properties(1)**,
-***notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-***notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-properties(7)`,
+:any:`notmuch-reindex(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

@@ -1,3 +1,5 @@
+.. _notmuch-show(1):
+
 ============
 notmuch-show
 ============
@@ -12,7 +14,7 @@ DESCRIPTION
 
 Shows all messages matching the search terms.
 
-See **notmuch-search-terms(7)** for details of the supported syntax for
+See :any:`notmuch-search-terms(7)` for details of the supported syntax for
 <search-terms>.
 
 The messages will be grouped and sorted based on the threading (all
@@ -90,7 +92,7 @@ Supported options for **show** include
 
 ``--format-version=N``
     Use the specified structured output format version. This is
-    intended for programs that invoke **notmuch(1)** internally. If
+    intended for programs that invoke :any:`notmuch(1)` internally. If
     omitted, the latest supported version will be used.
 
 ``--part=N``
@@ -190,9 +192,10 @@ Supported options for **show** include
     "text/html" parts, no part with content type "text/html" is included
     in the output.
 
-A common use of **notmuch show** is to display a single thread of email
-messages. For this, use a search term of "thread:<thread-id>" as can be
-seen in the first column of output from the **notmuch search** command.
+A common use of **notmuch show** is to display a single thread of
+email messages. For this, use a search term of "thread:<thread-id>" as
+can be seen in the first column of output from the
+:any:`notmuch-search(1)` command.
 
 EXIT STATUS
 ===========
@@ -208,15 +211,15 @@ This command supports the following special exit status codes
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-tag(1)`

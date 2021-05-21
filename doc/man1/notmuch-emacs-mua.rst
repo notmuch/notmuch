@@ -1,3 +1,5 @@
+.. _notmuch-emacs-mua(1):
+
 =================
 notmuch-emacs-mua
 =================
@@ -79,6 +81,6 @@ ENVIRONMENT VARIABLES
 SEE ALSO
 ========
 
-**notmuch(1)**,
+:any:`notmuch(1)`,
 :manpage:`emacsclient(1)`,
 :manpage:`mutt(1)`

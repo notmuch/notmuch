@@ -1,3 +1,5 @@
+.. _notmuch-restore(1):
+
 ===============
 notmuch-restore
 ===============
@@ -10,7 +12,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-Restores the tags from the given file (see **notmuch dump**).
+Restores the tags from the given file (see :any:`notmuch-dump(1)`).
 
 The input is read from the given filename, if any, or from stdin.
 
@@ -24,7 +26,7 @@ Supported options for **restore** include
 ``--format=(sup|batch-tag|auto)``
     Notmuch restore supports two plain text dump formats, with each
     line specifying a message-id and a set of tags. For details of the
-    actual formats, see **notmuch-dump(1)**.
+    actual formats, see :any:`notmuch-dump(1)`.
 
     **sup**
         The **sup** dump file format is specifically chosen to be
@@ -36,12 +38,12 @@ Supported options for **restore** include
     **batch-tag**
         The **batch-tag** dump format is intended to more robust
         against malformed message-ids and tags containing whitespace
-        or non-\ **ascii(7)** characters. See **notmuch-dump(1)** for
+        or non-\ **ascii(7)** characters. See :any:`notmuch-dump(1)` for
         details on this format.
 
         **notmuch restore** updates the maildir flags according to tag
         changes if the **maildir.synchronize\_flags** configuration
-        option is enabled. See **notmuch-config(1)** for details.
+        option is enabled. See :any:`notmuch-config(1)` for details.
 
     **auto**
         This option (the default) tries to guess the format from the
@@ -61,7 +63,7 @@ Supported options for **restore** include
         Restore per-message (key,value) metadata.  Each line starts
         with "#= ", followed by a message id, and a space separated
         list of key=value pairs.  Ids, keys and values are hex encoded
-        if needed.  See **notmuch-properties(7)** for more details.
+        if needed.  See :any:`notmuch-properties(7)` for more details.
 
     **tags**
         Restore per-message metadata, namely tags. See *format* above
@@ -84,16 +86,16 @@ particular works for standard input.
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-properties(7)**,
-**notmuch-reply(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-properties(7)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

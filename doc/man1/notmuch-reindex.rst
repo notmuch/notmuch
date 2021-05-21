@@ -1,3 +1,5 @@
+.. _notmuch-reindex(1):
+
 ===============
 notmuch-reindex
 ===============
@@ -12,7 +14,7 @@ DESCRIPTION
 
 Re-index all messages matching the search terms.
 
-See **notmuch-search-terms(7)** for details of the supported syntax for
+See :any:`notmuch-search-terms(7)` for details of the supported syntax for
 <*search-term*\ >.
 
 The **reindex** command searches for all messages matching the
@@ -42,7 +44,7 @@ Supported options for **reindex** include
     ``--decrypt=nostash`` without considering the security of your
     index.
 
-    See also ``index.decrypt`` in **notmuch-config(1)**.
+    See also ``index.decrypt`` in :any:`notmuch-config(1)`.
 
 EXAMPLES
 ========
@@ -84,17 +86,17 @@ https://trac.xapian.org/ticket/742:
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-compact(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-compact(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

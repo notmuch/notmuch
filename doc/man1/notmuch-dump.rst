@@ -1,3 +1,5 @@
+.. _notmuch-dump(1):
+
 ============
 notmuch-dump
 ============
@@ -19,7 +21,7 @@ recreated from the messages themselves. The output of notmuch dump is
 therefore the only critical thing to backup (and much more friendly to
 incremental backup than the native database files.)
 
-See **notmuch-search-terms(7)** for details of the supported syntax
+See :any:`notmuch-search-terms(7)` for details of the supported syntax
 for <search-terms>. With no search terms, a dump of all messages in
 the database will be generated. A ``--`` argument instructs notmuch that
 the remaining arguments are search terms.
@@ -49,15 +51,15 @@ Supported options for **dump** include
         quote, it must be enclosed in double quotes and double quotes
         inside the ID must be doubled. The astute reader will notice
         this is a special case of the batch input format for
-        **notmuch-tag(1)**; note that the single message-id query is
-        mandatory for **notmuch-restore(1)**.
+        :any:`notmuch-tag(1)`; note that the single message-id query is
+        mandatory for :any:`notmuch-restore(1)`.
 
     **sup**
         The **sup** dump file format is specifically chosen to be
         compatible with the format of files produced by
         :manpage:`sup-dump(1)`. So if you've previously been using sup
-        for mail, then the **notmuch restore** command provides you a
-        way to import all of your tags (or labels as sup calls
+        for mail, then the :any:`notmuch-restore(1)` command provides
+        you a way to import all of your tags (or labels as sup calls
         them). Each line has the following form::
 
           <*message-id*\ > **(** <*tag*\ > ... **)**
@@ -79,7 +81,7 @@ Supported options for **dump** include
         Output per-message (key,value) metadata.  Each line starts
         with "#= ", followed by a message id, and a space separated
         list of key=value pairs.  Ids, keys and values are hex encoded
-        if needed.  See **notmuch-properties(7)** for more details.
+        if needed.  See :any:`notmuch-properties(7)` for more details.
 
     **tags**
         Output per-message boolean metadata, namely tags. See *format* above
@@ -100,16 +102,16 @@ Supported options for **dump** include
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-properties(7)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-properties(7)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

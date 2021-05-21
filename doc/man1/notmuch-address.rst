@@ -1,3 +1,5 @@
+.. _notmuch-address(1):
+
 ===============
 notmuch-address
 ===============
@@ -13,7 +15,7 @@ DESCRIPTION
 Search for messages matching the given search terms, and display the
 addresses from them. Duplicate addresses are filtered out.
 
-See **notmuch-search-terms(7)** for details of the supported syntax for
+See :any:`notmuch-search-terms(7)` for details of the supported syntax for
 <search-terms>.
 
 Supported options for **address** include
@@ -26,7 +28,7 @@ Supported options for **address** include
 
 ``--format-version=N``
     Use the specified structured output format version. This is
-    intended for programs that invoke **notmuch(1)** internally. If
+    intended for programs that invoke :any:`notmuch(1)` internally. If
     omitted, the latest supported version will be used.
 
 ``--output=(sender|recipients|count|address)``
@@ -116,16 +118,16 @@ This command supports the following special exit status codes
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**,
-**notmuch-search(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

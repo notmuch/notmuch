@@ -1,3 +1,5 @@
+.. _notmuch-properties(7):
+
 ==================
 notmuch-properties
 ==================
@@ -45,7 +47,7 @@ CONVENTIONS
 ===========
 
 Any property with a key that starts with "index." will be removed (and
-possibly re-set) upon reindexing (see **notmuch-reindex(1)**).
+possibly re-set) upon reindexing (see :any:`notmuch-reindex(1)`).
 
 MESSAGE PROPERTIES
 ==================
@@ -70,15 +72,15 @@ of its normal activity.
 
     If notmuch never tried to decrypt an encrypted message during
     indexing (which is the default, see ``index.decrypt`` in
-    **notmuch-config(1)**), then this property will not be set on that
+    :any:`notmuch-config(1)`), then this property will not be set on that
     message.
 
 **session-key**
 
-    When **notmuch-show(1)** or **nomtuch-reply** encounters a message
-    with an encrypted part, if notmuch finds a ``session-key``
-    property associated with the message, it will try that stashed
-    session key for decryption.
+    When :any:`notmuch-show(1)` or :any:`notmuch-reply(1)` encounters
+    a message with an encrypted part, if notmuch finds a
+    ``session-key`` property associated with the message, it will try
+    that stashed session key for decryption.
 
     If you do not want to use any stashed session keys that might be
     present, you should pass those programs ``--decrypt=false``.
@@ -97,7 +99,7 @@ of its normal activity.
     message.  This includes attachments, cryptographic signatures, and
     other material that cannot be reconstructed from the index alone.
 
-    See ``index.decrypt`` in **notmuch-config(1)** for more
+    See ``index.decrypt`` in :any:`notmuch-config(1)` for more
     details about how to set notmuch's policy on when to store session
     keys.
 
@@ -136,13 +138,13 @@ of its normal activity.
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-dump(1)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reindex(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-show(1)**,
-***notmuch-search-terms(7)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-reindex(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`

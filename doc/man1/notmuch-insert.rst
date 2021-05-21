@@ -1,3 +1,5 @@
+.. _notmuch-insert(1):
+
 ==============
 notmuch-insert
 ==============
@@ -14,7 +16,7 @@ DESCRIPTION
 into the maildir directory given by configuration option
 **database.path**, then incorporates the message into the notmuch
 database. It is an alternative to using a separate tool to deliver the
-message then running **notmuch new** afterwards.
+message then running :any:`notmuch-new(1)` afterwards.
 
 The new message will be tagged with the tags specified by the
 **new.tags** configuration option, then by operations specified on the
@@ -25,7 +27,7 @@ If the new message is a duplicate of an existing message in the database
 (it has same Message-ID), it will be added to the maildir folder and
 notmuch database, but the tags will not be changed.
 
-The **insert** command supports hooks. See **notmuch-hooks(5)** for
+The **insert** command supports hooks. See :any:`notmuch-hooks(5)` for
 more details on hooks.
 
 Option arguments must appear before any tag operation arguments.
@@ -76,7 +78,7 @@ Supported options for **insert** include
     ``--decrypt=nostash`` without considering the security of your
     index.
 
-    See also ``index.decrypt`` in **notmuch-config(1)**.
+    See also ``index.decrypt`` in :any:`notmuch-config(1)`.
 
 EXIT STATUS
 ===========
@@ -101,14 +103,14 @@ status of the **insert** command.
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`

@@ -1,3 +1,6 @@
+.. _notmuch(1):
+.. _notmuch-setup(1):
+
 =======
 notmuch
 =======
@@ -15,8 +18,9 @@ reading, and tagging large collections of email messages.
 
 This page describes how to get started using notmuch from the command
 line, and gives a brief overview of the commands available. For more
-information on e.g. **notmuch show** consult the **notmuch-show(1)** man
-page, also accessible via **notmuch help show**
+information on e.g. **notmuch show** consult the
+:any:`notmuch-show(1)` man page, also accessible via **notmuch help
+show**
 
 The quickest way to get started with Notmuch is to simply invoke the
 ``notmuch`` command with no arguments, which will interactively guide
@@ -100,23 +104,25 @@ OTHER COMMANDS
 --------------
 
 Several of the notmuch commands accept search terms with a common
-syntax. See **notmuch-search-terms**\ (7) for more details on the
+syntax. See :any:`notmuch-search-terms(7)` for more details on the
 supported syntax.
 
-The **search**, **show**, **address** and **count** commands are used
-to query the email database.
+The :any:`notmuch-search(1)`, :any:`notmuch-show(1)`,
+:any:`notmuch-address(1)` and :any:`notmuch-count(1)` commands are
+used to query the email database.
 
-The **reply** command is useful for preparing a template for an email
-reply.
+The :any:`notmuch-reply(1)` command is useful for preparing a template
+for an email reply.
 
-The **tag** command is the only command available for manipulating
-database contents.
+The :any:`notmuch-tag(1)` command is the only command available for
+manipulating database contents.
 
-The **dump** and **restore** commands can be used to create a textual
-dump of email tags for backup purposes, and to restore from that dump.
+The :any:`notmuch-dump(1)` and :any:`notmuch-restore(1)` commands can
+be used to create a textual dump of email tags for backup purposes,
+and to restore from that dump.
 
-The **config** command can be used to get or set settings in the notmuch
-configuration file.
+The :any:`notmuch-config(1)` command can be used to get or set
+settings in the notmuch configuration file.
 
 CUSTOM COMMANDS
 ---------------
@@ -163,22 +169,22 @@ of notmuch.
 SEE ALSO
 ========
 
-**notmuch-address(1)**,
-**notmuch-compact(1)**,
-**notmuch-config(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-properties(7)**,
-**notmuch-reindex(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch-address(1)`,
+:any:`notmuch-compact(1)`,
+:any:`notmuch-config(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-properties(7)`,
+:any:`notmuch-reindex(1)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`
 
 The notmuch website: **https://notmuchmail.org**
 

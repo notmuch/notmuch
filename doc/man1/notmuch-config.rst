@@ -1,3 +1,5 @@
+.. _notmuch-config(1):
+
 ==============
 notmuch-config
 ==============
@@ -76,7 +78,7 @@ paths are presumed relative to `$HOME` for items in section
 **database.hook_dir**
 
     Directory containing hooks run by notmuch commands. See
-    **notmuch-hooks(5)**.
+    :any:`notmuch-hooks(5)`.
 
 **user.name**
     Your full name.
@@ -103,7 +105,7 @@ paths are presumed relative to `$HOME` for items in section
 
 **new.ignore**
     A list to specify files and directories that will not be searched
-    for messages by **notmuch new**. Each entry in the list is either:
+    for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
 
     A file or a directory name, without path, that will be ignored,
     regardless of the location in the mail store directory hierarchy.
@@ -124,7 +126,7 @@ paths are presumed relative to `$HOME` for items in section
     default. Using an excluded tag in a query will override that
     exclusion.
 
-    Default: empty list. Note that **notmuch-setup(1)** puts
+    Default: empty list. Note that :any:`notmuch-setup(1)` puts
     ``deleted;spam`` here when creating new configuration file.
 
 **maildir.synchronize\_flags**
@@ -145,16 +147,18 @@ paths are presumed relative to `$HOME` for items in section
     | S      | unread (added when 'S' flag is not present)   |
     +--------+-----------------------------------------------+
 
-    The **notmuch new** command will notice flag changes in filenames
-    and update tags, while the **notmuch tag** and **notmuch restore**
-    commands will notice tag changes and update flags in filenames.
+    The :any:`notmuch-new(1)` command will notice flag changes in
+    filenames and update tags, while the :any:`notmuch-tag(1)` and
+    :any:`notmuch-restore(1)` commands will notice tag changes and
+    update flags in filenames.
 
     If there have been any changes in the maildir (new messages added,
     old ones removed or renamed, maildir flags changed, etc.), it is
-    advisable to run **notmuch new** before **notmuch tag** or
-    **notmuch restore** commands to ensure the tag changes are
-    properly synchronized to the maildir flags, as the commands expect
-    the database and maildir to be in sync.
+    advisable to run :any:`notmuch-new(1)` before
+    :any:`notmuch-tag(1)` or :any:`notmuch-restore(1)` commands to
+    ensure the tag changes are properly synchronized to the maildir
+    flags, as the commands expect the database and maildir to be in
+    sync.
 
     Default: ``true``.
 
@@ -174,8 +178,8 @@ paths are presumed relative to `$HOME` for items in section
     ``nostash`` is the same as ``true`` except that it will not stash
     newly-discovered session keys in the database.
 
-    From the command line (i.e. during **notmuch-new(1)**,
-    **notmuch-insert(1)**, or **notmuch-reindex(1)**), the user can
+    From the command line (i.e. during :any:`notmuch-new(1)`,
+    :any:`notmuch-insert(1)`, or :any:`notmuch-reindex(1)`), the user can
     override the database's stored decryption policy with the
     ``--decrypt=`` option.
 
@@ -199,7 +203,7 @@ paths are presumed relative to `$HOME` for items in section
 
     Stashed session keys are kept in the database as properties
     associated with the message.  See ``session-key`` in
-    **notmuch-properties(7)** for more details about how they can be
+    :any:`notmuch-properties(7)` for more details about how they can be
     useful.
 
     Be aware that the notmuch index is likely sufficient (and a
@@ -217,7 +221,7 @@ paths are presumed relative to `$HOME` for items in section
     prefix ``List:`` that searches the ``List-Id`` field.  User
     defined prefixes must not start with 'a'...'z'; in particular
     adding a prefix with same name as a predefined prefix is not
-    supported. See **notmuch-search-terms(7)** for a list of existing
+    supported. See :any:`notmuch-search-terms(7)` for a list of existing
     prefixes, and an explanation of probabilistic prefixes.
 
 **built_with.<name>**
@@ -228,7 +232,7 @@ paths are presumed relative to `$HOME` for items in section
 
 **query.<name>**
     Expansion for named query called <name>. See
-    **notmuch-search-terms(7)** for more information about named
+    :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
 ENVIRONMENT
@@ -268,16 +272,16 @@ If ``database.hook_dir`` is unset, notmuch tries (in order)
 SEE ALSO
 ========
 
-**notmuch(1)**,
-**notmuch-count(1)**,
-**notmuch-dump(1)**,
-**notmuch-hooks(5)**,
-**notmuch-insert(1)**,
-**notmuch-new(1)**,
-**notmuch-reply(1)**,
-**notmuch-restore(1)**,
-**notmuch-search(1)**,
-**notmuch-search-terms(7)**,
-**notmuch-properties(7)**,
-**notmuch-show(1)**,
-**notmuch-tag(1)**
+:any:`notmuch(1)`,
+:any:`notmuch-count(1)`,
+:any:`notmuch-dump(1)`,
+:any:`notmuch-hooks(5)`,
+:any:`notmuch-insert(1)`,
+:any:`notmuch-new(1)`,
+:any:`notmuch-properties(7)`,
+:any:`notmuch-reply(1)`,
+:any:`notmuch-restore(1)`,
+:any:`notmuch-search(1)`,
+:any:`notmuch-search-terms(7)`,
+:any:`notmuch-show(1)`,
+:any:`notmuch-tag(1)`
