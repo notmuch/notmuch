@@ -72,11 +72,13 @@ Options may be specified multiple times.
 ENVIRONMENT VARIABLES
 =====================
 
-**EMACS**
-    Name of emacs command to invoke. Defaults to "emacs".
+.. envvar:: EMACS
 
-**EMACSCLIENT**
-    Name of emacsclient command to invoke. Defaults to "emacsclient".
+   Name of emacs command to invoke. Defaults to "emacs".
+
+.. envvar:: EMACSCLIENT
+
+   Name of emacsclient command to invoke. Defaults to "emacsclient".
 
 SEE ALSO
 ========

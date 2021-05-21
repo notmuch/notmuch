@@ -235,39 +235,39 @@ paths are presumed relative to `$HOME` for items in section
     :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
-ENVIRONMENT
-===========
-
-The following environment variables can be used to control the behavior
-of notmuch.
-
-**NOTMUCH\_CONFIG**
-    Specifies the location of the notmuch configuration file.
-
-**NOTMUCH_PROFILE**
-    Selects among notmuch configurations.
-
 FILES
 =====
 
 CONFIGURATION
 -------------
 
-If ``NOTMUCH_CONFIG`` is unset, notmuch tries (in order)
+Notmuch configuration file search order:
 
-- ``$XDG_CONFIG_HOME/notmuch/<profile>/config`` where ``<profile>`` is
-  defined by ``$NOTMUCH_PROFILE`` or "default"
-- ``${HOME}/.notmuch-config<profile>`` where ``<profile>`` is
-  ``.$NOTMUCH_PROFILE`` or ""
+1. File specified by ``--config=FILE`` global option; see
+   :any:`notmuch(1)`.
+
+2. File specified by :envvar:`NOTMUCH_CONFIG` environment variable.
+
+3. ``$XDG_CONFIG_HOME/notmuch/<profile>/config`` where ``<profile>``
+   is defined by :envvar:`NOTMUCH_PROFILE` environment variable if
+   set, ``$XDG_CONFIG_HOME/notmuch/default/config`` otherwise.
+
+4. ``$HOME/.notmuch-config.<profile>`` where ``<profile>`` is defined
+   by :envvar:`NOTMUCH_PROFILE` environment variable if set,
+   ``$HOME/.notmuch-config`` otherwise.
 
 Hooks
 -----
 
-If ``database.hook_dir`` is unset, notmuch tries (in order)
+Notmuch hook directory search order:
 
-- ``$XDG_CONFIG_HOME/notmuch/<profile>/hooks`` where ``<profile>`` is
-  defined by ``$NOTMUCH_PROFILE`` or "default"
-- ``<database.path>/.notmuch/hooks``
+1. Directory specified by ``database.hook_dir`` configuration option.
+
+2. ``$XDG_CONFIG_HOME/notmuch/<profile>/hooks`` where ``<profile>``
+   is defined by :envvar:`NOTMUCH_PROFILE` environment variable if
+   set, ``$XDG_CONFIG_HOME/notmuch/default/hooks`` otherwise.
+
+3. ``<database.path>/.notmuch/hooks``
 
 SEE ALSO
 ========

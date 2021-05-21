@@ -52,7 +52,7 @@ Supported global options for ``notmuch`` include
 
 ``--config=FILE``
     Specify the configuration file to use. This overrides any
-    configuration file specified by ${NOTMUCH\_CONFIG}. The empty
+    configuration file specified by :envvar:`NOTMUCH_CONFIG`. The empty
     string is a permitted and sometimes useful value of *FILE*, which
     tells ``notmuch`` to use only configuration metadata from the database.
 
@@ -79,7 +79,7 @@ use, (or to reconfigure it later).
 The setup command will prompt for your full name, your primary email
 address, any alternate email addresses you use, and the directory
 containing your email archives. Your answers will be written to a
-configuration file in ${NOTMUCH\_CONFIG} (if set) or
+configuration file in :envvar:`NOTMUCH_CONFIG` (if set) or
 ${HOME}/.notmuch-config . This configuration file will be created with
 descriptive comments, making it easy to edit by hand later to change the
 configuration. Or you can run **notmuch setup** again to change the
@@ -128,8 +128,8 @@ CUSTOM COMMANDS
 ---------------
 
 If the given command is not known to notmuch, notmuch tries to execute
-the external **notmuch-<subcommand>** in ${PATH} instead. This allows
-users to have their own notmuch related tools to be run via the
+the external **notmuch-<subcommand>** in :envvar:`PATH` instead. This
+allows users to have their own notmuch related tools to be run via the
 notmuch command. By design, this does not allow notmuch's own commands
 to be overridden using external commands.
 
@@ -153,18 +153,26 @@ ENVIRONMENT
 The following environment variables can be used to control the behavior
 of notmuch.
 
-**NOTMUCH\_CONFIG**
-    Specifies the location of the notmuch configuration file. Notmuch
-    will use ${HOME}/.notmuch-config if this variable is not set.
+.. envvar:: NOTMUCH_CONFIG
 
-**NOTMUCH\_TALLOC\_REPORT**
-    Location to write a talloc memory usage report. See
-    **talloc\_enable\_leak\_report\_full** in :manpage:`talloc(3)` for more
-    information.
+   Specifies the location of the notmuch configuration file. See
+   :any:`notmuch-config(1)` for details.
 
-**NOTMUCH\_DEBUG\_QUERY**
-    If set to a non-empty value, the notmuch library will print (to
-    stderr) Xapian queries it constructs.
+.. envvar:: NOTMUCH_PROFILE
+
+   Selects among notmuch configurations. See :any:`notmuch-config(1)`
+   for details.
+
+.. envvar:: NOTMUCH_TALLOC_REPORT
+
+   Location to write a talloc memory usage report. See
+   **talloc\_enable\_leak\_report\_full** in :manpage:`talloc(3)` for more
+   information.
+
+.. envvar:: NOTMUCH_DEBUG_QUERY
+
+   If set to a non-empty value, the notmuch library will print (to
+   stderr) Xapian queries it constructs.
 
 SEE ALSO
 ========
