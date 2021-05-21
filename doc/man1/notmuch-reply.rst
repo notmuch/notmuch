@@ -86,7 +86,7 @@ Supported options for **reply** include
     Use ``false`` to avoid even automatic decryption.
 
     Non-automatic decryption expects a functioning
-    **gpg-agent(1)** to provide any needed credentials. Without
+    :manpage:`gpg-agent(1)` to provide any needed credentials. Without
     one, the decryption will likely fail.
 
     Default: ``auto``

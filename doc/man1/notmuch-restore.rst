@@ -77,9 +77,9 @@ GZIPPED INPUT
 =============
 
 \ **notmuch restore** will detect if the input is compressed in
-**gzip(1)** format and automatically decompress it while reading. This
-detection does not depend on file naming and in particular works for
-standard input.
+:manpage:`gzip(1)` format and automatically decompress it while
+reading. This detection does not depend on file naming and in
+particular works for standard input.
 
 SEE ALSO
 ========

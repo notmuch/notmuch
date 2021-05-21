@@ -39,7 +39,7 @@ indicate user-supplied values).
 
 Some of the prefixes with <regex> forms can be also used to restrict
 the results to those whose value matches a regular expression (see
-**regex(7)**) delimited with //, for example::
+:manpage:`regex(7)`) delimited with //, for example::
 
    notmuch search 'from:"/bob@.*[.]example[.]com/"'
 

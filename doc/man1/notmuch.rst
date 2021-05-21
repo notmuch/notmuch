@@ -90,7 +90,8 @@ will do its best to detect those and ignore them.
 Mail storage that uses mbox format, (where one mbox file contains many
 messages), will not work with notmuch. If that's how your mail is
 currently stored, it is recommended you first convert it to maildir
-format with a utility such as mb2md before running **notmuch setup .**
+format with a utility such as :manpage:`mb2md(1)` before running
+**notmuch setup**.
 
 Invoking ``notmuch`` with no command argument will run **setup** if the
 setup command has not previously been completed.
@@ -152,7 +153,7 @@ of notmuch.
 
 **NOTMUCH\_TALLOC\_REPORT**
     Location to write a talloc memory usage report. See
-    **talloc\_enable\_leak\_report\_full** in **talloc(3)** for more
+    **talloc\_enable\_leak\_report\_full** in :manpage:`talloc(3)` for more
     information.
 
 **NOTMUCH\_DEBUG\_QUERY**

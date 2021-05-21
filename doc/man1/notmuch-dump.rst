@@ -27,7 +27,7 @@ the remaining arguments are search terms.
 Supported options for **dump** include
 
 ``--gzip``
-    Compress the output in a format compatible with **gzip(1)**.
+    Compress the output in a format compatible with :manpage:`gzip(1)`.
 
 ``--format=(sup|batch-tag)``
     Notmuch restore supports two plain text dump formats, both with
@@ -36,8 +36,8 @@ Supported options for **dump** include
     **batch-tag**
         The default **batch-tag** dump format is intended to more
         robust against malformed message-ids and tags containing
-        whitespace or non-\ **ascii(7)** characters. Each line has the
-        form::
+        whitespace or non-\ :manpage:`ascii(7)` characters. Each line
+        has the form::
 
 	  +<*encoded-tag*\ > +<*encoded-tag*\ > ... -- id:<*quoted-message-id*\ >
 
@@ -54,11 +54,11 @@ Supported options for **dump** include
 
     **sup**
         The **sup** dump file format is specifically chosen to be
-        compatible with the format of files produced by sup-dump. So
-        if you've previously been using sup for mail, then the
-        **notmuch restore** command provides you a way to import all
-        of your tags (or labels as sup calls them). Each line has the
-        following form::
+        compatible with the format of files produced by
+        :manpage:`sup-dump(1)`. So if you've previously been using sup
+        for mail, then the **notmuch restore** command provides you a
+        way to import all of your tags (or labels as sup calls
+        them). Each line has the following form::
 
           <*message-id*\ > **(** <*tag*\ > ... **)**
 

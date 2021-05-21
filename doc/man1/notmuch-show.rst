@@ -130,7 +130,7 @@ Supported options for **show** include
     Use ``false`` to avoid even automatic decryption.
 
     Non-automatic decryption (``stash`` or ``true``, in the absence of
-    a stashed session key) expects a functioning **gpg-agent(1)** to
+    a stashed session key) expects a functioning :manpage:`gpg-agent(1)` to
     provide any needed credentials. Without one, the decryption will
     fail.
 

@@ -80,6 +80,11 @@ htmlhelp_basename = 'notmuchdoc'
 # Despite the name, this actually affects manual pages as well.
 html_use_smartypants = False
 
+# See:
+# - https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-manpages_url
+# - https://manpages.debian.org/
+manpages_url = 'https://manpages.debian.org/{page}.{section}.html'
+
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples

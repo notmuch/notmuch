@@ -41,8 +41,9 @@ Supported options for **emacs-mua** include
     Even if a window system is available, use the current terminal.
 
 ``--client``
-    Use **emacsclient**, rather than **emacs**. For **emacsclient** to
-    work, you need an already running Emacs with a server, or use
+    Use :manpage:`emacsclient(1)`, rather than
+    :manpage:`emacs(1)`. For :manpage:`emacsclient(1)` to work, you
+    need an already running Emacs with a server, or use
     ``--auto-daemon``.
 
 ``--auto-daemon``
@@ -60,9 +61,9 @@ Supported options for **emacs-mua** include
     Output the resulting elisp to stdout instead of evaluating it.
 
 The supported positional parameters and short options are a compatible
-subset of the **mutt** MUA command-line options. The options and
-positional parameters modifying the message can't be combined with the
-mailto: URL.
+subset of the :manpage:`mutt(1)` MUA command-line options. The options
+and positional parameters modifying the message can't be combined with
+the mailto: URL.
 
 Options may be specified multiple times.
 
@@ -78,4 +79,6 @@ ENVIRONMENT VARIABLES
 SEE ALSO
 ========
 
-**notmuch(1)**, **emacsclient(1)**, **mutt(1)**
+**notmuch(1)**,
+:manpage:`emacsclient(1)`,
+:manpage:`mutt(1)`

@@ -27,8 +27,8 @@ Supported options for **search** include
 ``--format=``\ (**json**\ \|\ **sexp**\ \|\ **text**\ \|\ **text0**)
     Presents the results in either JSON, S-Expressions, newline
     character separated plain-text (default), or null character
-    separated plain-text (compatible with **xargs(1)** -0 option where
-    available).
+    separated plain-text (compatible with :manpage:`xargs(1)` -0
+    option where available).
 
 ``--format-version=N``
     Use the specified structured output format version. This is
