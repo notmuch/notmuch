@@ -248,7 +248,7 @@ CONFIGURATION
 
 Notmuch configuration file search order:
 
-1. File specified by ``--config=FILE`` global option; see
+1. File specified by :option:`notmuch --config` global option; see
    :any:`notmuch(1)`.
 
 2. File specified by :envvar:`NOTMUCH_CONFIG` environment variable.
