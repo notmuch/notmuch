@@ -68,6 +68,10 @@ Emacs
 Restore the dynamically bound variables `tag-changes` and `query` in
 in `notmuch-before-tag-hook` and `notmuch-after-tag-hook`.
 
+Add `notmuch-jump-key` face to fontify keys in `notmuch-jump` and
+related functions.  To ensure backward compatibility, the new face
+inherits from `minibuffer-prompt`.
+
 Notmuch 0.32 (2021-05-02)
 =========================
 

@@ -62,6 +62,11 @@ fast way to jump to a saved search from anywhere in Notmuch."
       (error "To use notmuch-jump, %s"
 	     "please customize shortcut keys in notmuch-saved-searches."))))
 
+(defface notmuch-jump-key
+  '((t :inherit minibuffer-prompt))
+  "Default face used for keys in `notmuch-jump' and related."
+  :group 'notmuch-faces)
+
 (defvar notmuch-jump--action nil)
 
 ;;;###autoload
@@ -88,7 +93,7 @@ not appear in the pop-up buffer."
 	    (buffer-string)))
 	 (full-prompt
 	  (concat table "\n\n"
-		  (propertize prompt 'face 'minibuffer-prompt)))
+		  (propertize prompt 'face 'notmuch-jump-key)))
 	 ;; By default, the minibuffer applies the minibuffer face to
 	 ;; the entire prompt.  However, we want to clearly
 	 ;; distinguish bindings (which we put in the prompt face
@@ -123,7 +128,7 @@ buffer."
     ;; Format each action
     (mapcar (pcase-lambda (`(,key ,desc))
 	      (setq key (format-kbd-macro key))
-	      (concat (propertize key 'face 'minibuffer-prompt)
+	      (concat (propertize key 'face 'notmuch-jump-key)
 		      (make-string (- key-width (length key)) ? )
 		      " " desc))
 	    action-map)))
