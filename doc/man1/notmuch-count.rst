@@ -24,38 +24,45 @@ See :any:`notmuch-search-terms(7)` for details of the supported syntax for
 
 Supported options for **count** include
 
-``--output=(messages|threads|files)``
-    **messages**
-        Output the number of matching messages. This is the default.
+.. program:: count
 
-    **threads**
-        Output the number of matching threads.
+.. option:: --output=(messages|threads|files)
 
-    **files**
-        Output the number of files associated with matching
-        messages. This may be bigger than the number of matching
-        messages due to duplicates (i.e. multiple files having the
-        same message-id).
+   **messages**
+     Output the number of matching messages. This is the default.
 
-``--exclude=(true|false)``
-    Specify whether to omit messages matching search.exclude\_tags from
-    the count (the default) or not.
+   **threads**
+     Output the number of matching threads.
 
-``--batch``
-    Read queries from a file (stdin by default), one per line, and
-    output the number of matching messages (or threads) to stdout, one
-    per line. On an empty input line the count of all messages (or
-    threads) in the database will be output. This option is not
-    compatible with specifying search terms on the command line.
+   **files**
+     Output the number of files associated with matching
+     messages. This may be bigger than the number of matching
+     messages due to duplicates (i.e. multiple files having the
+     same message-id).
 
-``--lastmod``
-    Append lastmod (counter for number of database updates) and UUID
-    to the output. lastmod values are only comparable between
-    databases with the same UUID.
+.. option:: --exclude=(true|false)
 
-``--input=``\ <filename>
-    Read input from given file, instead of from stdin. Implies
-    ``--batch``.
+   Specify whether to omit messages matching search.exclude\_tags from
+   the count (the default) or not.
+
+.. option:: --batch
+
+   Read queries from a file (stdin by default), one per line, and
+   output the number of matching messages (or threads) to stdout, one
+   per line. On an empty input line the count of all messages (or
+   threads) in the database will be output. This option is not
+   compatible with specifying search terms on the command line.
+
+.. option:: --lastmod
+
+   Append lastmod (counter for number of database updates) and UUID
+   to the output. lastmod values are only comparable between
+   databases with the same UUID.
+
+.. option:: --input=<filename>
+
+   Read input from given file, instead of from stdin. Implies
+   ``--batch``.
 
 SEE ALSO
 ========

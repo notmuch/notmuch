@@ -19,32 +19,37 @@ DESCRIPTION
 The **config** command can be used to get or set settings in the notmuch
 configuration file and corresponding database.
 
-**get**
-    The value of the specified configuration item is printed to
-    stdout. If the item has multiple values (it is a list), each value
-    is separated by a newline character.
+.. program:: config
 
-**set**
-    The specified configuration item is set to the given value. To
-    specify a multiple-value item (a list), provide each value as a
-    separate command-line argument.
+.. option:: get
 
-    If no values are provided, the specified configuration item will
-    be removed from the configuration file.
+   The value of the specified configuration item is printed to
+   stdout. If the item has multiple values (it is a list), each value
+   is separated by a newline character.
 
-    With the `--database` option, updates configuration metadata
-    stored in the database, rather than the default (text)
-    configuration file.
+.. option:: set
 
-**list**
-    Every configuration item is printed to stdout, each on a separate
-    line of the form::
+   The specified configuration item is set to the given value. To
+   specify a multiple-value item (a list), provide each value as a
+   separate command-line argument.
 
-        section.item=value
+   If no values are provided, the specified configuration item will
+   be removed from the configuration file.
 
-    No additional whitespace surrounds the dot or equals sign
-    characters. In a multiple-value item (a list), the values are
-    separated by semicolon characters.
+   With the `--database` option, updates configuration metadata
+   stored in the database, rather than the default (text)
+   configuration file.
+
+.. option:: list
+
+   Every configuration item is printed to stdout, each on a separate
+   line of the form::
+
+     section.item=value
+
+   No additional whitespace surrounds the dot or equals sign
+   characters. In a multiple-value item (a list), the values are
+   separated by semicolon characters.
 
 The available configuration items are described below. Non-absolute
 paths are presumed relative to `$HOME` for items in section

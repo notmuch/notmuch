@@ -28,76 +28,82 @@ the remaining arguments are search terms.
 
 Supported options for **dump** include
 
-``--gzip``
-    Compress the output in a format compatible with :manpage:`gzip(1)`.
+.. program:: dump
 
-``--format=(sup|batch-tag)``
-    Notmuch restore supports two plain text dump formats, both with
-    one message-id per line, followed by a list of tags.
+.. option:: --gzip
 
-    **batch-tag**
-        The default **batch-tag** dump format is intended to more
-        robust against malformed message-ids and tags containing
-        whitespace or non-\ :manpage:`ascii(7)` characters. Each line
-        has the form::
+   Compress the output in a format compatible with :manpage:`gzip(1)`.
 
-	  +<*encoded-tag*\ > +<*encoded-tag*\ > ... -- id:<*quoted-message-id*\ >
+.. option:: --format=(sup|batch-tag)
 
-        Tags are hex-encoded by replacing every byte not matching the
-        regex **[A-Za-z0-9@=.,\_+-]** with **%nn** where nn is the two
-        digit hex encoding. The message ID is a valid Xapian query,
-        quoted using Xapian boolean term quoting rules: if the ID
-        contains whitespace or a close paren or starts with a double
-        quote, it must be enclosed in double quotes and double quotes
-        inside the ID must be doubled. The astute reader will notice
-        this is a special case of the batch input format for
-        :any:`notmuch-tag(1)`; note that the single message-id query is
-        mandatory for :any:`notmuch-restore(1)`.
+   Notmuch restore supports two plain text dump formats, both with
+   one message-id per line, followed by a list of tags.
 
-    **sup**
-        The **sup** dump file format is specifically chosen to be
-        compatible with the format of files produced by
-        :manpage:`sup-dump(1)`. So if you've previously been using sup
-        for mail, then the :any:`notmuch-restore(1)` command provides
-        you a way to import all of your tags (or labels as sup calls
-        them). Each line has the following form::
+   **batch-tag**
+     The default **batch-tag** dump format is intended to more
+     robust against malformed message-ids and tags containing
+     whitespace or non-\ :manpage:`ascii(7)` characters. Each line
+     has the form::
 
-          <*message-id*\ > **(** <*tag*\ > ... **)**
+       +<*encoded-tag*\ > +<*encoded-tag*\ > ... -- id:<*quoted-message-id*\ >
 
-        with zero or more tags are separated by spaces. Note that
-        (malformed) message-ids may contain arbitrary non-null
-        characters. Note also that tags with spaces will not be
-        correctly restored with this format.
+     Tags are hex-encoded by replacing every byte not matching the
+     regex **[A-Za-z0-9@=.,\_+-]** with **%nn** where nn is the two
+     digit hex encoding. The message ID is a valid Xapian query,
+     quoted using Xapian boolean term quoting rules: if the ID
+     contains whitespace or a close paren or starts with a double
+     quote, it must be enclosed in double quotes and double quotes
+     inside the ID must be doubled. The astute reader will notice
+     this is a special case of the batch input format for
+     :any:`notmuch-tag(1)`; note that the single message-id query is
+     mandatory for :any:`notmuch-restore(1)`.
 
-``--include=(config|properties|tags)``
-    Control what kind of metadata is included in the output.
+   **sup**
+     The **sup** dump file format is specifically chosen to be
+     compatible with the format of files produced by
+     :manpage:`sup-dump(1)`. So if you've previously been using sup
+     for mail, then the :any:`notmuch-restore(1)` command provides
+     you a way to import all of your tags (or labels as sup calls
+     them). Each line has the following form::
 
-    **config**
-        Output configuration data stored in the database. Each line
-        starts with "#@ ", followed by a space separated key-value
-        pair.  Both key and value are hex encoded if needed.
+       <*message-id*\ > **(** <*tag*\ > ... **)**
 
-    **properties**
-        Output per-message (key,value) metadata.  Each line starts
-        with "#= ", followed by a message id, and a space separated
-        list of key=value pairs.  Ids, keys and values are hex encoded
-        if needed.  See :any:`notmuch-properties(7)` for more details.
+     with zero or more tags are separated by spaces. Note that
+     (malformed) message-ids may contain arbitrary non-null
+     characters. Note also that tags with spaces will not be
+     correctly restored with this format.
 
-    **tags**
-        Output per-message boolean metadata, namely tags. See *format* above
-        for description of the output.
+.. option:: --include=(config|properties|tags)
 
-    The default is to include all available types of data.  The option
-    can be specified multiple times to select some subset. As of
-    version 3 of the dump format, there is a header line of the
-    following form::
+   Control what kind of metadata is included in the output.
 
-      #notmuch-dump <*format*>:<*version*> <*included*>
+   **config**
+     Output configuration data stored in the database. Each line
+     starts with "#@ ", followed by a space separated key-value
+     pair.  Both key and value are hex encoded if needed.
 
-    where <*included*> is a comma separated list of the above options.
+   **properties**
+     Output per-message (key,value) metadata.  Each line starts
+     with "#= ", followed by a message id, and a space separated
+     list of key=value pairs.  Ids, keys and values are hex encoded
+     if needed.  See :any:`notmuch-properties(7)` for more details.
 
-``--output=``\ <filename>
-    Write output to given file instead of stdout.
+   **tags**
+     Output per-message boolean metadata, namely tags. See *format* above
+     for description of the output.
+
+   The default is to include all available types of data.  The option
+   can be specified multiple times to select some subset. As of
+   version 3 of the dump format, there is a header line of the
+   following form::
+
+     #notmuch-dump <*format*>:<*version*> <*included*>
+
+   where <*included*> is a comma separated list of the above options.
+
+.. option:: --output=<filename>
+
+   Write output to given file instead of stdout.
 
 SEE ALSO
 ========

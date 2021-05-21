@@ -43,25 +43,31 @@ OPTIONS
 
 Supported global options for ``notmuch`` include
 
-``--help`` [command-name]
-    Print a synopsis of available commands and exit. With an optional
-    command name, show the man page for that subcommand.
+.. program:: notmuch
 
-``--version``
-    Print the installed version of notmuch, and exit.
+.. option:: --help [command-name]
 
-``--config=FILE``
-    Specify the configuration file to use. This overrides any
-    configuration file specified by :envvar:`NOTMUCH_CONFIG`. The empty
-    string is a permitted and sometimes useful value of *FILE*, which
-    tells ``notmuch`` to use only configuration metadata from the database.
+   Print a synopsis of available commands and exit. With an optional
+   command name, show the man page for that subcommand.
 
-``--uuid=HEX``
-    Enforce that the database UUID (a unique identifier which persists
-    until e.g. the database is compacted) is HEX; exit with an error
-    if it is not. This is useful to detect rollover in modification
-    counts on messages. You can find this UUID using e.g. ``notmuch
-    count --lastmod``
+.. option:: --version
+
+   Print the installed version of notmuch, and exit.
+
+.. option:: --config=FILE
+
+   Specify the configuration file to use. This overrides any
+   configuration file specified by :envvar:`NOTMUCH_CONFIG`. The empty
+   string is a permitted and sometimes useful value of *FILE*, which
+   tells ``notmuch`` to use only configuration metadata from the database.
+
+.. option:: --uuid=HEX
+
+   Enforce that the database UUID (a unique identifier which persists
+   until e.g. the database is compacted) is HEX; exit with an error
+   if it is not. This is useful to detect rollover in modification
+   counts on messages. You can find this UUID using e.g. ``notmuch
+   count --lastmod``
 
 All global options except ``--config`` can also be specified after the
 command. For example, ``notmuch subcommand --uuid=HEX`` is equivalent

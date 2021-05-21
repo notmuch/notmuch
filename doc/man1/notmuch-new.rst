@@ -40,36 +40,43 @@ details on hooks.
 
 Supported options for **new** include
 
-``--no-hooks``
-    Prevents hooks from being run.
+.. program:: new
 
-``--quiet``
-    Do not print progress or results.
+.. option:: --no-hooks
 
-``--verbose``
-    Print file names being processed. Ignored when combined with
-    ``--quiet``.
+   Prevents hooks from being run.
 
-``--decrypt=(true|nostash|auto|false)``
-    If ``true``, when encountering an encrypted message, try to
-    decrypt it while indexing, and stash any discovered session keys.
-    If ``auto``, try to use any session key already known to belong to
-    this message, but do not attempt to use the user's secret keys.
-    If decryption is successful, index the cleartext of the message.
+.. option:: --quiet
 
-    Be aware that the index is likely sufficient (and the session key
-    is certainly sufficient) to reconstruct the cleartext of the
-    message itself, so please ensure that the notmuch message index is
-    adequately protected.  DO NOT USE ``--decrypt=true`` or
-    ``--decrypt=nostash`` without considering the security of your
-    index.
+   Do not print progress or results.
 
-    See also ``index.decrypt`` in :any:`notmuch-config(1)`.
+.. option:: --verbose
 
-``--full-scan``
-    By default notmuch-new uses directory modification times (mtimes)
-    to optimize the scanning of directories for new mail. This option turns
-    that optimization off.
+   Print file names being processed. Ignored when combined with
+   ``--quiet``.
+
+.. option:: --decrypt=(true|nostash|auto|false)
+
+   If ``true``, when encountering an encrypted message, try to
+   decrypt it while indexing, and stash any discovered session keys.
+   If ``auto``, try to use any session key already known to belong to
+   this message, but do not attempt to use the user's secret keys.
+   If decryption is successful, index the cleartext of the message.
+
+   Be aware that the index is likely sufficient (and the session key
+   is certainly sufficient) to reconstruct the cleartext of the
+   message itself, so please ensure that the notmuch message index is
+   adequately protected.  DO NOT USE ``--decrypt=true`` or
+   ``--decrypt=nostash`` without considering the security of your
+   index.
+
+   See also ``index.decrypt`` in :any:`notmuch-config(1)`.
+
+.. option:: --full-scan
+
+   By default notmuch-new uses directory modification times (mtimes)
+   to optimize the scanning of directories for new mail. This option turns
+   that optimization off.
 
 EXIT STATUS
 ===========
