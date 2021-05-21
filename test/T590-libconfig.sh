@@ -419,6 +419,7 @@ cat <<'EOF' >EXPECTED
 08: 'USERNAME@FQDN'
 09: 'NULL'
 10: 'USER_FULL_NAME'
+11: '8000'
 == stderr ==
 EOF
 unset MAILDIR
@@ -730,6 +731,7 @@ cat <<'EOF' >EXPECTED
 08: 'test_suite@notmuchmail.org'
 09: 'test_suite_other@notmuchmail.org;test_suite@otherdomain.org'
 10: 'Notmuch Test Suite'
+11: '8000'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -762,6 +764,7 @@ cat <<'EOF' >EXPECTED
 08: 'USERNAME@FQDN'
 09: 'NULL'
 10: 'USER_FULL_NAME'
+11: '8000'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -828,6 +831,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 aaabefore beforeval
+database.autocommit 8000
 database.backup_dir MAIL_DIR/.notmuch/backups
 database.hook_dir MAIL_DIR/.notmuch/hooks
 database.mail_root MAIL_DIR

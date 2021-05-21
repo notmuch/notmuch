@@ -2520,6 +2520,7 @@ typedef enum _notmuch_config_key {
     NOTMUCH_CONFIG_PRIMARY_EMAIL,
     NOTMUCH_CONFIG_OTHER_EMAIL,
     NOTMUCH_CONFIG_USER_NAME,
+    NOTMUCH_CONFIG_AUTOCOMMIT,
     NOTMUCH_CONFIG_LAST
 } notmuch_config_key_t;
 

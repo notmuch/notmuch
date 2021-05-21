@@ -259,6 +259,7 @@ EOF
 built_with.compact=true
 built_with.field_processor=true
 built_with.retry_lock=true
+database.autocommit=8000
 database.backup_dir
 database.hook_dir
 database.mail_root=MAIL_DIR

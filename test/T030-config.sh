@@ -51,6 +51,7 @@ cat <<EOF > EXPECTED
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
+database.autocommit=8000
 database.mail_root=MAIL_DIR
 database.path=MAIL_DIR
 foo.list=this;is another;list value;
