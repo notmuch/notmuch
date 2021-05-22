@@ -88,6 +88,14 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: See HOOKS, below.
 
+**database.autocommit**
+
+    How often to commit transactions to disk. `0` means wait until
+    command completes, otherwise an integer `n` specifies to commit to
+    disk after every `n` completed transactions.
+
+    History: this configuration value was introduced in notmuch 0.33.
+
 **user.name**
     Your full name.
 
