@@ -529,11 +529,11 @@ notmuch_database_status_string (const notmuch_database_t *notmuch);
  * have no effect.
  *
  * For writable databases, notmuch_database_close commits all changes
- * to disk before closing the database.  If the caller is currently in
- * an atomic section (there was a notmuch_database_begin_atomic
- * without a matching notmuch_database_end_atomic), this will discard
- * changes made in that atomic section (but still commit changes made
- * prior to entering the atomic section).
+ * to disk before closing the database, unless the caller is currently
+ * in an atomic section (there was a notmuch_database_begin_atomic
+ * without a matching notmuch_database_end_atomic). In this case
+ * changes since the last commit are discarded. @see
+ * notmuch_database_end_atomic for more information.
  *
  * Return value:
  *
@@ -670,7 +670,10 @@ notmuch_status_t
 notmuch_database_begin_atomic (notmuch_database_t *notmuch);
 
 /**
- * Indicate the end of an atomic database operation.
+ * Indicate the end of an atomic database operation.  If repeated
+ * (with matching notmuch_database_begin_atomic) "database.autocommit"
+ * times, commit the the transaction and all previous (non-cancelled)
+ * transactions to the database.
  *
  * Return value:
  *
