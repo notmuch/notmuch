@@ -564,26 +564,6 @@ notmuch_built_with_sanitize () {
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
-notmuch_passwd_sanitize () {
-    ${NOTMUCH_PYTHON} -c'
-import os, sys, pwd, socket
-
-pw = pwd.getpwuid(os.getuid())
-user = pw.pw_name
-name = pw.pw_gecos.partition(",")[0]
-fqdn = socket.getaddrinfo(socket.gethostname(), 0, 0, socket.SOCK_STREAM, 0, socket.AI_CANONNAME)[0][3]
-
-for l in sys.stdin:
-    if user:
-        l = l.replace(user, "USERNAME")
-    if fqdn:
-        l = l.replace(fqdn, "FQDN").replace(".(none)","")
-    if name:
-        l = l.replace(name, "USER_FULL_NAME")
-    sys.stdout.write(l)
-'
-}
-
 notmuch_config_sanitize () {
     notmuch_dir_sanitize | notmuch_built_with_sanitize
 }
