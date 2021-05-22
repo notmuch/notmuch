@@ -114,12 +114,10 @@ test_expect_equal \
     "$expected"
 
 # try inserting it with decryption, should appear as a single copy
-# (note: i think thread id skips 4 because of duplicate message-id
-# insertion, above)
 test_begin_subtest "message cleartext is present with insert --decrypt=true"
 notmuch insert --folder=sent --decrypt=true <<<"$contents"
-output=$(notmuch search wumpus)
-expected='thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (encrypted inbox unread)'
+output=$(notmuch search wumpus | notmuch_search_sanitize)
+expected='thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (encrypted inbox unread)'
 test_expect_equal \
     "$output" \
     "$expected"
@@ -129,9 +127,9 @@ test_expect_equal \
 test_begin_subtest 'tagging all messages'
 test_expect_success 'notmuch tag +blarney "encrypted message"'
 test_begin_subtest "verify that tags have not changed"
-output=$(notmuch search tag:blarney)
-expected='thread:0000000000000001   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
-thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
+output=$(notmuch search tag:blarney | notmuch_search_sanitize)
+expected='thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
 test_expect_equal \
     "$output" \
     "$expected"
@@ -140,14 +138,14 @@ test_expect_equal \
 test_begin_subtest 'reindex old messages'
 test_expect_success 'notmuch reindex --decrypt=true tag:encrypted and not property:index.decryption=success'
 test_begin_subtest "reindexed encrypted message, including cleartext"
-output=$(notmuch search wumpus)
+output=$(notmuch search wumpus | notmuch_search_sanitize)
 test_expect_equal \
     "$output" \
     "$expected"
 
 # and the same search, but by property ($expected is untouched):
 test_begin_subtest "emacs search by property for both messages"
-output=$(notmuch search property:index.decryption=success)
+output=$(notmuch search property:index.decryption=success | notmuch_search_sanitize)
 test_expect_equal \
     "$output" \
     "$expected"
@@ -156,7 +154,7 @@ test_expect_equal \
 test_begin_subtest 'reindex in auto mode'
 test_expect_success 'notmuch reindex tag:encrypted and property:index.decryption=success'
 test_begin_subtest "reindexed encrypted messages, should not have changed"
-output=$(notmuch search wumpus)
+output=$(notmuch search wumpus | notmuch_search_sanitize)
 test_expect_equal \
     "$output" \
     "$expected"
@@ -190,9 +188,9 @@ test_expect_equal \
 
 # ensure that the tags remain even when we are dropping the cleartext.
 test_begin_subtest "verify that tags remain without cleartext"
-output=$(notmuch search tag:blarney)
-expected='thread:0000000000000001   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
-thread:0000000000000005   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
+output=$(notmuch search tag:blarney | notmuch_search_sanitize)
+expected='thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 001 (blarney encrypted inbox)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test encrypted message for cleartext index 002 (blarney encrypted inbox unread)'
 test_expect_equal \
     "$output" \
     "$expected"
@@ -201,7 +199,7 @@ test_begin_subtest "index cleartext without keeping session keys"
 test_expect_success "notmuch reindex --decrypt=nostash tag:blarney"
 
 test_begin_subtest "Ensure that the indexed terms are present"
-output=$(notmuch search wumpus)
+output=$(notmuch search wumpus | notmuch_search_sanitize)
 test_expect_equal \
     "$output" \
     "$expected"

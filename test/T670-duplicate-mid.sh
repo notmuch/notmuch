@@ -2,10 +2,25 @@
 test_description="duplicate message ids"
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_require_external_prereq xapian-delve
+
 add_message '[id]="duplicate"' '[subject]="message 1" [filename]=copy1'
 add_message '[id]="duplicate"' '[subject]="message 2" [filename]=copy2'
 
 add_message '[id]="duplicate"' '[subject]="message 0" [filename]=copy0'
+
+test_begin_subtest 'at most 1 thread-id per xapian document'
+db=${MAIL_DIR}/.notmuch/xapian
+for doc in $(xapian-delve -1 -t '' "$db" | grep '^[1-9]'); do
+    xapian-delve -1 -r "$doc" "$db" | grep -c '^G'
+done > OUTPUT.raw
+sort -u < OUTPUT.raw > OUTPUT
+cat <<EOF > EXPECTED
+0
+1
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest 'search: first indexed subject preserved'
 cat <<EOF > EXPECTED
 thread:XXX   2001-01-05 [1/1(3)] Notmuch Test Suite; message 1 (inbox unread)
