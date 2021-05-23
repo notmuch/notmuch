@@ -10,7 +10,7 @@ test_description='test of proper handling of in-reply-to and references headers'
 # non-RFC-compliant headers'
 
 . $(dirname "$0")/test-lib.sh || exit 1
-. $(dirname "$0")/test-lib-emacs.sh || exit 1
+. $NOTMUCH_SRCDIR/test/test-lib-emacs.sh || exit 1
 
 test_begin_subtest "Use References when In-Reply-To is broken"
 add_message '[id]="foo@one.com"' \

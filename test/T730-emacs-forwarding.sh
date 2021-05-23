@@ -2,7 +2,7 @@
 
 test_description="emacs forwarding"
 . $(dirname "$0")/test-lib.sh || exit 1
-. $(dirname "$0")/test-lib-emacs.sh || exit 1
+. $NOTMUCH_SRCDIR/test/test-lib-emacs.sh || exit 1
 
 test_require_emacs
 

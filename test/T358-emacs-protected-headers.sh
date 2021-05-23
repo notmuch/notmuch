@@ -2,7 +2,7 @@
 
 test_description="protected headers in emacs interface"
 . $(dirname "$0")/test-lib.sh || exit 1
-. $(dirname "$0")/test-lib-emacs.sh || exit 1
+. $NOTMUCH_SRCDIR/test/test-lib-emacs.sh || exit 1
 
 # testing protected headers with emacs
 test_require_emacs
