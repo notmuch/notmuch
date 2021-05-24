@@ -395,16 +395,23 @@ notmuch_rb_database_get_all_tags (VALUE self)
 }
 
 /*
- * call-seq: DB.query(query) => QUERY
+ * call-seq:
+ *   DB.query(query) => QUERY
+ *   DB.query(query, sort:, excluded_tags:, omit_excluded:) => QUERY
  *
- * Retrieve a query object for the query string 'query'
+ * Retrieve a query object for the query string 'query'. When using keyword
+ * arguments they are passwed to the query object.
  */
 VALUE
-notmuch_rb_database_query_create (VALUE self, VALUE qstrv)
+notmuch_rb_database_query_create (int argc, VALUE *argv, VALUE self)
 {
+    VALUE qstrv;
+    VALUE opts;
     const char *qstr;
     notmuch_query_t *query;
     notmuch_database_t *db;
+
+    rb_scan_args (argc, argv, "1:", &qstrv, &opts);
 
     Data_Get_Notmuch_Database (self, db);
 
@@ -414,6 +421,40 @@ notmuch_rb_database_query_create (VALUE self, VALUE qstrv)
     query = notmuch_query_create (db, qstr);
     if (!query)
         rb_raise (notmuch_rb_eMemoryError, "Out of memory");
+
+    if (!NIL_P (opts)) {
+	VALUE sort, exclude_tags, omit_excluded;
+	VALUE kwargs[3];
+	static ID keyword_ids[3];
+
+	if (!keyword_ids[0]) {
+	    keyword_ids[0] = rb_intern_const ("sort");
+	    keyword_ids[1] = rb_intern_const ("exclude_tags");
+	    keyword_ids[2] = rb_intern_const ("omit_excluded");
+	}
+
+	rb_get_kwargs (opts, keyword_ids, 0, 3, kwargs);
+
+	sort = kwargs[0];
+	exclude_tags = kwargs[1];
+	omit_excluded = kwargs[2];
+
+	if (sort != Qundef)
+	    notmuch_query_set_sort (query, FIX2UINT (sort));
+
+	if (exclude_tags != Qundef) {
+	    for (int i = 0; i < RARRAY_LEN (exclude_tags); i++) {
+		VALUE e = RARRAY_AREF (exclude_tags, i);
+		notmuch_query_add_tag_exclude (query, RSTRING_PTR (e));
+	    }
+	}
+
+	if (omit_excluded != Qundef) {
+	    notmuch_exclude_t omit;
+	    omit = FIXNUM_P (omit_excluded) ? FIX2UINT (omit_excluded) : RTEST(omit_excluded);
+	    notmuch_query_set_omit_excluded (query, omit);
+	}
+    }
 
     return Data_Wrap_Notmuch_Object (notmuch_rb_cQuery, &notmuch_rb_query_type, query);
 }

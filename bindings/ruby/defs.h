@@ -174,7 +174,7 @@ VALUE
 notmuch_rb_database_get_all_tags (VALUE self);
 
 VALUE
-notmuch_rb_database_query_create (VALUE self, VALUE qstrv);
+notmuch_rb_database_query_create (int argc, VALUE *argv, VALUE self);
 
 /* directory.c */
 VALUE

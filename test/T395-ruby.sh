@@ -82,4 +82,22 @@ q.search_threads.each do |t|
 end
 EOF
 
+test_begin_subtest "check sort argument"
+notmuch search --sort=oldest-first --output=threads tag:inbox > EXPECTED
+test_ruby <<"EOF"
+q = db.query('tag:inbox', sort: Notmuch::SORT_OLDEST_FIRST)
+q.search_threads.each do |t|
+  puts 'thread:%s' % t.thread_id
+end
+EOF
+
+test_begin_subtest "check exclude_tags argument"
+notmuch search --output=threads --exclude=all tag:inbox > EXPECTED
+test_ruby <<"EOF"
+q = db.query('tag:inbox', exclude_tags: %w[deleted], omit_excluded: Notmuch::EXCLUDE_ALL)
+q.search_threads.each do |t|
+  puts 'thread:%s' % t.thread_id
+end
+EOF
+
 test_done
