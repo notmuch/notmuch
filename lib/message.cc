@@ -288,7 +288,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
-	_notmuch_database_log (notmuch_message_get_database (message),
+	_notmuch_database_log (notmuch,
 			       "A Xapian exception occurred creating message: %s\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
