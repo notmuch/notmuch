@@ -242,7 +242,7 @@ _choose_database_path (void *ctx,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-notmuch_database_t *
+static notmuch_database_t *
 _alloc_notmuch ()
 {
     notmuch_database_t *notmuch;
@@ -755,7 +755,7 @@ notmuch_database_reopen (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-notmuch_status_t
+static notmuch_status_t
 _maybe_load_config_from_database (notmuch_database_t *notmuch,
 				  GKeyFile *key_file,
 				  const char *database_path,

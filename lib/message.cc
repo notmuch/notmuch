@@ -742,7 +742,7 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
  * properties, along with any automatic tags*/
 /* According to Xapian API docs, none of these calls throw
  * exceptions */
-notmuch_private_status_t
+static notmuch_private_status_t
 _notmuch_message_remove_indexed_terms (notmuch_message_t *message)
 {
     Xapian::TermIterator i;
