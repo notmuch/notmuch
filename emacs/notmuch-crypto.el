@@ -119,14 +119,14 @@ mode."
     (cond
      ((string= status "good")
       (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
-	    (userid (plist-get sigstatus :userid)))
-	;; If userid is present it has full or greater validity.
-	(if userid
-	    (progn
-	      (setq label (concat "Good signature by: " userid))
-	      (setq face 'notmuch-crypto-signature-good))
-	  (setq label (concat "Good signature by key: " fingerprint))
-	  (setq face 'notmuch-crypto-signature-good-key))
+	    (email-or-userid (or (plist-get sigstatus :email)
+				  (plist-get sigstatus :userid))))
+	;; If email or userid are present, they have full or greater validity.
+	(setq label (concat "Good signature by key: " fingerprint))
+	(setq face 'notmuch-crypto-signature-good-key)
+	(when email-or-userid
+	  (setq label (concat "Good signature by: " email-or-user-id))
+	  (setq face 'notmuch-crypto-signature-good))
 	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
 	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
      ((string= status "error")
