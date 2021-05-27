@@ -131,6 +131,7 @@ add_gnupg_home () {
     # Change this if we ship a new test key
     FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
     SELF_USERID="Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"
+    SELF_EMAIL="test_suite@notmuchmail.org"
     printf '%s:6:\n' "$FINGERPRINT" | gpg --quiet --batch --no-tty --import-ownertrust
 }
 

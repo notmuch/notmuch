@@ -69,12 +69,12 @@ test_json_nodes <<<"$output" \
 test_begin_subtest "show cryptographic envelope on signed mail"
 output=$(notmuch show --verify --format=json id:simple-signed-mail@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
-                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525609971, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "status": "good"}]}}'
+                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525609971, "fingerprint": "'$FINGERPRINT'", "email": "'"$SELF_EMAIL"'", "userid": "'"$SELF_USERID"'", "status": "good"}]}}'
 
 test_begin_subtest "verify signed protected header"
 output=$(notmuch show --verify --format=json id:signed-protected-header@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
-                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525350527, "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "status": "good"}], "headers": ["Subject"]}}'
+                'crypto:[0][0][0]["crypto"]={"signed": {"status": [{"created": 1525350527, "fingerprint": "'$FINGERPRINT'", "email": "'"$SELF_EMAIL"'", "userid": "'"$SELF_USERID"'", "status": "good"}], "headers": ["Subject"]}}'
 
 test_begin_subtest "protected subject does not leak by default in replies"
 output=$(notmuch reply --decrypt=true --format=json id:protected-header@crypto.notmuchmail.org)
@@ -115,7 +115,7 @@ test_begin_subtest "verify protected header is both signed and encrypted"
 output=$(notmuch show --decrypt=true --format=json id:encrypted-signed@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={
-                   "signed":{"status": [{"status": "good", "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "created": 1525812676}],
+                   "signed":{"status": [{"status": "good", "fingerprint": "'$FINGERPRINT'", "email": "'"$SELF_EMAIL"'", "userid": "'"$SELF_USERID"'", "created": 1525812676}],
                    "encrypted": true, "headers": ["Subject"]},"decrypted": {"status": "full", "header-mask": {"Subject": "Subject Unavailable"}}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="Rhinoceros dinner"'
 
@@ -123,7 +123,7 @@ test_begin_subtest "verify protected header is signed even when not masked"
 output=$(notmuch show --decrypt=true --format=json id:encrypted-signed-not-masked@crypto.notmuchmail.org)
 test_json_nodes <<<"$output" \
                 'crypto:[0][0][0]["crypto"]={
-                   "signed":{"status": [{"status": "good", "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "created": 1525812676}],
+                   "signed":{"status": [{"status": "good", "fingerprint": "'$FINGERPRINT'", "userid": "'"$SELF_USERID"'", "email": "'"$SELF_EMAIL"'", "created": 1525812676}],
                    "encrypted": true, "headers": ["Subject"]},"decrypted": {"status": "full"}}' \
                 'subject:[0][0][0]["headers"]["Subject"]="Rhinoceros dinner"'
 

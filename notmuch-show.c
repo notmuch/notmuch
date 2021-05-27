@@ -475,6 +475,11 @@ format_part_sigstatus_sprinter (sprinter_t *sp, GMimeSignatureList *siglist)
 		    sp->map_key (sp, "userid");
 		    sp->string (sp, uid);
 		}
+		const char *email = g_mime_certificate_get_valid_email (certificate);
+		if (email) {
+		    sp->map_key (sp, "email");
+		    sp->string (sp, email);
+		}
 	    }
 	} else if (certificate) {
 	    const char *key_id = g_mime_certificate_get_fpr16 (certificate);

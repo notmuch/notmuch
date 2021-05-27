@@ -158,6 +158,7 @@ signature = {
     created?:       unix_time,
     expires?:       unix_time,
     userid?:        string
+    email?:         string
     # if status is not "good":
     keyid?:         string
     errors?: 	    sig_errors

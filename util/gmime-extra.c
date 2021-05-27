@@ -108,6 +108,21 @@ g_mime_certificate_get_valid_userid (GMimeCertificate *cert)
 }
 
 const char *
+g_mime_certificate_get_valid_email (GMimeCertificate *cert)
+{
+    /* output e-mail address only if validity is FULL or ULTIMATE. */
+    const char *email = g_mime_certificate_get_email(cert);
+
+    if (email == NULL)
+	return email;
+    GMimeValidity validity = g_mime_certificate_get_id_validity (cert);
+
+    if (validity == GMIME_VALIDITY_FULL || validity == GMIME_VALIDITY_ULTIMATE)
+	return email;
+    return NULL;
+}
+
+const char *
 g_mime_certificate_get_fpr16 (GMimeCertificate *cert)
 {
     const char *fpr = g_mime_certificate_get_fingerprint (cert);

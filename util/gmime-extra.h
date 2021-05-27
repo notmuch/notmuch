@@ -69,6 +69,10 @@ gint64 g_mime_utils_header_decode_date_unix (const char *date);
  * Return string for valid User ID (or NULL if no valid User ID exists)
  */
 const char *g_mime_certificate_get_valid_userid (GMimeCertificate *cert);
+/**
+ * Return string for valid e-mail address (or NULL if no valid e-mail address exists)
+ */
+const char *g_mime_certificate_get_valid_email (GMimeCertificate *cert);
 
 #ifdef __cplusplus
 }
