@@ -101,6 +101,13 @@ Removed, inlined or renamed functions and variables:
     `notmuch-sexp-eof`, `notmuch-split-content-type`, and
     `notmuch-tree-button-activate`.
 
+Keymaps are no longer fset, which means they need to be referred to in
+define-key directly (without quotes).  If your Emacs configuration has a
+keybinding like:
+   (define-key 'notmuch-show-mode-map "7" 'foo)
+you should change it to:
+   (define-key notmuch-show-mode-map "7" 'foo)
+
 Notmuch 0.31.4 (2021-02-18)
 ===========================
 
