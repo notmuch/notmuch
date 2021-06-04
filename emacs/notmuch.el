@@ -1162,8 +1162,6 @@ Point should be at the beginning of the line."
 
 ;;; _
 
-(setq mail-user-agent 'notmuch-user-agent)
-
 (provide 'notmuch)
 
 ;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.

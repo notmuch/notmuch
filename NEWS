@@ -1,6 +1,13 @@
 Notmuch 0.33 (UNRELEASED)
 =========================
 
+Emacs
+-----
+
+`notmuch` no longer sets `mail-user-agent` on load. To restore the
+previous behaviour of using notmuch to send mail by default, customize
+`mail-user-agent` to `notmuch-user-agent`.
+
 Vim
 ---
 
