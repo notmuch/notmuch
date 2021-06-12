@@ -499,11 +499,10 @@ int notmuch_minimal_options (const char *subcommand_name,
 struct _notmuch_client_indexing_cli_choices {
     int decrypt_policy;
     bool decrypt_policy_set;
-    notmuch_indexopts_t *opts;
 };
 extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;
 extern const notmuch_opt_desc_t notmuch_shared_indexing_options [];
 notmuch_status_t
-notmuch_process_shared_indexing_options (notmuch_database_t *notmuch);
+notmuch_process_shared_indexing_options (notmuch_indexopts_t *opts);
 
 #endif
