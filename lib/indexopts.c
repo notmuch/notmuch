@@ -20,6 +20,10 @@
 
 #include "notmuch-private.h"
 
+struct _notmuch_indexopts {
+    _notmuch_crypto_t crypto;
+};
+
 notmuch_indexopts_t *
 notmuch_database_get_default_indexopts (notmuch_database_t *db)
 {

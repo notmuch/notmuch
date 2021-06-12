@@ -711,9 +711,7 @@ _notmuch_thread_create (void *ctx,
 
 /* indexopts.c */
 
-struct _notmuch_indexopts {
-    _notmuch_crypto_t crypto;
-};
+struct _notmuch_indexopts;
 
 #define CONFIG_HEADER_PREFIX "index.header."
 
