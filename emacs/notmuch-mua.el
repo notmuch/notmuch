@@ -341,8 +341,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defvar notmuch-message-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
-    (define-key map (kbd "C-c C-s") #'notmuch-mua-send)
+    (define-key map [remap message-send-and-exit] #'notmuch-mua-send-and-exit)
+    (define-key map [remap message-send] #'notmuch-mua-send)
     (define-key map (kbd "C-c C-p") #'notmuch-draft-postpone)
     (define-key map (kbd "C-x C-s") #'notmuch-draft-save)
     map)
