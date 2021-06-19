@@ -713,23 +713,23 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 	 key < NOTMUCH_CONFIG_LAST;
 	 key = (notmuch_config_key_t)(key + 1)) {
 	const char *val = notmuch_config_get (db, key);
-	printf("%x: '%s'\n", key, val ? val : "NULL" );
+	printf("%02d: '%s'\n", key, val ? val : "NULL" );
     }
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-0: 'MAIL_DIR'
-1: 'MAIL_DIR'
-2: 'MAIL_DIR/.notmuch/hooks'
-3: 'MAIL_DIR/.notmuch/backups'
-4: 'foo;bar;fub'
-5: 'unread;inbox'
-6: 'sekrit_junk'
-7: 'true'
-8: 'test_suite@notmuchmail.org'
-9: 'test_suite_other@notmuchmail.org;test_suite@otherdomain.org'
-a: 'Notmuch Test Suite'
+00: 'MAIL_DIR'
+01: 'MAIL_DIR'
+02: 'MAIL_DIR/.notmuch/hooks'
+03: 'MAIL_DIR/.notmuch/backups'
+04: 'foo;bar;fub'
+05: 'unread;inbox'
+06: 'sekrit_junk'
+07: 'true'
+08: 'test_suite@notmuchmail.org'
+09: 'test_suite_other@notmuchmail.org;test_suite@otherdomain.org'
+10: 'Notmuch Test Suite'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
