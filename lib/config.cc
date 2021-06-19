@@ -318,7 +318,7 @@ notmuch_config_values_valid (notmuch_config_values_t *values)
 const char *
 notmuch_config_values_get (notmuch_config_values_t *values)
 {
-    return talloc_strndup (values, values->iterator, values->tok_len);
+    return talloc_strndup (values->children, values->iterator, values->tok_len);
 }
 
 void
