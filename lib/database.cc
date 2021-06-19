@@ -733,6 +733,15 @@ notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *notmuch)
 {
     notmuch_status_t status;
+    const char* talloc_report;
+
+    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
+    if (talloc_report && strcmp (talloc_report, "") != 0) {
+	FILE *report = fopen (talloc_report, "a");
+	if (report) {
+	    talloc_report_full (notmuch, report);
+	}
+    }
 
     status = notmuch_database_close (notmuch);
 

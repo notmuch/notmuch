@@ -589,7 +589,7 @@ main (int argc, char *argv[])
 	 * talloc_enable_null_tracking
 	 */
 
-	FILE *report = fopen (talloc_report, "w");
+	FILE *report = fopen (talloc_report, "a");
 	if (report) {
 	    talloc_report_full (NULL, report);
 	} else {
