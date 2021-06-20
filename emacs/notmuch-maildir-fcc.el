@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(require 'seq)
+
 (require 'message)
 
 (require 'notmuch-lib)

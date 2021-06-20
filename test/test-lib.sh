@@ -135,6 +135,8 @@ add_gnupg_home () {
 }
 
 add_gpgsm_home () {
+    test_require_external_prereq openssl
+
     local fpr
     [ -e "$GNUPGHOME/gpgsm.conf" ] && return
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }

@@ -13,6 +13,31 @@ Vim
 
 Respect excluded tags when showing a thread.
 
+Notmuch 0.32.2 (UNRELEASED)
+===========================
+
+General
+-------
+
+Fix a bug from 2017 that can add duplicate thread-id terms to message
+documents.
+
+Emacs
+-----
+
+Add `(require 'seq)` for `seq-some`.
+
+Documentation
+-------------
+
+Fix man page build for Sphinx 4.x. Fix variable name in emacs docs.
+
+Tests
+-----
+
+Fix backup creation in `perf-test/T00-new`.  Check openssl
+prerequisite in `add_gpgsm_home`.
+
 Notmuch 0.32.1 (2021-05-15)
 ===========================
 
