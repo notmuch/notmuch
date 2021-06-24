@@ -70,7 +70,8 @@
 	(completion-ignore-case t))
     (cl-case command
       (interactive (company-begin-backend 'notmuch-company))
-      (prefix (and (derived-mode-p 'message-mode)
+      (prefix (and (or (derived-mode-p 'message-mode)
+		       (derived-mode-p 'org-msg-edit-mode))
 		   (looking-back
 		    (concat notmuch-address-completion-headers-regexp ".*")
 		    (line-beginning-position))

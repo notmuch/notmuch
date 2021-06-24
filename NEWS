@@ -8,6 +8,8 @@ Emacs
 previous behaviour of using notmuch to send mail by default, customize
 `mail-user-agent` to `notmuch-user-agent`.
 
+`notmuch-company` now works in `org-msg`.
+
 Vim
 ---
 
