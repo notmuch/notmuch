@@ -179,6 +179,8 @@ indentation."
 
 (defvar-local notmuch-show-indent-content t)
 
+(defvar-local notmuch-show-single-message nil)
+
 (defvar notmuch-show-attachment-debug nil
   "If t log stdout and stderr from attachment handlers.
 
@@ -1315,9 +1317,10 @@ Apply the previously saved STATE if supplied, otherwise show the
 first relevant message.
 
 If no messages match the query return NIL."
-  (let* ((cli-args (cons "--exclude=false"
-			 (and notmuch-show-elide-non-matching-messages
-			      (list "--entire-thread=false"))))
+  (let* ((cli-args (list "--exclude=false"))
+	 (cli-args (if notmuch-show-elide-non-matching-messages (cons "--entire-thread=false" cli-args) cli-args))
+	 ;; "part 0 is the whole message (headers and body)" notmuch-show(1)
+	 (cli-args (if notmuch-show-single-message (cons "--part=0" cli-args) cli-args))
 	 (queries (notmuch-show--build-queries
 		   notmuch-show-thread-id notmuch-show-query-context))
 	 (forest nil)
@@ -1328,6 +1331,8 @@ If no messages match the query return NIL."
     (while (and (not forest) queries)
       (setq forest (notmuch-query-get-threads
 		    (append cli-args (list "'") (car queries) (list "'"))))
+      (when (and forest notmuch-show-single-message)
+	(setq forest (list (list (list forest)))))
       (setq queries (cdr queries)))
     (when forest
       (notmuch-show-insert-forest forest)
