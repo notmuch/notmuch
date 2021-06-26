@@ -575,7 +575,7 @@ NOT change the database."
       (with-selected-window notmuch-tree-message-window
 	(let (;; Since we are only displaying one message do not indent.
 	      (notmuch-show-indent-messages-width 0)
-	      (notmuch-show-only-matching-messages t)
+	      (notmuch-show-single-message t)
 	      ;; Ensure that `pop-to-buffer-same-window' uses the
 	      ;; window we want it to use.
 	      (display-buffer-overriding-action
@@ -599,7 +599,9 @@ NOT change the database."
     (when id
       ;; We close the window to kill off un-needed buffers.
       (notmuch-tree-close-message-window)
-      (notmuch-show id))))
+      ;; n-s-s-m is buffer local, so use inner let.
+      (let ((notmuch-show-single-message t))
+	(notmuch-show id)))))
 
 (defun notmuch-tree-show-message (arg)
   "Show the current message.

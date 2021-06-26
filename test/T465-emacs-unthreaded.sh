@@ -26,7 +26,6 @@ test_emacs '(let ((max-lisp-eval-depth 10))
 test_expect_equal_file EXPECTED.unthreaded OUTPUT
 
 test_begin_subtest "message from large thread (status)"
-test_subtest_known_broken
 output=$(test_emacs '(let ((max-lisp-eval-depth 10))
 		       (notmuch-unthreaded "subject:large-thread")
 		       (notmuch-test-wait)
