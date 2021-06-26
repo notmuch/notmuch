@@ -212,7 +212,7 @@ time_run ()
 {
     printf "  %-22s" "$1"
     test_count=$(($test_count+1))
-    if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
+    if test "$verbose" != "t"; then exec 4>test.output 3>&4; else exec 3>&1; fi
     if [[ "$use_perf" = 1 ]]; then
 	command_str="perf record --call-graph=${perf_callgraph} -o ${log_dir}/${test_count}.perf $2"
     else
