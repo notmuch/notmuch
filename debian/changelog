@@ -1,3 +1,11 @@
+notmuch (0.32.2-1) experimental; urgency=medium
+
+  * New upstream bugfix release
+  * Fix for memory leak in "notmuch new" introduced in 0.32
+  * Fix for bug from 2017 that can add duplicate thread-ids to messages.
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 Jun 2021 22:33:56 -0300
+
 notmuch (0.32.1-1) experimental; urgency=medium
 
   * New upstream bugfix release
