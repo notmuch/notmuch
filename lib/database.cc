@@ -733,7 +733,7 @@ notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *notmuch)
 {
     notmuch_status_t status;
-    const char* talloc_report;
+    const char *talloc_report;
 
     talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
     if (talloc_report && strcmp (talloc_report, "") != 0) {
