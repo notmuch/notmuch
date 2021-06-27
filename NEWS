@@ -7,6 +7,11 @@ General
 Fix a bug from 2017 that can add duplicate thread-id terms to message
 documents.
 
+CLI
+---
+
+Fix small memory leak in notmuch new.
+
 Emacs
 -----
 
