@@ -15,7 +15,7 @@ Vim
 
 Respect excluded tags when showing a thread.
 
-Notmuch 0.32.2 (UNRELEASED)
+Notmuch 0.32.2 (2021-06-27)
 ===========================
 
 General
@@ -23,6 +23,11 @@ General
 
 Fix a bug from 2017 that can add duplicate thread-id terms to message
 documents.
+
+CLI
+---
+
+Fix small memory leak in notmuch new.
 
 Emacs
 -----
