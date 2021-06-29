@@ -4,7 +4,7 @@ notmuch (0.31.4-2) unstable; urgency=medium
     duplicate message-ids can cause multiple thread-ids for some message
     documents.
 
- -- David Bremner <bremner@debian.org>  Sat, 26 Jun 2021 22:44:08 -0300
+ -- David Bremner <bremner@debian.org>  Mon, 28 Jun 2021 22:09:09 -0300
 
 notmuch (0.31.4-1) unstable; urgency=medium
 
