@@ -3,8 +3,9 @@ notmuch (0.31.4-2) unstable; urgency=medium
   * Cherry pick upstream commit 3f4de98e7c8, which fixes a bug where
     duplicate message-ids can cause multiple thread-ids for some message
     documents.
+  * Add build-dependency on xapian-tools, for new test
 
- -- David Bremner <bremner@debian.org>  Mon, 28 Jun 2021 22:09:09 -0300
+ -- David Bremner <bremner@debian.org>  Mon, 28 Jun 2021 22:48:02 -0300
 
 notmuch (0.31.4-1) unstable; urgency=medium
 
