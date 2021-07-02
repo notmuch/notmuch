@@ -111,6 +111,19 @@ Supported options for **show** include
    part still has two MIME parts: part 0 is the whole message
    (headers and body) and part 1 is just the body.
 
+.. option:: --sort=(newest-first|oldest-first)
+
+   This option can be used to present results in either chronological
+   order (**oldest-first**) or reverse chronological order
+   (**newest-first**).
+
+   Only threads as a whole are reordered.  Ordering of messages within
+   each thread will not be affected by this flag, since that order is
+   always determined by the thread's replies.
+
+   By default, results will be displayed in reverse chronological
+   order, (that is, the newest results will be displayed first).
+
 .. option:: --verify
 
    Compute and report the validity of any MIME cryptographic

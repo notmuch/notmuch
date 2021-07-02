@@ -15,7 +15,7 @@
 | l         | notmuch-search-filter                  | notmuch-show-filter-thread                            |                                         |
 | m         | notmuch-mua-new-mail                   | notmuch-mua-new-mail                                  | notmuch-mua-new-mail                    |
 | n         | notmuch-search-next-thread             | notmuch-show-next-open-message                        | notmuch-tree-next-matching-message      |
-| o         | notmuch-search-toggle-order            |                                                       |                                         |
+| o         | notmuch-search-toggle-order            |                                                       | notmuch-tree-toggle-order               |
 | p         | notmuch-search-previous-thread         | notmuch-show-previous-open-message                    | notmuch-tree-prev-matching-message      |
 | q         | notmuch-bury-or-kill-this-buffer       | notmuch-bury-or-kill-this-buffer                      | notmuch-bury-or-kill-this-buffer        |
 | r         | notmuch-search-reply-to-thread-sender  | notmuch-show-reply-sender                             | notmuch-show-reply-sender               |
@@ -38,10 +38,10 @@
 | V         |                                        | notmuch-show-view-raw-message                         | notmuch-show-view-raw-message           |
 | X         |                                        | notmuch-show-archive-thread-then-exit                 |                                         |
 | Z         | notmuch-tree-from-search-current-query | notmuch-tree-from-show-current-query                  |                                         |
-| =!=       |                                        | notmuch-show-toggle-elide-non-matching                |                                         |
-| =#=       |                                        | notmuch-show-print-message                            |                                         |
-| =$=       |                                        | notmuch-show-toggle-process-crypto                    |                                         |
-| =*=       | notmuch-search-tag-all                 | notmuch-show-tag-all                                  | notmuch-tree-tag-thread                 |
+| =!=         |                                        | notmuch-show-toggle-elide-non-matching                |                                         |
+| =#=         |                                        | notmuch-show-print-message                            |                                         |
+| =$=         |                                        | notmuch-show-toggle-process-crypto                    |                                         |
+| =*=         | notmuch-search-tag-all                 | notmuch-show-tag-all                                  | notmuch-tree-tag-thread                 |
 | +         | notmuch-search-add-tag                 | notmuch-show-add-tag                                  | notmuch-tree-add-tag                    |
 | -         | notmuch-search-remove-tag              | notmuch-show-remove-tag                               | notmuch-tree-remove-tag                 |
 | .         |                                        | notmuch-show-part-map                                 |                                         |

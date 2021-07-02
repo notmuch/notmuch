@@ -299,11 +299,18 @@ tags.
 ``p``
     Move to previous matching message
 
+``o`` ``notmuch-tree-toggle-order``
+   |docstring::notmuch-tree-toggle-order|
+
 ``g`` ``=``
     Refresh the buffer
 
 ``?``
     Display full set of key bindings
+
+As is the case with :ref:`notmuch-search`, the presentation of results
+can be controlled by the variable ``notmuch-search-oldest-first``.
+
 
 Global key bindings
 ===================
