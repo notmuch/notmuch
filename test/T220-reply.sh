@@ -245,6 +245,27 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > From guessing
 OK"
 
+test_begin_subtest "From guessing: multiple Delivered-To"
+test_subtest_known_broken
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Recipient <recipient@example.com>"' \
+	    '[subject]="From guessing"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="From guessing"' \
+	    '[header]="Delivered-To: test_suite_other@notmuchmail.org
+Delivered-To: test_suite@notmuchmail.org"'
+
+output=$(notmuch reply id:${gen_msg_id} 2>&1 && echo OK)
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: From guessing
+To: Sender <sender@example.com>, Recipient <recipient@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> From guessing
+OK"
+
 test_begin_subtest "Reply with RFC 2047-encoded headers"
 add_message '[subject]="=?iso-8859-1?q?=e0=df=e7?="' \
 	    '[from]="=?utf-8?q?=e2=98=83?= <snowman@example.com>"' \
@@ -281,7 +302,7 @@ test_expect_equal_json "$output" '
         "crypto": {},
         "date_relative": "2010-01-05",
         "excluded": false,
-        "filename": ["'${MAIL_DIR}'/msg-014"],
+        "filename": ["'${MAIL_DIR}'/msg-015"],
         "headers": {
             "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
             "From": "\u2603 <snowman@example.com>",
