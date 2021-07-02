@@ -246,7 +246,6 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 OK"
 
 test_begin_subtest "From guessing: multiple Delivered-To"
-test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
 	    '[to]="Recipient <recipient@example.com>"' \
 	    '[subject]="From guessing"' \

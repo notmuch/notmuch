@@ -464,8 +464,8 @@ guess_from_in_received_by (notmuch_database_t *notmuch, const char *received)
  * (last Received: header added) and try to extract from them
  * indications to which email address this message was delivered.
  *
- * The Received: header is special in our get_header function and is
- * always concatenated.
+ * The Received: header is among special ones in our get_header function
+ * and is always concatenated.
  *
  * Return the address that was found, if any, and NULL otherwise.
  */
@@ -498,6 +498,9 @@ guess_from_in_received_headers (notmuch_message_t *message)
  * Try to find user's email address in one of the extra To-like
  * headers: Envelope-To, X-Original-To, and Delivered-To (searched in
  * that order).
+ *
+ * The Delivered-To: header is among special ones in our get_header
+ * function and is always concatenated.
  *
  * Return the address that was found, if any, and NULL otherwise.
  */
