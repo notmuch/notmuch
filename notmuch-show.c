@@ -1249,8 +1249,13 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     bool single_message;
     bool unthreaded = FALSE;
     notmuch_status_t status;
+    int sort = NOTMUCH_SORT_NEWEST_FIRST;
 
     notmuch_opt_desc_t options[] = {
+	{ .opt_keyword = &sort, .name = "sort", .keywords =
+	      (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
+				      { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
+				      { 0, 0 } } },
 	{ .opt_keyword = &format, .name = "format", .keywords =
 	      (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				      { "text", NOTMUCH_FORMAT_TEXT },
@@ -1366,6 +1371,8 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
     }
+
+    notmuch_query_set_sort (query, sort);
 
     /* Create structure printer. */
     formatter = formatters[format];
