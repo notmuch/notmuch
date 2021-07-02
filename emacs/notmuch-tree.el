@@ -1064,7 +1064,8 @@ Complete list of currently available key bindings:
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
 					 results-buf)))))
 
-(defun notmuch-tree-worker (basic-query &optional query-context target open-target unthreaded)
+(defun notmuch-tree-worker (basic-query &optional query-context target
+					open-target unthreaded oldest-first)
   "Insert the tree view of the search in the current buffer.
 
 This is is a helper function for notmuch-tree. The arguments are
@@ -1090,6 +1091,7 @@ the same as for the function notmuch-tree."
   (let* ((search-args (concat basic-query
 			      (and query-context
 				   (concat " and (" query-context ")"))))
+	 (sort-arg (if oldest-first "--sort=oldest-first" "--sort=newest-first"))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
     (when (equal (car (process-lines notmuch-command "count" search-args)) "0")
       (setq search-args basic-query))
@@ -1097,7 +1099,7 @@ the same as for the function notmuch-tree."
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel
 		 "show" "--body=false" "--format=sexp" "--format-version=4"
-		 message-arg search-args))
+		 sort-arg message-arg search-args))
 	  ;; Use a scratch buffer to accumulate partial output.
 	  ;; This buffer will be killed by the sentinel, which
 	  ;; should be called no matter how the process dies.
@@ -1116,7 +1118,7 @@ the same as for the function notmuch-tree."
     notmuch-tree-basic-query))
 
 (defun notmuch-tree (&optional query query-context target buffer-name
-			       open-target unthreaded parent-buffer)
+			       open-target unthreaded parent-buffer oldest-first)
   "Display threads matching QUERY in tree view.
 
 The arguments are:
@@ -1145,7 +1147,7 @@ The arguments are:
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
   (setq buffer-undo-list t)
-  (notmuch-tree-worker query query-context target open-target unthreaded)
+  (notmuch-tree-worker query query-context target open-target unthreaded oldest-first)
   (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))
 

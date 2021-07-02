@@ -484,7 +484,9 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest _ignore)
   (cl-case (widget-get widget :notmuch-search-type)
    (tree
-    (notmuch-tree (widget-get widget :notmuch-search-terms)))
+    (notmuch-tree (widget-get widget :notmuch-search-terms)
+		  nil nil nil nil nil nil
+		  (widget-get widget :notmuch-search-oldest-first)))
    (unthreaded
     (notmuch-unthreaded (widget-get widget :notmuch-search-terms)))
    (t
