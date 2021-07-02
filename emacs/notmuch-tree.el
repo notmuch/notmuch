@@ -326,6 +326,7 @@ then NAME behaves like CMD."
     (define-key map [remap notmuch-mua-new-mail] 'notmuch-tree-new-mail)
     (define-key map [remap notmuch-jump-search]  'notmuch-tree-jump-search)
 
+    (define-key map "o" 'notmuch-tree-toggle-order)
     (define-key map "S" 'notmuch-search-from-tree-current-query)
     (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
     (define-key map "Z" 'notmuch-tree-from-unthreaded-current-query)
@@ -751,7 +752,8 @@ nil otherwise."
 			 query-context
 			 target
 			 nil
-			 unthreaded)))
+			 unthreaded
+			 notmuch-search-oldest-first)))
 
 (defun notmuch-tree-thread-top ()
   (when (notmuch-tree-get-message-properties)
@@ -1073,6 +1075,7 @@ the same as for the function notmuch-tree."
   (interactive)
   (notmuch-tree-mode)
   (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
+  (setq notmuch-search-oldest-first oldest-first)
   (setq notmuch-tree-unthreaded unthreaded)
   (setq notmuch-tree-basic-query basic-query)
   (setq notmuch-tree-query-context (if (or (string= query-context "")
@@ -1116,6 +1119,15 @@ the same as for the function notmuch-tree."
 	      notmuch-tree-query-context
 	      ")")
     notmuch-tree-basic-query))
+
+(defun notmuch-tree-toggle-order ()
+  "Toggle the current search order.
+
+This command toggles the sort order for the current search. The
+default sort order is defined by `notmuch-search-oldest-first'."
+  (interactive)
+  (setq notmuch-search-oldest-first (not notmuch-search-oldest-first))
+  (notmuch-tree-refresh-view))
 
 (defun notmuch-tree (&optional query query-context target buffer-name
 			       open-target unthreaded parent-buffer oldest-first)
