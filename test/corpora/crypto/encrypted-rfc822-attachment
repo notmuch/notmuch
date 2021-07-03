@@ -1,0 +1,52 @@
+Content-Type: multipart/encrypted; protocol="application/pgp-encrypted"; boundary="===============9060418334135509864=="
+MIME-Version: 1.0
+From: Notmuch test suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
+Subject: testing encrypted rfc822 attachments
+Date: Sat, 03 Jul 2021 16:00:02 -0300
+Message-ID: <encrypted-rfc822-attachment@crypto.notmuchmail.org>
+User-Agent: alot/0.9.1
+
+--===============9060418334135509864==
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: application/pgp-encrypted; charset="us-ascii"
+
+Version: 1
+--===============9060418334135509864==
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: application/octet-stream; charset="us-ascii"
+
+-----BEGIN PGP MESSAGE-----
+
+hIwDxE023q1UqxYBBACGKSDv5/rcwScSf9n33cZZPPxltQgxkDaClMGY2DARgebE
+9rpE2O/4eoaEbdu+2shahPLIbD0wuRiGVpMIIloNNucl3f15h1wXPZbTwK7sNxJq
+HycSf8sT1fkolmC9s9X0r5xHgk0G4klAqr5C3GOk7Y6wsHTYGqzDvBFEB0LvaoUC
+DANw48DehwaEUQEP/iaiYeMDUsOzFZodKZOlQWese2JPTsRwF7KrTl8C93MrZqAh
+A1pQjUH9cafj8mwDXA9ZCsYZs7r84IxShI+dUhinBSCq8F61OlLP859wq+wpKU7n
+PNVA5bfd//4hRFvDT33ZlgeeeCcRo7h4IDjJwFDYsf0Ysqvo+IKipVNXXlAcGYYI
+DVBucB0fYaVHWRKxw50mo02zKP2/GW6K3p1nxGTf73cKjc9of+VOvvMByODaJ+ne
+WIuzZMqz0vfQ0UvRVBjlsXtB7VpCqJZWkubqqwwP6+2WOCA/c5LC3z2f/BK90EQh
+/JrKfDR083UNhu4SjNwL/TF4ET33JHf1u5Gmzqx+eO00pfhVvkyz6LYImkE8ky/+
+bXyJY8iDq7dxtfqhzZbeNe4fafU/avXxTA5UkWTnYhCqyd2bvAYH3Ep3L7lSv6SQ
+Tsy0jjTsWJoSq6jRIzJuo2mX2MBKPBfLZs4tH71/4RppECletNnS4ZlxiV4LNrWE
+LrXQvE1V+mJ82muucIe7w52nf3UWjQqTA73+Ml0aK+lIhbckRIovAw1sGzRrbTEX
+xLCgz7BYDMhs5mgtfiMAzGox4xGxi56Ge519vdbddan4G92mPlLl1IPOXkO8GyLO
+D4IiPp5ilPy6uThuxxIFemxxUREbPrfLJNA8W7aRPrHz4YcgZhrAV9I4C+xE0ukB
+i8MoJeFvbCGPyTwVDn8XfFKynlZYm1f8NIVMSj5JfV8J3Om9jzDp6hx+52iUQEbW
+C9g4kfPZY8h0RMggdOlZsaR8j26xuW+fEtz7ucJIqfJ/ElTH+4bm8MK2qPZniRWv
+ej2md4bP4Bo5DXydzxz7O7TBL6/Jsp7pJhHUUb36OnTWvInyg71LPT1QIxdRvXr9
+vNhrEBDX3MNf7RyXczvBcc+cLRo+zV+T4b8wd2kwXskWgKrGUJEe2TItdsafaQ9B
+BkuVGu6cIDa6STyCJiOB68KIXiDuADSWJiiR+gZr4eU6vzfhR27LMQt/g+oPW+U4
+1AvzUl9uXjTMC2vFuTQ4M2g0WmksCNpPpzOu/QlBmRqpP2Fg9UuLv6ITWeCxp439
+g5NT5KXE2IiruL/DS0KEpWVNe4ayGzRvMawFuU582xbIzXjvilUZrW+p6req+oeF
+QWTWHGDojTvULQPV2c91lWnLaNXVethfF4hrM5MIL+EwVs3sUXFMr1kX7VNrK0QH
+Uos7nc4G9xngpdvwF4ImldD83O8qxOVzIfk5Dhz+etTH4HbnnDvmQ/FIYvjzGviR
+ZeVwdCjv/9TC4yY3nJFKMwGp70jVa1vbmWL68HVNRyAVwnQnu2UlI8UR43iVZyUH
+ZY0Nr0rbse/pvZyX4//EVOFLUR7K4GG0N4Kz41q5ZB8rI4Fl6QJhgIFJds13iM77
+n+wqLQE7kllgI32E4U9B
+=YlXg
+-----END PGP MESSAGE-----
+
+--===============9060418334135509864==--
