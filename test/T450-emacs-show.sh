@@ -219,6 +219,12 @@ test_emacs '(notmuch-show "id:basic-encrypted@crypto.notmuchmail.org")
             (test-visible-output)'
 test_expect_equal_file $EXPECTED/notmuch-show-decrypted-message OUTPUT
 
+test_begin_subtest "show encrypted rfc822 message"
+test_subtest_known_broken
+test_emacs '(notmuch-show "id:encrypted-rfc822-attachment@crypto.notmuchmail.org")
+            (test-visible-output)'
+test_expect_code 1 'fgrep "!!!" OUTPUT'
+
 test_begin_subtest "show undecryptable message"
 test_emacs '(notmuch-show "id:simple-encrypted@crypto.notmuchmail.org")
             (test-visible-output)'
