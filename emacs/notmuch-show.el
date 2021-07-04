@@ -719,21 +719,23 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-message/rfc822 (msg part _content-type _nth depth _button)
-  (let* ((message (car (plist-get part :content)))
-	 (body (car (plist-get message :body)))
-	 (start (point)))
-    ;; Override `notmuch-message-headers' to force `From' to be
-    ;; displayed.
-    (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
-      (notmuch-show-insert-headers (plist-get message :headers)))
-    ;; Blank line after headers to be compatible with the normal
-    ;; message display.
-    (insert "\n")
-    ;; Show the body
-    (notmuch-show-insert-bodypart msg body depth)
-    (when notmuch-show-indent-multipart
-      (indent-rigidly start (point) 1)))
-  t)
+  (let ((message (car (plist-get part :content))))
+    (and
+     message
+     (let ((body (car (plist-get message :body)))
+	   (start (point)))
+       ;; Override `notmuch-message-headers' to force `From' to be
+       ;; displayed.
+       (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
+	 (notmuch-show-insert-headers (plist-get message :headers)))
+       ;; Blank line after headers to be compatible with the normal
+       ;; message display.
+       (insert "\n")
+       ;; Show the body
+       (notmuch-show-insert-bodypart msg body depth)
+       (when notmuch-show-indent-multipart
+	 (indent-rigidly start (point) 1))
+       t))))
 
 (defun notmuch-show-insert-part-text/plain (msg part _content-type _nth depth button)
   ;; For backward compatibility we want to apply the text/plain hook
