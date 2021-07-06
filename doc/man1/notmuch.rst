@@ -210,4 +210,4 @@ list <notmuch@notmuchmail.org> . Subscription is not required before
 posting, but is available from the notmuchmail.org website.
 
 Real-time interaction with the Notmuch community is available via IRC
-(server: irc.freenode.net, channel: #notmuch).
+(server: irc.libera.chat, channel: #notmuch).

@@ -25,5 +25,5 @@ script:
 notifications:
   irc:
     channels:
-      - "chat.freenode.net#notmuch"
+      - "irc.libera.chat#notmuch"
     on_success: change
