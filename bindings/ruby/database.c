@@ -27,6 +27,19 @@ notmuch_rb_database_alloc (VALUE klass)
 }
 
 /*
+ * call-seq: DB.destroy => nil
+ *
+ * Destroys the database, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_database_destroy (VALUE self)
+{
+    notmuch_rb_object_destroy (self, &notmuch_rb_database_type);
+
+    return Qnil;
+}
+
+/*
  * call-seq: Notmuch::Database.new(path [, {:create => false, :mode => Notmuch::MODE_READ_ONLY}]) => DB
  *
  * Create or open a notmuch database using the given path.
@@ -113,8 +126,12 @@ notmuch_rb_database_open (int argc, VALUE *argv, VALUE klass)
 VALUE
 notmuch_rb_database_close (VALUE self)
 {
+    notmuch_database_t *db;
     notmuch_status_t ret;
-    ret = notmuch_rb_object_destroy (self, &notmuch_rb_database_type);
+
+    Data_Get_Notmuch_Database (self, db);
+
+    ret = notmuch_database_close (db);
     notmuch_rb_status_raise (ret);
 
     return Qnil;

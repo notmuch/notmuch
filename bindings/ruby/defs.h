@@ -161,6 +161,9 @@ VALUE
 notmuch_rb_database_alloc (VALUE klass);
 
 VALUE
+notmuch_rb_database_destroy (VALUE self);
+
+VALUE
 notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE klass);
 
 VALUE
