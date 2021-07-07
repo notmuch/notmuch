@@ -125,7 +125,7 @@ mode."
 	(setq label (concat "Good signature by key: " fingerprint))
 	(setq face 'notmuch-crypto-signature-good-key)
 	(when email-or-userid
-	  (setq label (concat "Good signature by: " email-or-user-id))
+	  (setq label (concat "Good signature by: " email-or-userid))
 	  (setq face 'notmuch-crypto-signature-good))
 	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
 	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
