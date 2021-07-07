@@ -33,7 +33,7 @@
 (declare-function notmuch-poll "notmuch-lib" ())
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target unthreaded parent-buffer))
+			     open-target unthreaded parent-buffer oldest-first))
 (declare-function notmuch-unthreaded "notmuch-tree"
 		  (&optional query query-context target buffer-name
 			     open-target))
