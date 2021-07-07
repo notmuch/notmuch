@@ -1001,10 +1001,9 @@ message together with all its descendents."
 
 (defun notmuch-tree-insert-forest-thread (forest-thread)
   "Insert a single complete thread."
-  (let (tree-status)
-    ;; Reset at the start of each main thread.
-    (setq notmuch-tree-previous-subject nil)
-    (notmuch-tree-insert-thread forest-thread 0 tree-status)))
+  ;; Reset at the start of each main thread.
+  (setq notmuch-tree-previous-subject nil)
+  (notmuch-tree-insert-thread forest-thread 0 nil))
 
 (defun notmuch-tree-insert-forest (forest)
   "Insert a forest of threads.
