@@ -93,7 +93,7 @@ not appear in the pop-up buffer."
 	    (buffer-string)))
 	 (full-prompt
 	  (concat table "\n\n"
-		  (propertize prompt 'face 'notmuch-jump-key)))
+		  (propertize prompt 'face 'minibuffer-prompt)))
 	 ;; By default, the minibuffer applies the minibuffer face to
 	 ;; the entire prompt.  However, we want to clearly
 	 ;; distinguish bindings (which we put in the prompt face
