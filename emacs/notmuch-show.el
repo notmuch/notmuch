@@ -2078,19 +2078,19 @@ message."
     (let ((cwd default-directory)
 	  (buf (get-buffer-create (concat "*notmuch-pipe*"))))
       (with-current-buffer buf
-	(setq buffer-read-only nil)
-	(erase-buffer)
-	;; Use the originating buffer's working directory instead of
-	;; that of the pipe buffer.
-	(cd cwd)
-	(let ((exit-code (call-process-shell-command shell-command nil buf)))
-	  (goto-char (point-max))
-	  (set-buffer-modified-p nil)
-	  (setq buffer-read-only t)
-	  (unless (zerop exit-code)
-	    (pop-to-buffer buf)
-	    (message (format "Command '%s' exited abnormally with code %d"
-			     shell-command exit-code))))))))
+	(setq buffer-read-only t)
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  ;; Use the originating buffer's working directory instead of
+	  ;; that of the pipe buffer.
+	  (cd cwd)
+	  (let ((exit-code (call-process-shell-command shell-command nil buf)))
+	    (goto-char (point-max))
+	    (set-buffer-modified-p nil)
+	    (unless (zerop exit-code)
+	      (pop-to-buffer buf)
+	      (message (format "Command '%s' exited abnormally with code %d"
+			       shell-command exit-code)))))))))
 
 (defun notmuch-show-tag-message (&rest tag-changes)
   "Change tags for the current message.
