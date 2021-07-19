@@ -25,6 +25,10 @@
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 
+(declare-function notmuch-search "notmuch")
+(declare-function notmuch-tree "notmuch-tree")
+(declare-function notmuch-unthreaded "notmuch-tree")
+
 ;;;###autoload
 (defun notmuch-jump-search ()
   "Jump to a saved search by shortcut key.
