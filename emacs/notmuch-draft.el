@@ -42,7 +42,7 @@
   :group 'notmuch)
 
 (defcustom notmuch-draft-tags '("+draft")
-  "List of tags changes to apply to a draft message when it is saved in the database.
+  "List of tag changes to apply when saving a draft message in the database.
 
 Tags starting with \"+\" (or not starting with either \"+\" or
 \"-\") in the list will be added, and tags starting with \"-\"

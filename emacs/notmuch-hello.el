@@ -144,9 +144,11 @@ a plist. Supported properties are
                    Possible values are `oldest-first', `newest-first'
                    or nil. Nil means use the default sort order.
   :search-type     Specify whether to run the search in search-mode,
-                   tree mode or unthreaded mode. Set to 'tree to specify tree
-                   mode, 'unthreaded to specify unthreaded mode, and set to nil
-                   (or anything except tree and unthreaded) to specify search mode.
+                   tree mode or unthreaded mode. Set to `tree' to
+                   specify tree mode, 'unthreaded to specify
+                   unthreaded mode, and set to nil (or anything
+                   except tree and unthreaded) to specify search
+                   mode.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
