@@ -553,7 +553,7 @@ and vice versa."
 				name)
 			    (mapconcat #'identity tag-change " "))))
 	(push (list key name-string
-		    `(lambda () (,tag-function ',tag-change)))
+		    (lambda () (funcall tag-function tag-change)))
 	      action-map)))
     (push (list notmuch-tag-jump-reverse-key
 		(if reverse

@@ -869,16 +869,16 @@ Supports the following entries in OPTIONS as a plist:
 	(start (point)))
     (if is-hidden
 	(widget-create 'push-button
-		       :notify `(lambda (widget &rest _ignore)
-				  (setq notmuch-hello-hidden-sections
-					(delete ,title notmuch-hello-hidden-sections))
-				  (notmuch-hello-update))
+		       :notify (lambda (&rest _ignore)
+				 (setq notmuch-hello-hidden-sections
+				       (delete title notmuch-hello-hidden-sections))
+				 (notmuch-hello-update))
 		       "show")
       (widget-create 'push-button
-		     :notify `(lambda (widget &rest _ignore)
-				(add-to-list 'notmuch-hello-hidden-sections
-					     ,title)
-				(notmuch-hello-update))
+		     :notify (lambda (&rest _ignore)
+			       (add-to-list 'notmuch-hello-hidden-sections
+					    title)
+			       (notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
     (unless is-hidden
