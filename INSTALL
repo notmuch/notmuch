@@ -32,13 +32,6 @@ Talloc, and zlib which are each described below:
 
 	Xapian is available from https://xapian.org
 
-	Note: Notmuch will work best with Xapian 1.0.18 (or later) or
-	Xapian 1.1.4 (or later). Previous versions of Xapian (whether
-	1.0 or 1.1) had a performance bug that made notmuch very slow
-	when modifying tags. This would cause distracting pauses when
-	reading mail while notmuch would wait for Xapian when removing
-	the "inbox" and "unread" tags from messages in a thread.
-
 	GMime
 	-----
 	GMime provides decoding of MIME email messages for Notmuch.
