@@ -861,7 +861,7 @@ test_when_finished () {
 test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
-	test -d "$test_results_dir" || mkdir "$test_results_dir"
+	mkdir -p "$test_results_dir"
 	test_results_path="$test_results_dir/$this_test"
 
 	printf %s\\n \
