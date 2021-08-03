@@ -136,20 +136,17 @@ notmuch_rb_object_free (void *rb_wrapper)
     talloc_free (rb_wrapper);
 }
 
-static inline notmuch_status_t
+static inline void
 notmuch_rb_object_destroy (VALUE rb_object, const rb_data_type_t *type)
 {
     notmuch_rb_object_t *rb_wrapper;
-    notmuch_status_t ret;
 
     Data_Get_Notmuch_Rb_Object (rb_object, type, rb_wrapper);
 
     /* Call the corresponding notmuch_*_destroy function */
-    ret = ((notmuch_status_t (*)(void *)) type->data) (rb_wrapper->nm_object);
+    ((void (*)(void *)) type->data) (rb_wrapper->nm_object);
     notmuch_rb_object_free (rb_wrapper);
     DATA_PTR (rb_object) = NULL;
-
-    return ret;
 }
 
 /* status.c */
