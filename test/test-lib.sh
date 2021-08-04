@@ -404,29 +404,29 @@ test_expect_equal () {
 
 # Like test_expect_equal, but takes two filenames.
 test_expect_equal_file () {
-	local file1 file2 testname basename1 basename2
-	exec 1>&6 2>&7		# Restore stdout and stderr
-	if [ -z "$inside_subtest" ]; then
-		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
-	fi
-	inside_subtest=
-	test "$#" = 2 ||
+    local file1 file2 testname basename1 basename2
+    exec 1>&6 2>&7		# Restore stdout and stderr
+    if [ -z "$inside_subtest" ]; then
+	error "bug in the test script: test_expect_equal_file without test_begin_subtest"
+    fi
+    inside_subtest=
+    test "$#" = 2 ||
 	error "bug in the test script: not 2 parameters to test_expect_equal_file"
 
-	file1="$1"
-	file2="$2"
-	if ! test_skip "$test_subtest_name"
-	then
-		if diff -q "$file1" "$file2" >/dev/null ; then
-			test_ok_
-		else
-			testname=$this_test.$test_count
-			basename1=`basename "$file1"`
-			basename2=`basename "$file2"`
-			cp "$file1" "$testname.$basename1"
-			cp "$file2" "$testname.$basename2"
-			test_failure_ "$(diff -u "$testname.$basename1" "$testname.$basename2")"
-		fi
+    file1="$1"
+    file2="$2"
+    if ! test_skip "$test_subtest_name"
+    then
+	if diff -q "$file1" "$file2" >/dev/null ; then
+	    test_ok_
+	else
+	    testname=$this_test.$test_count
+	    basename1=`basename "$file1"`
+	    basename2=`basename "$file2"`
+	    cp "$file1" "$testname.$basename1"
+	    cp "$file2" "$testname.$basename2"
+	    test_failure_ "$(diff -u "$testname.$basename1" "$testname.$basename2")"
+	fi
     fi
 }
 
