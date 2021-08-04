@@ -434,6 +434,26 @@ test_expect_equal_file () {
     test_diff_file_ "$1" "$2"
 }
 
+# Like test_expect_equal, but takes two filenames. Fails if either is empty
+test_expect_equal_file_nonempty () {
+    exec 1>&6 2>&7		# Restore stdout and stderr
+    if [ -z "$inside_subtest" ]; then
+	error "bug in the test script: test_expect_equal_file_nonempty without test_begin_subtest"
+    fi
+    inside_subtest=
+    test "$#" = 2 ||
+	error "bug in the test script: not 2 parameters to test_expect_equal_file_nonempty"
+
+    for file in "$1" "$2"; do
+	if [ ! -s "$file" ]; then
+	    test_failure_ "Missing or zero length file: $file"
+	    return $?
+	fi
+    done
+
+    test_diff_file_ "$1" "$2"
+}
+
 # Like test_expect_equal, but arguments are JSON expressions to be
 # canonicalized before diff'ing.  If an argument cannot be parsed, it
 # is used unchanged so that there's something to diff against.
