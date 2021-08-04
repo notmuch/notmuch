@@ -125,12 +125,10 @@ for config in traditional split XDG XDG+profile symlink home_mail maildir_env; d
     esac
 
     test_begin_subtest "count ($config)"
-    [[ "$config" = maildir_env ]] && test_subtest_known_broken
     output=$(notmuch count '*')
     test_expect_equal "$output" '52'
 
     test_begin_subtest "count+tag ($config)"
-    [[ "$config" = maildir_env ]] && test_subtest_known_broken
     tag="tag${RANDOM}"
     notmuch tag +$tag '*'
     output=$(notmuch count tag:$tag)
@@ -138,7 +136,6 @@ for config in traditional split XDG XDG+profile symlink home_mail maildir_env; d
     test_expect_equal "$output" '52'
 
     test_begin_subtest "address ($config)"
-    [[ "$config" = maildir_env ]] && test_subtest_known_broken
     notmuch address --deduplicate=no --sort=newest-first --output=sender --output=recipients path:foo >OUTPUT
     cat <<EOF >EXPECTED
 Carl Worth <cworth@cworth.org>
@@ -147,7 +144,6 @@ EOF
     test_expect_equal_file EXPECTED OUTPUT
 
     test_begin_subtest "dump ($config)"
-    [[ "$config" = maildir_env ]] && test_subtest_known_broken
     notmuch dump is:attachment and is:signed | sort > OUTPUT
     cat <<EOF > EXPECTED
 #notmuch-dump batch-tag:3 config,properties,tags
@@ -170,19 +166,16 @@ EOF
     test_expect_equal_file EXPECTED OUTPUT
 
     test_begin_subtest "use existing database ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     output=$(notmuch new)
     test_expect_equal "$output" 'No new mail.'
 
     test_begin_subtest "create database ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     rm -rf $DATABASE_PATH/{.notmuch,}/xapian
     notmuch new
     output=$(notmuch count '*')
     test_expect_equal "$output" '52'
 
     test_begin_subtest "detect new files ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     generate_message
     generate_message
     notmuch new
@@ -190,14 +183,12 @@ EOF
     test_expect_equal "$output" '54'
 
     test_begin_subtest "Show a raw message ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     add_message
     notmuch show --format=raw id:$gen_msg_id > OUTPUT
     test_expect_equal_file $gen_msg_filename OUTPUT
     rm -f $gen_msg_filename
 
     test_begin_subtest "reply ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     add_message '[from]="Sender <sender@example.com>"' \
 		[to]=test_suite@notmuchmail.org \
 		[subject]=notmuch-reply-test \
@@ -217,7 +208,6 @@ EOF
     test_expect_equal_file EXPECTED OUTPUT
 
     test_begin_subtest "insert+search ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     generate_message \
 	"[subject]=\"insert-subject\"" \
 	"[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \
@@ -235,7 +225,6 @@ EOF
     test_expect_equal_file EXPECTED OUTPUT
 
     test_begin_subtest "upgrade backup ($config)"
-    [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
     features=$(xapian-metadata get $XAPIAN_PATH features | grep -v "^relative directory paths")
     xapian-metadata set $XAPIAN_PATH features "$features"
     output=$(notmuch new | grep Welcome)
@@ -269,7 +258,6 @@ EOF
    test_expect_equal "${output}+${output2}" "${value}+"
 
    test_begin_subtest "Set config value in database ($config)"
-   [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
    name=${RANDOM}
    value=${RANDOM}
    notmuch config set --database test${test_count}.${name} ${value}
@@ -279,7 +267,6 @@ EOF
    test_expect_equal "${output}+${output2}" "${value}+"
 
    test_begin_subtest "Config list ($config)"
-   [[ "$config" = "maildir_env" ]] && test_subtest_known_broken
    notmuch config list | notmuch_dir_sanitize | \
        sed -e "s/^database.backup_dir=.*$/database.backup_dir/"  \
 	   -e "s/^database.hook_dir=.*$/database.hook_dir/" \
