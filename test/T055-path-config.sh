@@ -157,13 +157,13 @@ EOF
     notmuch tag -inbox '*'
     notmuch restore < EXPECTED
     notmuch dump > OUTPUT
-    test_expect_equal_file EXPECTED OUTPUT
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
 
     test_begin_subtest "reindex ($config)"
     notmuch search --output=messages '*' > EXPECTED
     notmuch reindex '*'
     notmuch search --output=messages '*' > OUTPUT
-    test_expect_equal_file EXPECTED OUTPUT
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
 
     test_begin_subtest "use existing database ($config)"
     output=$(notmuch new)
@@ -185,7 +185,7 @@ EOF
     test_begin_subtest "Show a raw message ($config)"
     add_message
     notmuch show --format=raw id:$gen_msg_id > OUTPUT
-    test_expect_equal_file $gen_msg_filename OUTPUT
+    test_expect_equal_file_nonempty $gen_msg_filename OUTPUT
     rm -f $gen_msg_filename
 
     test_begin_subtest "reply ($config)"
@@ -215,14 +215,13 @@ EOF
     mkdir -p "$MAIL_DIR"/{cur,new,tmp}
     notmuch insert < "$gen_msg_filename"
     cur_msg_filename=$(notmuch search --output=files "subject:insert-subject")
-    test_expect_equal_file "$cur_msg_filename" "$gen_msg_filename"
-
+    test_expect_equal_file_nonempty "$cur_msg_filename" "$gen_msg_filename"
 
     test_begin_subtest "compact+search ($config)"
     notmuch search --output=messages '*' | sort > EXPECTED
     notmuch compact
     notmuch search --output=messages '*' | sort > OUTPUT
-    test_expect_equal_file EXPECTED OUTPUT
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
 
     test_begin_subtest "upgrade backup ($config)"
     features=$(xapian-metadata get $XAPIAN_PATH features | grep -v "^relative directory paths")
