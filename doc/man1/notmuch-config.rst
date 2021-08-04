@@ -60,7 +60,7 @@ paths are presumed relative to `$HOME` for items in section
     sub-directory named ``.notmuch`` if **database.mail\_root**
     is unset).
 
-    Default: ``$MAILDIR`` variable if set, otherwise ``$HOME/mail``.
+    Default: see :ref:`database`
 
 **database.mail_root**
     The top-level directory where your mail currently exists and to
@@ -271,6 +271,25 @@ Notmuch configuration file search order:
 4. ``$HOME/.notmuch-config.<profile>`` where ``<profile>`` is defined
    by :envvar:`NOTMUCH_PROFILE` environment variable if set,
    ``$HOME/.notmuch-config`` otherwise.
+
+.. _database:
+
+DATABASE LOCATION
+-----------------
+
+Notmuch database search order:
+
+1. Directory specified by :envvar:`NOTMUCH_DATABASE` environment variable.
+
+2. Directory specified by config key ``database.path``.
+
+3. ``$XDG_DATA_HOME/notmuch/<profile>`` where ``<profile>``
+   is defined by :envvar:`NOTMUCH_PROFILE` environment variable if
+   set, ``$XDG_DATA_HOME/notmuch/default`` otherwise.
+
+4. Directory specified by :envvar:`MAILDIR` environment variable.
+
+5. ``$HOME/mail``
 
 HOOKS
 -----

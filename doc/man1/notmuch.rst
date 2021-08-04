@@ -164,6 +164,11 @@ of notmuch.
    Specifies the location of the notmuch configuration file. See
    :any:`notmuch-config(1)` for details.
 
+.. envvar:: NOTMUCH_DATABASE
+
+   Specifies the location of the notmuch database. See
+   :any:`notmuch-config(1)` for details.
+
 .. envvar:: NOTMUCH_PROFILE
 
    Selects among notmuch configurations. See :any:`notmuch-config(1)`
