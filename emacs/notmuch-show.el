@@ -59,6 +59,7 @@
 (defvar shr-blocked-images)
 (defvar gnus-blocked-images)
 (defvar shr-content-function)
+(defvar w3m-ignored-image-url-regexp)
 
 ;;; Options
 
@@ -823,7 +824,8 @@ will return nil if the CID is unknown or cannot be retrieved."
     (let ((mm-inline-text-html-with-w3m-keymap nil)
 	  ;; FIXME: If we block an image, offer a button to load external
 	  ;; images.
-	  (gnus-blocked-images notmuch-show-text/html-blocked-images))
+	  (gnus-blocked-images notmuch-show-text/html-blocked-images)
+	  (w3m-ignored-image-url-regexp notmuch-show-text/html-blocked-images))
       (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
 ;;; Functions used by notmuch-show--insert-part-text/html-shr
