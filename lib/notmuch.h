@@ -316,7 +316,7 @@ typedef enum {
 
 /**
  * Deprecated alias for notmuch_database_open_with_config with
- * config_path=error_message=NULL
+ * config_path="" and error_message=NULL
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  */
 /* NOTMUCH_DEPRECATED(5, 4) */
@@ -326,7 +326,7 @@ notmuch_database_open (const char *path,
 		       notmuch_database_t **database);
 /**
  * Deprecated alias for notmuch_database_open_with_config with
- * config_path=NULL
+ * config_path=""
  *
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  *
