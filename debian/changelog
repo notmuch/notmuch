@@ -1,3 +1,11 @@
+notmuch (0.32.3-1) unstable; urgency=medium
+
+  * new upstream bugfix release
+  * fixes for a few configuration related bugs introduced in 0.32
+  * bump libnotmuch minor version to match documentation.
+
+ -- David Bremner <bremner@debian.org>  Tue, 17 Aug 2021 17:16:09 -0700
+
 notmuch (0.32.2-1) experimental; urgency=medium
 
   * New upstream bugfix release
