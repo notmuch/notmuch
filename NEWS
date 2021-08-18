@@ -1,3 +1,23 @@
+Notmuch 0.32.3 (2021-08-17)
+===========================
+
+Library
+-------
+
+Restore location of database via `MAILDIR` environment variable, which
+was broken in 0.32.
+
+Bump libnotmuch minor version to match the documentation in
+`notmuch.h`.
+
+Correct documentation for deprecated database opening functions to
+point out that they (still) do not load configuration information.
+
+CLI
+---
+
+Restore "notmuch config get built_with.*", which was broken in 0.32.
+
 Notmuch 0.32.2 (2021-06-27)
 ===========================
 
