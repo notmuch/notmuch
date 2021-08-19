@@ -538,11 +538,18 @@ notmuch_config_command_get (notmuch_database_t *notmuch, char *item)
 {
     notmuch_config_values_t *list;
 
-    for (list = notmuch_config_get_values_string (notmuch, item);
-	 notmuch_config_values_valid (list);
-	 notmuch_config_values_move_to_next (list)) {
-	const char *val = notmuch_config_values_get (list);
-	puts (val);
+    if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
+	if (notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)))
+	    puts ("true");
+	else
+	    puts ("false");
+    } else {
+	for (list = notmuch_config_get_values_string (notmuch, item);
+	     notmuch_config_values_valid (list);
+	     notmuch_config_values_move_to_next (list)) {
+	    const char *val = notmuch_config_values_get (list);
+	    puts (val);
+	}
     }
     return EXIT_SUCCESS;
 }

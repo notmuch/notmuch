@@ -221,6 +221,10 @@ _choose_database_path (void *ctx,
     }
 
     if (! *database_path) {
+	*database_path = getenv ("MAILDIR");
+    }
+
+    if (! *database_path) {
 	notmuch_status_t status;
 
 	*database_path = talloc_asprintf (ctx, "%s/mail", getenv ("HOME"));

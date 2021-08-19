@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION        5
-#define LIBNOTMUCH_MINOR_VERSION        3
+#define LIBNOTMUCH_MINOR_VERSION        4
 #define LIBNOTMUCH_MICRO_VERSION        0
 
 
@@ -316,7 +316,7 @@ typedef enum {
 
 /**
  * Deprecated alias for notmuch_database_open_with_config with
- * config_path=error_message=NULL
+ * config_path="" and error_message=NULL
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  */
 /* NOTMUCH_DEPRECATED(5, 4) */
@@ -326,7 +326,7 @@ notmuch_database_open (const char *path,
 		       notmuch_database_t **database);
 /**
  * Deprecated alias for notmuch_database_open_with_config with
- * config_path=NULL
+ * config_path=""
  *
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  *

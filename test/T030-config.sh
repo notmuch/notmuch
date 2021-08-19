@@ -145,4 +145,21 @@ notmuch config set --database ${key} ${value}
 output=$(notmuch config get ${key})
 test_expect_equal "${output}" "${value}"
 
+test_begin_subtest "set built_with.* yields error"
+test_expect_code 1 "notmuch config set built_with.compact false"
+
+test_begin_subtest "get built_with.{compact,field_processor} prints true"
+for key in compact field_processor; do
+    notmuch config get built_with.${key}
+done > OUTPUT
+cat <<EOF > EXPECTED
+true
+true
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "get built_with.nonexistent prints false"
+output=$(notmuch config get built_with.nonexistent)
+test_expect_equal "$output" "false"
+
 test_done
