@@ -305,6 +305,10 @@ tags.
 ``l`` ``notmuch-tree-filter``
    Filter or LIMIT the current search results based on an additional query string
 
+``t`` ``notmuch-tree-filter-by-tag``
+   Filter the current search results based on an additional tag
+
+
 ``g`` ``=``
     Refresh the buffer
 

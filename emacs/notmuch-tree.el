@@ -321,10 +321,10 @@ then NAME behaves like CMD."
     ;; These bindings shadow common bindings with variants
     ;; that additionally close the message window.
     (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
-    (define-key map [remap notmuch-search]       'notmuch-tree-to-search)
-    (define-key map [remap notmuch-help]         'notmuch-tree-help)
-    (define-key map [remap notmuch-mua-new-mail] 'notmuch-tree-new-mail)
-    (define-key map [remap notmuch-jump-search]  'notmuch-tree-jump-search)
+    (define-key map [remap notmuch-search]        'notmuch-tree-to-search)
+    (define-key map [remap notmuch-help]          'notmuch-tree-help)
+    (define-key map [remap notmuch-mua-new-mail]  'notmuch-tree-new-mail)
+    (define-key map [remap notmuch-jump-search]   'notmuch-tree-jump-search)
 
     (define-key map "o" 'notmuch-tree-toggle-order)
     (define-key map "S" 'notmuch-search-from-tree-current-query)
@@ -350,6 +350,7 @@ then NAME behaves like CMD."
     (define-key map "R" 'notmuch-tree-reply)
     (define-key map "V" 'notmuch-tree-view-raw-message)
     (define-key map "l" 'notmuch-tree-filter)
+    (define-key map "t" 'notmuch-tree-filter-by-tag)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -1183,6 +1184,25 @@ current search results AND the additional query string provided."
     (notmuch-tree (if (string= grouped-original-query "*")
 		      grouped-query
 		    (concat grouped-original-query " and " grouped-query)))))
+
+(defun notmuch-tree-filter-by-tag (tag)
+  "Filter the current search results based on a single TAG.
+
+Run a new search matching only messages that match the current
+search results and that are also tagged with the given TAG."
+  (interactive
+   (list (notmuch-select-tag-with-completion "Filter by tag: "
+					     notmuch-tree-basic-query)))
+  (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto)))
+    (notmuch-tree-close-message-window)
+    (notmuch-tree (concat notmuch-tree-basic-query " and tag:" tag)
+		  notmuch-tree-query-context
+		  nil
+		  nil
+		  nil
+		  notmuch-tree-unthreaded
+		  nil
+		  notmuch-search-oldest-first)))
 
 ;;; _
 
