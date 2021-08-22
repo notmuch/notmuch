@@ -14,7 +14,7 @@ are interleaved. Keys are printed as keywords (symbols preceded by a
 colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
 nil, true as t and false as nil.
 
-This is version 4 of the structured output format.
+This is version 5 of the structured output format.
 
 Version history
 ---------------
@@ -35,6 +35,10 @@ v4
   individual errors.
 - (notmuch 0.29) added message.crypto to identify overall message
   cryptographic state
+
+v5
+- sorting support for notmuch show (no change to actual schema,
+  just new command line argument)
 
 Common non-terminals
 --------------------

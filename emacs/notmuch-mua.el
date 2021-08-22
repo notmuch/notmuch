@@ -235,7 +235,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 ;;; Mua reply
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=sexp" "--format-version=4"))
+  (let ((args '("reply" "--format=sexp" "--format-version=5"))
 	(process-crypto notmuch-show-process-crypto)
 	reply
 	original)

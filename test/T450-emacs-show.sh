@@ -192,7 +192,7 @@ test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES E
 This is an error (see *Notmuch errors* for more details)
 === ERROR ===
 This is an error
-command: YYY/notmuch_fail show --format\\=sexp --format-version\\=4 --decrypt\\=true --exclude\\=false \\' \\* \\'
+command: YYY/notmuch_fail show --format\\=sexp --format-version\\=5 --decrypt\\=true --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error

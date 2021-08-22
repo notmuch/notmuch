@@ -308,7 +308,7 @@ execution, CALLBACK is called when harvesting finishes."
 			    (and config-query
 				 (format " and (%s)" config-query)))
 		  from-or-to-me-query))
-	 (args `("address" "--format=sexp" "--format-version=4"
+	 (args `("address" "--format=sexp" "--format-version=5"
 		 ,(if sent "--output=recipients" "--output=sender")
 		 "--deduplicate=address"
 		 ,query)))
