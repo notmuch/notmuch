@@ -302,6 +302,9 @@ tags.
 ``o`` ``notmuch-tree-toggle-order``
    |docstring::notmuch-tree-toggle-order|
 
+``l`` ``notmuch-tree-filter``
+   Filter or LIMIT the current search results based on an additional query string
+
 ``g`` ``=``
     Refresh the buffer
 

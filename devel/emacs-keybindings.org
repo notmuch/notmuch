@@ -12,7 +12,7 @@
 | i         |                                        |                                                       |                                         |
 | j         | notmuch-jump-search                    | notmuch-jump-search                                   | notmuch-jump-search                     |
 | k         | notmuch-tag-jump                       | notmuch-tag-jump                                      | notmuch-tag-jump                        |
-| l         | notmuch-search-filter                  | notmuch-show-filter-thread                            |                                         |
+| l         | notmuch-search-filter                  | notmuch-show-filter-thread                            | notmuch-tree-filter                     |
 | m         | notmuch-mua-new-mail                   | notmuch-mua-new-mail                                  | notmuch-mua-new-mail                    |
 | n         | notmuch-search-next-thread             | notmuch-show-next-open-message                        | notmuch-tree-next-matching-message      |
 | o         | notmuch-search-toggle-order            |                                                       | notmuch-tree-toggle-order               |

@@ -349,6 +349,7 @@ then NAME behaves like CMD."
     (define-key map "r" 'notmuch-tree-reply-sender)
     (define-key map "R" 'notmuch-tree-reply)
     (define-key map "V" 'notmuch-tree-view-raw-message)
+    (define-key map "l" 'notmuch-tree-filter)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -1167,6 +1168,21 @@ The arguments are:
 				     open-target)
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
+
+(defun notmuch-tree-filter (query)
+  "Filter or LIMIT the current search results based on an additional query string.
+
+Runs a new tree search matching only messages that match both the
+current search results AND the additional query string provided."
+  (interactive (list (notmuch-read-query "Filter search: ")))
+  (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto))
+	(grouped-query (notmuch-group-disjunctive-query-string query))
+	(grouped-original-query (notmuch-group-disjunctive-query-string
+				 (notmuch-tree-get-query))))
+    (notmuch-tree-close-message-window)
+    (notmuch-tree (if (string= grouped-original-query "*")
+		      grouped-query
+		    (concat grouped-original-query " and " grouped-query)))))
 
 ;;; _
 
