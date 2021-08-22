@@ -385,10 +385,10 @@ Sending Mail
 
 :index:`mail-user-agent`
 
-       Emacs consults the variable :ref:`mail-user-agent` to choose a mail
-       sending package for commands like :ref:`report-emacs-bug` and
-       :ref:`compose-mail`.  To use ``notmuch`` for this, customize this
-       variable to the symbol :ref:`notmuch-user-agent`.
+       Emacs consults the variable :code:`mail-user-agent` to choose a mail
+       sending package for commands like :code:`report-emacs-bug` and
+       :code:`compose-mail`.  To use ``notmuch`` for this, customize this
+       variable to the symbol :code:`notmuch-user-agent`.
 
 Init File
 ---------
