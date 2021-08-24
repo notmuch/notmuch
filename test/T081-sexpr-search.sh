@@ -565,4 +565,76 @@ output=$(notmuch search --query=sexp '(subject deleted)' | notmuch_search_saniti
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
 thread:XXX   2001-01-05 [2/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
 
+test_begin_subtest "regex at top level"
+notmuch search --query=sexp '(rx foo)' >& OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+illegal 'rx' outside field
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regex in illegal field"
+notmuch search --query=sexp '(body (regex foo))' >& OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'regex' not supported in field 'body'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+notmuch search --output=messages from:cworth > cworth.msg-ids
+
+test_begin_subtest "regexp 'from' search"
+notmuch search --output=messages --query=sexp '(from (rx cworth))' > OUTPUT
+test_expect_equal_file cworth.msg-ids OUTPUT
+
+test_begin_subtest "regexp search for 'from' 2"
+notmuch search from:/cworth@cworth.org/ and subject:patch | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(and (from (rx cworth@cworth.org)) (subject patch))' \
+    | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regexp 'folder' search"
+notmuch search 'folder:/^bar$/' | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(folder (rx ^bar$))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regexp 'id' search"
+notmuch search --output=messages --query=sexp '(id (rx yoom))' > OUTPUT
+test_expect_equal_file cworth.msg-ids OUTPUT
+
+test_begin_subtest "unanchored 'is' search"
+notmuch search tag:signed or tag:inbox > EXPECTED
+notmuch search --query=sexp '(is (rx i))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "anchored 'is' search"
+notmuch search tag:signed > EXPECTED
+notmuch search --query=sexp '(is (rx ^si))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "combine regexp mid and subject"
+notmuch search subject:/-C/ and mid:/y..m/ | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(and (subject (rx -C)) (mid (rx y..m)))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regexp 'path' search"
+notmuch search 'path:/^bar$/' | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(path (rx ^bar$))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regexp 'property' search"
+notmuch search property:foo=bar > EXPECTED
+notmuch search --query=sexp '(property (rx foo=.*))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "anchored 'tag' search"
+notmuch search tag:signed > EXPECTED
+notmuch search --query=sexp '(tag (rx ^si))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "regexp 'thread' search"
+notmuch search --output=threads '*' | grep '7$' > EXPECTED
+notmuch search --output=threads --query=sexp '(thread (rx 7$))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

@@ -144,6 +144,11 @@ MODIFIERS
 *Modifiers* refer to any prefixes (first elements of compound queries)
 that are neither operators nor fields.
 
+``(regex`` *atom* ``)`` ``(rx`` *atom* ``)``
+    Interpret *atom* as a POSIX.2 regular expression (see
+    :manpage:`regex(7)`). This applies in term fields and a subset [#not-phrase]_ of
+    phrase fields (see :any:`field-table`).
+
 ``(starts-with`` *subword* ``)``
     Matches any term starting with *subword*.  This applies in either
     phrase or term :any:`fields <fields>`, or outside of fields [#not-body]_. Note that
@@ -204,6 +209,9 @@ NOTES
 .. [#aka-prob] a.k.a. probabilistic prefixes
 
 .. [#aka-bool] a.k.a. boolean prefixes
+
+.. [#not-phrase] Due to the implemention of phrase fields in Xapian,
+                 regex queries could only match individual words.
 
 .. [#not-body] Due the the way ``body`` is implemented in notmuch,
                this modifier is not supported in the ``body`` field.
