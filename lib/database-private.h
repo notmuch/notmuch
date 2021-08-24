@@ -306,6 +306,11 @@ _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch);
 notmuch_status_t
 _notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
 				      Xapian::Query &output);
+
+notmuch_status_t
+_notmuch_regexp_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std::string field,
+			  std::string regexp_str,
+			  Xapian::Query &output, std::string &msg);
 #endif
 
 #endif

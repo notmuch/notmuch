@@ -30,6 +30,11 @@
 #include "database-private.h"
 #include "notmuch-private.h"
 
+notmuch_status_t
+_notmuch_regex_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std::string field,
+			 std::string regexp_str,
+			 Xapian::Query &output, std::string &msg);
+
 /* A posting source that returns documents where a value matches a
  * regexp.
  */
@@ -64,6 +69,7 @@ public:
 class RegexpFieldProcessor : public Xapian::FieldProcessor {
 protected:
     Xapian::valueno slot;
+    std::string field;
     std::string term_prefix;
     notmuch_field_flag_t options;
     Xapian::QueryParser &parser;

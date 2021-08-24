@@ -26,27 +26,32 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
-static void
-compile_regex (regex_t &regexp, const char *str)
+notmuch_status_t
+compile_regex (regex_t &regexp, const char *str, std::string &msg)
 {
     int err = regcomp (&regexp, str, REG_EXTENDED | REG_NOSUB);
 
     if (err != 0) {
 	size_t len = regerror (err, &regexp, NULL, 0);
 	char *buffer = new char[len];
-	std::string msg = "Regexp error: ";
+	msg = "Regexp error: ";
 	(void) regerror (err, &regexp, buffer, len);
 	msg.append (buffer, len);
 	delete[] buffer;
 
-	throw Xapian::QueryParserError (msg);
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
     }
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 RegexpPostingSource::RegexpPostingSource (Xapian::valueno slot, const std::string &regexp)
     : slot_ (slot)
 {
-    compile_regex (regexp_, regexp.c_str ());
+    std::string msg;
+    notmuch_status_t status = compile_regex (regexp_, regexp.c_str (), msg);
+
+    if (status)
+	throw Xapian::QueryParserError (msg);
 }
 
 RegexpPostingSource::~RegexpPostingSource ()
@@ -141,17 +146,53 @@ _find_slot (std::string prefix)
 	return Xapian::BAD_VALUENO;
 }
 
-RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix,
+RegexpFieldProcessor::RegexpFieldProcessor (std::string field_,
 					    notmuch_field_flag_t options_,
 					    Xapian::QueryParser &parser_,
 					    notmuch_database_t *notmuch_)
-    : slot (_find_slot (prefix)),
-    term_prefix (_find_prefix (prefix.c_str ())),
+    : slot (_find_slot (field_)),
+    field (field_),
+    term_prefix (_find_prefix (field_.c_str ())),
     options (options_),
     parser (parser_),
     notmuch (notmuch_)
 {
 };
+
+notmuch_status_t
+_notmuch_regexp_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std::string field,
+			  std::string regexp_str,
+			  Xapian::Query &output, std::string &msg)
+{
+    regex_t regexp;
+    notmuch_status_t status;
+
+    status = compile_regex (regexp, regexp_str.c_str (), msg);
+    if (status) {
+	_notmuch_database_log_append (notmuch, "error compiling regex %s", msg.c_str ());
+	return status;
+    }
+
+    if (slot == Xapian::BAD_VALUENO)
+	slot = _find_slot (field);
+
+    if (slot == Xapian::BAD_VALUENO) {
+	std::string term_prefix = _find_prefix (field.c_str ());
+	std::vector<std::string> terms;
+
+	for (Xapian::TermIterator it = notmuch->xapian_db->allterms_begin (term_prefix);
+	     it != notmuch->xapian_db->allterms_end (); ++it) {
+	    if (regexec (&regexp, (*it).c_str () + term_prefix.size (),
+			 0, NULL, 0) == 0)
+		terms.push_back (*it);
+	}
+	output = Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());
+    } else {
+	RegexpPostingSource *postings = new RegexpPostingSource (slot, regexp_str);
+	output = Xapian::Query (postings->release ());
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
 
 Xapian::Query
 RegexpFieldProcessor::operator() (const std::string & str)
@@ -168,23 +209,15 @@ RegexpFieldProcessor::operator() (const std::string & str)
 
     if (str.at (0) == '/') {
 	if (str.length () > 1 && str.at (str.size () - 1) == '/') {
+	    Xapian::Query query;
 	    std::string regexp_str = str.substr (1, str.size () - 2);
-	    if (slot != Xapian::BAD_VALUENO) {
-		RegexpPostingSource *postings = new RegexpPostingSource (slot, regexp_str);
-		return Xapian::Query (postings->release ());
-	    } else {
-		std::vector<std::string> terms;
-		regex_t regexp;
+	    std::string msg;
+	    notmuch_status_t status;
 
-		compile_regex (regexp, regexp_str.c_str ());
-		for (Xapian::TermIterator it = notmuch->xapian_db->allterms_begin (term_prefix);
-		     it != notmuch->xapian_db->allterms_end (); ++it) {
-		    if (regexec (&regexp, (*it).c_str () + term_prefix.size (),
-				 0, NULL, 0) == 0)
-			terms.push_back (*it);
-		}
-		return Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());
-	    }
+	    status = _notmuch_regexp_to_query (notmuch, slot, field, regexp_str, query, msg);
+	    if (status)
+		throw Xapian::QueryParserError (msg);
+	    return query;
 	} else {
 	    throw Xapian::QueryParserError ("unmatched regex delimiter in '" + str + "'");
 	}
