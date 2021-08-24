@@ -189,4 +189,11 @@ test_begin_subtest "parts do not have adjacent term positions"
 output=$(notmuch search id:termpos and '"c x"')
 test_expect_equal "$output" ""
 
+if [[ NOTMUCH_HAVE_SFSEXP = 1 ]]; then
+    test_begin_subtest "sexpr query: all messages"
+    notmuch search '*' > EXPECTED
+    notmuch search --query=sexp '()' > OUTPUT
+    test_expect_equal_file EXPECTED OUTPUT
+fi
+
 test_done

@@ -56,6 +56,7 @@ typedef struct {
     int format_sel;
     sprinter_t *format;
     int exclude;
+    int query_syntax;
     notmuch_query_t *query;
     int sort;
     int output;
@@ -719,11 +720,10 @@ _notmuch_search_prepare (search_context_t *ctx, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    ctx->query = notmuch_query_create (ctx->notmuch, query_str);
-    if (ctx->query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    if (print_status_database ("notmuch search", ctx->notmuch,
+			       notmuch_query_create_with_syntax (ctx->notmuch, query_str,
+								 ctx->query_syntax, &ctx->query)))
 	return EXIT_FAILURE;
-    }
 
     notmuch_query_set_sort (ctx->query, ctx->sort);
 
@@ -769,6 +769,7 @@ static search_context_t search_context = {
     .format_sel = NOTMUCH_FORMAT_TEXT,
     .exclude = NOTMUCH_EXCLUDE_TRUE,
     .sort = NOTMUCH_SORT_NEWEST_FIRST,
+    .query_syntax = NOTMUCH_QUERY_SYNTAX_XAPIAN,
     .output = 0,
     .offset = 0,
     .limit = -1, /* unlimited */
@@ -786,6 +787,10 @@ static const notmuch_opt_desc_t common_options[] = {
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "text", NOTMUCH_FORMAT_TEXT },
 				  { "text0", NOTMUCH_FORMAT_TEXT0 },
+				  { 0, 0 } } },
+    { .opt_keyword = &search_context.query_syntax, .name = "query", .keywords =
+	  (notmuch_keyword_t []){ { "infix", NOTMUCH_QUERY_SYNTAX_XAPIAN },
+				  { "sexp", NOTMUCH_QUERY_SYNTAX_SEXP },
 				  { 0, 0 } } },
     { .opt_int = &notmuch_format_version, .name = "format-version" },
     { }
