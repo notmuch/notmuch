@@ -57,6 +57,8 @@ static _sexp_prefix_t prefixes[] =
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+    { "infix",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+      SEXP_FLAG_SINGLE },
     { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "matching",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
@@ -242,6 +244,34 @@ _sexp_expand_query (notmuch_database_t *notmuch,
     return status;
 }
 
+static notmuch_status_t
+_sexp_parse_infix (notmuch_database_t *notmuch,  const _sexp_prefix_t *parent,
+		   const sexp_t *sx, Xapian::Query &output)
+{
+    if (parent) {
+	_notmuch_database_log (notmuch, "'infix' not supported inside '%s'\n", parent->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+    try {
+	output = notmuch->query_parser->parse_query (sx->val, NOTMUCH_QUERY_PARSER_FLAGS);
+    } catch (const Xapian::QueryParserError &error) {
+	_notmuch_database_log (notmuch, "Syntax error in infix query: %s\n", sx->val);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    _notmuch_database_log (notmuch,
+				   "A Xapian exception occurred parsing query: %s\n",
+				   error.get_msg ().c_str ());
+	    _notmuch_database_log_append (notmuch,
+					  "Query string was: %s\n",
+					  sx->val);
+	    notmuch->exception_reported = true;
+	    return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	}
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -309,6 +339,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		_notmuch_database_log (notmuch, "'%s' expects single atom as argument\n",
 				       prefix->name);
 		return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	    }
+
+	    if (strcmp (prefix->name, "infix") == 0) {
+		return _sexp_parse_infix (notmuch, parent, sx->list->next, output);
 	    }
 
 	    if (prefix->xapian_op == Xapian::Query::OP_WILDCARD)

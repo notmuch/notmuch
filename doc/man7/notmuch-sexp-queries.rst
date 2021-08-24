@@ -144,6 +144,10 @@ MODIFIERS
 *Modifiers* refer to any prefixes (first elements of compound queries)
 that are neither operators nor fields.
 
+``(infix`` *atom* ``)``
+    Interpret *atom* as an infix notmuch query (see
+    :any:`notmuch-search-terms(7)`). Not supported inside fields.
+
 ``(matching`` |q1| |q2| ... |qn| ``)`` ``(of`` |q1| |q2| ... |qn|  ``)``
     Match all messages have the same values of the current field as
     those matching all of |q1| ... |qn|. Supported in most term [#not-path]_ or
@@ -186,6 +190,9 @@ EXAMPLES
 
 ``(id 1234@invalid blah@test)``
     Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
+
+``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
+    Match messages in the given date range with tag unread.
 
 ``(starts-with prelim)``
     Match any words starting with "prelim".

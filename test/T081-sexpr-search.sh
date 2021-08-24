@@ -689,4 +689,47 @@ id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "infix query"
+notmuch search to:searchbyto | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(infix "to:searchbyto")' |  notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "bad infix query 1"
+notmuch search --query=sexp '(infix "from:/unbalanced")' 2>&1|  notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+Syntax error in infix query: from:/unbalanced
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "bad infix query 2"
+notmuch search --query=sexp '(infix "thread:{unbalanced")' 2>&1|  notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+Syntax error in infix query: thread:{unbalanced
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "bad infix query 3: bad nesting"
+notmuch search --query=sexp '(subject (infix "tag:inbox"))' 2>&1|  notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'infix' not supported inside 'subject'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "infix query that matches no messages"
+notmuch search --query=sexp '(and (infix "from:keithp") (infix "to:keithp"))' > OUTPUT
+test_expect_equal_file /dev/null OUTPUT
+
+test_begin_subtest "compound infix query"
+notmuch search date:2009-11-18..2009-11-18 and tag:unread > EXPECTED
+notmuch search --query=sexp  '(infix "date:2009-11-18..2009-11-18 and tag:unread")' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "compound infix query 2"
+notmuch search date:2009-11-18..2009-11-18 and tag:unread > EXPECTED
+notmuch search --query=sexp  '(and (infix "date:2009-11-18..2009-11-18") (infix "tag:unread"))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
