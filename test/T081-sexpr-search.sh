@@ -637,4 +637,56 @@ notmuch search --output=threads '*' | grep '7$' > EXPECTED
 notmuch search --output=threads --query=sexp '(thread (rx 7$))' > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Basic query that matches no messages"
+count=$(notmuch count from:keithp and to:keithp)
+test_expect_equal 0 "$count"
+
+test_begin_subtest "Same query against threads"
+notmuch search --query=sexp '(and (thread (of (from keithp))) (thread (matching (to keithp))))' \
+    | notmuch_search_sanitize > OUTPUT
+cat<<EOF > EXPECTED
+thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Mix thread and non-threads query"
+notmuch search --query=sexp '(and (thread (matching keithp)) (to keithp))' | notmuch_search_sanitize > OUTPUT
+cat<<EOF > EXPECTED
+thread:XXX   2009-11-18 [1/7] Lars Kellogg-Stedman| Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Compound subquery"
+notmuch search --query=sexp '(thread (of (from keithp) (subject Maildir)))' | notmuch_search_sanitize > OUTPUT
+cat<<EOF > EXPECTED
+thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "empty subquery"
+notmuch search --query=sexp '(thread (of))' 1>OUTPUT 2>&1
+notmuch search '*' > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "illegal expansion"
+notmuch search --query=sexp '(id (of ego))' 1>OUTPUT 2>&1
+cat<<EOF > EXPECTED
+notmuch search: Syntax error in query
+'of' unsupported inside 'id'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "(folder (of subquery))"
+notmuch search --query=sexp --output=messages '(folder (of (id yun3a4cegoa.fsf@aiko.keithp.com)))' > OUTPUT
+cat <<EOF > EXPECTED
+id:yun1vjwegii.fsf@aiko.keithp.com
+id:yun3a4cegoa.fsf@aiko.keithp.com
+id:1258509400-32511-1-git-send-email-stewart@flamingspork.com
+id:1258506353-20352-1-git-send-email-stewart@flamingspork.com
+id:20091118010116.GC25380@dottiness.seas.harvard.edu
+id:20091118005829.GB25380@dottiness.seas.harvard.edu
+id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

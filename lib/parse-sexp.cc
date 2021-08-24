@@ -15,6 +15,8 @@ typedef enum {
     SEXP_FLAG_WILDCARD	= 1 << 3,
     SEXP_FLAG_REGEX	= 1 << 4,
     SEXP_FLAG_DO_REGEX	= 1 << 5,
+    SEXP_FLAG_EXPAND	= 1 << 6,
+    SEXP_FLAG_DO_EXPAND = 1 << 7,
 } _sexp_flag_t;
 
 /*
@@ -46,29 +48,33 @@ static _sexp_prefix_t prefixes[] =
     { "and",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
     { "attachment",     Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD },
     { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
     { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
+    { "matching",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_DO_EXPAND },
     { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
     { "mimetype",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { "not",            Xapian::Query::OP_AND_NOT,      Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
+    { "of",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_DO_EXPAND },
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
     { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
     { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "regex",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
       SEXP_FLAG_SINGLE | SEXP_FLAG_DO_REGEX },
     { "rx",             Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
@@ -76,13 +82,13 @@ static _sexp_prefix_t prefixes[] =
     { "starts-with",    Xapian::Query::OP_WILDCARD,     Xapian::Query::MatchAll,
       SEXP_FLAG_SINGLE },
     { "subject",        Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "tag",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "thread",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "to",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { }
 };
 
@@ -210,6 +216,32 @@ _sexp_parse_regex (notmuch_database_t *notmuch,
 				     val, output, msg);
 }
 
+
+static notmuch_status_t
+_sexp_expand_query (notmuch_database_t *notmuch,
+		    const _sexp_prefix_t *prefix, const _sexp_prefix_t *parent,
+		    const sexp_t *sx, Xapian::Query &output)
+{
+    Xapian::Query subquery;
+    notmuch_status_t status;
+    std::string msg;
+
+    if (! (parent->flags & SEXP_FLAG_EXPAND)) {
+	_notmuch_database_log (notmuch, "'%s' unsupported inside '%s'\n", prefix->name, parent->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    status = _sexp_combine_query (notmuch, NULL, prefix->xapian_op, prefix->initial, sx, subquery);
+    if (status)
+	return status;
+
+    status = _notmuch_query_expand (notmuch, parent->name, subquery, output, msg);
+    if (status) {
+	_notmuch_database_log (notmuch, "error expanding query %s\n", msg.c_str ());
+    }
+    return status;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -284,6 +316,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 
 	    if (prefix->flags & SEXP_FLAG_DO_REGEX) {
 		return _sexp_parse_regex (notmuch, prefix, parent, sx->list->next->val, output);
+	    }
+
+	    if (prefix->flags & SEXP_FLAG_DO_EXPAND) {
+		return _sexp_expand_query (notmuch, prefix, parent, sx->list->next, output);
 	    }
 
 	    return _sexp_combine_query (notmuch, parent, prefix->xapian_op, prefix->initial,

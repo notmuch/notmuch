@@ -144,6 +144,11 @@ MODIFIERS
 *Modifiers* refer to any prefixes (first elements of compound queries)
 that are neither operators nor fields.
 
+``(matching`` |q1| |q2| ... |qn| ``)`` ``(of`` |q1| |q2| ... |qn|  ``)``
+    Match all messages have the same values of the current field as
+    those matching all of |q1| ... |qn|. Supported in most term [#not-path]_ or
+    phrase fields. Most commonly used in the ``thread`` field.
+
 ``(regex`` *atom* ``)`` ``(rx`` *atom* ``)``
     Interpret *atom* as a POSIX.2 regular expression (see
     :manpage:`regex(7)`). This applies in term fields and a subset [#not-phrase]_ of
@@ -176,6 +181,9 @@ EXAMPLES
     Match the *phrase* "quick" followed by "fox" in phrase fields (or
     outside a field). Match the literal string in a term field.
 
+``(folder (of (id 1234@invalid)))``
+    Match any message in the same folder as the one with Message-Id "1234@invalid"
+
 ``(id 1234@invalid blah@test)``
     Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
 
@@ -192,6 +200,14 @@ EXAMPLES
 ``(subject (starts-wih quick) "brown fox")``
     Match messages whose subject contains "quick brown fox", but also
     "brown fox quicksand".
+
+``(thread (of (id 1234@invalid)))``
+    Match any message in the same thread as the one with Message-Id "1234@invalid"
+
+``(thread (matching (from bob@example.com) (to bob@example.com)))``
+    Match any (messages in) a thread containing a message from
+    "bob@example.com" and a (possibly distinct) message to "bob at
+    example.com")
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
     Match in the "To" or "Cc" headers, "bob@example.com",
@@ -215,6 +231,10 @@ NOTES
 
 .. [#not-body] Due the the way ``body`` is implemented in notmuch,
                this modifier is not supported in the ``body`` field.
+
+.. [#not-path] Due to the way recursive ``path`` queries are implemented
+               in notmuch, this modifier is not supported in the
+               ``path`` field.
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`
