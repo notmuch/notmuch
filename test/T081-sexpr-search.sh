@@ -29,10 +29,13 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "single term in body, stemmed version"
-test_subtest_known_broken
 notmuch search arriv > EXPECTED
 notmuch search --query=sexp arriv > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "single term in body, unstemmed version"
+notmuch search --query=sexp '"arriv"' > OUTPUT
+test_expect_equal_file /dev/null OUTPUT
 
 test_begin_subtest "Unbalanced parens"
 # A code 1 indicates the error was handled (a crash will return e.g. 139).

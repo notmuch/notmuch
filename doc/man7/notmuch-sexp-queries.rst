@@ -41,8 +41,10 @@ subqueries.
     The empty list matches all messages
 
 *term*
-    Match all messages containing *term*, possibly after stemming
-    or phase splitting.
+    Match all messages containing *term*, possibly after
+    stemming or phase splitting. For discussion of stemming in
+    notmuch see :any:`notmuch-search-terms(7)`. Stemming only applies
+    to unquoted terms (basic values) in s-expression queries.
 
 ``(`` *field* |q1| |q2| ... |qn| ``)``
     Restrict the queries |q1| to |qn| to *field*, and combine with *and*
@@ -75,6 +77,10 @@ EXAMPLES
 
 ``Wizard``
     Match all messages containing the word "wizard", ignoring case.
+
+``added``
+    Match all messages containing "added", but also those containing "add", "additional",
+    "Additional", "adds", etc... via stemming.
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`

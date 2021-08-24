@@ -1,5 +1,4 @@
-#include <xapian.h>
-#include "notmuch-private.h"
+#include "database-private.h"
 
 #if HAVE_SFSEXP
 #include "sexp.h"
@@ -18,7 +17,12 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const sexp_t *sx,
 {
 
     if (sx->ty == SEXP_VALUE) {
-	output = Xapian::Query (Xapian::Unicode::tolower (sx->val));
+	std::string term = Xapian::Unicode::tolower (sx->val);
+	Xapian::Stem stem = *(notmuch->stemmer);
+	if (sx->aty == SEXP_BASIC)
+	    term = "Z" + stem (term);
+
+	output = Xapian::Query (term);
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
