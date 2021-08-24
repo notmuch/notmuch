@@ -101,6 +101,99 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Search by 'attachment'"
+notmuch search attachment:notmuch-help.patch > EXPECTED
+notmuch search --query=sexp '(attachment notmuch-help.patch)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'body'"
+add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
+output=$(notmuch search --query=sexp '(body bodysearchtest)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
+
+test_begin_subtest "Search by 'body' (phrase)"
+add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
+add_message '[subject]="negative result"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="This phrase should not match the body search"'
+output=$(notmuch search --query=sexp '(body "body search phrase")' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
+
+test_begin_subtest "Search by 'body' (utf-8):"
+add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'
+output=$(notmuch search --query=sexp '(body bödý)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
+
+test_begin_subtest "Search by 'from'"
+add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
+output=$(notmuch search --query=sexp '(from searchbyfrom)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
+
+test_begin_subtest "Search by 'from' (address)"
+add_message '[subject]="search by from (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom@example.com
+output=$(notmuch search --query=sexp '(from searchbyfrom@example.com)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
+
+test_begin_subtest "Search by 'from' (name)"
+add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
+output=$(notmuch search --query=sexp '(from "Search By From Name")' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
+test_begin_subtest "Search by 'from' (name and address)"
+output=$(notmuch search --query=sexp '(from "Search By From Name <test@example.com>")' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
+add_message '[dir]=bad' '[subject]="To the bone"'
+add_message '[dir]=.' '[subject]="Top level"'
+add_message '[dir]=bad/news' '[subject]="Bears"'
+mkdir -p "${MAIL_DIR}/duplicate/bad/news"
+cp "$gen_msg_filename" "${MAIL_DIR}/duplicate/bad/news"
+
+add_message '[dir]=things' '[subject]="These are a few"'
+add_message '[dir]=things/favorite' '[subject]="Raindrops, whiskers, kettles"'
+add_message '[dir]=things/bad' '[subject]="Bites, stings, sad feelings"'
+
+test_begin_subtest "Search by 'folder' (multiple)"
+output=$(notmuch search --query=sexp '(folder bad bad/news things/bad)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "Search by 'folder': top level."
+notmuch search folder:'""' > EXPECTED
+notmuch search --query=sexp '(folder "")'  > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'id'"
+add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp "(id ${gen_msg_id})" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
+
+test_begin_subtest "Search by 'id' (or)"
+add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp "(id non-existent-mid ${gen_msg_id})" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
+
+test_begin_subtest "Search by 'is' (multiple)"
+notmuch tag -inbox tag:searchbytag
+notmuch search is:inbox AND is:unread | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(is inbox unread)' | notmuch_search_sanitize > OUTPUT
+notmuch tag +inbox tag:searchbytag
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'mid'"
+add_message '[subject]="search by mid"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp "(mid ${gen_msg_id})" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by mid (inbox unread)"
+
+test_begin_subtest "Search by 'mid' (or)"
+add_message '[subject]="search by mid"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp "(mid non-existent-mid ${gen_msg_id})" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by mid (inbox unread)"
+
+test_begin_subtest "Search by 'mimetype'"
+notmuch search mimetype:text/html > EXPECTED
+notmuch search --query=sexp '(mimetype text html)'  > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Search by 'subject' (utf-8, phrase-token):"
 output=$(notmuch search --query=sexp '(subject utf8-sübjéct)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
@@ -118,6 +211,7 @@ notmuch search --query=sexp '(subject (or utf8 "compatibility issues"))' | notmu
 cat <<EOF > EXPECTED
 thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

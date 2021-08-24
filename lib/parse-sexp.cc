@@ -10,7 +10,25 @@
 typedef enum {
     SEXP_FLAG_NONE	= 0,
     SEXP_FLAG_FIELD	= 1 << 0,
+    SEXP_FLAG_BOOLEAN	= 1 << 1,
 } _sexp_flag_t;
+
+/*
+ * define bitwise operators to hide casts */
+
+inline _sexp_flag_t
+operator| (_sexp_flag_t a, _sexp_flag_t b)
+{
+    return static_cast<_sexp_flag_t>(
+	static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+inline _sexp_flag_t
+operator& (_sexp_flag_t a, _sexp_flag_t b)
+{
+    return static_cast<_sexp_flag_t>(
+	static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
 
 typedef struct  {
     const char *name;
@@ -23,11 +41,38 @@ static _sexp_prefix_t prefixes[] =
 {
     { "and",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
+    { "attachment",     Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
+    { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
+    { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
+    { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "mimetype",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
     { "not",            Xapian::Query::OP_AND_NOT,      Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
+    { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD
+      | SEXP_FLAG_BOOLEAN },
     { "subject",        Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
+    { "tag",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "thread",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+    { "to",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD },
     { }
 };
@@ -110,6 +155,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	std::string term = Xapian::Unicode::tolower (sx->val);
 	Xapian::Stem stem = *(notmuch->stemmer);
 	std::string term_prefix = parent ? _find_prefix (parent->name) : "";
+	if (parent && (parent->flags & SEXP_FLAG_BOOLEAN)) {
+	    output = Xapian::Query (term_prefix + sx->val);
+	    return NOTMUCH_STATUS_SUCCESS;
+	}
 	if (sx->aty == SEXP_BASIC && unicode_word_utf8 (sx->val)) {
 	    output = Xapian::Query ("Z" + term_prefix + stem (term));
 	    return NOTMUCH_STATUS_SUCCESS;

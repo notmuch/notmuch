@@ -81,6 +81,14 @@ string) into words, ignore punctuation. Phrase splitting is applied to
 terms in phrase (probabilistic) fields. Both phrase splitting and
 stemming apply only in phrase fields.
 
+Each term or phrase field has an associated combining operator
+(``and`` or ``or``) used to combine the queries from each element of
+the tail of the list. This is generally ``or`` for those fields where
+a message has one such attribute, and ``and`` otherwise.
+
+Term or phrase fields can contain arbitrarily complex queries made up
+from terms, operators, and modifiers, but not other fields.
+
 .. _field-table:
 
 .. table:: Fields with supported modifiers
@@ -112,7 +120,7 @@ stemming apply only in phrase fields.
   +------------+-----------+-----------+-----------+-----------+----------+
   |  mimetype  |    or     |  phrase   |    yes    |    yes    |    no    |
   +------------+-----------+-----------+-----------+-----------+----------+
-  |    path    |    or     |   term    |    yes    |    yes    |   yes    |
+  |    path    |    or     |   term    |    no     |    yes    |   yes    |
   +------------+-----------+-----------+-----------+-----------+----------+
   |  property  |    and    |   term    |    yes    |    yes    |   yes    |
   +------------+-----------+-----------+-----------+-----------+----------+
@@ -151,9 +159,17 @@ EXAMPLES
     Match the *phrase* "quick" followed by "fox" in phrase fields (or
     outside a field). Match the literal string in a term field.
 
+``(id 1234@invalid blah@test)``
+    Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
+
 ``(subject quick "brown fox")``
     Match messages whose subject contains "quick" (anywhere, stemmed) and
     the phrase "brown fox".
+
+``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
+    Match in the "To" or "Cc" headers, "bob@example.com",
+    "mallory@example.org", and also "bob@example.com.au" since it
+    contains the adjacent triple "bob", "example", "com".
 
 NOTES
 =====
