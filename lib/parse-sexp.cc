@@ -7,6 +7,11 @@
 /* _sexp is used for file scope symbols to avoid clashing with
  * definitions from sexp.h */
 
+typedef struct {
+    const char *name;
+    const sexp_t *sx;
+} _sexp_binding_t;
+
 typedef enum {
     SEXP_FLAG_NONE	= 0,
     SEXP_FLAG_FIELD	= 1 << 0,
@@ -99,12 +104,14 @@ static _sexp_prefix_t prefixes[] =
 
 static notmuch_status_t _sexp_to_xapian_query (notmuch_database_t *notmuch,
 					       const _sexp_prefix_t *parent,
+					       const _sexp_binding_t *env,
 					       const sexp_t *sx,
 					       Xapian::Query &output);
 
 static notmuch_status_t
 _sexp_combine_query (notmuch_database_t *notmuch,
 		     const _sexp_prefix_t *parent,
+		     const _sexp_binding_t *env,
 		     Xapian::Query::op operation,
 		     Xapian::Query left,
 		     const sexp_t *sx,
@@ -121,12 +128,13 @@ _sexp_combine_query (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    status = _sexp_to_xapian_query (notmuch, parent, sx, subquery);
+    status = _sexp_to_xapian_query (notmuch, parent, env, sx, subquery);
     if (status)
 	return status;
 
     return _sexp_combine_query (notmuch,
 				parent,
+				env,
 				operation,
 				Xapian::Query (operation, left, subquery),
 				sx->next, output);
@@ -165,6 +173,7 @@ _sexp_parse_phrase (std::string term_prefix, const char *phrase, Xapian::Query &
 static notmuch_status_t
 _sexp_parse_wildcard (notmuch_database_t *notmuch,
 		      const _sexp_prefix_t *parent,
+		      unused(const _sexp_binding_t *env),
 		      std::string match,
 		      Xapian::Query &output)
 {
@@ -201,6 +210,7 @@ _sexp_parse_one_term (notmuch_database_t *notmuch, std::string term_prefix, cons
 notmuch_status_t
 _sexp_parse_regex (notmuch_database_t *notmuch,
 		   const _sexp_prefix_t *prefix, const _sexp_prefix_t *parent,
+		   unused(const _sexp_binding_t *env),
 		   std::string val, Xapian::Query &output)
 {
     if (! parent) {
@@ -225,7 +235,7 @@ _sexp_parse_regex (notmuch_database_t *notmuch,
 static notmuch_status_t
 _sexp_expand_query (notmuch_database_t *notmuch,
 		    const _sexp_prefix_t *prefix, const _sexp_prefix_t *parent,
-		    const sexp_t *sx, Xapian::Query &output)
+		    unused(const _sexp_binding_t *env), const sexp_t *sx, Xapian::Query &output)
 {
     Xapian::Query subquery;
     notmuch_status_t status;
@@ -236,7 +246,8 @@ _sexp_expand_query (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
 
-    status = _sexp_combine_query (notmuch, NULL, prefix->xapian_op, prefix->initial, sx, subquery);
+    status = _sexp_combine_query (notmuch, NULL, NULL, prefix->xapian_op, prefix->initial, sx,
+				  subquery);
     if (status)
 	return status;
 
@@ -272,7 +283,7 @@ _sexp_parse_infix (notmuch_database_t *notmuch, const sexp_t *sx, Xapian::Query 
 
 static notmuch_status_t
 _sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
-		    const sexp_t *sx, Xapian::Query &output)
+		    const _sexp_binding_t *env, const sexp_t *sx, Xapian::Query &output)
 {
     _sexp_prefix_t user_prefix;
 
@@ -287,13 +298,13 @@ _sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 
     parent = &user_prefix;
 
-    return _sexp_combine_query (notmuch, parent, Xapian::Query::OP_AND, Xapian::Query::MatchAll,
+    return _sexp_combine_query (notmuch, parent, env, Xapian::Query::OP_AND, Xapian::Query::MatchAll,
 				sx->list->next, output);
 }
 
 static notmuch_status_t
-maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, const sexp_t *sx,
-		    Xapian::Query &output)
+maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
+		    const _sexp_binding_t *env, const sexp_t *sx, Xapian::Query &output)
 {
     char *key;
     char *expansion = NULL;
@@ -325,7 +336,7 @@ maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, c
 	goto DONE;
     }
 
-    status =  _sexp_to_xapian_query (notmuch, parent, saved_sexp, output);
+    status =  _sexp_to_xapian_query (notmuch, parent, env, saved_sexp, output);
 
   DONE:
     if (local)
@@ -339,8 +350,8 @@ maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, c
  * list */
 
 static notmuch_status_t
-_sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, const sexp_t *sx,
-		       Xapian::Query &output)
+_sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
+		       const _sexp_binding_t *env, const sexp_t *sx, Xapian::Query &output)
 {
     notmuch_status_t status;
 
@@ -348,7 +359,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	std::string term_prefix = parent ? _notmuch_database_prefix (notmuch, parent->name) : "";
 
 	if (sx->aty == SEXP_BASIC && strcmp (sx->val, "*") == 0) {
-	    return _sexp_parse_wildcard (notmuch, parent, "", output);
+	    return _sexp_parse_wildcard (notmuch, parent, env, "", output);
 	}
 
 	if (parent && (parent->flags & SEXP_FLAG_BOOLEAN)) {
@@ -387,13 +398,13 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
 
-    status = maybe_saved_squery (notmuch, parent, sx, output);
+    status = maybe_saved_squery (notmuch, parent, env, sx, output);
     if (status != NOTMUCH_STATUS_IGNORED)
 	return status;
 
     /* Check for user defined field */
     if (_notmuch_string_map_get (notmuch->user_prefix, sx->list->val)) {
-	return _sexp_parse_header (notmuch, parent, sx, output);
+	return _sexp_parse_header (notmuch, parent, env, sx, output);
     }
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
@@ -429,17 +440,17 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    }
 
 	    if (prefix->xapian_op == Xapian::Query::OP_WILDCARD)
-		return _sexp_parse_wildcard (notmuch, parent, sx->list->next->val, output);
+		return _sexp_parse_wildcard (notmuch, parent, env, sx->list->next->val, output);
 
 	    if (prefix->flags & SEXP_FLAG_DO_REGEX) {
-		return _sexp_parse_regex (notmuch, prefix, parent, sx->list->next->val, output);
+		return _sexp_parse_regex (notmuch, prefix, parent, env, sx->list->next->val, output);
 	    }
 
 	    if (prefix->flags & SEXP_FLAG_DO_EXPAND) {
-		return _sexp_expand_query (notmuch, prefix, parent, sx->list->next, output);
+		return _sexp_expand_query (notmuch, prefix, parent, env, sx->list->next, output);
 	    }
 
-	    return _sexp_combine_query (notmuch, parent, prefix->xapian_op, prefix->initial,
+	    return _sexp_combine_query (notmuch, parent, env, prefix->xapian_op, prefix->initial,
 					sx->list->next, output);
 	}
     }
@@ -461,6 +472,6 @@ _notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *q
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
 
-    return _sexp_to_xapian_query (notmuch, NULL, sx, output);
+    return _sexp_to_xapian_query (notmuch, NULL, NULL, sx, output);
 }
 #endif
