@@ -2,7 +2,7 @@
 
 #if HAVE_SFSEXP
 #include "sexp.h"
-
+#include "unicode-util.h"
 
 /* _sexp is used for file scope symbols to avoid clashing with
  * definitions from sexp.h */
@@ -67,6 +67,36 @@ _sexp_combine_query (notmuch_database_t *notmuch,
 				sx->next, output);
 }
 
+static notmuch_status_t
+_sexp_parse_phrase (std::string term_prefix, const char *phrase, Xapian::Query &output)
+{
+    Xapian::Utf8Iterator p (phrase);
+    Xapian::Utf8Iterator end;
+    std::vector<std::string> terms;
+
+    while (p != end) {
+	Xapian::Utf8Iterator start;
+	while (p != end && ! Xapian::Unicode::is_wordchar (*p))
+	    p++;
+
+	if (p == end)
+	    break;
+
+	start = p;
+
+	while (p != end && Xapian::Unicode::is_wordchar (*p))
+	    p++;
+
+	if (p != start) {
+	    std::string word (start, p);
+	    word = Xapian::Unicode::tolower (word);
+	    terms.push_back (term_prefix + word);
+	}
+    }
+    output = Xapian::Query (Xapian::Query::OP_PHRASE, terms.begin (), terms.end ());
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -80,13 +110,12 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	std::string term = Xapian::Unicode::tolower (sx->val);
 	Xapian::Stem stem = *(notmuch->stemmer);
 	std::string term_prefix = parent ? _find_prefix (parent->name) : "";
-	if (sx->aty == SEXP_BASIC)
-	    term = "Z" + term_prefix + stem (term);
-	else
-	    term = term_prefix + term;
-
-	output = Xapian::Query (term);
-	return NOTMUCH_STATUS_SUCCESS;
+	if (sx->aty == SEXP_BASIC && unicode_word_utf8 (sx->val)) {
+	    output = Xapian::Query ("Z" + term_prefix + stem (term));
+	    return NOTMUCH_STATUS_SUCCESS;
+	} else {
+	    return _sexp_parse_phrase (term_prefix, sx->val, output);
+	}
     }
 
     /* Empty list */

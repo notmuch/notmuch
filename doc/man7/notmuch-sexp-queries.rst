@@ -40,10 +40,12 @@ subqueries.
     Match all messages.
 
 *term*
-    Match all messages containing *term*, possibly after
-    stemming or phase splitting. For discussion of stemming in
-    notmuch see :any:`notmuch-search-terms(7)`. Stemming only applies
-    to unquoted terms (basic values) in s-expression queries.
+
+    Match all messages containing *term*, possibly after stemming or
+    phrase splitting. For discussion of stemming in notmuch see
+    :any:`notmuch-search-terms(7)`. Stemming only applies to unquoted
+    terms (basic values) in s-expression queries.  For information on
+    phrase splitting see :any:`fields`.
 
 ``(`` *field* |q1| |q2| ... |qn| ``)``
     Restrict the queries |q1| to |qn| to *field*, and combine with *and*
@@ -63,7 +65,7 @@ subqueries.
 FIELDS
 ``````
 
-*Fields* (also called *prefixes* in notmuch documentation)
+*Fields* [#aka-pref]_
 correspond to attributes of mail messages. Some are inherent (and
 immutable) like ``subject``, while others ``tag`` and ``property`` are
 settable by the user.  Each concrete field in
@@ -71,6 +73,13 @@ settable by the user.  Each concrete field in
 is discussed further under "Search prefixes" in
 :any:`notmuch-search-terms(7)`. The row *user* refers to user defined
 fields, described in :any:`notmuch-config(1)`.
+
+Most fields are either *phrase fields* [#aka-prob]_ (which match
+sequences of words), or *term fields* [#aka-bool]_ (which match exact
+strings). *Phrase splitting* breaks the term (basic value or quoted
+string) into words, ignore punctuation. Phrase splitting is applied to
+terms in phrase (probabilistic) fields. Both phrase splitting and
+stemming apply only in phrase fields.
 
 .. _field-table:
 
@@ -138,9 +147,22 @@ EXAMPLES
 ``(not Bob Marley)``
     Match messages containing neither "Bob" nor "Marley", nor their stems,
 
+``"quick fox"`` ``quick-fox`` ``quick@fox``
+    Match the *phrase* "quick" followed by "fox" in phrase fields (or
+    outside a field). Match the literal string in a term field.
+
 ``(subject quick "brown fox")``
     Match messages whose subject contains "quick" (anywhere, stemmed) and
     the phrase "brown fox".
+
+NOTES
+=====
+
+.. [#aka-pref] a.k.a. prefixes
+
+.. [#aka-prob] a.k.a. probabilistic prefixes
+
+.. [#aka-bool] a.k.a. boolean prefixes
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`

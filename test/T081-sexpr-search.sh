@@ -102,14 +102,31 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Search by 'subject' (utf-8, phrase-token):"
-test_subtest_known_broken
 output=$(notmuch search --query=sexp '(subject utf8-sübjéct)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
 
 test_begin_subtest "Search by 'subject' (utf-8, quoted string):"
-test_subtest_known_broken
 output=$(notmuch search --query=sexp '(subject "utf8 sübjéct")' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (combine phrase, term):"
+output=$(notmuch search --query=sexp '(subject Mac "compatibility issues")' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (combine phrase, term 2):"
+notmuch search --query=sexp '(subject (or utf8 "compatibility issues"))' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'subject' (combine phrase, term 3):"
+notmuch search --query=sexp '(subject issues X/Darwin)' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Unbalanced parens"
 # A code 1 indicates the error was handled (a crash will return e.g. 139).
