@@ -309,6 +309,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "No database found";
     case NOTMUCH_STATUS_DATABASE_EXISTS:
 	return "Database exists, not recreated";
+    case NOTMUCH_STATUS_BAD_QUERY_SYNTAX:
+	return "Syntax error in query";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";

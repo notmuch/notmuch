@@ -221,6 +221,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_DATABASE_EXISTS,
     /**
+     * Syntax error in query
+     */
+    NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
