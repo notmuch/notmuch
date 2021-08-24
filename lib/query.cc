@@ -84,9 +84,9 @@ _notmuch_query_destructor (notmuch_query_t *query)
     return 0;
 }
 
-notmuch_query_t *
-notmuch_query_create (notmuch_database_t *notmuch,
-		      const char *query_string)
+static notmuch_query_t *
+_notmuch_query_constructor (notmuch_database_t *notmuch,
+			    const char *query_string)
 {
     notmuch_query_t *query;
 
@@ -112,6 +112,19 @@ notmuch_query_create (notmuch_database_t *notmuch,
     query->exclude_terms = _notmuch_string_list_create (query);
 
     query->omit_excluded = NOTMUCH_EXCLUDE_TRUE;
+
+    return query;
+}
+
+notmuch_query_t *
+notmuch_query_create (notmuch_database_t *notmuch,
+		      const char *query_string)
+{
+
+    notmuch_query_t *query = _notmuch_query_constructor (notmuch, query_string);
+
+    if (! query)
+	return NULL;
 
     return query;
 }
