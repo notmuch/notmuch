@@ -432,7 +432,8 @@ _finish_open (notmuch_database_t *notmuch,
 									      "lastmod:");
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
-	notmuch->query_parser->set_stemmer (Xapian::Stem ("english"));
+	notmuch->stemmer = new Xapian::Stem ("english");
+	notmuch->query_parser->set_stemmer (*notmuch->stemmer);
 	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
 	notmuch->query_parser->add_rangeprocessor (notmuch->value_range_processor);
 	notmuch->query_parser->add_rangeprocessor (notmuch->date_range_processor);

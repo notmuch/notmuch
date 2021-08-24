@@ -232,6 +232,7 @@ struct _notmuch_database {
      */
     unsigned long view;
     Xapian::QueryParser *query_parser;
+    Xapian::Stem *stemmer;
     Xapian::TermGenerator *term_gen;
     Xapian::RangeProcessor *value_range_processor;
     Xapian::RangeProcessor *date_range_processor;
