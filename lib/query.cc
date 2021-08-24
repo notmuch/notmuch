@@ -182,11 +182,16 @@ static notmuch_status_t
 _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
 {
     try {
-	query->xapian_query =
-	    query->notmuch->query_parser->
-	    parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+	if (strcmp (query->query_string, "") == 0 ||
+	    strcmp (query->query_string, "*") == 0) {
+	    query->xapian_query = Xapian::Query::MatchAll;
+	} else {
+	    query->xapian_query =
+		query->notmuch->query_parser->
+		parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 
-	_notmuch_query_cache_terms (query);
+	    _notmuch_query_cache_terms (query);
+	}
 	query->parsed = true;
 
     } catch (const Xapian::Error &error) {
@@ -331,7 +336,6 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 				 notmuch_messages_t **out)
 {
     notmuch_database_t *notmuch = query->notmuch;
-    const char *query_string = query->query_string;
     notmuch_mset_messages_t *messages;
     notmuch_status_t status;
 
@@ -361,13 +365,9 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	Xapian::MSet mset;
 	Xapian::MSetIterator iterator;
 
-	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0) {
-	    final_query = mail_query;
-	} else {
-	    final_query = Xapian::Query (Xapian::Query::OP_AND,
-					 mail_query, query->xapian_query);
-	}
+	final_query = Xapian::Query (Xapian::Query::OP_AND,
+				     mail_query, query->xapian_query);
+
 	messages->base.excluded_doc_ids = NULL;
 
 	if ((query->omit_excluded != NOTMUCH_EXCLUDE_FALSE) && (query->exclude_terms)) {
@@ -688,7 +688,6 @@ notmuch_status_t
 _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsigned *count_out)
 {
     notmuch_database_t *notmuch = query->notmuch;
-    const char *query_string = query->query_string;
     Xapian::doccount count = 0;
     notmuch_status_t status;
 
@@ -704,13 +703,8 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	Xapian::Query final_query, exclude_query;
 	Xapian::MSet mset;
 
-	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0) {
-	    final_query = mail_query;
-	} else {
-	    final_query = Xapian::Query (Xapian::Query::OP_AND,
-					 mail_query, query->xapian_query);
-	}
+	final_query = Xapian::Query (Xapian::Query::OP_AND,
+				     mail_query, query->xapian_query);
 
 	exclude_query = _notmuch_exclude_tags (query);
 
