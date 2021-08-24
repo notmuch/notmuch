@@ -4,6 +4,21 @@ test_description='reindexing messages'
 
 add_email_corpus
 
+
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+
+    count=$(notmuch count --lastmod '*' | cut -f 3)
+    for query in '()' '(not)' '(and)' '(or ())' '(or (not))' '(or (and))' \
+		'(or (and) (or) (not (and)))'; do
+	test_begin_subtest "reindex all messages: $query"
+	notmuch reindex --query=sexp "$query"
+	output=$(notmuch count --lastmod '*' | cut -f 3)
+	count=$((count + 1))
+	test_expect_equal "$output" "$count"
+    done
+
+fi
+
 notmuch tag +usertag1 '*'
 
 notmuch search '*' 2>1 | notmuch_search_sanitize > initial-threads
@@ -41,6 +56,7 @@ notmuch dump > OUTPUT
 notmuch tag -attachment2 -encrypted2 -signed2 '*'
 test_expect_equal_file EXPECTED OUTPUT
 
+backup_database
 test_begin_subtest 'reindex moves a message between threads'
 notmuch search --output=threads id:87iqd9rn3l.fsf@vertex.dottedmag > EXPECTED
 # re-parent
@@ -48,7 +64,9 @@ sed -i 's/1258471718-6781-1-git-send-email-dottedmag@dottedmag.net/87iqd9rn3l.fs
 notmuch reindex id:1258471718-6781-2-git-send-email-dottedmag@dottedmag.net
 notmuch search --output=threads id:1258471718-6781-2-git-send-email-dottedmag@dottedmag.net > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+restore_database
 
+backup_database
 test_begin_subtest 'reindex detects removal of all files'
 notmuch search --output=messages not id:20091117232137.GA7669@griffis1.net> EXPECTED
 # remove both copies
@@ -56,6 +74,17 @@ mv $MAIL_DIR/cur/51:2,* duplicate-message-2.eml
 notmuch reindex id:20091117232137.GA7669@griffis1.net
 notmuch search --output=messages '*' > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
+backup_database
+test_begin_subtest 'reindex detects removal of all files'
+notmuch search --output=messages not id:20091117232137.GA7669@griffis1.net> EXPECTED
+# remove both copies
+mv $MAIL_DIR/cur/51:2,* duplicate-message-2.eml
+notmuch reindex id:20091117232137.GA7669@griffis1.net
+notmuch search --output=messages '*' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
 
 test_begin_subtest "reindex preserves properties"
 cat <<EOF > prop-dump

@@ -154,4 +154,28 @@ print("4: {} messages".format(query.count_messages()))
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+
+    test_begin_subtest "and of exact terms (query=sexp)"
+    output=$(notmuch count --query=sexp '(and "wonderful" "wizard")')
+    test_expect_equal "$output" 1
+
+    test_begin_subtest "or of exact terms (query=sexp)"
+    output=$(notmuch count --query=sexp '(or "php" "wizard")')
+    test_expect_equal "$output" 2
+
+    test_begin_subtest "starts-with, case-insensitive (query=sexp)"
+    output=$(notmuch count --query=sexp '(starts-with FreeB)')
+    test_expect_equal "$output" 5
+
+    test_begin_subtest "query that matches no messages (query=sexp)"
+    count=$(notmuch count --query=sexp '(and (from keithp) (to keithp))')
+    test_expect_equal 0 "$count"
+
+    test_begin_subtest "Compound subquery (query=sexp)"
+    output=$(notmuch count --query=sexp '(thread (of (from keithp) (subject Maildir)))')
+    test_expect_equal "$output" 7
+
+fi
+
 test_done

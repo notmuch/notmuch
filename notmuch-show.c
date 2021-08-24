@@ -1364,11 +1364,11 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch show", notmuch, status))
 	return EXIT_FAILURE;
-    }
 
     notmuch_query_set_sort (query, sort);
 

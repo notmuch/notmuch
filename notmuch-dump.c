@@ -232,11 +232,12 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
     if (! query_str)
 	query_str = "";
 
-    query = notmuch_query_create (notmuch, query_str);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_str,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch dump", notmuch, status))
 	return EXIT_FAILURE;
-    }
+
     /* Don't ask xapian to sort by Message-ID. Xapian optimizes returning the
      * first results quickly at the expense of total time.
      */

@@ -74,10 +74,12 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
     int ret = 0;
     notmuch_status_t status;
 
-    query = notmuch_query_create (notmuch, query_str);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return -1;
+    status = notmuch_query_create_with_syntax (notmuch, query_str,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch count", notmuch, status)) {
+	ret = -1;
+	goto DONE;
     }
 
     for (notmuch_config_values_start (exclude_tags);

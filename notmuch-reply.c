@@ -719,6 +719,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
     };
     int format = FORMAT_DEFAULT;
     int reply_all = true;
+    notmuch_status_t status;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -761,11 +762,11 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch reply", notmuch, status))
 	return EXIT_FAILURE;
-    }
 
     if (do_reply (notmuch, query, &params, format, reply_all) != 0)
 	return EXIT_FAILURE;

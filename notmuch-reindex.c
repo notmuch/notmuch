@@ -49,11 +49,11 @@ reindex_query (notmuch_database_t *notmuch, const char *query_string,
 
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory.\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch reindex", notmuch, status))
 	return 1;
-    }
 
     /* reindexing is not interested in any special sort order */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
