@@ -178,35 +178,52 @@ _notmuch_query_cache_terms (notmuch_query_t *query)
 	query->terms.insert (*t);
 }
 
+notmuch_status_t
+_notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
+				       std::string query_string,
+				       Xapian::Query &output,
+				       std::string &msg)
+{
+    try {
+	if (query_string == "" || query_string == "*") {
+	    output = Xapian::Query::MatchAll;
+	} else {
+	    output =
+		notmuch->query_parser->
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+	}
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    _notmuch_database_log (notmuch,
+				   "A Xapian exception occurred parsing query: %s\n",
+				   error.get_msg ().c_str ());
+	    _notmuch_database_log_append (notmuch,
+					  "Query string was: %s\n",
+					  query_string.c_str ());
+	    notmuch->exception_reported = true;
+	}
+
+	msg = error.get_msg ();
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static notmuch_status_t
 _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
 {
-    try {
-	if (strcmp (query->query_string, "") == 0 ||
-	    strcmp (query->query_string, "*") == 0) {
-	    query->xapian_query = Xapian::Query::MatchAll;
-	} else {
-	    query->xapian_query =
-		query->notmuch->query_parser->
-		parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+    notmuch_status_t status;
+    std::string msg; /* ignored */
 
-	    _notmuch_query_cache_terms (query);
-	}
-	query->parsed = true;
+    status =  _notmuch_query_string_to_xapian_query (query->notmuch, query->query_string,
+						     query->xapian_query, msg);
+    if (status)
+	return status;
 
-    } catch (const Xapian::Error &error) {
-	if (! query->notmuch->exception_reported) {
-	    _notmuch_database_log (query->notmuch,
-				   "A Xapian exception occurred parsing query: %s\n",
-				   error.get_msg ().c_str ());
-	    _notmuch_database_log_append (query->notmuch,
-					  "Query string was: %s\n",
-					  query->query_string);
-	    query->notmuch->exception_reported = true;
-	}
+    query->parsed = true;
 
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-    }
+    _notmuch_query_cache_terms (query);
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
