@@ -732,4 +732,48 @@ notmuch search date:2009-11-18..2009-11-18 and tag:unread > EXPECTED
 notmuch search --query=sexp  '(and (infix "date:2009-11-18..2009-11-18") (infix "tag:unread"))' > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "user header (unknown header)"
+notmuch search --query=sexp '(FooBar)' >& OUTPUT
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+unknown prefix 'FooBar'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "adding user header"
+test_expect_code 0 "notmuch config set index.header.List \"List-Id\""
+
+test_begin_subtest "reindexing"
+test_expect_code 0 'notmuch reindex "*"'
+
+test_begin_subtest "wildcard search for user header"
+grep -Ril List-Id ${MAIL_DIR} | sort | notmuch_dir_sanitize > EXPECTED
+notmuch search --output=files --query=sexp '(List *)' | sort | notmuch_dir_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "wildcard search for user header 2"
+grep -Ril List-Id ${MAIL_DIR} | sort | notmuch_dir_sanitize > EXPECTED
+notmuch search --output=files --query=sexp '(List (starts-with not))' | sort | notmuch_dir_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search for user header"
+notmuch search List:notmuch | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(List notmuch)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search for user header (list token)"
+notmuch search List:notmuch | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(List notmuch.notmuchmail.org)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search for user header (quoted string)"
+notmuch search 'List:"notmuch notmuchmail org"' | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(List "notmuch notmuchmail org")' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search for user header (atoms)"
+notmuch search 'List:"notmuch notmuchmail org"' | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(List notmuch notmuchmail org)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

@@ -224,6 +224,10 @@ EXAMPLES
 ``(not (to *))``
     Match messages with an empty or invalid 'To' and 'Cc' field.
 
+``(List *)``
+    Match messages with a non-empty List-Id header, assuming
+    configuration ``index.header.List=List-Id``
+
 NOTES
 =====
 

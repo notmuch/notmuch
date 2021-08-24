@@ -166,7 +166,7 @@ _sexp_parse_wildcard (notmuch_database_t *notmuch,
 		      Xapian::Query &output)
 {
 
-    std::string term_prefix = parent ? _find_prefix (parent->name) : "";
+    std::string term_prefix = parent ? _notmuch_database_prefix (notmuch, parent->name) : "";
 
     if (parent && ! (parent->flags & SEXP_FLAG_WILDCARD)) {
 	_notmuch_database_log (notmuch, "'%s' does not support wildcard queries\n", parent->name);
@@ -272,6 +272,27 @@ _sexp_parse_infix (notmuch_database_t *notmuch,  const _sexp_prefix_t *parent,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static notmuch_status_t
+_sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
+		    const sexp_t *sx, Xapian::Query &output)
+{
+    _sexp_prefix_t user_prefix;
+
+    user_prefix.name = sx->list->val;
+    user_prefix.flags = SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD;
+
+    if (parent) {
+	_notmuch_database_log (notmuch, "nested field: '%s' inside '%s'\n",
+			       sx->list->val, parent->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    parent = &user_prefix;
+
+    return _sexp_combine_query (notmuch, parent, Xapian::Query::OP_AND, Xapian::Query::MatchAll,
+				sx->list->next, output);
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -281,7 +302,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		       Xapian::Query &output)
 {
     if (sx->ty == SEXP_VALUE) {
-	std::string term_prefix = parent ? _find_prefix (parent->name) : "";
+	std::string term_prefix = parent ? _notmuch_database_prefix (notmuch, parent->name) : "";
 
 	if (sx->aty == SEXP_BASIC && strcmp (sx->val, "*") == 0) {
 	    return _sexp_parse_wildcard (notmuch, parent, "", output);
@@ -291,6 +312,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    output = Xapian::Query (term_prefix + sx->val);
 	    return NOTMUCH_STATUS_SUCCESS;
 	}
+
 	if (parent) {
 	    return _sexp_parse_one_term (notmuch, term_prefix, sx, output);
 	} else {
@@ -299,7 +321,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		if (prefix->flags & SEXP_FLAG_FIELD) {
 		    notmuch_status_t status;
 		    Xapian::Query subquery;
-		    term_prefix = _find_prefix (prefix->name);
+		    term_prefix = _notmuch_database_prefix (notmuch, prefix->name);
 		    status = _sexp_parse_one_term (notmuch, term_prefix, sx, subquery);
 		    if (status)
 			return status;
@@ -321,6 +343,11 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	_notmuch_database_log (notmuch, "unexpected list in field/operation position\n",
 			       sx->list->val);
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    /* Check for user defined field */
+    if (_notmuch_string_map_get (notmuch->user_prefix, sx->list->val)) {
+	return _sexp_parse_header (notmuch, parent, sx, output);
     }
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
@@ -362,7 +389,6 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
     }
 
     _notmuch_database_log (notmuch, "unknown prefix '%s'\n", sx->list->val);
-
     return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 }
 
