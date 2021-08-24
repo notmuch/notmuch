@@ -9,9 +9,34 @@ fi
 
 add_email_corpus
 
-test_begin_subtest "all messages: ()"
-notmuch search '*' > EXPECTED
-notmuch search --query=sexp "()" > OUTPUT
+for query in '()' '(not)' '(and)' '(or ())' '(or (not))' '(or (and))' \
+            '(or (and) (or) (not (and)))'; do
+    test_begin_subtest "all messages: $query"
+    notmuch search '*' > EXPECTED
+    notmuch search --query=sexp "$query" > OUTPUT
+    test_expect_equal_file EXPECTED OUTPUT
+done
+
+for query in '(or)' '(not ())' '(not (not))' '(not (and))' \
+                   '(not (or (and) (or) (not (and))))'; do
+    test_begin_subtest "no messages: $query"
+    notmuch search --query=sexp "$query" > OUTPUT
+    test_expect_equal_file /dev/null OUTPUT
+done
+
+test_begin_subtest "and of exact terms"
+notmuch search --query=sexp '(and "wonderful" "wizard")' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "or of exact terms"
+notmuch search --query=sexp '(or "php" "wizard")' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2010-12-29 [1/1] François Boulogne; [aur-general] Guidelines: cp, mkdir vs install (inbox unread)
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "single term in body"

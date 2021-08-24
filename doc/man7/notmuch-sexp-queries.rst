@@ -51,7 +51,9 @@ subqueries.
     (for most fields) or *or*. See :any:`fields` for more information.
 
 ``(`` *operator* |q1| |q2| ... |qn| ``)``
-    Combine queries |q1| to |qn|. See :any:`operators` for more information.
+    Combine queries |q1| to |qn|. Currently supported operators are
+    ``and``, ``or``, and ``not``. ``(not`` |q1| ... |qn| ``)`` is equivalent
+    to ``(and (not`` |q1| ``) ... (not`` |qn| ``))``.
 
 ``(`` *modifier* |q1| |q2| ... |qn| ``)``
     Combine queries |q1| to |qn|, and reinterpret the result (e.g. as a regular expression).
@@ -61,11 +63,6 @@ subqueries.
 
 FIELDS
 ``````
-
-.. _operators:
-
-OPERATORS
-`````````
 
 .. _modifiers:
 
@@ -81,6 +78,13 @@ EXAMPLES
 ``added``
     Match all messages containing "added", but also those containing "add", "additional",
     "Additional", "adds", etc... via stemming.
+
+``(and Bob Marley)``
+    Match messages containing words "Bob" and "Marley", or their stems
+    The words need not be adjacent.
+
+``(not Bob Marley)``
+    Match messages containing neither "Bob" nor "Marley", nor their stems,
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`
