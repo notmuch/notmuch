@@ -7,10 +7,21 @@ notmuch-sexp-queries
 SYNOPSIS
 ========
 
-**notmuch** **search** ``--query=sexp`` '(and (to santa) (date december))'
+**notmuch** *subcommand* ``--query=sexp`` [option ...]  ``--`` '(and (to santa) (date december))'
 
 DESCRIPTION
 ===========
+
+Notmuch supports an alternative query syntax based on `S-expressions
+<https://en.wikipedia.org/wiki/S-expression>`_ . It can be selected
+with the command line ``--query=sexp`` or with the appropriate option
+to the library function :c:func:`notmuch_query_create_with_syntax`.
+Support for this syntax is currently optional, you can test if your
+build of notmuch supports it with
+
+::
+
+   $ notmuch config get built_with.sexpr_query
 
 
 S-EXPRESSIONS
