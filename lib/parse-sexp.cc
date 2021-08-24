@@ -291,6 +291,49 @@ _sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 				sx->list->next, output);
 }
 
+static notmuch_status_t
+maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, const sexp_t *sx,
+		    Xapian::Query &output)
+{
+    char *key;
+    char *expansion = NULL;
+    notmuch_status_t status;
+    sexp_t *saved_sexp;
+    void *local = talloc_new (notmuch);
+    char *buf;
+
+    key = talloc_asprintf (local, "squery.%s", sx->list->val);
+    if (! key) {
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    status = notmuch_database_get_config (notmuch, key, &expansion);
+    if (status)
+	goto DONE;
+    if (EMPTY_STRING (expansion)) {
+	status = NOTMUCH_STATUS_IGNORED;
+	goto DONE;
+    }
+
+    buf = talloc_strdup (local, expansion);
+    /* XXX TODO: free this memory */
+    saved_sexp = parse_sexp (buf, strlen (expansion));
+    if (! saved_sexp) {
+	_notmuch_database_log (notmuch, "invalid saved s-expression query: '%s'\n", expansion);
+	status = NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	goto DONE;
+    }
+
+    status =  _sexp_to_xapian_query (notmuch, parent, saved_sexp, output);
+
+  DONE:
+    if (local)
+	talloc_free (local);
+
+    return status;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -299,6 +342,8 @@ static notmuch_status_t
 _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, const sexp_t *sx,
 		       Xapian::Query &output)
 {
+    notmuch_status_t status;
+
     if (sx->ty == SEXP_VALUE) {
 	std::string term_prefix = parent ? _notmuch_database_prefix (notmuch, parent->name) : "";
 
@@ -317,7 +362,6 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    Xapian::Query accumulator;
 	    for (_sexp_prefix_t *prefix = prefixes; prefix->name; prefix++) {
 		if (prefix->flags & SEXP_FLAG_FIELD) {
-		    notmuch_status_t status;
 		    Xapian::Query subquery;
 		    term_prefix = _notmuch_database_prefix (notmuch, prefix->name);
 		    status = _sexp_parse_one_term (notmuch, term_prefix, sx, subquery);
@@ -342,6 +386,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 			       sx->list->val);
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
+
+    status = maybe_saved_squery (notmuch, parent, sx, output);
+    if (status != NOTMUCH_STATUS_IGNORED)
+	return status;
 
     /* Check for user defined field */
     if (_notmuch_string_map_get (notmuch->user_prefix, sx->list->val)) {

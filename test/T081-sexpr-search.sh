@@ -825,4 +825,36 @@ notmuch config set squery.Test '(subject override subject)'
 output=$(notmuch config get squery.Test)
 test_expect_equal "$output" '(subject override subject)'
 
+test_begin_subtest "unknown saved query"
+notmuch search --query=sexp '(Unknown foo bar)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+unknown prefix 'Unknown'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "syntax error in saved query"
+notmuch config set squery.Bad '(Bad'
+notmuch search --query=sexp '(Bad foo bar)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+invalid saved s-expression query: '(Bad'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search by 'tag' and 'subject'"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.TagSubject  '(and (tag inbox) (subject maildir))'
+notmuch search --query=sexp '(TagSubject)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: illegal nesting"
+notmuch config set squery.TagSubject  '(and (tag inbox) (subject maildir))'
+notmuch search --query=sexp '(subject (TagSubject))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'tag' inside 'subject'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
