@@ -23,6 +23,10 @@
 
 #include <glib.h> /* GHashTable, GPtrArray */
 
+#if HAVE_SFSEXP
+#include "sexp.h"
+#endif
+
 struct _notmuch_query {
     notmuch_database_t *notmuch;
     const char *query_string;
@@ -30,6 +34,7 @@ struct _notmuch_query {
     notmuch_string_list_t *exclude_terms;
     notmuch_exclude_t omit_excluded;
     bool parsed;
+    notmuch_query_syntax_t syntax;
     Xapian::Query xapian_query;
     std::set<std::string> terms;
 };
@@ -105,7 +110,10 @@ _notmuch_query_constructor (notmuch_database_t *notmuch,
 
     query->notmuch = notmuch;
 
-    query->query_string = talloc_strdup (query, query_string);
+    if (query_string)
+	query->query_string = talloc_strdup (query, query_string);
+    else
+	query->query_string = NULL;
 
     query->sort = NOTMUCH_SORT_NEWEST_FIRST;
 
@@ -121,20 +129,49 @@ notmuch_query_create (notmuch_database_t *notmuch,
 		      const char *query_string)
 {
 
-    notmuch_query_t *query = _notmuch_query_constructor (notmuch, query_string);
+    notmuch_query_t *query;
+    notmuch_status_t status;
 
-    if (! query)
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       NOTMUCH_QUERY_SYNTAX_XAPIAN,
+					       &query);
+    if (status)
 	return NULL;
 
     return query;
 }
 
-static notmuch_status_t
-_notmuch_query_ensure_parsed (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_create_with_syntax (notmuch_database_t *notmuch,
+				  const char *query_string,
+				  notmuch_query_syntax_t syntax,
+				  notmuch_query_t **output)
 {
-    if (query->parsed)
-	return NOTMUCH_STATUS_SUCCESS;
 
+    notmuch_query_t *query;
+
+    if (! output)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    query = _notmuch_query_constructor (notmuch, query_string);
+    if (! query)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    if (syntax == NOTMUCH_QUERY_SYNTAX_SEXP && ! HAVE_SFSEXP) {
+	_notmuch_database_log (notmuch, "sexp query parser not available");
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+    }
+
+    query->syntax = syntax;
+
+    *output = query;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
+{
     try {
 	query->xapian_query =
 	    query->notmuch->query_parser->
@@ -165,6 +202,30 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
+{
+    if (query->parsed)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    query->xapian_query = Xapian::Query::MatchAll;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_notmuch_query_ensure_parsed (notmuch_query_t *query)
+{
+    if (query->parsed)
+	return NOTMUCH_STATUS_SUCCESS;
+
+#if HAVE_SFSEXP
+    if (query->syntax == NOTMUCH_QUERY_SYNTAX_SEXP)
+	return _notmuch_query_ensure_parsed_sexpr (query);
+#endif
+
+    return _notmuch_query_ensure_parsed_xapian (query);
 }
 
 const char *

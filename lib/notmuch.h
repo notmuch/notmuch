@@ -961,6 +961,16 @@ notmuch_query_t *
 notmuch_query_create (notmuch_database_t *database,
 		      const char *query_string);
 
+typedef enum {
+    NOTMUCH_QUERY_SYNTAX_XAPIAN,
+    NOTMUCH_QUERY_SYNTAX_SEXP
+} notmuch_query_syntax_t;
+
+notmuch_status_t
+notmuch_query_create_with_syntax (notmuch_database_t *database,
+				  const char *query_string,
+				  notmuch_query_syntax_t syntax,
+				  notmuch_query_t **output);
 /**
  * Sort values for notmuch_query_set_sort.
  */
