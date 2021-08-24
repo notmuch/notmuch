@@ -54,13 +54,25 @@ notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
 
 static bool print_version = false, print_help = false;
 static const char *notmuch_requested_db_uuid = NULL;
+static int query_syntax = NOTMUCH_QUERY_SYNTAX_XAPIAN;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
     { .opt_bool = &print_version, .name = "version" },
     { .opt_bool = &print_help, .name = "help" },
     { .opt_string = &notmuch_requested_db_uuid, .name = "uuid" },
+    { .opt_keyword = &query_syntax, .name = "query", .keywords =
+	  (notmuch_keyword_t []){ { "infix", NOTMUCH_QUERY_SYNTAX_XAPIAN },
+				  { "sexp", NOTMUCH_QUERY_SYNTAX_SEXP },
+				  { 0, 0 } } },
+
     { }
 };
+
+notmuch_query_syntax_t
+shared_option_query_syntax ()
+{
+    return query_syntax;
+}
 
 /* any subcommand wanting to support these options should call
  * inherit notmuch_shared_options and call

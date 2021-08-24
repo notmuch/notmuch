@@ -487,6 +487,8 @@ print_status_gzbytes (const char *loc,
 
 extern const notmuch_opt_desc_t notmuch_shared_options [];
 
+notmuch_query_syntax_t shared_option_query_syntax ();
+
 void notmuch_process_shared_options (notmuch_database_t *notmuch, const char *subcommand_name);
 int notmuch_minimal_options (const char *subcommand_name,
 			     int argc, char **argv);
