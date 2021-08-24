@@ -164,6 +164,22 @@ _sexp_parse_wildcard (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static notmuch_status_t
+_sexp_parse_one_term (notmuch_database_t *notmuch, std::string term_prefix, const sexp_t *sx,
+		      Xapian::Query &output)
+{
+    Xapian::Stem stem = *(notmuch->stemmer);
+
+    if (sx->aty == SEXP_BASIC && unicode_word_utf8 (sx->val)) {
+	std::string term = Xapian::Unicode::tolower (sx->val);
+
+	output = Xapian::Query ("Z" + term_prefix + stem (term));
+	return NOTMUCH_STATUS_SUCCESS;
+    } else {
+	return _sexp_parse_phrase (term_prefix, sx->val, output);
+    }
+
+}
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -185,11 +201,23 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    output = Xapian::Query (term_prefix + sx->val);
 	    return NOTMUCH_STATUS_SUCCESS;
 	}
-	if (sx->aty == SEXP_BASIC && unicode_word_utf8 (sx->val)) {
-	    output = Xapian::Query ("Z" + term_prefix + stem (term));
-	    return NOTMUCH_STATUS_SUCCESS;
+	if (parent) {
+	    return _sexp_parse_one_term (notmuch, term_prefix, sx, output);
 	} else {
-	    return _sexp_parse_phrase (term_prefix, sx->val, output);
+	    Xapian::Query accumulator;
+	    for (_sexp_prefix_t *prefix = prefixes; prefix->name; prefix++) {
+		if (prefix->flags & SEXP_FLAG_FIELD) {
+		    notmuch_status_t status;
+		    Xapian::Query subquery;
+		    term_prefix = _find_prefix (prefix->name);
+		    status = _sexp_parse_one_term (notmuch, term_prefix, sx, subquery);
+		    if (status)
+			return status;
+		    accumulator = Xapian::Query (Xapian::Query::OP_OR, accumulator, subquery);
+		}
+	    }
+	    output = accumulator;
+	    return NOTMUCH_STATUS_SUCCESS;
 	}
     }
 

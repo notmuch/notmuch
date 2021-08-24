@@ -122,6 +122,29 @@ add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12
 output=$(notmuch search --query=sexp '(body bödý)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
 
+add_message "[body]=thebody-1" "[subject]=kryptonite-1"
+add_message "[body]=nothing-to-see-here-1" "[subject]=thebody-1"
+
+test_begin_subtest 'search without body: prefix'
+notmuch search thebody > EXPECTED
+notmuch search --query=sexp '(and thebody)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest 'negated body: prefix'
+notmuch search thebody and not body:thebody > EXPECTED
+notmuch search --query=sexp '(and (not (body thebody)) thebody)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest 'search unprefixed for prefixed term'
+notmuch search kryptonite > EXPECTED
+notmuch search --query=sexp '(and kryptonite)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest 'search with body: prefix for term only in subject'
+notmuch search body:kryptonite > EXPECTED
+notmuch search --query=sexp '(body kryptonite)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Search by 'from'"
 add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
 output=$(notmuch search --query=sexp '(from searchbyfrom)' | notmuch_search_sanitize)
@@ -287,11 +310,11 @@ output=$(notmuch search --query=sexp '(attachment (starts-with not))' | notmuch_
 test_expect_equal "$output" 'thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] "notmuch help" outputs to stderr? (attachment inbox signed unread)'
 
 test_begin_subtest "starts-with, folder"
-notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_dir_sanitize > OUTPUT
+notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_dir_sanitize | sed 's/[0-9]*$/XXX/' > OUTPUT
 cat <<EOF > EXPECTED
-MAIL_DIR/bad/msg-010
-MAIL_DIR/bad/news/msg-012
-MAIL_DIR/duplicate/bad/news/msg-012
+MAIL_DIR/bad/msg-XXX
+MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
