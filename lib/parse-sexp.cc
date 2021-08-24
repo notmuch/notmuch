@@ -176,6 +176,11 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	std::string term = Xapian::Unicode::tolower (sx->val);
 	Xapian::Stem stem = *(notmuch->stemmer);
 	std::string term_prefix = parent ? _find_prefix (parent->name) : "";
+
+	if (sx->aty == SEXP_BASIC && strcmp (sx->val, "*") == 0) {
+	    return _sexp_parse_wildcard (notmuch, parent, "", output);
+	}
+
 	if (parent && (parent->flags & SEXP_FLAG_BOOLEAN)) {
 	    output = Xapian::Query (term_prefix + sx->val);
 	    return NOTMUCH_STATUS_SUCCESS;

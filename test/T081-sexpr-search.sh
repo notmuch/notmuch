@@ -386,6 +386,46 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unr
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "wildcard search for 'is'"
+notmuch search not id:${notag_mid} > EXPECTED
+notmuch search --query=sexp '(is *)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "negated wildcard search for 'is'"
+notmuch search id:${notag_mid} > EXPECTED
+notmuch search --query=sexp '(not (is *))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "wildcard search for 'property'"
+notmuch search property:foo=bar > EXPECTED
+notmuch search --query=sexp '(property *)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "wildcard search for 'tag'"
+notmuch search not id:${notag_mid} > EXPECTED
+notmuch search --query=sexp '(tag *)' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "negated wildcard search for 'tag'"
+notmuch search id:${notag_mid} > EXPECTED
+notmuch search --query=sexp '(not (tag *))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+add_message '[subject]="message with tag \"*\""'
+notmuch tag '+*' id:${gen_msg_id}
+
+test_begin_subtest "search for 'tag' \"*\""
+output=$(notmuch search --query=sexp --output=messages '(tag "*")')
+test_expect_equal "$output" "id:$gen_msg_id"
+
+test_begin_subtest "search for missing / empty to"
+add_message [to]="undisclosed-recipients:"
+notmuch search --query=sexp '(not (to *))' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; search for missing / empty to (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Unbalanced parens"
 # A code 1 indicates the error was handled (a crash will return e.g. 139).
 test_expect_code 1 "notmuch search --query=sexp '('"
@@ -448,6 +488,14 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "starts-with, illegal field"
 notmuch search --query=sexp '(body (starts-with foo))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'body' does not support wildcard queries
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "wildcard, illegal field"
+notmuch search --query=sexp '(body *)' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
 'body' does not support wildcard queries

@@ -36,8 +36,11 @@ An s-expression query is either an atom, the empty list, or a
 a *field*, *logical operation*, or *modifier*, and 0 or more
 subqueries.
 
-``*`` ``()``
-    Match all messages.
+``*``
+   "*" matches any non-empty string in the current field.
+
+``()``
+    The empty list matches all messages
 
 *term*
 
@@ -138,6 +141,15 @@ from terms, operators, and modifiers, but not other fields.
 MODIFIERS
 `````````
 
+*Modifiers* refer to any prefixes (first elements of compound queries)
+that are neither operators nor fields.
+
+``(starts-with`` *subword* ``)``
+    Matches any term starting with *subword*.  This applies in either
+    phrase or term :any:`fields <fields>`, or outside of fields [#not-body]_. Note that
+    a ``starts-with`` query cannot be part of a phrase. The
+    atom ``*`` is a synonym for ``(starts-with "")``.
+
 EXAMPLES
 ========
 
@@ -180,6 +192,9 @@ EXAMPLES
     Match in the "To" or "Cc" headers, "bob@example.com",
     "mallory@example.org", and also "bob@example.com.au" since it
     contains the adjacent triple "bob", "example", "com".
+
+``(not (to *))``
+    Match messages with an empty or invalid 'To' and 'Cc' field.
 
 NOTES
 =====
