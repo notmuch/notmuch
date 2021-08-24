@@ -11,6 +11,8 @@ typedef enum {
     SEXP_FLAG_NONE	= 0,
     SEXP_FLAG_FIELD	= 1 << 0,
     SEXP_FLAG_BOOLEAN	= 1 << 1,
+    SEXP_FLAG_SINGLE	= 1 << 2,
+    SEXP_FLAG_WILDCARD	= 1 << 3,
 } _sexp_flag_t;
 
 /*
@@ -42,38 +44,39 @@ static _sexp_prefix_t prefixes[] =
     { "and",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
     { "attachment",     Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
     { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD },
     { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
     { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "mimetype",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
     { "not",            Xapian::Query::OP_AND_NOT,      Xapian::Query::MatchAll,
       SEXP_FLAG_NONE },
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
     { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD
-      | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
+    { "starts-with",    Xapian::Query::OP_WILDCARD,     Xapian::Query::MatchAll,
+      SEXP_FLAG_SINGLE },
     { "subject",        Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
     { "tag",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "thread",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD },
     { "to",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
-      SEXP_FLAG_FIELD },
+      SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD },
     { }
 };
 
@@ -142,6 +145,25 @@ _sexp_parse_phrase (std::string term_prefix, const char *phrase, Xapian::Query &
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static notmuch_status_t
+_sexp_parse_wildcard (notmuch_database_t *notmuch,
+		      const _sexp_prefix_t *parent,
+		      std::string match,
+		      Xapian::Query &output)
+{
+
+    std::string term_prefix = parent ? _find_prefix (parent->name) : "";
+
+    if (parent && ! (parent->flags & SEXP_FLAG_WILDCARD)) {
+	_notmuch_database_log (notmuch, "'%s' does not support wildcard queries\n", parent->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    output = Xapian::Query (Xapian::Query::OP_WILDCARD,
+			    term_prefix + Xapian::Unicode::tolower (match));
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -150,7 +172,6 @@ static notmuch_status_t
 _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent, const sexp_t *sx,
 		       Xapian::Query &output)
 {
-
     if (sx->ty == SEXP_VALUE) {
 	std::string term = Xapian::Unicode::tolower (sx->val);
 	Xapian::Stem stem = *(notmuch->stemmer);
@@ -189,6 +210,16 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		}
 		parent = prefix;
 	    }
+
+	    if ((prefix->flags & SEXP_FLAG_SINGLE) &&
+		(! sx->list->next || sx->list->next->next || sx->list->next->ty != SEXP_VALUE)) {
+		_notmuch_database_log (notmuch, "'%s' expects single atom as argument\n",
+				       prefix->name);
+		return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	    }
+
+	    if (prefix->xapian_op == Xapian::Query::OP_WILDCARD)
+		return _sexp_parse_wildcard (notmuch, parent, sx->list->next->val, output);
 
 	    return _sexp_combine_query (notmuch, parent, prefix->xapian_op, prefix->initial,
 					sx->list->next, output);

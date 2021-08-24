@@ -162,9 +162,19 @@ EXAMPLES
 ``(id 1234@invalid blah@test)``
     Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
 
+``(starts-with prelim)``
+    Match any words starting with "prelim".
+
 ``(subject quick "brown fox")``
     Match messages whose subject contains "quick" (anywhere, stemmed) and
     the phrase "brown fox".
+
+``(subject (starts-with prelim))``
+    Matches any word starting with "prelim", inside a message subject.
+
+``(subject (starts-wih quick) "brown fox")``
+    Match messages whose subject contains "quick brown fox", but also
+    "brown fox quicksand".
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
     Match in the "To" or "Cc" headers, "bob@example.com",
@@ -179,6 +189,9 @@ NOTES
 .. [#aka-prob] a.k.a. probabilistic prefixes
 
 .. [#aka-bool] a.k.a. boolean prefixes
+
+.. [#not-body] Due the the way ``body`` is implemented in notmuch,
+               this modifier is not supported in the ``body`` field.
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`
