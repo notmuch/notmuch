@@ -36,9 +36,8 @@ An s-expression query is either an atom, the empty list, or a
 a *field*, *logical operation*, or *modifier*, and 0 or more
 subqueries.
 
-``*``
-``()``
-    The empty list matches all messages
+``*`` ``()``
+    Match all messages.
 
 *term*
     Match all messages containing *term*, possibly after
@@ -64,6 +63,59 @@ subqueries.
 FIELDS
 ``````
 
+*Fields* (also called *prefixes* in notmuch documentation)
+correspond to attributes of mail messages. Some are inherent (and
+immutable) like ``subject``, while others ``tag`` and ``property`` are
+settable by the user.  Each concrete field in
+:any:`the table below <field-table>`
+is discussed further under "Search prefixes" in
+:any:`notmuch-search-terms(7)`. The row *user* refers to user defined
+fields, described in :any:`notmuch-config(1)`.
+
+.. _field-table:
+
+.. table:: Fields with supported modifiers
+
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |   field    |  combine  |   type    |  expand   | wildcard  |  regex   |
+  +============+===========+===========+===========+===========+==========+
+  |   *none*   |    and    |           |    no     |    yes    |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |   *user*   |    and    |  phrase   |    no     |    yes    |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  | attachment |    and    |  phrase   |    yes    |    yes    |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    body    |    and    |  phrase   |    no     |    no     |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    date    |           |   range   |    no     |    no     |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |   folder   |    or     |  phrase   |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    from    |    and    |  phrase   |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |     id     |    or     |   term    |    no     |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |     is     |    and    |   term    |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |  lastmod   |           |   range   |    no     |    no     |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    mid     |    or     |   term    |    no     |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |  mimetype  |    or     |  phrase   |    yes    |    yes    |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    path    |    or     |   term    |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |  property  |    and    |   term    |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |  subject   |    and    |  phrase   |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |    tag     |    and    |   term    |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |   thread   |    or     |   term    |    yes    |    yes    |   yes    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+  |     to     |    and    |  phrase   |    yes    |    yes    |    no    |
+  +------------+-----------+-----------+-----------+-----------+----------+
+
 .. _modifiers:
 
 MODIFIERS
@@ -85,6 +137,10 @@ EXAMPLES
 
 ``(not Bob Marley)``
     Match messages containing neither "Bob" nor "Marley", nor their stems,
+
+``(subject quick "brown fox")``
+    Match messages whose subject contains "quick" (anywhere, stemmed) and
+    the phrase "brown fox".
 
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`

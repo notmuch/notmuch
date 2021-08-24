@@ -62,6 +62,55 @@ test_begin_subtest "single term in body, unstemmed version"
 notmuch search --query=sexp '"arriv"' > OUTPUT
 test_expect_equal_file /dev/null OUTPUT
 
+test_begin_subtest "Search by 'subject'"
+add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp '(subject subjectsearchtest)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (case insensitive)"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(subject "Maildir")' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'subject' (utf-8):"
+add_message [subject]=utf8-sübjéct '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --query=sexp '(subject utf8 sübjéct)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (utf-8, and):"
+output=$(notmuch search --query=sexp '(subject (and utf8 sübjéct))' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (utf-8, and outside):"
+output=$(notmuch search --query=sexp '(and (subject utf8) (subject sübjéct))' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (utf-8, or):"
+notmuch search --query=sexp '(subject (or utf8 subjectsearchtest))' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'subject' (utf-8, or outside):"
+notmuch search --query=sexp '(or (subject utf8) (subject subjectsearchtest))' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search by 'subject' (utf-8, phrase-token):"
+test_subtest_known_broken
+output=$(notmuch search --query=sexp '(subject utf8-sübjéct)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "Search by 'subject' (utf-8, quoted string):"
+test_subtest_known_broken
+output=$(notmuch search --query=sexp '(subject "utf8 sübjéct")' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
 test_begin_subtest "Unbalanced parens"
 # A code 1 indicates the error was handled (a crash will return e.g. 139).
 test_expect_code 1 "notmuch search --query=sexp '('"
@@ -87,6 +136,14 @@ notmuch search --query=sexp '((foo))' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
 unexpected list in field/operation position
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "illegal nesting"
+notmuch search --query=sexp '(subject (subject foo))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'subject' inside 'subject'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

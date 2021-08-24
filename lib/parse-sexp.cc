@@ -8,7 +8,8 @@
  * definitions from sexp.h */
 
 typedef enum {
-    SEXP_FLAG_NONE = 0,
+    SEXP_FLAG_NONE	= 0,
+    SEXP_FLAG_FIELD	= 1 << 0,
 } _sexp_flag_t;
 
 typedef struct  {
@@ -26,6 +27,8 @@ static _sexp_prefix_t prefixes[] =
       SEXP_FLAG_NONE },
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
+    { "subject",        Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+      SEXP_FLAG_FIELD },
     { }
 };
 
@@ -76,8 +79,11 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
     if (sx->ty == SEXP_VALUE) {
 	std::string term = Xapian::Unicode::tolower (sx->val);
 	Xapian::Stem stem = *(notmuch->stemmer);
+	std::string term_prefix = parent ? _find_prefix (parent->name) : "";
 	if (sx->aty == SEXP_BASIC)
-	    term = "Z" + stem (term);
+	    term = "Z" + term_prefix + stem (term);
+	else
+	    term = term_prefix + term;
 
 	output = Xapian::Query (term);
 	return NOTMUCH_STATUS_SUCCESS;
@@ -97,6 +103,15 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
 	if (strcmp (prefix->name, sx->list->val) == 0) {
+	    if (prefix->flags & SEXP_FLAG_FIELD) {
+		if (parent) {
+		    _notmuch_database_log (notmuch, "nested field: '%s' inside '%s'\n",
+					   prefix->name, parent->name);
+		    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+		}
+		parent = prefix;
+	    }
+
 	    return _sexp_combine_query (notmuch, parent, prefix->xapian_op, prefix->initial,
 					sx->list->next, output);
 	}
