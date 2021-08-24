@@ -327,6 +327,11 @@ _notmuch_regexp_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std
 			  std::string regexp_str,
 			  Xapian::Query &output, std::string &msg);
 
+/* thread-fp.cc */
+notmuch_status_t
+_notmuch_query_name_to_query (notmuch_database_t *notmuch, const std::string name,
+			      Xapian::Query &output);
+
 #if HAVE_SFSEXP
 /* parse-sexp.cc */
 notmuch_status_t

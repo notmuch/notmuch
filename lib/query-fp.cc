@@ -24,17 +24,33 @@
 #include "query-fp.h"
 #include <iostream>
 
-Xapian::Query
-QueryFieldProcessor::operator() (const std::string & name)
+notmuch_status_t
+_notmuch_query_name_to_query (notmuch_database_t *notmuch, const std::string name,
+			      Xapian::Query &output)
 {
     std::string key = "query." + name;
     char *expansion;
     notmuch_status_t status;
 
     status = notmuch_database_get_config (notmuch, key.c_str (), &expansion);
+    if (status)
+	return status;
+
+    output = notmuch->query_parser->parse_query (expansion, NOTMUCH_QUERY_PARSER_FLAGS);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+Xapian::Query
+QueryFieldProcessor::operator() (const std::string & name)
+{
+    notmuch_status_t status;
+    Xapian::Query output;
+
+    status = _notmuch_query_name_to_query (notmuch, name, output);
     if (status) {
 	throw Xapian::QueryParserError ("error looking up key" + name);
     }
 
-    return parser.parse_query (expansion, NOTMUCH_QUERY_PARSER_FLAGS);
+    return output;
+
 }
