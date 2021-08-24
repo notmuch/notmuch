@@ -63,6 +63,14 @@ subqueries.
     Combine queries |q1| to |qn|, and reinterpret the result (e.g. as a regular expression).
     See :any:`modifiers` for more information.
 
+``(macro (`` |p1| ... |pn| ``) body)``
+    Define saved query with parameter substitution. The syntax is
+    recognized only in saved s-expression queries (see ``squery.*`` in
+    :any:`notmuch-config(1)`). Parameter names in ``body`` must be
+    prefixed with ``,`` to be expanded (see :any:`macro_examples`).
+    Macros may refer to other macros, but only to their own
+    parameters [#macro-details]_.
+
 .. _fields:
 
 FIELDS
@@ -234,8 +242,42 @@ EXAMPLES
     Match messages with a non-empty List-Id header, assuming
     configuration ``index.header.List=List-Id``
 
+.. _macro_examples:
+
+MACRO EXAMPLES
+--------------
+
+A macro that takes two parameters and applies different fields to them.
+
+::
+
+   $ notmuch config set squery.TagSubject '(macro (tagname subj) (and (tag ,tagname) (subject ,subj)))'
+   $ notmuch search --query=sexp '(TagSubject inbox maildir)'
+
+Nested macros are allowed.
+
+::
+
+    $ notmuch config set squery.Inner '(macro (x) (subject ,x))'
+    $ notmuch config set squery.Outer  '(macro (x y) (and (tag ,x) (Inner ,y)))'
+    $ notmuch search --query=sexp '(Outer inbox maildir)'
+
+Parameters can be re-used to reduce boilerplate. Any field, including
+user defined fields is permitted within a macro.
+
+::
+
+    $ notmuch config set squery.About '(macro (name) (or (subject ,name) (List ,name)))'
+    $ notmuch search --query=sexp '(About notmuch)'
+
+
 NOTES
 =====
+
+.. [#macro-details] Technically macros impliment lazy evaluation and
+                    lexical scope. There is one top level scope
+                    containing all macro definitions, but all
+                    parameter definitions are local to a given macro.
 
 .. [#aka-pref] a.k.a. prefixes
 
@@ -256,3 +298,7 @@ NOTES
 .. |q1| replace:: :math:`q_1`
 .. |q2| replace:: :math:`q_2`
 .. |qn| replace:: :math:`q_n`
+
+.. |p1| replace:: :math:`p_1`
+.. |p2| replace:: :math:`p_2`
+.. |pn| replace:: :math:`p_n`

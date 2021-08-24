@@ -857,4 +857,130 @@ nested field: 'tag' inside 'subject'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Saved Search: list as prefix"
+notmuch config set squery.Bad2  '((and) (tag inbox) (subject maildir))'
+notmuch search --query=sexp '(Bad2)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+unexpected list in field/operation position
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax"
+notmuch config set squery.Bad3  '(macro a b)'
+notmuch search --query=sexp '(Bad3)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+missing (possibly empty) list of arguments to macro
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 2"
+notmuch config set squery.Bad4  '(macro ((a b)) a)'
+notmuch search --query=sexp '(Bad4 1)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+macro parameters must be unquoted atoms
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 3"
+notmuch config set squery.Bad5  '(macro (a b) a)'
+notmuch search --query=sexp '(Bad5 1)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+too few arguments to macro
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 4"
+notmuch search --query=sexp '(Bad5 1 2 3)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+too many arguments to macro
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: macro without body"
+notmuch config set squery.Bad3  '(macro (a b))'
+notmuch search --query=sexp '(Bad3)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+missing body of macro
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "macro in query"
+notmuch search --query=sexp '(macro (a) (and ,b (subject maildir)))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+macro definition not permitted here
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "zero argument macro"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.TagSubject0  '(macro () (and (tag inbox) (subject maildir)))'
+notmuch search --query=sexp '(TagSubject0)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "undefined argument"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.Bad6  '(macro (a) (and ,b (subject maildir)))'
+notmuch search --query=sexp '(Bad6 foo)' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+undefined parameter b
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Single argument macro"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.TagSubject1  '(macro (tagname) (and (tag ,tagname) (subject maildir)))'
+notmuch search --query=sexp '(TagSubject1 inbox)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Single argument macro, list argument"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.ThingSubject  '(macro (thing) (and ,thing (subject maildir)))'
+notmuch search --query=sexp '(ThingSubject (tag inbox))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "two argument macro"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.TagSubject2  '(macro (tagname subj) (and (tag ,tagname) (subject ,subj)))'
+notmuch search --query=sexp '(TagSubject2 inbox maildir)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "nested macros (shadowing)"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.Inner '(macro (x) (subject ,x))'
+notmuch config set squery.Outer  '(macro (x y) (and (tag ,x) (Inner ,y)))'
+notmuch search --query=sexp '(Outer inbox maildir)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "nested macros (no dynamic scope)"
+notmuch config set squery.Inner2 '(macro (x) (subject ,y))'
+notmuch config set squery.Outer2  '(macro (x y) (and (tag ,x) (Inner2 ,y)))'
+notmuch search --query=sexp '(Outer2 inbox maildir)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+undefined parameter y
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "combine macro and user defined header"
+notmuch config set squery.About '(macro (name) (or (subject ,name) (List ,name)))'
+notmuch search subject:notmuch or List:notmuch | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(About notmuch)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+
+test_begin_subtest "combine macro and user defined header"
+notmuch config set squery.About '(macro (name) (or (subject ,name) (List ,name)))'
+notmuch search subject:notmuch or List:notmuch | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp '(About notmuch)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_done

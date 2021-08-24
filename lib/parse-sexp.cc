@@ -7,9 +7,18 @@
 /* _sexp is used for file scope symbols to avoid clashing with
  * definitions from sexp.h */
 
-typedef struct {
+/* sexp_binding structs attach name to a sexp and a defining
+ * context. The latter allows lazy evaluation of parameters whose
+ * definition contains other parameters.  Lazy evaluation is needed
+ * because a primary goal of macros is to change the parent field for
+ * a sexp.
+ */
+
+typedef struct sexp_binding {
     const char *name;
     const sexp_t *sx;
+    const struct sexp_binding *context;
+    const struct sexp_binding *next;
 } _sexp_binding_t;
 
 typedef enum {
@@ -302,6 +311,81 @@ _sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 				sx->list->next, output);
 }
 
+static _sexp_binding_t *
+_sexp_bind (void *ctx, const _sexp_binding_t *env, const char *name, const sexp_t *sx, const
+	    _sexp_binding_t *context)
+{
+    _sexp_binding_t *binding = talloc (ctx, _sexp_binding_t);
+
+    binding->name = talloc_strdup (ctx, name);
+    binding->sx = sx;
+    binding->context = context;
+    binding->next = env;
+    return binding;
+}
+
+static notmuch_status_t
+maybe_apply_macro (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
+		   const _sexp_binding_t *env, const sexp_t *sx, const sexp_t *args,
+		   Xapian::Query &output)
+{
+    const sexp_t *params, *param, *arg, *body;
+    void *local = talloc_new (notmuch);
+    _sexp_binding_t *new_env = NULL;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
+    if (sx->list->ty != SEXP_VALUE || strcmp (sx->list->val, "macro") != 0) {
+	status = NOTMUCH_STATUS_IGNORED;
+	goto DONE;
+    }
+
+    params = sx->list->next;
+
+    if (! params || (params->ty != SEXP_LIST)) {
+	_notmuch_database_log (notmuch, "missing (possibly empty) list of arguments to macro\n");
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    body = params->next;
+
+    if (! body) {
+	_notmuch_database_log (notmuch, "missing body of macro\n");
+	status = NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	goto DONE;
+    }
+
+    for (param = params->list, arg = args;
+	 param && arg;
+	 param = param->next, arg = arg->next) {
+	if (param->ty != SEXP_VALUE || param->aty != SEXP_BASIC) {
+	    _notmuch_database_log (notmuch, "macro parameters must be unquoted atoms\n");
+	    status = NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	    goto DONE;
+	}
+	new_env = _sexp_bind (local, new_env, param->val, arg, env);
+    }
+
+    if (param && ! arg) {
+	_notmuch_database_log (notmuch, "too few arguments to macro\n");
+	status = NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	goto DONE;
+    }
+
+    if (! param && arg) {
+	_notmuch_database_log (notmuch, "too many arguments to macro\n");
+	status = NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	goto DONE;
+    }
+
+    status = _sexp_to_xapian_query (notmuch, parent, new_env, body, output);
+
+  DONE:
+    if (local)
+	talloc_free (local);
+
+    return status;
+}
+
 static notmuch_status_t
 maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 		    const _sexp_binding_t *env, const sexp_t *sx, Xapian::Query &output)
@@ -336,13 +420,30 @@ maybe_saved_squery (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 	goto DONE;
     }
 
-    status =  _sexp_to_xapian_query (notmuch, parent, env, saved_sexp, output);
+    status = maybe_apply_macro (notmuch, parent, env, saved_sexp, sx->list->next, output);
+    if (status == NOTMUCH_STATUS_IGNORED)
+	status =  _sexp_to_xapian_query (notmuch, parent, env, saved_sexp, output);
 
   DONE:
     if (local)
 	talloc_free (local);
 
     return status;
+}
+
+static notmuch_status_t
+_sexp_expand_param (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
+		    const _sexp_binding_t *env, const char *name,
+		    Xapian::Query &output)
+{
+    for (; env; env = env->next) {
+	if (strcmp (name, env->name) == 0) {
+	    return _sexp_to_xapian_query (notmuch, parent, env->context, env->sx,
+					  output);
+	}
+    }
+    _notmuch_database_log (notmuch, "undefined parameter %s\n", name);
+    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 }
 
 /* Here we expect the s-expression to be a proper list, with first
@@ -354,6 +455,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		       const _sexp_binding_t *env, const sexp_t *sx, Xapian::Query &output)
 {
     notmuch_status_t status;
+
+    if (sx->ty == SEXP_VALUE && sx->aty == SEXP_BASIC && sx->val[0] == ',') {
+	return _sexp_expand_param (notmuch, parent, env, sx->val + 1, output);
+    }
 
     if (sx->ty == SEXP_VALUE) {
 	std::string term_prefix = parent ? _notmuch_database_prefix (notmuch, parent->name) : "";
@@ -405,6 +510,11 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
     /* Check for user defined field */
     if (_notmuch_string_map_get (notmuch->user_prefix, sx->list->val)) {
 	return _sexp_parse_header (notmuch, parent, env, sx, output);
+    }
+
+    if (strcmp (sx->list->val, "macro") == 0) {
+	_notmuch_database_log (notmuch, "macro definition not permitted here\n");
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
