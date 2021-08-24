@@ -300,4 +300,11 @@ _notmuch_database_setup_standard_query_fields (notmuch_database_t *notmuch);
 notmuch_status_t
 _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch);
 
+#if __cplusplus
+/* parse-sexp.cc */
+notmuch_status_t
+_notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
+				      Xapian::Query &output);
+#endif
+
 #endif

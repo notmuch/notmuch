@@ -159,6 +159,10 @@ man_pages = [
      u'syntax for notmuch queries',
      [notmuch_authors], 7),
 
+    ('man7/notmuch-sexp-queries', 'notmuch-sexp-queries',
+     u's-expression syntax for notmuch queries',
+     [notmuch_authors], 7),
+
     ('man1/notmuch-show', 'notmuch-show',
      u'show messages matching the given search terms',
      [notmuch_authors], 1),

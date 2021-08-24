@@ -24,6 +24,7 @@ Contents:
    man1/notmuch-restore
    man1/notmuch-search
    man7/notmuch-search-terms
+   man7/notmuch-sexp-queries
    man1/notmuch-show
    man1/notmuch-tag
    python-bindings

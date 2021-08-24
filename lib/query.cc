@@ -23,10 +23,6 @@
 
 #include <glib.h> /* GHashTable, GPtrArray */
 
-#if HAVE_SFSEXP
-#include "sexp.h"
-#endif
-
 struct _notmuch_query {
     notmuch_database_t *notmuch;
     const char *query_string;
@@ -210,8 +206,8 @@ _notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
     if (query->parsed)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    query->xapian_query = Xapian::Query::MatchAll;
-    return NOTMUCH_STATUS_SUCCESS;
+    return _notmuch_sexp_string_to_xapian_query (query->notmuch, query->query_string,
+						 query->xapian_query);
 }
 
 static notmuch_status_t
