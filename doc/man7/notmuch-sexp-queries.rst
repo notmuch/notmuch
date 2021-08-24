@@ -153,6 +153,12 @@ that are neither operators nor fields.
     those matching all of |q1| ... |qn|. Supported in most term [#not-path]_ or
     phrase fields. Most commonly used in the ``thread`` field.
 
+``(query`` *atom* ``)``
+    Expand to the saved query named by *atom*. See
+    :any:`notmuch-config(1)` for more. Note that the saved query must
+    be in infix syntax (:any:`notmuch-search-terms(7)`). Not supported
+    inside fields.
+
 ``(regex`` *atom* ``)`` ``(rx`` *atom* ``)``
     Interpret *atom* as a POSIX.2 regular expression (see
     :manpage:`regex(7)`). This applies in term fields and a subset [#not-phrase]_ of

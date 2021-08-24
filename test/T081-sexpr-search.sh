@@ -217,9 +217,45 @@ notmuch search mimetype:text/html > EXPECTED
 notmuch search --query=sexp '(mimetype text html)'  > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+QUERYSTR="date:2009-11-18..2009-11-18 and tag:unread"
+QUERYSTR2="query:test and subject:Maildir"
+notmuch config set --database query.test "$QUERYSTR"
+notmuch config set query.test2 "$QUERYSTR2"
+
+test_begin_subtest "ill-formed named query search"
+notmuch search --query=sexp '(query)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'query' expects single atom as argument
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "ill-formed named query search 2"
+notmuch search --query=sexp '(to (query))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'query' not supported inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search named query"
+notmuch search --query=sexp '(query test)' > OUTPUT
+notmuch search $QUERYSTR > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Search by 'subject' (utf-8, phrase-token):"
 output=$(notmuch search --query=sexp '(subject utf8-sübjéct)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+test_begin_subtest "search named query with other terms"
+notmuch search --query=sexp '(and (query test) (subject Maildir))' > OUTPUT
+notmuch search $QUERYSTR and subject:Maildir > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "search nested named query"
+notmuch search --query=sexp '(query test2)' > OUTPUT
+notmuch search $QUERYSTR2 > EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Search by 'subject' (utf-8, quoted string):"
 output=$(notmuch search --query=sexp '(subject "utf8 sübjéct")' | notmuch_search_sanitize)
