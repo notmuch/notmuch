@@ -40,6 +40,10 @@
 
 #include <xapian.h>
 
+#if HAVE_SFSEXP
+#include <sexp.h>
+#endif
+
 /* Bit masks for _notmuch_database::features.  Features are named,
  * independent aspects of the database schema.
  *
@@ -313,11 +317,21 @@ notmuch_status_t
 _notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
 				      Xapian::Query &output);
 
+notmuch_status_t
+_notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Query subquery,
+		       Xapian::Query &output, std::string &msg);
+
 /* regexp-fields.cc */
 notmuch_status_t
 _notmuch_regexp_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std::string field,
 			  std::string regexp_str,
 			  Xapian::Query &output, std::string &msg);
-#endif
 
+#if HAVE_SFSEXP
+/* parse-sexp.cc */
+notmuch_status_t
+_notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
+				      Xapian::Query &output);
+#endif
+#endif
 #endif

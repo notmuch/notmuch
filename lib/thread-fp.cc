@@ -34,28 +34,20 @@ ThreadFieldProcessor::operator() (const std::string & str)
 	if (str.size () <= 1 || str.at (str.size () - 1) != '}') {
 	    throw Xapian::QueryParserError ("missing } in '" + str + "'");
 	} else {
+	    Xapian::Query subquery;
+	    Xapian::Query query;
+	    std::string msg;
 	    std::string subquery_str = str.substr (1, str.size () - 2);
-	    notmuch_query_t *subquery = notmuch_query_create (notmuch, subquery_str.c_str ());
-	    notmuch_messages_t *messages;
-	    std::set<std::string> terms;
 
-	    if (! subquery)
-		throw Xapian::QueryParserError ("failed to create subquery for '" + subquery_str +
-						"'");
-
-	    status = notmuch_query_search_messages (subquery, &messages);
+	    status = _notmuch_query_string_to_xapian_query (notmuch, subquery_str, subquery, msg);
 	    if (status)
-		throw Xapian::QueryParserError ("failed to search messages for '" + subquery_str +
-						"'");
+		throw Xapian::QueryParserError (msg);
 
-	    for (; notmuch_messages_valid (messages); notmuch_messages_move_to_next (messages)) {
-		std::string term = thread_prefix;
-		notmuch_message_t *message;
-		message = notmuch_messages_get (messages);
-		term += _notmuch_message_get_thread_id_only (message);
-		terms.insert (term);
-	    }
-	    return Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());
+	    status = _notmuch_query_expand (notmuch, "thread", subquery, query, msg);
+	    if (status)
+		throw Xapian::QueryParserError (msg);
+
+	    return query;
 	}
     } else {
 	/* literal thread id */

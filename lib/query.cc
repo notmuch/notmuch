@@ -821,3 +821,51 @@ notmuch_query_get_database (const notmuch_query_t *query)
 {
     return query->notmuch;
 }
+
+notmuch_status_t
+_notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Query subquery,
+		       Xapian::Query &output, std::string &msg)
+{
+    std::set<std::string> terms;
+    const std::string term_prefix =  _find_prefix (field);
+
+    if (_debug_query ()) {
+	fprintf (stderr, "Expanding subquery:\n%s\n",
+		 subquery.get_description ().c_str ());
+    }
+
+    try {
+	Xapian::Enquire enquire (*notmuch->xapian_db);
+	Xapian::MSet mset;
+
+	enquire.set_weighting_scheme (Xapian::BoolWeight ());
+	enquire.set_query (subquery);
+
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+
+	for (Xapian::MSetIterator iterator = mset.begin (); iterator != mset.end (); iterator++) {
+	    Xapian::docid doc_id = *iterator;
+	    Xapian::Document doc = notmuch->xapian_db->get_document (doc_id);
+	    Xapian::TermIterator i = doc.termlist_begin ();
+
+	    for (i.skip_to (term_prefix);
+		 i != doc.termlist_end () && ((*i).rfind (term_prefix, 0) == 0); i++) {
+		terms.insert (*i);
+	    }
+	}
+	output = Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());
+	if (_debug_query ()) {
+	    fprintf (stderr, "Expanded query:\n%s\n",
+		     subquery.get_description ().c_str ());
+	}
+
+    } catch (const Xapian::Error &error) {
+	_notmuch_database_log (notmuch,
+			       "A Xapian exception occurred expanding query: %s\n",
+			       error.get_msg ().c_str ());
+	msg = error.get_msg ();
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
