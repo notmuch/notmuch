@@ -517,6 +517,7 @@ static const struct config_key
     { "index.decrypt",   false,  NULL },
     { "index.header.",   true,   validate_field_name },
     { "query.",          true,   NULL },
+    { "squery.",         true,   validate_field_name },
 };
 
 static const config_key_info_t *

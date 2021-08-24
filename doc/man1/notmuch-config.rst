@@ -251,6 +251,11 @@ paths are presumed relative to `$HOME` for items in section
     :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
+**squery.<name>**
+    Expansion for named query called <name>, using s-expression syntax. See
+    :any:`notmuch-sexp-queries(7)` for more information about s-expression
+    queries.
+
 FILES
 =====
 

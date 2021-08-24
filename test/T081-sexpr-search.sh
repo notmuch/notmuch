@@ -812,4 +812,17 @@ notmuch search 'List:"notmuch notmuchmail org"' | notmuch_search_sanitize > EXPE
 notmuch search --query=sexp '(List notmuch notmuchmail org)' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "check saved query name"
+test_expect_code 1 "notmuch config set squery.test '(subject utf8-sübjéct)'"
+
+test_begin_subtest "roundtrip saved query (database)"
+notmuch config set --database squery.Test '(subject utf8-sübjéct)'
+output=$(notmuch config get squery.Test)
+test_expect_equal "$output" '(subject utf8-sübjéct)'
+
+test_begin_subtest "roundtrip saved query"
+notmuch config set squery.Test '(subject override subject)'
+output=$(notmuch config get squery.Test)
+test_expect_equal "$output" '(subject override subject)'
+
 test_done
