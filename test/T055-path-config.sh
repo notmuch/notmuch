@@ -266,7 +266,7 @@ EOF
    test_expect_equal "${output}+${output2}" "${value}+"
 
    test_begin_subtest "Config list ($config)"
-   notmuch config list | notmuch_dir_sanitize | \
+   notmuch config list | notmuch_config_sanitize | \
        sed -e "s/^database.backup_dir=.*$/database.backup_dir/"  \
 	   -e "s/^database.hook_dir=.*$/database.hook_dir/" \
 	   -e "s/^database.path=.*$/database.path/"  \
@@ -274,9 +274,10 @@ EOF
 	   -e "s,^database.mail_root=CWD/home/env_points_here,database.mail_root=MAIL_DIR," \
 	   > OUTPUT
    cat <<EOF > EXPECTED
-built_with.compact=true
-built_with.field_processor=true
-built_with.retry_lock=true
+built_with.compact=something
+built_with.field_processor=something
+built_with.retry_lock=something
+built_with.sexpr_query=something
 database.autocommit=8000
 database.backup_dir
 database.hook_dir

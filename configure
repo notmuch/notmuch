@@ -820,6 +820,19 @@ else
     WITH_BASH=0
 fi
 
+printf "Checking for sfsexp... "
+if pkg-config --exists sfsexp; then
+    printf "Yes.\n"
+    have_sfsexp=1
+    sfsexp_cflags=$(pkg-config --cflags sfsexp)
+    sfsexp_ldflags=$(pkg-config --libs sfsexp)
+else
+    printf "No (will not enable s-expression queries).\n"
+    have_sfsexp=0
+    sfsexp_cflags=
+    sfsexp_ldflags=
+fi
+
 if [ -z "${EMACSLISPDIR-}" ]; then
     EMACSLISPDIR="\$(prefix)/share/emacs/site-lisp"
 fi
@@ -1443,6 +1456,13 @@ HAVE_VALGRIND = ${have_valgrind}
 # And if so, flags needed at compile time for valgrind macros
 VALGRIND_CFLAGS = ${valgrind_cflags}
 
+# Whether the sfsexp library is available
+HAVE_SFSEXP = ${have_sfsexp}
+
+# And if so, flags needed at compile/link time for sfsexp
+SFSEXP_CFLAGS = ${sfsexp_cflags}
+SFSEXP_LDFLAGS = ${sfsexp_ldflags}
+
 # Support for emacs
 WITH_EMACS = ${WITH_EMACS}
 
@@ -1459,6 +1479,7 @@ WITH_ZSH = ${WITH_ZSH}
 COMMON_CONFIGURE_CFLAGS = \\
 	\$(GMIME_CFLAGS) \$(TALLOC_CFLAGS) \$(ZLIB_CFLAGS)	\\
 	-DHAVE_VALGRIND=\$(HAVE_VALGRIND) \$(VALGRIND_CFLAGS)	\\
+	-DHAVE_SFSEXP=\$(HAVE_SFSEXP) \$(SFSEXP_CFLAGS)		\\
 	-DHAVE_GETLINE=\$(HAVE_GETLINE)				\\
 	-DWITH_EMACS=\$(WITH_EMACS)				\\
 	-DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
@@ -1475,7 +1496,7 @@ CONFIGURE_CFLAGS = \$(COMMON_CONFIGURE_CFLAGS)
 
 CONFIGURE_CXXFLAGS = \$(COMMON_CONFIGURE_CFLAGS) \$(XAPIAN_CXXFLAGS)
 
-CONFIGURE_LDFLAGS = \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
+CONFIGURE_LDFLAGS = \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS) \$(SFSEXP_LDFLAGS)
 EOF
 
 # construct the sh.config
@@ -1523,6 +1544,9 @@ NOTMUCH_HAVE_PYTHON3_CFFI=${have_python3_cffi}
 
 # Is the python pytest package available?
 NOTMUCH_HAVE_PYTHON3_PYTEST=${have_python3_pytest}
+
+# Is the sfsexp library available?
+NOTMUCH_HAVE_SFSEXP=${have_sfsexp}
 
 # Platform we are run on
 PLATFORM=${platform}
