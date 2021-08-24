@@ -165,6 +165,19 @@ notmuch_query_create_with_syntax (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static void
+_notmuch_query_cache_terms (notmuch_query_t *query)
+{
+    /* Xapian doesn't support skip_to on terms from a query since
+     *  they are unordered, so cache a copy of all terms in
+     *  something searchable.
+     */
+
+    for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
+	 t != query->xapian_query.get_terms_end (); ++t)
+	query->terms.insert (*t);
+}
+
 static notmuch_status_t
 _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
 {
@@ -173,15 +186,7 @@ _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
 	    query->notmuch->query_parser->
 	    parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 
-	/* Xapian doesn't support skip_to on terms from a query since
-	 *  they are unordered, so cache a copy of all terms in
-	 *  something searchable.
-	 */
-
-	for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
-	     t != query->xapian_query.get_terms_end (); ++t)
-	    query->terms.insert (*t);
-
+	_notmuch_query_cache_terms (query);
 	query->parsed = true;
 
     } catch (const Xapian::Error &error) {
@@ -203,11 +208,18 @@ _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
 static notmuch_status_t
 _notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
 {
+    notmuch_status_t status;
+
     if (query->parsed)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    return _notmuch_sexp_string_to_xapian_query (query->notmuch, query->query_string,
-						 query->xapian_query);
+    status = _notmuch_sexp_string_to_xapian_query (query->notmuch, query->query_string,
+						   query->xapian_query);
+    if (status)
+	return status;
+
+    _notmuch_query_cache_terms (query);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static notmuch_status_t

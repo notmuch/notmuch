@@ -525,4 +525,44 @@ notmuch search: Syntax error in query
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Search, exclude \"deleted\" messages from search"
+notmuch config set search.exclude_tags deleted
+generate_message '[subject]="Not deleted"'
+not_deleted_id=$gen_msg_id
+generate_message '[subject]="Deleted"'
+notmuch new > /dev/null
+notmuch tag +deleted id:$gen_msg_id
+deleted_id=$gen_msg_id
+output=$(notmuch search --query=sexp '(subject deleted)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)"
+
+test_begin_subtest "Search, exclude \"deleted\" messages from message search --exclude=false"
+output=$(notmuch search --query=sexp --exclude=false --output=messages '(subject deleted)' | notmuch_search_sanitize)
+test_expect_equal "$output" "id:$not_deleted_id
+id:$deleted_id"
+
+test_begin_subtest "Search, exclude \"deleted\" messages from search, overridden"
+notmuch search --query=sexp '(and (subject deleted) (tag deleted))' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Deleted (deleted inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Search, exclude \"deleted\" messages from threads"
+add_message '[subject]="Not deleted reply"' '[in-reply-to]="<$gen_msg_id>"'
+output=$(notmuch search --query=sexp '(subject deleted)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Not deleted reply (deleted inbox unread)"
+
+test_begin_subtest "Search, don't exclude \"deleted\" messages when --exclude=flag specified"
+output=$(notmuch search --query=sexp --exclude=flag '(subject deleted)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
+
+test_begin_subtest "Search, don't exclude \"deleted\" messages from search if not configured"
+notmuch config set search.exclude_tags
+output=$(notmuch search --query=sexp '(subject deleted)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [2/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
+
 test_done
