@@ -272,8 +272,7 @@ notmuch_restore_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	goto DONE;
     }
 
-    notmuch_process_shared_options (argv[0]);
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (include == 0) {
 	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_PROPERTIES | DUMP_INCLUDE_TAGS;

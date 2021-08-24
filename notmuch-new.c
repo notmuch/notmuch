@@ -1142,7 +1142,7 @@ notmuch_new_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     /* quiet trumps verbose */
     if (quiet)
@@ -1196,8 +1196,6 @@ notmuch_new_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	if (print_status_database ("notmuch new", notmuch, status))
 	    return EXIT_FAILURE;
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     if (notmuch_database_get_revision (notmuch, NULL) == 0) {
 	int count = 0;

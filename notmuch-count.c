@@ -182,7 +182,7 @@ notmuch_count_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (input_file_name) {
 	batch = true;
@@ -200,8 +200,6 @@ notmuch_count_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	    fclose (input);
 	return EXIT_FAILURE;
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_str == NULL) {

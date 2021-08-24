@@ -1287,7 +1287,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     /* explicit decryption implies verification */
     if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH ||
@@ -1352,8 +1352,6 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	    return EXIT_FAILURE;
 	}
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     query_string = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {

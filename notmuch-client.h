@@ -485,11 +485,9 @@ print_status_gzbytes (const char *loc,
 
 #include "command-line-arguments.h"
 
-extern const char *notmuch_requested_db_uuid;
 extern const notmuch_opt_desc_t notmuch_shared_options [];
-void notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
 
-void notmuch_process_shared_options (const char *subcommand_name);
+void notmuch_process_shared_options (notmuch_database_t *notmuch, const char *subcommand_name);
 int notmuch_minimal_options (const char *subcommand_name,
 			     int argc, char **argv);
 

@@ -746,7 +746,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     notmuch_exit_if_unsupported_format ();
 
@@ -760,8 +760,6 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	fprintf (stderr, "Error: notmuch reply requires at least one search term.\n");
 	return EXIT_FAILURE;
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {

@@ -108,9 +108,7 @@ notmuch_reindex_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     status = notmuch_process_shared_indexing_options (notmuch);
     if (status != NOTMUCH_STATUS_SUCCESS) {

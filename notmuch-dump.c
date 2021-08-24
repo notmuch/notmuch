@@ -366,8 +366,6 @@ notmuch_dump_command (notmuch_database_t *notmuch, int argc, char *argv[])
     const char *query_str = NULL;
     int ret;
 
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
-
     const char *output_file_name = NULL;
     int opt_index;
 
@@ -394,7 +392,7 @@ notmuch_dump_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (include == 0)
 	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS | DUMP_INCLUDE_PROPERTIES;
