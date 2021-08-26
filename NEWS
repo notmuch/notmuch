@@ -1,6 +1,22 @@
 Notmuch 0.33 (UNRELEASED)
 =========================
 
+Library
+-------
+
+Correct documentatation about transactions.
+
+Add a configurable automatic commit of transactions. See
+`database.autocommit` in notmuch-config(1).
+
+Document the algorithm used to find a database.
+
+CLI
+---
+
+Define format version 5, which supports sorting the output of
+notmuch-show.
+
 Emacs
 -----
 
@@ -9,6 +25,8 @@ previous behaviour of using notmuch to send mail by default, customize
 `mail-user-agent` to `notmuch-user-agent`.
 
 `notmuch-company` now works in `org-msg`.
+
+Improve the display of messages from long threads in unthreaded mode.
 
 Vim
 ---
