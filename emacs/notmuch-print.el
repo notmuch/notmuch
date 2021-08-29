@@ -48,7 +48,7 @@
   "Pass the contents of the current buffer to 'muttprint'.
 
 Optional OUTPUT allows passing a list of flags to muttprint."
-  (apply #'call-process-region (point-min) (point-max)
+  (apply #'notmuch--call-process-region (point-min) (point-max)
 	 ;; Reads from stdin.
 	 "muttprint"
 	 nil nil nil

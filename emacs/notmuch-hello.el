@@ -569,7 +569,7 @@ options will be handled as specified for
 					(or (plist-get options :filter-count)
 					    (plist-get options :filter))))
 	 "\n")))
-    (unless (= (call-process-region (point-min) (point-max) notmuch-command
+    (unless (= (notmuch--call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
       (notmuch-logged-error
        "notmuch count --batch failed"

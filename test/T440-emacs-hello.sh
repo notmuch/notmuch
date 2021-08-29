@@ -69,7 +69,6 @@ notmuch tag -$tag '*'
 test_expect_equal_file $EXPECTED/notmuch-hello-long-names OUTPUT
 
 test_begin_subtest "notmuch-hello with nonexistent CWD"
-test_subtest_known_broken
 test_emacs '
       (notmuch-hello)
       (test-log-error

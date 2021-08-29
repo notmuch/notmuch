@@ -869,6 +869,14 @@ You may need to restart Emacs or upgrade your notmuch package."))
 default"
   (notmuch--apply-with-env #'process-lines program args))
 
+(defun notmuch--call-process-region (start end program
+					   &optional delete buffer display
+					   &rest args)
+  "Wrap call-process-region, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env
+   #'call-process-region start end program delete buffer display args))
+
 (defun notmuch-call-notmuch--helper (destination args)
   "Helper for synchronous notmuch invocation commands.
 
@@ -885,7 +893,7 @@ for `call-process'.  ARGS is as described for
     (if (null stdin-string)
 	(apply #'call-process notmuch-command nil destination nil args)
       (insert stdin-string)
-      (apply #'call-process-region (point-min) (point-max)
+      (apply #'notmuch--call-process-region (point-min) (point-max)
 	     notmuch-command t destination nil args))))
 
 (defun notmuch-call-notmuch-process (&rest args)
