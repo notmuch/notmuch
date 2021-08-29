@@ -224,7 +224,7 @@ corresponding key when the status button is pressed."
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
 	    (insert (format "--- Retrieving key %s:\n" keyid)))
-	  (let ((p (make-process
+	  (let ((p (notmuch--make-process
 		    :name "notmuch GPG key retrieval"
 		    :connection-type 'pipe
 		    :buffer buffer

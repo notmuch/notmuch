@@ -869,6 +869,11 @@ You may need to restart Emacs or upgrade your notmuch package."))
 default"
   (notmuch--apply-with-env #'process-lines program args))
 
+(defun notmuch--make-process (&rest args)
+  "Wrap make-process, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env #'make-process args))
+
 (defun notmuch--call-process-region (start end program
 					   &optional delete buffer display
 					   &rest args)
@@ -950,7 +955,7 @@ status."
   (let* ((command (or (executable-find notmuch-command)
 		      (error "Command not found: %s" notmuch-command)))
 	 (err-buffer (generate-new-buffer " *notmuch-stderr*"))
-	 (proc (make-process
+	 (proc (notmuch--make-process
 		:name name
 		:buffer buffer
 		:command (cons command args)

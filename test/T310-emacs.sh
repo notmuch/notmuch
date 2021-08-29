@@ -1169,7 +1169,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch-search with nonexistent CWD"
-test_subtest_known_broken
 test_emacs '(test-log-error
 	      (let ((default-directory "/nonexistent"))
 	        (notmuch-search "*")))'
