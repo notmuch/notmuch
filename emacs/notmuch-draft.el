@@ -239,7 +239,7 @@ applied to newly inserted messages)."
 (defun notmuch-draft-resume (id)
   "Resume editing of message with id ID."
   ;; Used by command `notmuch-show-resume-message'.
-  (let* ((tags (process-lines notmuch-command "search" "--output=tags"
+  (let* ((tags (notmuch--process-lines notmuch-command "search" "--output=tags"
 			      "--exclude=false" id))
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
     (when (or draft

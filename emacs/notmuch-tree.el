@@ -1113,7 +1113,7 @@ the same as for the function notmuch-tree."
 				   (concat " and (" query-context ")"))))
 	 (sort-arg (if oldest-first "--sort=oldest-first" "--sort=newest-first"))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
-    (when (equal (car (process-lines notmuch-command "count" search-args)) "0")
+    (when (equal (car (notmuch--process-lines notmuch-command "count" search-args)) "0")
       (setq search-args basic-query))
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch

@@ -496,7 +496,7 @@ diagonal."
 		    (widget-get widget :notmuch-search-oldest-first)))))
 
 (defun notmuch-saved-search-count (search)
-  (car (process-lines notmuch-command "count" search)))
+  (car (notmuch--process-lines notmuch-command "count" search)))
 
 (defun notmuch-hello-tags-per-line (widest)
   "Determine how many tags to show per line and how wide they
@@ -748,7 +748,7 @@ Complete list of currently available key bindings:
 		    (list (cons tag
 				(concat "tag:"
 					(notmuch-escape-boolean-term tag))))))
-	     (process-lines notmuch-command "search" "--output=tags" "*")))
+	     (notmuch--process-lines notmuch-command "search" "--output=tags" "*")))
 
 (defun notmuch-hello-insert-header ()
   "Insert the default notmuch-hello header."
@@ -786,7 +786,7 @@ Complete list of currently available key bindings:
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
 		    (string-to-number
-		     (car (process-lines notmuch-command "count")))))
+		     (car (notmuch--process-lines notmuch-command "count")))))
     (widget-insert " messages.\n")))
 
 (defun notmuch-hello-insert-saved-searches ()

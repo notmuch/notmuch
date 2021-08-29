@@ -860,6 +860,15 @@ You may need to restart Emacs or upgrade your notmuch package."))
       ;; `notmuch-logged-error' does not return.
       ))))
 
+(defmacro notmuch--apply-with-env (func &rest args)
+  `(let ((default-directory "~"))
+     (apply ,func ,@args)))
+
+(defun notmuch--process-lines (program &rest args)
+  "Wrap process-lines, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env #'process-lines program args))
+
 (defun notmuch-call-notmuch--helper (destination args)
   "Helper for synchronous notmuch invocation commands.
 

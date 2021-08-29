@@ -217,7 +217,7 @@ requiring external commands."
       ;; harvest if necessary.
       (notmuch-address-harvest-trigger)))
    (t
-    (process-lines notmuch-address-command original))))
+    (notmuch--process-lines notmuch-address-command original))))
 
 (defun notmuch-address-expand-name ()
   (cond

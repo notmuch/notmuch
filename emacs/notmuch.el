@@ -940,7 +940,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (let* ((all-tags
 	  (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
-		  (process-lines notmuch-command "search" "--output=tags" "*")))
+		  (notmuch--process-lines notmuch-command "search" "--output=tags" "*")))
 	 (completions
 	  (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
 			"subject:" "attachment:")
