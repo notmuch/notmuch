@@ -174,6 +174,18 @@ running, quit if it terminated."
 			   " "))
 		       tags-to-letters ""))))
 
+;; Log any signalled error (and other messages) to MESSAGES
+;; Log "COMPLETE" if forms complete without error.
+(defmacro test-log-error (&rest body)
+  `(progn
+     (with-current-buffer "*Messages*"
+       (let ((inhibit-read-only t)) (erase-buffer)))
+     (condition-case err
+       (progn ,@body
+	  (message "COMPLETE"))
+       (t (message "%s" err)))
+     (with-current-buffer "*Messages*" (test-output "MESSAGES"))))
+
 ;; For historical reasons, we hide deleted tags by default in the test
 ;; suite
 (setq notmuch-tag-deleted-formats
