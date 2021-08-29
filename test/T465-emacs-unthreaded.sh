@@ -51,4 +51,10 @@ test_emacs '
 '
 test_expect_equal_file $EXPECTED/result-format-function OUTPUT
 
+test_begin_subtest "notmuch-unthreaded with nonexistent CWD"
+test_emacs '(test-log-error
+	      (let ((default-directory "/nonexistent"))
+	        (notmuch-unthreaded "*")))'
+test_expect_equal "$(cat MESSAGES)" "COMPLETE"
+
 test_done
