@@ -41,6 +41,20 @@ test_emacs '(notmuch-search "tag:inbox")
 	    (test-output)'
 test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox OUTPUT
 
+test_begin_subtest "Functions in search-result-format"
+test_emacs '(let
+		((notmuch-search-result-format
+		  (quote ((notmuch-test-result-flags . "%s ")
+			  ("date" . "%12s ")
+			  ("count" . "%9s ")
+			  ("authors" . "%-30s ")
+			  ("subject" . "%s ")
+			  ("tags" . "(%s)")))))
+	      (notmuch-search "tag:inbox")
+	      (notmuch-test-wait)
+	      (test-output))'
+test_expect_equal_file $EXPECTED/search-result-format-function OUTPUT
+
 test_begin_subtest "Incremental parsing of search results"
 test_emacs "(cl-letf* (((symbol-function 'orig)
 			(symbol-function 'notmuch-search-process-filter))

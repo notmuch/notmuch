@@ -159,6 +159,21 @@ running, quit if it terminated."
 	 (lambda (x) `(prog1 ,x (notmuch-post-command)))
 	 body)))
 
+;; For testing functions in
+;; notmuch-{search,tree,unsorted}-result-format
+(defun notmuch-test-result-flags (format-string result)
+  (let ((tags-to-letters (quote (("attachment" . "&")
+				 ("signed" . "=")
+				 ("unread" . "u")
+				 ("inbox" . "i"))))
+	(tags (plist-get result :tags)))
+    (format format-string
+	    (mapconcat (lambda (t2l)
+			 (if (member (car t2l) tags)
+			     (cdr t2l)
+			   " "))
+		       tags-to-letters ""))))
+
 ;; For historical reasons, we hide deleted tags by default in the test
 ;; suite
 (setq notmuch-tag-deleted-formats
