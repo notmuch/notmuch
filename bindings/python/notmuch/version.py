@@ -1,3 +1,3 @@
 # this file should be kept in sync with ../../../version
-__VERSION__ = '0.33~rc0'
+__VERSION__ = '0.33'
 SOVERSION = '5'
