@@ -1,3 +1,10 @@
+notmuch (0.33-1) unstable; urgency=medium
+
+  * New upstream release
+  * See /usr/share/doc/notmuch/NEWS.gz for user visible changes.
+
+ -- David Bremner <bremner@debian.org>  Fri, 03 Sep 2021 12:24:41 -0700
+
 notmuch (0.33~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate
