@@ -1,4 +1,4 @@
-Notmuch 0.33 (UNRELEASED)
+Notmuch 0.33 (2021-09-03)
 =========================
 
 Library
@@ -28,10 +28,36 @@ previous behaviour of using notmuch to send mail by default, customize
 
 Improve the display of messages from long threads in unthreaded mode.
 
+Prefer email addresses over User ID when showing valid signatures.
+
+Define a new face `notmuch-jump-key`.
+
+New commands in notmuch-tree view: `notmuch-tree-filter` and `notmuch-tree-filter-by-tag`.
+
+Honour `notmuch-show-text/html-blocked-images` when using `w3m` to
+render html.
+
+Support toggling sort order in notmuch-tree mode.
+
+Ruby
+----
+
+Memory management of allocated notmuch objects (database, messages,
+etc...) is now done via the Ruby GC. This removes all constraints on
+the order of object destruction.  Database close and destroy are
+split, following an old library API change.
+
 Vim
 ---
 
 Respect excluded tags when showing a thread.
+
+Documentation
+-------------
+
+Fix doc build for Sphinx 4.0.
+
+Improve the markup and linking of the documentation.
 
 Notmuch 0.32.3 (2021-08-17)
 ===========================
