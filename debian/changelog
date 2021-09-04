@@ -1,3 +1,9 @@
+notmuch (0.33-2) unstable; urgency=medium
+
+  * Disable two flaky tests in T590-libconfig.
+
+ -- David Bremner <bremner@debian.org>  Sat, 04 Sep 2021 11:29:44 -0700
+
 notmuch (0.33-1) unstable; urgency=medium
 
   * New upstream release
