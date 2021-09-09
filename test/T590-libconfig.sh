@@ -12,12 +12,10 @@ import os, sys, pwd, socket
 pw = pwd.getpwuid(os.getuid())
 user = pw.pw_name
 name = pw.pw_gecos.partition(",")[0]
-fqdn = socket.getaddrinfo(socket.gethostname(), 0, 0,
-                          socket.SOCK_STREAM, 0, socket.AI_CANONNAME)[0][3]
+
 for l in sys.stdin:
     if l[:4] == "08: ":
-        l = l.replace(user, "USERNAME", 1).replace("@" + fqdn, "@FQDN", 1)
-        l = l.replace(".(none)", "", 1).replace(".localdomain", "", 1)
+        l = l.replace(user, "USERNAME", 1)
     elif l[:4] == "10: ":
         l = l.replace("'" + name, "'USER_FULL_NAME", 1)
     sys.stdout.write(l)
@@ -416,7 +414,7 @@ cat <<'EOF' >EXPECTED
 05: 'unread;inbox'
 06: ''
 07: 'true'
-08: 'USERNAME@FQDN'
+08: 'USERNAME@localhost'
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
@@ -761,7 +759,7 @@ cat <<'EOF' >EXPECTED
 05: 'unread;inbox'
 06: ''
 07: 'true'
-08: 'USERNAME@FQDN'
+08: 'USERNAME@localhost'
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
