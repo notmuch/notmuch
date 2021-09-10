@@ -1,3 +1,9 @@
+notmuch (0.33-2~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- David Bremner <bremner@debian.org>  Fri, 10 Sep 2021 07:52:49 -0300
+
 notmuch (0.33-2) unstable; urgency=medium
 
   * Disable two flaky tests in T590-libconfig.
