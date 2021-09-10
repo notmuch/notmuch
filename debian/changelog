@@ -1,3 +1,48 @@
+notmuch (0.31.4-2) unstable; urgency=medium
+
+  * Cherry pick upstream commit 3f4de98e7c8, which fixes a bug where
+    duplicate message-ids can cause multiple thread-ids for some message
+    documents.
+  * Add build-dependency on xapian-tools, for new test
+
+ -- David Bremner <bremner@debian.org>  Mon, 28 Jun 2021 22:48:02 -0300
+
+notmuch (0.31.4-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+    - Fix include bug triggered by glib 2.67
+    - Fix race condition in T568-lib-thread
+
+ -- David Bremner <bremner@debian.org>  Thu, 18 Feb 2021 07:23:00 -0400
+
+notmuch (0.31.3-2) unstable; urgency=medium
+
+  * Don't install gdb on hppa (skip gdb based tests)
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 Dec 2020 15:14:07 -0400
+
+notmuch (0.31.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Second fix for T360, fix regression on ppc64el
+  * Fix for exclude tags in notmuch2 python bindings
+  * Fix for memory error in notmuch_database_get_config_list
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 Dec 2020 11:48:37 -0400
+
+notmuch (0.31.2-5) unstable; urgency=medium
+
+  * Use readelf instead of nm in T360, hopefully build in ppc64
+
+ -- David Bremner <bremner@debian.org>  Sun, 13 Dec 2020 08:24:23 -0400
+
+notmuch (0.31.2-4) unstable; urgency=medium
+
+  * Move prerequisite to file targets from phony ones. Thanks to
+    Lucas Nussbaum for the report. (Closes: #976934).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Dec 2020 21:02:20 -0400
+
 notmuch (0.31.2-3~bpo10+2) buster-backports; urgency=medium
 
   * Re-upload with binaries for NEW package.
