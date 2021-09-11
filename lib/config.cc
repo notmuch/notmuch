@@ -543,25 +543,11 @@ _get_username_from_passwd_file (void *ctx)
 static const char *
 _get_email_from_passwd_file (void *ctx)
 {
-
-    char hostname[256];
-    struct hostent *hostent;
-    const char *domainname;
     char *email;
 
     char *username = _get_username_from_passwd_file (ctx);
 
-    gethostname (hostname, 256);
-    hostname[255] = '\0';
-
-    hostent = gethostbyname (hostname);
-    if (hostent && (domainname = strchr (hostent->h_name, '.')))
-	domainname += 1;
-    else
-	domainname = "(none)";
-
-    email = talloc_asprintf (ctx, "%s@%s.%s",
-			     username, hostname, domainname);
+    email = talloc_asprintf (ctx, "%s@localhost", username);
 
     talloc_free (username);
     return email;
