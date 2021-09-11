@@ -238,7 +238,6 @@ test_expect_equal_file $EXPECTED/notmuch-show-decrypted-message-no-crypto OUTPUT
 
 test_begin_subtest "notmuch-show with nonexistent CWD"
 tid=$(notmuch search --limit=1 --output=threads '*' | sed s/thread://)
-test_subtest_known_broken
 test_emacs "(test-log-error
 	      (let ((default-directory \"/nonexistent\"))
 	        (notmuch-show \"$tid\")))"

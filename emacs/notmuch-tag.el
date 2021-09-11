@@ -397,7 +397,7 @@ Return all tags if no search terms are given."
   (split-string
    (with-output-to-string
      (with-current-buffer standard-output
-       (apply 'call-process notmuch-command nil t
+       (apply 'notmuch--call-process notmuch-command nil t
 	      nil "search" "--output=tags" "--exclude=false" search-terms)))
    "\n+" t))
 

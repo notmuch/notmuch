@@ -279,7 +279,7 @@ position of the message in the thread."
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
 	 (with-current-buffer buf
 	   (let ((coding-system-for-read 'no-conversion))
-	     (call-process notmuch-command nil t nil "show" "--format=raw" id))
+	     (notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
 	   ,@body)
 	 (kill-buffer buf)))))
 
@@ -2034,7 +2034,7 @@ to show, nil otherwise."
     (pop-to-buffer-same-window buf)
     (erase-buffer)
     (let ((coding-system-for-read 'no-conversion))
-      (call-process notmuch-command nil t nil "show" "--format=raw" id))
+      (notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
@@ -2086,7 +2086,7 @@ message."
 	  ;; Use the originating buffer's working directory instead of
 	  ;; that of the pipe buffer.
 	  (cd cwd)
-	  (let ((exit-code (call-process-shell-command shell-command nil buf)))
+	  (let ((exit-code (notmuch--call-process-shell-command shell-command nil buf)))
 	    (goto-char (point-max))
 	    (set-buffer-modified-p nil)
 	    (unless (zerop exit-code)

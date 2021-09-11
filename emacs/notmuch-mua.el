@@ -474,7 +474,7 @@ the From: address."
 		(with-current-buffer temp-buffer
 		  (erase-buffer)
 		  (let ((coding-system-for-read 'no-conversion))
-		    (call-process notmuch-command nil t nil
+		    (notmuch--call-process notmuch-command nil t nil
 				  "show" "--format=raw" id))
 		  ;; Because we process the messages in reverse order,
 		  ;; always generate a forwarded subject, then use the

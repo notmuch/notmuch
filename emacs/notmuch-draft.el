@@ -249,7 +249,7 @@ applied to newly inserted messages)."
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((coding-system-for-read 'no-conversion))
-	(call-process notmuch-command nil t nil "show" "--format=raw" id))
+	(notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
       (mime-to-mml)
       (goto-char (point-min))
       (when (re-search-forward "^$" nil t)
