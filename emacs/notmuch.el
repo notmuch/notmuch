@@ -880,6 +880,14 @@ sets the :orig-tag property."
       (setq notmuch-search-target-thread "found")
       (goto-char pos))))
 
+(defvar-local notmuch--search-hook-run nil
+  "Flag used to ensure the notmuch-search-hook is only run once per buffer")
+
+(defun notmuch--search-hook-wrapper ()
+  (unless notmuch--search-hook-run
+    (setq notmuch--search-hook-run t)
+    (run-hooks 'notmuch-search-hook)))
+
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\"."
   (let ((results-buf (process-buffer proc))
@@ -892,7 +900,9 @@ sets the :orig-tag property."
 	  (goto-char (point-max))
 	  (insert string))
 	(notmuch-sexp-parse-partial-list 'notmuch-search-append-result
-					 results-buf)))))
+					 results-buf))
+      (with-current-buffer results-buf
+	(notmuch--search-hook-wrapper)))))
 
 ;;; Commands (and some helper functions used by them)
 
@@ -1036,8 +1046,7 @@ the configured default sort order."
 	  (process-put proc 'parse-buf
 		       (generate-new-buffer " *notmuch search parse*"))
 	  (set-process-filter proc 'notmuch-search-process-filter)
-	  (set-process-query-on-exit-flag proc nil))))
-    (run-hooks 'notmuch-search-hook)))
+	  (set-process-query-on-exit-flag proc nil))))))
 
 (defun notmuch-search-refresh-view ()
   "Refresh the current view.
