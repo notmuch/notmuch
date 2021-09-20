@@ -16,7 +16,7 @@ override_dh_auto_configure:
 		--localstatedir=/var
 
 override_dh_auto_test:
-	dh_auto_test -- V=1 NOTMUCH_SKIP_TESTS="libconfig.18 libconfig.31"
+	dh_auto_test -- V=1
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
