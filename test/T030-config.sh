@@ -85,13 +85,11 @@ output=$(notmuch config get foo.bar)
 test_expect_equal "${output}" "thing	other"
 
 test_begin_subtest "Round trip config item with embedded backslash"
-test_subtest_known_broken
 notmuch config set foo.bar 'thing\other'
 output=$(notmuch config get foo.bar)
 test_expect_equal "${output}" "thing\other"
 
 test_begin_subtest "Round trip config item with embedded NL/CR"
-test_subtest_known_broken
 notmuch config set foo.bar 'thing
 other'
 output=$(notmuch config get foo.bar)

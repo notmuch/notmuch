@@ -198,7 +198,7 @@ _choose_database_path (void *ctx,
     }
 
     if (! *database_path && key_file) {
-	char *path = g_key_file_get_value (key_file, "database", "path", NULL);
+	char *path = g_key_file_get_string (key_file, "database", "path", NULL);
 	if (path) {
 	    if (path[0] == '/')
 		*database_path = talloc_strdup (ctx, path);
@@ -642,7 +642,7 @@ notmuch_database_create_with_config (const char *database_path,
 
     if (key_file && ! split) {
 	char *mail_root = notmuch_canonicalize_file_name (
-	    g_key_file_get_value (key_file, "database", "mail_root", NULL));
+	    g_key_file_get_string (key_file, "database", "mail_root", NULL));
 	char *db_path = notmuch_canonicalize_file_name (database_path);
 
 	split = (mail_root && (0 != strcmp (mail_root, db_path)));

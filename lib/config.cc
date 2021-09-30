@@ -435,7 +435,7 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	for (gchar **keys_p = keys; *keys_p; keys_p++) {
 	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
 	    char *normalized_val;
-	    val = g_key_file_get_value (file, *grp, *keys_p, NULL);
+	    val = g_key_file_get_string (file, *grp, *keys_p, NULL);
 	    if (! val) {
 		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
