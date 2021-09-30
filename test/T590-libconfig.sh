@@ -273,7 +273,6 @@ test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
 test_begin_subtest "notmuch_config_get_values (ignore leading/trailing whitespace)"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
 {
     notmuch_config_values_t *values;

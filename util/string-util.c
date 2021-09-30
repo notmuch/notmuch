@@ -42,13 +42,15 @@ const char *
 strsplit_len (const char *s, char delim, size_t *len)
 {
     bool escaping = false;
-    size_t count = 0;
+    size_t count = 0, last_nonspace = 0;
 
-    /* Skip initial unescaped delimiters */
-    while (*s && *s == delim)
+    /* Skip initial unescaped delimiters and whitespace */
+    while (*s && (*s == delim || isspace (*s)))
 	s++;
 
     while (s[count] && (escaping || s[count] != delim)) {
+	if (! isspace (s[count]))
+	    last_nonspace = count;
 	escaping = (s[count] == '\\');
 	count++;
     }
@@ -56,7 +58,7 @@ strsplit_len (const char *s, char delim, size_t *len)
     if (count == 0)
 	return NULL;
 
-    *len = count;
+    *len = last_nonspace + 1;
     return s;
 }
 

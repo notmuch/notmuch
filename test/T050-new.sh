@@ -330,7 +330,6 @@ output=$(NOTMUCH_NEW --quiet 2>&1)
 test_expect_equal "$output" ""
 
 test_begin_subtest "leading/trailing whitespace in new.tags is ignored"
-test_subtest_known_broken
 # avoid complications with leading spaces and "notmuch config"
 sed -i 's/^tags=.*$/tags= fu bar ; ; bar /' notmuch-config
 add_message
