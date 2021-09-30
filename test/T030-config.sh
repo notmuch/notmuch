@@ -67,6 +67,37 @@ user.primary_email=test_suite@notmuchmail.org
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Round trip config item with leading spaces"
+test_subtest_known_broken
+notmuch config set foo.bar "  thing"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "  thing"
+
+test_begin_subtest "Round trip config item with leading tab"
+test_subtest_known_broken
+notmuch config set foo.bar "	thing"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "	thing"
+
+test_begin_subtest "Round trip config item with embedded tab"
+notmuch config set foo.bar "thing	other"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing	other"
+
+test_begin_subtest "Round trip config item with embedded backslash"
+test_subtest_known_broken
+notmuch config set foo.bar 'thing\other'
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing\other"
+
+test_begin_subtest "Round trip config item with embedded NL/CR"
+test_subtest_known_broken
+notmuch config set foo.bar 'thing
+other'
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing
+other"
+
 test_begin_subtest "Top level --config=FILE option"
 cp "${NOTMUCH_CONFIG}" alt-config
 notmuch --config=alt-config config set user.name "Another Name"
