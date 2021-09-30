@@ -329,6 +329,19 @@ notmuch config set new.tags "foo;;bar"
 output=$(NOTMUCH_NEW --quiet 2>&1)
 test_expect_equal "$output" ""
 
+test_begin_subtest "leading/trailing whitespace in new.tags is ignored"
+test_subtest_known_broken
+# avoid complications with leading spaces and "notmuch config"
+sed -i 's/^tags=.*$/tags= fu bar ; ; bar /' notmuch-config
+add_message
+NOTMUCH_NEW --quiet
+notmuch dump id:$gen_msg_id | sed 's/ --.*$//' > OUTPUT
+cat <<EOF >EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
++bar +fu%20bar
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"
 output=$(NOTMUCH_NEW --debug 2>&1)
