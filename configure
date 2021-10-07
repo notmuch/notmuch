@@ -775,9 +775,25 @@ if [ $have_python -eq 1 ]; then
     fi
 fi
 
+have_python3_dev=0
+if [ $have_python3 -eq 1 ]; then
+    printf "Checking for python3 version ..."
+    python3_version=$("$python" -c 'import sysconfig; print(sysconfig.get_python_version());')
+    printf "(%s)\n" $python3_version
+
+    printf "Checking for python $python3_version development files..."
+    if pkg-config --exists "python-$python3_version"; then
+        have_python3_dev=1
+        printf "Yes.\n"
+    else
+        have_python3_dev=0
+        printf "No (will not install CFFI-based python bindings).\n"
+    fi
+fi
+
 have_python3_cffi=0
 have_python3_pytest=0
-if [ $have_python3 -eq 1 ]; then
+if [ $have_python3_dev -eq 1 ]; then
     printf "Checking for python3 cffi and setuptools... "
     if "$python" -c 'import cffi,setuptools; cffi.FFI().verify()' >/dev/null 2>&1; then
         printf "Yes.\n"
