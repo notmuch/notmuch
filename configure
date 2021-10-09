@@ -496,16 +496,16 @@ int main () {
 }
 EOF
     if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
-        printf 'No.\nCould not make tempdir for testing session-key support.\n'
-        errors=$((errors + 1))
+	printf 'No.\nCould not make tempdir for testing session-key support.\n'
+	errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _check_session_keys.c ${gmime_ldflags} -o _check_session_keys \
-           && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
-           && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
-           && [ $SESSION_KEY = 9:0BACD64099D1468AB07C796F0C0AC4851948A658A15B34E803865E9FC635F2F5 ]
+	   && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
+	   && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
+	   && [ $SESSION_KEY = 9:0BACD64099D1468AB07C796F0C0AC4851948A658A15B34E803865E9FC635F2F5 ]
     then
-        printf "OK.\n"
+	printf "OK.\n"
     else
-        cat <<EOF
+	cat <<EOF
 No.
 *** Error: Could not extract session keys from encrypted message.
 
@@ -515,15 +515,15 @@ version of GPGME.
 Please try to rebuild your version of GMime against a more recent
 version of GPGME (at least GPGME 1.8.0).
 EOF
-        if command -v gpgme-config >/dev/null; then
-            printf 'Your current GPGME development version is: %s\n' "$(gpgme-config --version)"
-        else
-            printf 'You do not have the GPGME development libraries installed.\n'
-        fi
-        errors=$((errors + 1))
+	if command -v gpgme-config >/dev/null; then
+	    printf 'Your current GPGME development version is: %s\n' "$(gpgme-config --version)"
+	else
+	    printf 'You do not have the GPGME development libraries installed.\n'
+	fi
+	errors=$((errors + 1))
     fi
     if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
-        rm -rf "$TEMP_GPG"
+	rm -rf "$TEMP_GPG"
     fi
 
     # see https://github.com/jstedfast/gmime/pull/90
@@ -570,36 +570,36 @@ int main () {
 }
 EOF
     if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
-        printf 'No.\nCould not make tempdir for testing X.509 certificate validity support.\n'
-        errors=$((errors + 1))
+	printf 'No.\nCould not make tempdir for testing X.509 certificate validity support.\n'
+	errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _check_x509_validity.c ${gmime_ldflags} -o _check_x509_validity \
-            && echo disable-crl-checks > "$TEMP_GPG/gpgsm.conf" \
-            && echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$TEMP_GPG/trustlist.txt" \
-            && GNUPGHOME=${TEMP_GPG} gpgsm --batch --quiet --import < "$srcdir"/test/smime/ca.crt
+	    && echo disable-crl-checks > "$TEMP_GPG/gpgsm.conf" \
+	    && echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$TEMP_GPG/trustlist.txt" \
+	    && GNUPGHOME=${TEMP_GPG} gpgsm --batch --quiet --import < "$srcdir"/test/smime/ca.crt
     then
-        if GNUPGHOME=${TEMP_GPG} ./_check_x509_validity; then
-            gmime_x509_cert_validity=1
-            printf "Yes.\n"
-        else
-            gmime_x509_cert_validity=0
-            printf "No.\n"
-            if pkg-config --exists "gmime-3.0 >= 3.2.7"; then
-                cat <<EOF
+	if GNUPGHOME=${TEMP_GPG} ./_check_x509_validity; then
+	    gmime_x509_cert_validity=1
+	    printf "Yes.\n"
+	else
+	    gmime_x509_cert_validity=0
+	    printf "No.\n"
+	    if pkg-config --exists "gmime-3.0 >= 3.2.7"; then
+		cat <<EOF
 *** Error: GMime fails to calculate X.509 certificate validity, and
 is later than 3.2.7, which should have fixed this issue.
 
 Please follow up on https://github.com/jstedfast/gmime/pull/90 with
 more details.
 EOF
-                errors=$((errors + 1))
-            fi
-        fi
+		errors=$((errors + 1))
+	    fi
+	fi
     else
-        printf 'No.\nFailed to set up gpgsm for testing X.509 certificate validity support.\n'
-        errors=$((errors + 1))
+	printf 'No.\nFailed to set up gpgsm for testing X.509 certificate validity support.\n'
+	errors=$((errors + 1))
     fi
     if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
-        rm -rf "$TEMP_GPG"
+	rm -rf "$TEMP_GPG"
     fi
 
     # see https://dev.gnupg.org/T3464
@@ -647,31 +647,31 @@ int main () {
 }
 EOF
     if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
-        printf 'No.\nCould not make tempdir for testing signature verification when decrypting with session keys.\n'
-        errors=$((errors + 1))
+	printf 'No.\nCould not make tempdir for testing signature verification when decrypting with session keys.\n'
+	errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _verify_sig_with_session_key.c ${gmime_ldflags} -o _verify_sig_with_session_key \
-            && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
-            && rm -f ${TEMP_GPG}/private-keys-v1.d/*.key
+	    && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
+	    && rm -f ${TEMP_GPG}/private-keys-v1.d/*.key
     then
-        if GNUPGHOME=${TEMP_GPG} ./_verify_sig_with_session_key; then
-            gmime_verify_with_session_key=1
-            printf "Yes.\n"
-        else
-            gmime_verify_with_session_key=0
-            printf "No.\n"
-            cat <<EOF
+	if GNUPGHOME=${TEMP_GPG} ./_verify_sig_with_session_key; then
+	    gmime_verify_with_session_key=1
+	    printf "Yes.\n"
+	else
+	    gmime_verify_with_session_key=0
+	    printf "No.\n"
+	    cat <<EOF
 *** Error: GMime fails to verify signatures when decrypting with a session key.
 
 This is most likely due to a buggy version of GPGME, which should be fixed in 1.13.2 or later.
 See https://dev.gnupg.org/T3464 for more details.
 EOF
-        fi
+	fi
     else
-        printf 'No.\nFailed to set up gpg for testing signature verification while decrypting with a session key.\n'
-        errors=$((errors + 1))
+	printf 'No.\nFailed to set up gpg for testing signature verification while decrypting with a session key.\n'
+	errors=$((errors + 1))
     fi
     if [ -n "$TEMP_GPG" -a -d "$TEMP_GPG" ]; then
-        rm -rf "$TEMP_GPG"
+	rm -rf "$TEMP_GPG"
     fi
 else
     have_gmime=0
@@ -768,10 +768,10 @@ have_python3=0
 if [ $have_python -eq 1 ]; then
     printf "Checking for python3 (>= 3.5)..."
     if "$python" -c 'import sys, sysconfig; assert sys.version_info >= (3,5)'; >/dev/null 2>&1; then
-        printf "Yes.\n"
-        have_python3=1
+	printf "Yes.\n"
+	have_python3=1
     else
-        printf "No (will not install CFFI-based python bindings).\n"
+	printf "No (will not install CFFI-based python bindings).\n"
     fi
 fi
 
@@ -783,11 +783,11 @@ if [ $have_python3 -eq 1 ]; then
 
     printf "Checking for python $python3_version development files..."
     if pkg-config --exists "python-$python3_version"; then
-        have_python3_dev=1
-        printf "Yes.\n"
+	have_python3_dev=1
+	printf "Yes.\n"
     else
-        have_python3_dev=0
-        printf "No (will not install CFFI-based python bindings).\n"
+	have_python3_dev=0
+	printf "No (will not install CFFI-based python bindings).\n"
     fi
 fi
 
@@ -796,12 +796,12 @@ have_python3_pytest=0
 if [ $have_python3_dev -eq 1 ]; then
     printf "Checking for python3 cffi and setuptools... "
     if "$python" -c 'import cffi,setuptools; cffi.FFI().verify()' >/dev/null 2>&1; then
-        printf "Yes.\n"
-        have_python3_cffi=1
-        WITH_PYTHON_DOCS=1
+	printf "Yes.\n"
+	have_python3_cffi=1
+	WITH_PYTHON_DOCS=1
     else
-        WITH_PYTHON_DOCS=0
-        printf "No (will not install CFFI-based python bindings).\n"
+	WITH_PYTHON_DOCS=0
+	printf "No (will not install CFFI-based python bindings).\n"
     fi
     rm -rf __pycache__  # cffi.FFI().verify() uses this space
 
@@ -809,10 +809,10 @@ if [ $have_python3_dev -eq 1 ]; then
     conf=$(mktemp)
     printf "[pytest]\nminversion=3.0\n" > $conf
     if "$python" -m pytest -c $conf --version >/dev/null 2>&1; then
-        printf "Yes.\n"
-        have_python3_pytest=1
+	printf "Yes.\n"
+	have_python3_pytest=1
     else
-        printf "No (will not test CFFI-based python bindings).\n"
+	printf "No (will not test CFFI-based python bindings).\n"
     fi
     rm -f $conf
 fi
@@ -860,10 +860,10 @@ fi
 if [ $WITH_EMACS = "1" ]; then
     printf "Checking if emacs (>= 25) is available... "
     if emacs --quick --batch --eval '(if (< emacs-major-version 25) (kill-emacs 1))' > /dev/null 2>&1; then
-        printf "Yes.\n"
+	printf "Yes.\n"
     else
-        printf "No (disabling emacs related parts of build)\n"
-        WITH_EMACS=0
+	printf "No (disabling emacs related parts of build)\n"
+	WITH_EMACS=0
     fi
 fi
 
@@ -1571,10 +1571,10 @@ EOF
 {
     echo "# Generated by configure, run from doc/conf.py"
     if [ $WITH_EMACS = "1" ]; then
-        echo "tags.add('WITH_EMACS')"
+	echo "tags.add('WITH_EMACS')"
     fi
     if [ $WITH_PYTHON_DOCS = "1" ]; then
-        echo "tags.add('WITH_PYTHON')"
+	echo "tags.add('WITH_PYTHON')"
     fi
     printf "rsti_dir = '%s'\n" "$(cd emacs && pwd -P)"
 } > sphinx.config
