@@ -55,7 +55,7 @@ MESSAGE PROPERTIES
 The following properties are set by notmuch internally in the course
 of its normal activity.
 
-**index.decryption**
+index.decryption
     If a message contains encrypted content, and notmuch tries to
     decrypt that content during indexing, it will add the property
     ``index.decryption=success`` when the cleartext was successfully
@@ -75,8 +75,7 @@ of its normal activity.
     :any:`notmuch-config(1)`), then this property will not be set on that
     message.
 
-**session-key**
-
+session-key
     When :any:`notmuch-show(1)` or :any:`notmuch-reply(1)` encounters
     a message with an encrypted part, if notmuch finds a
     ``session-key`` property associated with the message, it will try
@@ -111,8 +110,7 @@ of its normal activity.
     example, an AES-128 key might be stashed in a notmuch property as:
     ``session-key=7:14B16AF65536C28AF209828DFE34C9E0``.
 
-**index.repaired**
-
+index.repaired
     Some messages arrive in forms that are confusing to view; they can
     be mangled by mail transport agents, or the sending mail user
     agent may structure them in a way that is confusing.  If notmuch

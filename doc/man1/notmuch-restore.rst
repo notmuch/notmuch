@@ -32,14 +32,14 @@ Supported options for **restore** include
    line specifying a message-id and a set of tags. For details of the
    actual formats, see :any:`notmuch-dump(1)`.
 
-   **sup**
+   sup
      The **sup** dump file format is specifically chosen to be
      compatible with the format of files produced by sup-dump. So
      if you've previously been using sup for mail, then the
      **notmuch restore** command provides you a way to import all
      of your tags (or labels as sup calls them).
 
-   **batch-tag**
+   batch-tag
      The **batch-tag** dump format is intended to more robust
      against malformed message-ids and tags containing whitespace
      or non-\ **ascii(7)** characters. See :any:`notmuch-dump(1)` for
@@ -49,7 +49,7 @@ Supported options for **restore** include
      changes if the **maildir.synchronize\_flags** configuration
      option is enabled. See :any:`notmuch-config(1)` for details.
 
-   **auto**
+   auto
      This option (the default) tries to guess the format from the
      input. For correctly formed input in either supported format,
      this heuristic, based the fact that batch-tag format contains
@@ -59,18 +59,18 @@ Supported options for **restore** include
 
    Control what kind of metadata is restored.
 
-   **config**
+   config
      Restore configuration data to the database. Each configuration
      line starts with "#@ ", followed by a space separated
      key-value pair.  Both key and value are hex encoded if needed.
 
-   **properties**
+   properties
      Restore per-message (key,value) metadata.  Each line starts
      with "#= ", followed by a message id, and a space separated
      list of key=value pairs.  Ids, keys and values are hex encoded
      if needed.  See :any:`notmuch-properties(7)` for more details.
 
-   **tags**
+   tags
      Restore per-message metadata, namely tags. See *format* above
      for more details.
 

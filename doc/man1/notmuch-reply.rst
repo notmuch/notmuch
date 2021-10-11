@@ -40,22 +40,22 @@ Supported options for **reply** include
 
 .. option:: --format=(default|json|sexp|headers-only)
 
-   **default**
+   default
      Includes subject and quoted message body as an RFC 2822
      message.
 
-   **json**
+   json
      Produces JSON output containing headers for a reply message
      and the contents of the original message. This output can be
      used by a client to create a reply message intelligently.
 
-   **sexp**
+   sexp
      Produces S-Expression output containing headers for a reply
      message and the contents of the original message. This output
      can be used by a client to create a reply message
      intelligently.
 
-   **headers-only**
+   headers-only
      Only produces In-Reply-To, References, To, Cc, and Bcc
      headers.
 
@@ -67,10 +67,10 @@ Supported options for **reply** include
 
 .. option:: --reply-to=(all|sender)
 
-   **all** (default)
+   all (default)
      Replies to all addresses.
 
-   **sender**
+   sender
      Replies only to the sender. If replying to user's own message
      (Reply-to: or From: header is one of the user's configured
      email addresses), try To:, Cc:, and Bcc: headers in this

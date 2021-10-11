@@ -19,7 +19,7 @@ must have executable permissions.
 
 The currently available hooks are described below.
 
-**pre-new**
+pre-new
     This hook is invoked by the :any:`notmuch-new(1)` command before
     scanning or importing new messages into the database. If this hook
     exits with a non-zero status, notmuch will abort further
@@ -28,7 +28,7 @@ The currently available hooks are described below.
     Typically this hook is used for fetching or delivering new mail to
     be imported into the database.
 
-**post-new**
+post-new
     This hook is invoked by the :any:`notmuch-new(1)` command after
     new messages have been imported into the database and initial tags
     have been applied. The hook will not be run if there have been any
@@ -37,7 +37,7 @@ The currently available hooks are described below.
     Typically this hook is used to perform additional query-based
     tagging on the imported messages.
 
-**post-insert**
+post-insert
     This hook is invoked by the :any:`notmuch-insert(1)` command after
     the message has been delivered, added to the database, and initial
     tags have been applied. The hook will not be run if there have
