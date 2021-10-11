@@ -1206,6 +1206,9 @@ The arguments are:
 
 (defun notmuch-unthreaded (&optional query query-context target buffer-name
 				     open-target)
+  "Display threads matching QUERY in unthreaded view.
+
+See function NOTMUCH-TREE for documentation of the arguments"
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
 
