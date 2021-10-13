@@ -426,13 +426,13 @@ mime_node_seek_dfs (mime_node_t *node, int n);
 const _notmuch_message_crypto_t *
 mime_node_get_message_crypto_status (mime_node_t *node);
 
-typedef enum dump_formats {
+typedef enum {
     DUMP_FORMAT_AUTO,
     DUMP_FORMAT_BATCH_TAG,
     DUMP_FORMAT_SUP
 } dump_format_t;
 
-typedef enum dump_includes {
+typedef enum {
     DUMP_INCLUDE_TAGS		= 1,
     DUMP_INCLUDE_CONFIG		= 2,
     DUMP_INCLUDE_PROPERTIES	= 4
