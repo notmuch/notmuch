@@ -160,7 +160,7 @@ operator&= (_notmuch_features &a, _notmuch_features b)
 
 /*
  * Configuration options for xapian database fields */
-typedef enum notmuch_field_flags {
+typedef enum {
     NOTMUCH_FIELD_NO_FLAGS	= 0,
     NOTMUCH_FIELD_EXTERNAL	= 1 << 0,
     NOTMUCH_FIELD_PROBABILISTIC = 1 << 1,

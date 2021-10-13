@@ -112,7 +112,7 @@ typedef int notmuch_bool_t;
  * A zero value (NOTMUCH_STATUS_SUCCESS) indicates that the function
  * completed without error. Any other value indicates an error.
  */
-typedef enum _notmuch_status {
+typedef enum {
     /**
      * No error occurred.
      */
@@ -1678,7 +1678,7 @@ notmuch_message_reindex (notmuch_message_t *message,
 /**
  * Message flags.
  */
-typedef enum _notmuch_message_flag {
+typedef enum {
     NOTMUCH_MESSAGE_FLAG_MATCH,
     NOTMUCH_MESSAGE_FLAG_EXCLUDED,
 
@@ -2524,7 +2524,7 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 /**
  * Configuration keys known to libnotmuch
  */
-typedef enum _notmuch_config_key {
+typedef enum {
     NOTMUCH_CONFIG_FIRST,
     NOTMUCH_CONFIG_DATABASE_PATH = NOTMUCH_CONFIG_FIRST,
     NOTMUCH_CONFIG_MAIL_ROOT,
