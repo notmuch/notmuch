@@ -323,7 +323,7 @@ typedef enum {
  * config_path="" and error_message=NULL
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  */
-/* NOTMUCH_DEPRECATED(5, 4) */
+NOTMUCH_DEPRECATED(5, 4)
 notmuch_status_t
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode,
@@ -335,7 +335,7 @@ notmuch_database_open (const char *path,
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  *
  */
-/* NOTMUCH_DEPRECATED(5, 4) */
+NOTMUCH_DEPRECATED(5, 4)
 notmuch_status_t
 notmuch_database_open_verbose (const char *path,
 			       notmuch_database_mode_t mode,
