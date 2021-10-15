@@ -24,6 +24,7 @@ Build-Depends:
  gpgsm <!nocheck>,
  libgmime-3.0-dev (>= 3.0.3~),
  libpython3-all-dev,
+ libsexp-dev,
  libtalloc-dev,
  libxapian-dev,
  libz-dev,
