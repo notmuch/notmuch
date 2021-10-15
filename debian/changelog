@@ -1,3 +1,9 @@
+notmuch (0.34~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Fri, 15 Oct 2021 08:50:57 -0300
+
 notmuch (0.33.2-1) unstable; urgency=medium
 
   * Upstream fix for flaky/hanging tests in T355-smime
