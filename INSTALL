@@ -41,6 +41,15 @@ Talloc, and zlib which are each described below:
 
 	GMime is available from https://github.com/jstedfast/gmime
 
+        Sfsexp
+        ------
+
+        sfsexp is the "small fast s-expression" library. Notmuch
+        optionally use it to provide a second query parser.
+
+        sfsexp is available from https://github.com/mjsottile/sfsexp.
+        In Debian Bookworm and later, install libsexp-dev.
+
 	Talloc
 	------
 	Talloc is a memory-pool allocator used by Notmuch.
