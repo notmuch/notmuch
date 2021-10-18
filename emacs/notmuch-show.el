@@ -2086,7 +2086,7 @@ message."
 	  ;; Use the originating buffer's working directory instead of
 	  ;; that of the pipe buffer.
 	  (cd cwd)
-	  (let ((exit-code (notmuch--call-process-shell-command shell-command nil buf)))
+	  (let ((exit-code (call-process-shell-command shell-command nil buf)))
 	    (goto-char (point-max))
 	    (set-buffer-modified-p nil)
 	    (unless (zerop exit-code)
