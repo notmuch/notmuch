@@ -1,3 +1,16 @@
+notmuch (0.34-1) unstable; urgency=medium
+
+  * New upstream release
+  * Adds s-expression based query parser (man notmuch-sexp-queries).
+  * Bug fix: "notmuch breaks on directory removal", thanks to Joerg
+    Jaspert (Closes: #922536).
+  * Respect notmuch-show-text/html-blocked-images for renderer w3m
+    (Closes: #934082).
+  * Bug fix: "add an option to change the database path", thanks to
+    Michael Gold (Closes: #887041) (actually fixed in 0.32)
+
+ -- David Bremner <bremner@debian.org>  Wed, 20 Oct 2021 11:15:23 -0300
+
 notmuch (0.34~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate
