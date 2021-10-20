@@ -10,6 +10,22 @@ notmuch-sexp-queries(7) for syntax, and use `notmuch config get
 built_with.sexpr_queries` to check if notmuch is compiled with
 s-expression query support.
 
+CLI
+---
+
+Support multiple `Delivered-To` headers in notmuch-reply(1).
+
+Emacs
+-----
+
+Functions are now allowed in `notmuch-search-result-format`.
+
+Improvements to unthreaded view on large threads.
+
+Tolerate bad/missing working directory for most commands.
+
+Allow customization of tree drawing symbols in notmuch-tree mode.
+
 Notmuch 0.33.2 (2021-09-30)
 ===========================
 
