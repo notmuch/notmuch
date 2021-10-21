@@ -433,6 +433,8 @@ notmuch_database_open_verbose (const char *path,
  * @retval NOTMUCH_STATUS_NULL_POINTER: The given \a database
  * argument is NULL.
  *
+ * @retval NOTMUCH_STATUS_NO_CONFIG: No config file was found. Fatal.
+ *
  * @retval NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
  * @retval NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
