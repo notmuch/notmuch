@@ -491,6 +491,9 @@ notmuch_database_load_config (const char *database_path,
  *
  * For description of arguments, @see notmuch_database_open_with_config
  *
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL.
+ *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully created the database.
  *
  * @retval NOTMUCH_STATUS_DATABASE_EXISTS: Database already exists, not created

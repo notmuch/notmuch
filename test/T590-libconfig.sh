@@ -890,4 +890,32 @@ db == NULL: 1
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "create: database set to null on missing config"
+test_subtest_known_broken
+cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR} "/nonexistent"
+  notmuch_status_t st = notmuch_database_create_with_config(argv[1],argv[2], NULL, &db, NULL);
+EOF
+cat <<EOF> EXPECTED
+== stdout ==
+db == NULL: 1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "create: database set to null on missing config (env)"
+test_subtest_known_broken
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+NOTMUCH_CONFIG="/nonexistent"
+cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
+  notmuch_status_t st = notmuch_database_create_with_config(argv[1],
+							  NULL, NULL, &db, NULL);
+EOF
+NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+cat <<EOF> EXPECTED
+== stdout ==
+db == NULL: 1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
