@@ -862,7 +862,6 @@ cat <<EOF > c_tail3
 EOF
 
 test_begin_subtest "open: database set to null on missing config"
-test_subtest_known_broken
 cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   notmuch_status_t st = notmuch_database_open_with_config(argv[1],
 							  NOTMUCH_DATABASE_MODE_READ_ONLY,
@@ -876,7 +875,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "open: database set to null on missing config (env)"
-test_subtest_known_broken
 old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
 NOTMUCH_CONFIG="/nonexistent"
 cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}

@@ -396,8 +396,6 @@ _finish_open (notmuch_database_t *notmuch,
 				     "       has a newer database format version (%u) than supported by this\n"
 				     "       version of notmuch (%u).\n",
 				     database_path, version, NOTMUCH_DATABASE_VERSION));
-	    notmuch_database_destroy (notmuch);
-	    notmuch = NULL;
 	    status = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
@@ -414,8 +412,6 @@ _finish_open (notmuch_database_t *notmuch,
 				     "       requires features (%s)\n"
 				     "       not supported by this version of notmuch.\n",
 				     database_path, incompat_features));
-	    notmuch_database_destroy (notmuch);
-	    notmuch = NULL;
 	    status = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
@@ -489,8 +485,6 @@ _finish_open (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	IGNORE_RESULT (asprintf (&message, "A Xapian exception occurred opening database: %s\n",
 				 error.get_msg ().c_str ()));
-	notmuch_database_destroy (notmuch);
-	notmuch = NULL;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
   DONE:
@@ -559,10 +553,13 @@ notmuch_database_open_with_config (const char *database_path,
 	    free (message);
     }
 
+    if (status && notmuch) {
+	notmuch_database_destroy (notmuch);
+	notmuch = NULL;
+    }
+
     if (database)
 	*database = notmuch;
-    else
-	talloc_free (notmuch);
 
     if (notmuch)
 	notmuch->open = true;
