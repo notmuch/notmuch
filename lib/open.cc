@@ -871,6 +871,13 @@ notmuch_database_load_config (const char *database_path,
     if (status_string)
 	*status_string = message;
 
+    if (status &&
+	status != NOTMUCH_STATUS_NO_DATABASE
+	&& status != NOTMUCH_STATUS_NO_CONFIG) {
+	notmuch_database_destroy (notmuch);
+	notmuch = NULL;
+    }
+
     if (database)
 	*database = notmuch;
 
