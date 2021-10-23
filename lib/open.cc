@@ -714,10 +714,16 @@ notmuch_database_create_with_config (const char *database_path,
 	else
 	    free (message);
     }
+    if (status && notmuch) {
+	notmuch_database_destroy (notmuch);
+	notmuch = NULL;
+    }
+
     if (database)
 	*database = notmuch;
-    else
-	talloc_free (notmuch);
+
+    if (notmuch)
+	notmuch->open = true;
     return status;
 }
 
