@@ -535,12 +535,12 @@ thread."
       (message "End of search results."))))
 
 (defun notmuch-tree-from-search-current-query ()
-  "Call notmuch tree with the current query."
+  "Tree view of current query."
   (interactive)
   (notmuch-tree notmuch-search-query-string))
 
 (defun notmuch-unthreaded-from-search-current-query ()
-  "Call notmuch tree with the current query."
+  "Unthreaded view of current query."
   (interactive)
   (notmuch-unthreaded notmuch-search-query-string))
 
