@@ -590,10 +590,12 @@ notmuch_database_compact (const char *path,
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
 
-    ret = notmuch_database_open_verbose (path,
-					 NOTMUCH_DATABASE_MODE_READ_WRITE,
-					 &notmuch,
-					 &message);
+    ret = notmuch_database_open_with_config (path,
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     "",
+					     NULL,
+					     &notmuch,
+					     &message);
     if (ret) {
 	if (status_cb) status_cb (message, closure);
 	return ret;
