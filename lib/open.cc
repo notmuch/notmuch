@@ -19,9 +19,8 @@ notmuch_database_open (const char *path,
     char *status_string = NULL;
     notmuch_status_t status;
 
-    status = notmuch_database_open_verbose (path, mode, database,
-					    &status_string);
-
+    status = notmuch_database_open_with_config (path, mode, "", NULL,
+						database, &status_string);
     if (status_string) {
 	fputs (status_string, stderr);
 	free (status_string);
