@@ -460,6 +460,9 @@ notmuch_database_open_with_config (const char *database_path,
  *
  * For description of arguments, @see notmuch_database_open_with_config
  *
+ * For errors other then NO_DATABASE and NO_CONFIG, *database is set to
+ * NULL.
+ *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded configuration.
  *
  * @retval NOTMUCH_STATUS_NO_CONFIG: No config file was loaded. Not fatal.

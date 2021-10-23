@@ -916,4 +916,41 @@ db == NULL: 1
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "load_config: database set non-null on missing config"
+cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR} "/nonexistent"
+  notmuch_status_t st = notmuch_database_load_config(argv[1],argv[2], NULL, &db, NULL);
+EOF
+cat <<EOF> EXPECTED
+== stdout ==
+db == NULL: 0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "load_config: database non-null on missing config (env)"
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+NOTMUCH_CONFIG="/nonexistent"
+cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
+  notmuch_status_t st = notmuch_database_load_config(argv[1], NULL, NULL, &db, NULL);
+EOF
+NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+cat <<EOF> EXPECTED
+== stdout ==
+db == NULL: 0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "load_config: database set to NULL on fatal error"
+test_subtest_known_broken
+cat c_head3 - c_tail3 <<'EOF' | test_C
+  notmuch_status_t st = notmuch_database_load_config("relative", NULL, NULL, &db, NULL);
+EOF
+cat <<EOF> EXPECTED
+== stdout ==
+db == NULL: 1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
