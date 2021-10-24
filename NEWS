@@ -7,7 +7,7 @@ General
 An optional new s-expression based query parser is available if
 notmuch is built with the `sfsexp` library. See
 notmuch-sexp-queries(7) for syntax, and use `notmuch config get
-built_with.sexpr_queries` to check if notmuch is compiled with
+built_with.sexpr_query` to check if notmuch is compiled with
 s-expression query support.
 
 CLI
