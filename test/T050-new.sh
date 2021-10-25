@@ -380,31 +380,26 @@ chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 
+make_shim dif-shim<<EOF
+#include <notmuch-test.h>
+
+WRAP_DLFUNC(notmuch_status_t, notmuch_database_index_file, \
+ (notmuch_database_t *database, const char *filename, notmuch_indexopts_t *indexopts, notmuch_message_t **message))
+
+  if (unlink ("${MAIL_DIR}/vanish")) {
+     fprintf (stderr, "unlink failed\n");
+     exit (42);
+  }
+  return notmuch_database_index_file_orig (database, filename, indexopts, message);
+}
+EOF
+
 test_begin_subtest "Handle files vanishing between scandir and add_file"
 
 # A file for scandir to find. It won't get indexed, so can be empty.
 touch ${MAIL_DIR}/vanish
-
-# Breakpoint to remove the file before indexing
-cat <<EOF > notmuch-new-vanish.gdb
-set breakpoint pending on
-set logging file notmuch-new-vanish-gdb.log
-set logging on
-break notmuch_database_index_file
-commands
-shell rm -f ${MAIL_DIR}/vanish
-continue
-end
-run
-EOF
-
-${TEST_GDB} --batch-silent --return-child-result -x notmuch-new-vanish.gdb \
-    --args notmuch new 2>OUTPUT 1>/dev/null
+notmuch_with_shim dif-shim new 2>OUTPUT 1>/dev/null
 echo "exit status: $?" >> OUTPUT
-
-# Clean up the file in case gdb isn't available.
-rm -f ${MAIL_DIR}/vanish
-
 cat <<EOF > EXPECTED
 Unexpected error with file ${MAIL_DIR}/vanish
 add_file: Something went wrong trying to read or write a file
