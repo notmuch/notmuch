@@ -102,22 +102,25 @@ output=$(sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' OUTPUT)
 test_expect_equal "${output}" "A Xapian exception occurred opening database"
 restore_database
 
-cat <<EOF > count-files.gdb
-set breakpoint pending on
-set logging file count-files-gdb.log
-set logging on
-break count_files
-commands
-shell cp /dev/null ${MAIL_DIR}/.notmuch/xapian/postlist.*
-continue
-end
-run
+make_shim qsm-shim<<EOF
+#include <notmuch-test.h>
+
+WRAP_DLFUNC (notmuch_status_t, notmuch_query_search_messages, (notmuch_query_t *query, notmuch_messages_t **messages))
+
+  /* XXX WARNING THIS CORRUPTS THE DATABASE */
+  int fd = open ("target_postlist", O_WRONLY|O_TRUNC);
+  if (fd < 0)
+    exit (8);
+  close (fd);
+
+  return notmuch_query_search_messages_orig(query, messages);
+}
 EOF
 
 backup_database
 test_begin_subtest "error message from query_search_messages"
-${TEST_GDB} --batch-silent --return-child-result -x count-files.gdb \
-    --args notmuch count --output=files '*' 2>OUTPUT 1>/dev/null
+ln -s ${MAIL_DIR}/.notmuch/xapian/postlist.* target_postlist
+notmuch_with_shim qsm-shim count --output=files '*' 2>OUTPUT 1>/dev/null
 cat <<EOF > EXPECTED
 notmuch count: A Xapian exception occurred
 A Xapian exception occurred performing query
