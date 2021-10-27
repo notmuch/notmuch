@@ -461,7 +461,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 }
 EOF
 rm -f ${ovconfig}
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 test.key1 = overridden-home
@@ -488,7 +488,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 }
 EOF
 rm -f ${ovconfig}
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 test.key1 = overridden-xdg
@@ -515,7 +515,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% work
 }
 EOF
 rm -f ${ovconfig}
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 test.key1 = overridden-xdg-profile
@@ -541,7 +541,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% work
 }
 EOF
 #rm -f ${ovconfig}
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 test.key1 = overridden-profile
@@ -559,7 +559,7 @@ cat c_head - c_tail <<'EOF' | test_C %NULL% '' %NULL%
    printf("NOT RUN");
 }
 EOF
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
@@ -604,7 +604,7 @@ cat c_head - c_tail <<'EOF' | test_C %NULL% '' %NULL%
    printf("test.key2 = %s\n", val);
 }
 EOF
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 unset NOTMUCH_DATABASE
 cat <<'EOF' >EXPECTED
 == stdout ==
@@ -783,7 +783,7 @@ cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 }
 EOF
 rm -f ${ovconfig}
-NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
 cat <<'EOF' >EXPECTED
 == stdout ==
 test.key1 = overridden-home
