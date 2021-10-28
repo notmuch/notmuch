@@ -190,6 +190,39 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_WILDCARD | \
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
+/*
+ * Which parameters were explicit when the database was opened */
+typedef enum {
+    NOTMUCH_PARAM_NONE		= 0,
+    NOTMUCH_PARAM_DATABASE	= 1 << 0,
+    NOTMUCH_PARAM_CONFIG	= 1 << 1,
+    NOTMUCH_PARAM_PROFILE	= 1 << 2,
+} notmuch_open_param_t;
+
+/*
+ * define bitwise operators to hide casts */
+
+inline notmuch_open_param_t
+operator| (notmuch_open_param_t a, notmuch_open_param_t b)
+{
+    return static_cast<notmuch_open_param_t>(
+	static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+inline notmuch_open_param_t&
+operator|= (notmuch_open_param_t &a, notmuch_open_param_t b)
+{
+    a = a | b;
+    return a;
+}
+
+inline notmuch_open_param_t
+operator& (notmuch_open_param_t a, notmuch_open_param_t b)
+{
+    return static_cast<notmuch_open_param_t>(
+	static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
+
 struct _notmuch_database {
     bool exception_reported;
 
@@ -249,6 +282,9 @@ struct _notmuch_database {
 
     /* Cached and possibly overridden configuration */
     notmuch_string_map_t *config;
+
+    /* Track what parameters were specified when opening */
+    notmuch_open_param_t params;
 };
 
 /* Prior to database version 3, features were implied by the database
