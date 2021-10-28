@@ -23,8 +23,6 @@ EOF
 }
 
 cat <<EOF > c_head
-#include <string.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
 
 int main (int argc, char** argv)
@@ -639,8 +637,6 @@ cp notmuch-config.bak notmuch-config
 test_expect_equal_file EXPECTED OUTPUT
 
 cat <<EOF > c_head2
-#include <string.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
 
 int main (int argc, char** argv)
