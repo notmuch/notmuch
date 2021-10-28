@@ -953,7 +953,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "open: database parameter overrides implicit config"
-test_subtest_known_broken
 notmuch config set database.path ${MAIL_DIR}/nonexistent
 cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   const char *path = NULL;
