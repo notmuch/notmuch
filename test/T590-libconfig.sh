@@ -952,4 +952,26 @@ db == NULL: 1
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "open: database parameter overrides implicit config"
+test_subtest_known_broken
+notmuch config set database.path ${MAIL_DIR}/nonexistent
+cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
+  const char *path = NULL;
+  notmuch_status_t st = notmuch_database_open_with_config(argv[1],
+							  NOTMUCH_DATABASE_MODE_READ_ONLY,
+							  NULL, NULL, &db, NULL);
+  printf ("status: %d\n", st);
+  path = notmuch_database_get_path (db);
+  printf ("path: %s\n", path ? path : "(null)");
+EOF
+cat <<EOF> EXPECTED
+== stdout ==
+status: 0
+path: MAIL_DIR
+db == NULL: 0
+== stderr ==
+EOF
+notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED OUTPUT.clean
+
 test_done
