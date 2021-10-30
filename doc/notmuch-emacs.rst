@@ -56,7 +56,7 @@ notmuch-hello key bindings
 ``<tab>``
     Move to the next widget (button or text entry field)
 
-``<backspace>``
+``<backtab>``
     Move to the previous widget.
 
 ``<return>``

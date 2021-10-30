@@ -702,7 +702,6 @@ with `notmuch-hello-query-counts'."
   ;; that when we modify map it does not modify widget-keymap).
   (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 
