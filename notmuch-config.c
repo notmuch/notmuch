@@ -680,9 +680,9 @@ _notmuch_config_list_built_with ()
     printf ("%sretry_lock=%s\n",
 	    BUILT_WITH_PREFIX,
 	    notmuch_built_with ("retry_lock") ? "true" : "false");
-    printf ("%ssexpr_query=%s\n",
+    printf ("%ssexp_queries=%s\n",
 	    BUILT_WITH_PREFIX,
-	    notmuch_built_with ("sexpr_query") ? "true" : "false");
+	    notmuch_built_with ("sexp_queries") ? "true" : "false");
 }
 
 static int

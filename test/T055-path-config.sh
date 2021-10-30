@@ -277,7 +277,7 @@ EOF
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
-built_with.sexpr_query=something
+built_with.sexp_queries=something
 database.autocommit=8000
 database.backup_dir
 database.hook_dir

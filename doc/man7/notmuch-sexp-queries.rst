@@ -21,7 +21,7 @@ build of notmuch supports it with
 
 ::
 
-   $ notmuch config get built_with.sexpr_query
+   $ notmuch config get built_with.sexp_queries
 
 
 S-EXPRESSIONS

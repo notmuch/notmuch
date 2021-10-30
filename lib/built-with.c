@@ -32,7 +32,7 @@ notmuch_built_with (const char *name)
 	return HAVE_XAPIAN_DB_RETRY_LOCK;
     } else if (STRNCMP_LITERAL (name, "session_key") == 0) {
 	return true;
-    } else if (STRNCMP_LITERAL (name, "sexpr_query") == 0) {
+    } else if (STRNCMP_LITERAL (name, "sexp_queries") == 0) {
 	return HAVE_SFSEXP;
     } else {
 	return false;
