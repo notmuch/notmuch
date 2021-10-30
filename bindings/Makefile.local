@@ -15,11 +15,14 @@ ifeq ($(HAVE_RUBY_DEV),1)
 	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC" && touch $@
 endif
 
-python-cffi-bindings: lib/$(LINKER_NAME)
+python-cffi-bindings: $(dir)/python-cffi.stamp
+
+$(dir)/python-cffi.stamp: lib/$(LINKER_NAME)
 ifeq ($(HAVE_PYTHON3_CFFI),1)
 	cd $(dir)/python-cffi && \
 		${PYTHON} setup.py build --build-lib build/stage && \
-		mkdir -p build/stage/tests && cp tests/*.py build/stage/tests && touch ../../$@
+		mkdir -p build/stage/tests && cp tests/*.py build/stage/tests && \
+		touch ../python-cffi.stamp
 endif
 
 CLEAN += $(patsubst %,$(dir)/ruby/%, \
@@ -30,4 +33,4 @@ CLEAN += $(patsubst %,$(dir)/ruby/%, \
 
 CLEAN += bindings/ruby/.vendorarchdir.time $(dir)/ruby.stamp
 
-CLEAN += bindings/python-cffi/build
+CLEAN += bindings/python-cffi/build $(dir)/python-cffi.stamp
