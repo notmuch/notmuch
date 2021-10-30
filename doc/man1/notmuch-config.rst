@@ -259,6 +259,8 @@ paths are presumed relative to `$HOME` for items in section
 FILES
 =====
 
+.. _config_search:
+
 CONFIGURATION
 -------------
 

@@ -309,11 +309,10 @@ EOF
 	   ;&
        split)
 	   test_begin_subtest "'to' header does not crash (python-cffi) ($config)"
-	   test_subtest_known_broken
 	   echo 'notmuch@notmuchmail.org' > EXPECTED
 	   test_python <<EOF
-import notmuch2
-db=notmuch2.Database()
+from notmuch2 import Database
+db=Database(config=Database.CONFIG.SEARCH)
 m=db.find('20091117232137.GA7669@griffis1.net')
 to=m.header('To')
 print(to)
