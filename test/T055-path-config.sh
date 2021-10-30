@@ -306,7 +306,24 @@ EOF
 	   output2=$(notmuch --config='' config get ${key})
 	   notmuch config set ${key}
 	   test_expect_equal "${output}+${output2}" "${value}+"
-	   ;;
+	   ;&
+       split)
+	   test_begin_subtest "'to' header does not crash (python-cffi) ($config)"
+	   test_subtest_known_broken
+	   echo 'notmuch@notmuchmail.org' > EXPECTED
+	   test_python <<EOF
+import notmuch2
+db=notmuch2.Database()
+m=db.find('20091117232137.GA7669@griffis1.net')
+to=m.header('To')
+print(to)
+EOF
+	   test_expect_equal_file EXPECTED OUTPUT
+	   ;& # fall through
+   esac
+
+   case $config in
+       split|XDG*)
    esac
    restore_config
    rm -rf home/.local
