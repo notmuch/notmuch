@@ -433,6 +433,8 @@ notmuch_database_open_verbose (const char *path,
  * @retval NOTMUCH_STATUS_NULL_POINTER: The given \a database
  * argument is NULL.
  *
+ * @retval NOTMUCH_STATUS_NO_CONFIG: No config file was found. Fatal.
+ *
  * @retval NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
  * @retval NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
@@ -457,6 +459,9 @@ notmuch_database_open_with_config (const char *database_path,
  * Loads configuration from config file, database, and/or defaults
  *
  * For description of arguments, @see notmuch_database_open_with_config
+ *
+ * For errors other then NO_DATABASE and NO_CONFIG, *database is set to
+ * NULL.
  *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded configuration.
  *
@@ -488,6 +493,9 @@ notmuch_database_load_config (const char *database_path,
  * configuration in 'config_path'.
  *
  * For description of arguments, @see notmuch_database_open_with_config
+ *
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL.
  *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully created the database.
  *
