@@ -187,8 +187,8 @@ class Database(base.NotmuchObject):
 
         :param cfg_path: The pathname of the notmuch configuration file.
            If not specified tries to use the pathname provided in the
-           :env:`NOTMUCH_CONFIG` environment variable and falls back
-           to :file:`~/.notmuch-config.
+           :envvar:`NOTMUCH_CONFIG` environment variable and falls back
+           to :file:`~/.notmuch-config`.
         :type cfg_path: str, bytes, os.PathLike or pathlib.Path.
 
         :returns: The path of the database, which does not necessarily
@@ -198,7 +198,7 @@ class Database(base.NotmuchObject):
            be opened.
         :raises configparser.Error: or subclasses if the configuration
            file can not be parsed.
-        :raises NotmuchError if the config file does not have the
+        :raises NotmuchError: if the config file does not have the
            database.path setting.
         """
         if not cfg_path:
