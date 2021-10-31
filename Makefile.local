@@ -54,7 +54,6 @@ update-versions:
 	sed -i -e "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" \
 	    -e "s/^SOVERSION[[:blank:]]*=.*$$/SOVERSION = \'${LIBNOTMUCH_VERSION_MAJOR}\'/" \
 	    ${PV_FILE}
-	cp version.txt bindings/python-cffi
 
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
