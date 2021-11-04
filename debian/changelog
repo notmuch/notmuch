@@ -1,3 +1,10 @@
+notmuch (0.34.1-1) unstable; urgency=medium
+
+  * New upstream bugfix release. Fixes a memory deallocation error in
+    libnotmuch.
+
+ -- David Bremner <bremner@debian.org>  Wed, 03 Nov 2021 10:20:33 -0300
+
 notmuch (0.34-1) unstable; urgency=medium
 
   * New upstream release

@@ -1,3 +1,15 @@
+Notmuch 0.34.1 (2021-11-03)
+===========================
+
+Library
+-------
+
+Fix for deallocation and nulling of output parameter for
+notmuch_database_{open_with,create_with,load}_config when errors
+occur. This change fixes a potential use-after-free bug that has been
+present since 0.32. This release also improves the documentation of
+status returns for the same 3 functions.
+
 Notmuch 0.34 (2021-10-20)
 =========================
 
