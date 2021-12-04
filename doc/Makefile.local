@@ -35,7 +35,7 @@ endif
 
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 
-.PHONY: sphinx-html sphinx-texinfo sphinx-info doc-prereqs
+.PHONY: sphinx-html sphinx-texinfo sphinx-info
 
 .PHONY: install-man build-man apidocs install-apidocs
 
@@ -47,18 +47,20 @@ $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.texi.stamp
 endif
 
 ifeq ($(HAVE_PYTHON3_CFFI),1)
-doc-prereqs: python-cffi-bindings
+DOC_PREREQS=bindings/python-cffi.stamp
+else
+DOC_PREREQS=
 endif
 
 sphinx-html: $(DOCBUILDDIR)/.html.stamp
 
-$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES) doc-prereqs
+$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES) $(DOC_PREREQS)
 	$(SPHINXBUILD) -b html -d $(DOCBUILDDIR)/html_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 	touch $@
 
 sphinx-texinfo: $(DOCBUILDDIR)/.texi.stamp
 
-$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES) doc-prereqs
+$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES) $(DOC_PREREQS)
 	$(SPHINXBUILD) -b texinfo -d $(DOCBUILDDIR)/texinfo_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
 	touch $@
 
