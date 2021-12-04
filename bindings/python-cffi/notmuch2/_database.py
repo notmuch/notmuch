@@ -31,6 +31,9 @@ class Mode(enum.Enum):
     READ_ONLY = capi.lib.NOTMUCH_DATABASE_MODE_READ_ONLY
     READ_WRITE = capi.lib.NOTMUCH_DATABASE_MODE_READ_WRITE
 
+class ConfigFile(enum.Enum):
+    EMPTY = b''
+    SEARCH = capi.ffi.NULL
 
 class QuerySortOrder(enum.Enum):
     OLDEST_FIRST = capi.lib.NOTMUCH_SORT_OLDEST_FIRST
@@ -71,6 +74,9 @@ class Database(base.NotmuchObject):
     :cvar EXCLUDE: Which messages to exclude from queries, ``TRUE``,
        ``FLAG``, ``FALSE`` or ``ALL``.  See the query documentation
        for details.
+    :cvar CONFIG: Control loading of config file. Enumeration of
+       ``EMPTY`` (don't load a config file), and ``SEARCH`` (search as
+       in :ref:`config_search`)
     :cvar AddedMessage: A namedtuple ``(msg, dup)`` used by
        :meth:`add` as return value.
     :cvar STR_MODE_MAP: A map mapping strings to :attr:`MODE` items.
@@ -81,9 +87,8 @@ class Database(base.NotmuchObject):
        still open.
 
     :param path: The directory of where the database is stored.  If
-       ``None`` the location will be read from the user's
-       configuration file, respecting the ``NOTMUCH_CONFIG``
-       environment variable if set.
+       ``None`` the location will be searched according to
+       :ref:`database`
     :type path: str, bytes, os.PathLike or pathlib.Path
     :param mode: The mode to open the database in.  One of
        :attr:`MODE.READ_ONLY` OR :attr:`MODE.READ_WRITE`.  For
@@ -91,6 +96,8 @@ class Database(base.NotmuchObject):
        :attr:`MODE.READ_ONLY` and ``rw`` for :attr:`MODE.READ_WRITE`.
     :type mode: :attr:`MODE` or str.
 
+    :param config: Where to load the configuration from, if any.
+    :type config: :attr:`CONFIG.EMPTY`, :attr:`CONFIG.SEARCH`, str, bytes, os.PathLike, pathlib.Path
     :raises KeyError: if an unknown mode string is used.
     :raises OSError: or subclasses if the configuration file can not
        be opened.
@@ -102,6 +109,7 @@ class Database(base.NotmuchObject):
     MODE = Mode
     SORT = QuerySortOrder
     EXCLUDE = QueryExclude
+    CONFIG = ConfigFile
     AddedMessage = collections.namedtuple('AddedMessage', ['msg', 'dup'])
     _db_p = base.MemoryPointer()
     STR_MODE_MAP = {
@@ -109,18 +117,40 @@ class Database(base.NotmuchObject):
         'rw': MODE.READ_WRITE,
     }
 
-    def __init__(self, path=None, mode=MODE.READ_ONLY):
+    @staticmethod
+    def _cfg_path_encode(path):
+        if isinstance(path,ConfigFile):
+            path = path.value
+        elif path is None:
+            path = capi.ffi.NULL
+        elif not hasattr(os, 'PathLike') and isinstance(path, pathlib.Path):
+            path = bytes(path)
+        else:
+            path = os.fsencode(path)
+        return path
+
+    @staticmethod
+    def _db_path_encode(path):
+        if path is None:
+            path = capi.ffi.NULL
+        elif not hasattr(os, 'PathLike') and isinstance(path, pathlib.Path):
+            path = bytes(path)
+        else:
+            path = os.fsencode(path)
+        return path
+
+    def __init__(self, path=None, mode=MODE.READ_ONLY, config=CONFIG.EMPTY):
         if isinstance(mode, str):
             mode = self.STR_MODE_MAP[mode]
         self.mode = mode
-        if path is None:
-            path = self.default_path()
-        if not hasattr(os, 'PathLike') and isinstance(path, pathlib.Path):
-            path = bytes(path)
+
         db_pp = capi.ffi.new('notmuch_database_t **')
         cmsg = capi.ffi.new('char**')
-        ret = capi.lib.notmuch_database_open_verbose(os.fsencode(path),
-                                                     mode.value, db_pp, cmsg)
+        ret = capi.lib.notmuch_database_open_with_config(self._db_path_encode(path),
+                                                         mode.value,
+                                                         self._cfg_path_encode(config),
+                                                         capi.ffi.NULL,
+                                                         db_pp, cmsg)
         if cmsg[0]:
             msg = capi.ffi.string(cmsg[0]).decode(errors='replace')
             capi.lib.free(cmsg[0])
@@ -132,17 +162,19 @@ class Database(base.NotmuchObject):
         self.closed = False
 
     @classmethod
-    def create(cls, path=None):
+    def create(cls, path=None, config=ConfigFile.EMPTY):
         """Create and open database in READ_WRITE mode.
 
         This is creates a new notmuch database and returns an opened
         instance in :attr:`MODE.READ_WRITE` mode.
 
-        :param path: The directory of where the database is stored.  If
-           ``None`` the location will be read from the user's
-           configuration file, respecting the ``NOTMUCH_CONFIG``
-           environment variable if set.
+        :param path: The directory of where the database is stored.
+           If ``None`` the location will be read searched by the
+           notmuch library (see notmuch(3)::notmuch_open_with_config).
         :type path: str, bytes or os.PathLike
+
+        :param config: The pathname of the notmuch configuration file.
+        :type config: :attr:`CONFIG.EMPTY`, :attr:`CONFIG.SEARCH`, str, bytes, os.PathLike, pathlib.Path
 
         :raises OSError: or subclasses if the configuration file can not
            be opened.
@@ -154,14 +186,13 @@ class Database(base.NotmuchObject):
 
         :returns: The newly created instance.
         """
-        if path is None:
-            path = cls.default_path()
-        if not hasattr(os, 'PathLike') and isinstance(path, pathlib.Path):
-            path = bytes(path)
+
         db_pp = capi.ffi.new('notmuch_database_t **')
         cmsg = capi.ffi.new('char**')
-        ret = capi.lib.notmuch_database_create_verbose(os.fsencode(path),
-                                                       db_pp, cmsg)
+        ret = capi.lib.notmuch_database_create_with_config(cls._db_path_encode(path),
+                                                           cls._cfg_path_encode(config),
+                                                           capi.ffi.NULL,
+                                                           db_pp, cmsg)
         if cmsg[0]:
             msg = capi.ffi.string(cmsg[0]).decode(errors='replace')
             capi.lib.free(cmsg[0])
@@ -176,7 +207,7 @@ class Database(base.NotmuchObject):
         ret = capi.lib.notmuch_database_destroy(db_pp[0])
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
-        return cls(path, cls.MODE.READ_WRITE)
+        return cls(path, cls.MODE.READ_WRITE, config=config)
 
     @staticmethod
     def default_path(cfg_path=None):
@@ -187,8 +218,8 @@ class Database(base.NotmuchObject):
 
         :param cfg_path: The pathname of the notmuch configuration file.
            If not specified tries to use the pathname provided in the
-           :env:`NOTMUCH_CONFIG` environment variable and falls back
-           to :file:`~/.notmuch-config.
+           :envvar:`NOTMUCH_CONFIG` environment variable and falls back
+           to :file:`~/.notmuch-config`.
         :type cfg_path: str, bytes, os.PathLike or pathlib.Path.
 
         :returns: The path of the database, which does not necessarily
@@ -198,8 +229,11 @@ class Database(base.NotmuchObject):
            be opened.
         :raises configparser.Error: or subclasses if the configuration
            file can not be parsed.
-        :raises NotmuchError if the config file does not have the
+        :raises NotmuchError: if the config file does not have the
            database.path setting.
+
+        .. deprecated:: 0.35
+           Use the ``config`` parameter to :meth:`__init__` or :meth:`__create__` instead.
         """
         if not cfg_path:
             cfg_path = _config_pathname()

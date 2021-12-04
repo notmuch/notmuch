@@ -246,7 +246,7 @@ _choose_database_path (void *ctx,
 }
 
 static notmuch_database_t *
-_alloc_notmuch ()
+_alloc_notmuch (const char *database_path, const char *config_path, const char *profile)
 {
     notmuch_database_t *notmuch;
 
@@ -262,6 +262,15 @@ _alloc_notmuch ()
     notmuch->transaction_count = 0;
     notmuch->transaction_threshold = 0;
     notmuch->view = 1;
+
+    notmuch->params = NOTMUCH_PARAM_NONE;
+    if (database_path)
+	notmuch->params |= NOTMUCH_PARAM_DATABASE;
+    if (config_path)
+	notmuch->params |= NOTMUCH_PARAM_CONFIG;
+    if (profile)
+	notmuch->params |= NOTMUCH_PARAM_PROFILE;
+
     return notmuch;
 }
 
@@ -509,7 +518,7 @@ notmuch_database_open_with_config (const char *database_path,
 
     _notmuch_init ();
 
-    notmuch = _alloc_notmuch ();
+    notmuch = _alloc_notmuch (database_path, config_path, profile);
     if (! notmuch) {
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
@@ -609,7 +618,7 @@ notmuch_database_create_with_config (const char *database_path,
 
     _notmuch_init ();
 
-    notmuch = _alloc_notmuch ();
+    notmuch = _alloc_notmuch (database_path, config_path, profile);
     if (! notmuch) {
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
@@ -811,7 +820,7 @@ notmuch_database_load_config (const char *database_path,
 
     _notmuch_init ();
 
-    notmuch = _alloc_notmuch ();
+    notmuch = _alloc_notmuch (database_path, config_path, profile);
     if (! notmuch) {
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;

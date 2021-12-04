@@ -25,7 +25,7 @@ for pathdir in ['.', '..']:
             version=infile.read().replace('\n','')
 
 # for autodoc
-sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'notmuch2'))
+sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'build', 'stage'))
 
 # read generated config
 for pathdir in ['.', '..']:

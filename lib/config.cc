@@ -259,7 +259,15 @@ _notmuch_config_load_from_database (notmuch_database_t *notmuch)
 
     for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
 	const char *key = notmuch_config_list_key (list);
-	char *normalized_val = _expand_path (list, key, notmuch_config_list_value (list));
+	char *normalized_val = NULL;
+
+	/* If we opened from a given path, do not overwrite it */
+	if (strcmp (key, "database.path") == 0 &&
+	    (notmuch->params & NOTMUCH_PARAM_DATABASE) &&
+	    notmuch->xapian_db)
+	    continue;
+
+	normalized_val = _expand_path (list, key, notmuch_config_list_value (list));
 	_notmuch_string_map_append (notmuch->config, key, normalized_val);
 	talloc_free (normalized_val);
     }
@@ -432,6 +440,13 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
 	    }
+
+	    /* If we opened from a given path, do not overwrite it */
+	    if (strcmp (absolute_key, "database.path") == 0 &&
+		(notmuch->params & NOTMUCH_PARAM_DATABASE) &&
+		notmuch->xapian_db)
+		continue;
+
 	    normalized_val = _expand_path (notmuch, absolute_key, val);
 	    _notmuch_string_map_set (notmuch->config, absolute_key, normalized_val);
 	    g_free (val);

@@ -259,6 +259,8 @@ squery.<name>
 FILES
 =====
 
+.. _config_search:
+
 CONFIGURATION
 -------------
 

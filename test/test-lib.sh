@@ -909,7 +909,7 @@ test_done () {
 test_python () {
     # Note: if there is need to print debug information from python program,
     # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
-    PYTHONPATH="$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+    PYTHONPATH="$NOTMUCH_BUILDDIR/bindings/python-cffi/build/stage:$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
 	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
