@@ -51,7 +51,7 @@ cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred at lib/directory.cc:XXX: Database has been closed
+A Xapian exception occurred at directory.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -68,7 +68,7 @@ cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred at lib/directory.cc:XXX: Database has been closed
+A Xapian exception occurred at directory.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

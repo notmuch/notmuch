@@ -529,7 +529,7 @@ notmuch_debug_sanitize () {
 }
 
 notmuch_exception_sanitize () {
-    perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
+    perl -pe 's,(A Xapian exception occurred at) .*?([^/]*[.]cc?):([0-9]*),\1 \2:XXX,'
 }
 
 notmuch_search_sanitize () {
