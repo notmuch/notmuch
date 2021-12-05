@@ -83,7 +83,8 @@ class NotmuchError(Exception):
         if self.message:
             return self.message
         elif self.status:
-            return capi.lib.notmuch_status_to_string(self.status)
+            char_str = capi.lib.notmuch_status_to_string(self.status)
+            return capi.ffi.string(char_str).decode(errors='replace')
         else:
             return 'Unknown error'
 
