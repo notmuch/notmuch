@@ -179,7 +179,7 @@ Note that the author string should not contain whitespace
      (:foreground "dark blue"))
     (t
      (:bold t)))
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for the author in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -236,7 +236,7 @@ Note that the author string should not contain whitespace
 
 (defface notmuch-tree-no-match-author-face
   nil
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for non-matching authors."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
