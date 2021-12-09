@@ -1,3 +1,10 @@
+notmuch (0.34.2-1) unstable; urgency=medium
+
+  * New upstream bugfix with release, with fixes database location in
+    library and notmuch2 python module.
+
+ -- David Bremner <bremner@debian.org>  Thu, 09 Dec 2021 08:48:53 -0400
+
 notmuch (0.34.1-1) unstable; urgency=medium
 
   * New upstream bugfix release. Fixes a memory deallocation error in
