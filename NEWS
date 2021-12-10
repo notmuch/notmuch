@@ -1,3 +1,25 @@
+Notmuch 0.34.2 (2021-12-09)
+===========================
+
+Library
+-------
+
+Fix a bug that wrongly resolved conflict between the `database_path`
+parameter to `notmuch_database_open_with_config` and configuration
+item `database.path` in favour of the latter.
+
+Python Bindings (notmuch2)
+--------------------------
+
+When building the documentation for the `notmuch2` python module,
+import from the built module, not a system wide installed one.
+
+The notmuch2.Database constructor now uses the library function
+`notmuch_database_open_with_config` to support the same configuration
+and database location options as the library does.
+
+Fix some unprintable exception objects.
+
 Notmuch 0.34.1 (2021-11-03)
 ===========================
 
