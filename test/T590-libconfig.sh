@@ -972,6 +972,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "open: database parameter overrides implicit config"
+cp $NOTMUCH_CONFIG ${NOTMUCH_CONFIG}.bak
 notmuch config set database.path ${MAIL_DIR}/nonexistent
 cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   const char *path = NULL;
@@ -982,6 +983,7 @@ cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   path = notmuch_database_get_path (db);
   printf ("path: %s\n", path ? path : "(null)");
 EOF
+cp ${NOTMUCH_CONFIG}.bak ${NOTMUCH_CONFIG}
 cat <<EOF> EXPECTED
 == stdout ==
 status: 0
