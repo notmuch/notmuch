@@ -994,4 +994,44 @@ EOF
 notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
 test_expect_equal_file EXPECTED OUTPUT.clean
 
+cat <<EOF > c_body
+  notmuch_status_t st = notmuch_database_open_with_config(NULL,
+							  NOTMUCH_DATABASE_MODE_READ_ONLY,
+							  "", NULL, &db, NULL);
+  printf ("status == SUCCESS: %d\n", st == NOTMUCH_STATUS_SUCCESS);
+  if (db) {
+    const char *mail_root = NULL;
+    mail_root = notmuch_config_get (db, NOTMUCH_CONFIG_MAIL_ROOT);
+    printf ("mail_root: %s\n", mail_root ? mail_root : "(null)");
+  }
+EOF
+
+cat <<EOF> EXPECTED.common
+== stdout ==
+status == SUCCESS: 0
+db == NULL: 1
+== stderr ==
+EOF
+
+test_begin_subtest "open/error: config=empty with no mail root in db "
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+cat c_head3 c_body c_tail3 | test_C
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED.common OUTPUT.clean
+
+test_begin_subtest "open/error: config=empty with no mail root in db (xdg)"
+test_subtest_known_broken
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+backup_database
+mkdir -p home/.local/share/notmuch
+mv mail/.notmuch home/.local/share/notmuch/default
+cat c_head3 c_body c_tail3 | test_C
+restore_database
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED.common OUTPUT.clean
+
 test_done
