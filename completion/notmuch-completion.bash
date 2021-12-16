@@ -103,12 +103,12 @@ _notmuch_search_terms()
 	    COMPREPLY=( $(compgen -P "from:" -W "`_notmuch_email ${cur}`" -- ${cur##from:}) )
 	    ;;
 	path:*)
-	    local path=`notmuch config get database.path`
+	    local path=`notmuch config get database.mail_root`
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -d "$path/${cur##path:}" | sed "s|^$path/||" ) )
 	    ;;
 	folder:*)
-	    local path=`notmuch config get database.path`
+	    local path=`notmuch config get database.mail_root`
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -d "$path/${cur##folder:}" | \
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
@@ -281,7 +281,7 @@ _notmuch_insert()
     $split &&
     case "${prev}" in
 	--folder)
-	    local path=`notmuch config get database.path`
+	    local path=`notmuch config get database.mail_root`
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -d "$path/${cur}" | \
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
