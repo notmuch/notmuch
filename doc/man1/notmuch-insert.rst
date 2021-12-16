@@ -14,7 +14,7 @@ DESCRIPTION
 
 **notmuch insert** reads a message from standard input and delivers it
 into the maildir directory given by configuration option
-**database.path**, then incorporates the message into the notmuch
+**database.mail_root**, then incorporates the message into the notmuch
 database. It is an alternative to using a separate tool to deliver the
 message then running :any:`notmuch-new(1)` afterwards.
 
@@ -38,7 +38,7 @@ Supported options for **insert** include
 .. option:: --folder=<folder>
 
    Deliver the message to the specified folder, relative to the
-   top-level directory given by the value of **database.path**. The
+   top-level directory given by the value of **database.mail_root**. The
    default is the empty string, which means delivering to the
    top-level directory.
 
