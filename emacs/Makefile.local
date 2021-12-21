@@ -42,7 +42,7 @@ emacs_mua := $(dir)/notmuch-emacs-mua
 emacs_mua_desktop := $(dir)/notmuch-emacs-mua.desktop
 
 emacs_images := \
-	$(srcdir)/$(dir)/notmuch-logo.png
+	$(srcdir)/$(dir)/notmuch-logo.svg
 
 emacs_bytecode = $(emacs_sources:.el=.elc)
 emacs_docstrings = $(emacs_sources:.el=.rsti)

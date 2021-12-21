@@ -198,7 +198,7 @@ fields of the search."
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
 
-(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
+(defimage notmuch-hello-logo ((:type svg :file "notmuch-logo.svg")))
 
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
