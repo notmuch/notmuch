@@ -55,6 +55,8 @@ subdirs="${subdirs} bindings"
 # the directory structure and copy Makefiles.
 if [ "$srcdir" != "." ]; then
 
+    NOTMUCH_BUILDDIR=$PWD
+
     for dir in . ${subdirs}; do
 	mkdir -p "$dir"
 	cp "$srcdir"/"$dir"/Makefile.local "$dir"
@@ -78,6 +80,8 @@ if [ "$srcdir" != "." ]; then
        "$srcdir"/bindings/python-cffi/notmuch2 \
        "$srcdir"/bindings/python-cffi/setup.py \
        bindings/python-cffi/
+else
+    NOTMUCH_BUILDDIR=$NOTMUCH_SRCDIR
 fi
 
 # Set several defaults (optionally specified by the user in
@@ -1245,6 +1249,7 @@ cat > Makefile.config <<EOF
 # directory (the current directory at the time configure was run).
 srcdir = ${srcdir}
 NOTMUCH_SRCDIR = ${NOTMUCH_SRCDIR}
+NOTMUCH_BUILDDIR = ${NOTMUCH_BUILDDIR}
 
 # subdirectories to build
 subdirs = ${subdirs}
