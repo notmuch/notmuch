@@ -117,6 +117,11 @@ build-man:
 install-man:
 	@echo "No sphinx, will not install man pages."
 else
+
+# it should be safe to depend on the stamp file, because it is created
+# after all roff files are moved into place.
+${MAN_GZIP_FILES}: ${DOCBUILDDIR}/.roff.stamp
+
 build-man: ${MAN_GZIP_FILES}
 install-man: ${MAN_GZIP_FILES}
 	mkdir -m0755 -p "$(DESTDIR)$(mandir)/man1"
