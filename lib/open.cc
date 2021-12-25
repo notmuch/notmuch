@@ -190,7 +190,6 @@ _choose_database_path (notmuch_database_t *notmuch,
 		       const char *profile,
 		       GKeyFile *key_file,
 		       const char **database_path,
-		       bool *split,
 		       char **message)
 {
     if (! *database_path) {
@@ -215,7 +214,7 @@ _choose_database_path (notmuch_database_t *notmuch,
 	if (status) {
 	    *database_path = NULL;
 	} else {
-	    *split = true;
+	    notmuch->params |= NOTMUCH_PARAM_SPLIT;
 	}
     }
 
@@ -513,7 +512,6 @@ notmuch_database_open_with_config (const char *database_path,
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
-    bool split = false;
 
     _notmuch_init ();
 
@@ -530,7 +528,7 @@ notmuch_database_open_with_config (const char *database_path,
     }
 
     if ((status = _choose_database_path (notmuch, profile, key_file,
-					 &database_path, &split,
+					 &database_path,
 					 &message)))
 	goto DONE;
 
@@ -610,7 +608,6 @@ notmuch_database_create_with_config (const char *database_path,
     char *message = NULL;
     GKeyFile *key_file = NULL;
     int err;
-    bool split = false;
 
     _notmuch_init ();
 
@@ -627,7 +624,7 @@ notmuch_database_create_with_config (const char *database_path,
     }
 
     if ((status = _choose_database_path (notmuch, profile, key_file,
-					 &database_path, &split, &message)))
+					 &database_path, &message)))
 	goto DONE;
 
     status = _db_dir_exists (database_path, &message);
@@ -636,18 +633,19 @@ notmuch_database_create_with_config (const char *database_path,
 
     _set_database_path (notmuch, database_path);
 
-    if (key_file && ! split) {
+    if (key_file && ! (notmuch->params & NOTMUCH_PARAM_SPLIT)) {
 	char *mail_root = notmuch_canonicalize_file_name (
 	    g_key_file_get_string (key_file, "database", "mail_root", NULL));
 	char *db_path = notmuch_canonicalize_file_name (database_path);
 
-	split = (mail_root && (0 != strcmp (mail_root, db_path)));
+	if (mail_root && (0 != strcmp (mail_root, db_path)))
+	    notmuch->params |= NOTMUCH_PARAM_SPLIT;
 
 	free (mail_root);
 	free (db_path);
     }
 
-    if (split) {
+    if (notmuch->params & NOTMUCH_PARAM_SPLIT) {
 	notmuch_path = database_path;
     } else {
 	if (! (notmuch_path = talloc_asprintf (notmuch, "%s/%s", database_path, ".notmuch"))) {
@@ -805,7 +803,6 @@ notmuch_database_load_config (const char *database_path,
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
-    bool split = false;
 
     _notmuch_init ();
 
@@ -828,7 +825,7 @@ notmuch_database_load_config (const char *database_path,
     }
 
     status = _choose_database_path (notmuch, profile, key_file,
-				    &database_path, &split, &message);
+				    &database_path, &message);
     switch (status) {
     case NOTMUCH_STATUS_NO_DATABASE:
     case NOTMUCH_STATUS_SUCCESS:

@@ -191,12 +191,17 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
 /*
- * Which parameters were explicit when the database was opened */
+ * explicit and implied parameters to open */
 typedef enum {
     NOTMUCH_PARAM_NONE		= 0,
+    /* database passed explicitely */
     NOTMUCH_PARAM_DATABASE	= 1 << 0,
+    /* config file passed explicitely */
     NOTMUCH_PARAM_CONFIG	= 1 << 1,
+    /* profile name passed explicitely */
     NOTMUCH_PARAM_PROFILE	= 1 << 2,
+    /* split (e.g. XDG) configuration */
+    NOTMUCH_PARAM_SPLIT		= 1 << 3,
 } notmuch_open_param_t;
 
 /*
