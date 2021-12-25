@@ -658,6 +658,9 @@ _notmuch_config_load_defaults (notmuch_database_t *notmuch)
 {
     notmuch_config_key_t key;
 
+    if (notmuch->config == NULL)
+	notmuch->config = _notmuch_string_map_create (notmuch);
+
     for (key = NOTMUCH_CONFIG_FIRST;
 	 key < NOTMUCH_CONFIG_LAST;
 	 key = notmuch_config_key_t (key + 1)) {
