@@ -311,6 +311,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Database exists, not recreated";
     case NOTMUCH_STATUS_BAD_QUERY_SYNTAX:
 	return "Syntax error in query";
+    case NOTMUCH_STATUS_NO_MAIL_ROOT:
+	return "No mail root found";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";

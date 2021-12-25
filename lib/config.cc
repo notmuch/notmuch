@@ -657,6 +657,7 @@ notmuch_status_t
 _notmuch_config_load_defaults (notmuch_database_t *notmuch)
 {
     notmuch_config_key_t key;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
     if (notmuch->config == NULL)
 	notmuch->config = _notmuch_string_map_create (notmuch);
@@ -669,11 +670,14 @@ _notmuch_config_load_defaults (notmuch_database_t *notmuch)
 
 	val = _notmuch_string_map_get (notmuch->config, key_string);
 	if (! val) {
+	    if (key == NOTMUCH_CONFIG_MAIL_ROOT && (notmuch->params & NOTMUCH_PARAM_SPLIT))
+		status = NOTMUCH_STATUS_NO_MAIL_ROOT;
+
 	    _notmuch_string_map_set (notmuch->config, key_string, _notmuch_config_default (notmuch,
 											   key));
 	}
     }
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 const char *

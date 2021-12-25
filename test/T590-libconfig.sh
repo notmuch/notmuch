@@ -1022,7 +1022,6 @@ notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
 test_expect_equal_file EXPECTED.common OUTPUT.clean
 
 test_begin_subtest "open/error: config=empty with no mail root in db (xdg)"
-test_subtest_known_broken
 old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
 unset NOTMUCH_CONFIG
 backup_database

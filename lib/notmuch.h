@@ -225,6 +225,10 @@ typedef enum {
      */
     NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
     /**
+     * No mail root could be deduced from parameters and environment
+     */
+    NOTMUCH_STATUS_NO_MAIL_ROOT,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
