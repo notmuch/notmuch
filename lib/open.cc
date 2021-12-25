@@ -662,16 +662,12 @@ notmuch_database_create_with_config (const char *database_path,
 
 	err = mkdir (notmuch_path, 0755);
 	if (err) {
-	    if (errno == EEXIST) {
-		status = NOTMUCH_STATUS_DATABASE_EXISTS;
-		talloc_free (notmuch);
-		notmuch = NULL;
-	    } else {
+	    if (errno != EEXIST) {
 		IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
 					 notmuch_path, strerror (errno)));
 		status = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
 	    }
-	    goto DONE;
 	}
     }
 

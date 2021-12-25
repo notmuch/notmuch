@@ -322,7 +322,6 @@ EOF
        *)
 	   backup_database
 	   test_begin_subtest ".notmuch without xapian/ handled gracefully ($config)"
-	   test_subtest_known_broken
 	   rm -r $XAPIAN_PATH
 	   test_expect_success "notmuch new"
 	   restore_database
