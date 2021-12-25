@@ -186,7 +186,7 @@ _db_dir_exists (const char *database_path, char **message)
 }
 
 static notmuch_status_t
-_choose_database_path (void *ctx,
+_choose_database_path (notmuch_database_t *notmuch,
 		       const char *profile,
 		       GKeyFile *key_file,
 		       const char **database_path,
@@ -201,16 +201,16 @@ _choose_database_path (void *ctx,
 	char *path = g_key_file_get_string (key_file, "database", "path", NULL);
 	if (path) {
 	    if (path[0] == '/')
-		*database_path = talloc_strdup (ctx, path);
+		*database_path = talloc_strdup (notmuch, path);
 	    else
-		*database_path = talloc_asprintf (ctx, "%s/%s", getenv ("HOME"), path);
+		*database_path = talloc_asprintf (notmuch, "%s/%s", getenv ("HOME"), path);
 	    g_free (path);
 	}
     }
     if (! *database_path) {
 	notmuch_status_t status;
 
-	*database_path = _xdg_dir (ctx, "XDG_DATA_HOME", ".local/share", profile);
+	*database_path = _xdg_dir (notmuch, "XDG_DATA_HOME", ".local/share", profile);
 	status = _db_dir_exists (*database_path, message);
 	if (status) {
 	    *database_path = NULL;
@@ -226,7 +226,7 @@ _choose_database_path (void *ctx,
     if (! *database_path) {
 	notmuch_status_t status;
 
-	*database_path = talloc_asprintf (ctx, "%s/mail", getenv ("HOME"));
+	*database_path = talloc_asprintf (notmuch, "%s/mail", getenv ("HOME"));
 	status = _db_dir_exists (*database_path, message);
 	if (status) {
 	    *database_path = NULL;
@@ -510,7 +510,6 @@ notmuch_database_open_with_config (const char *database_path,
 				   char **status_string)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-    void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
@@ -530,7 +529,7 @@ notmuch_database_open_with_config (const char *database_path,
 	goto DONE;
     }
 
-    if ((status = _choose_database_path (local, profile, key_file,
+    if ((status = _choose_database_path (notmuch, profile, key_file,
 					 &database_path, &split,
 					 &message)))
 	goto DONE;
@@ -549,8 +548,6 @@ notmuch_database_open_with_config (const char *database_path,
     status = _finish_open (notmuch, profile, mode, key_file, &message);
 
   DONE:
-    talloc_free (local);
-
     if (key_file)
 	g_key_file_free (key_file);
 
@@ -612,7 +609,6 @@ notmuch_database_create_with_config (const char *database_path,
     const char *notmuch_path = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
-    void *local = talloc_new (NULL);
     int err;
     bool split = false;
 
@@ -630,7 +626,7 @@ notmuch_database_create_with_config (const char *database_path,
 	goto DONE;
     }
 
-    if ((status = _choose_database_path (local, profile, key_file,
+    if ((status = _choose_database_path (notmuch, profile, key_file,
 					 &database_path, &split, &message)))
 	goto DONE;
 
@@ -654,7 +650,7 @@ notmuch_database_create_with_config (const char *database_path,
     if (split) {
 	notmuch_path = database_path;
     } else {
-	if (! (notmuch_path = talloc_asprintf (local, "%s/%s", database_path, ".notmuch"))) {
+	if (! (notmuch_path = talloc_asprintf (notmuch, "%s/%s", database_path, ".notmuch"))) {
 	    status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	    goto DONE;
 	}
@@ -707,8 +703,6 @@ notmuch_database_create_with_config (const char *database_path,
     }
 
   DONE:
-    talloc_free (local);
-
     if (key_file)
 	g_key_file_free (key_file);
 
@@ -808,7 +802,6 @@ notmuch_database_load_config (const char *database_path,
 			      char **status_string)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS, warning = NOTMUCH_STATUS_SUCCESS;
-    void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
@@ -834,7 +827,7 @@ notmuch_database_load_config (const char *database_path,
 	goto DONE;
     }
 
-    status = _choose_database_path (local, profile, key_file,
+    status = _choose_database_path (notmuch, profile, key_file,
 				    &database_path, &split, &message);
     switch (status) {
     case NOTMUCH_STATUS_NO_DATABASE:
@@ -870,8 +863,6 @@ notmuch_database_load_config (const char *database_path,
 	goto DONE;
 
   DONE:
-    talloc_free (local);
-
     if (status_string)
 	*status_string = message;
 
