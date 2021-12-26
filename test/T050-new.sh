@@ -351,6 +351,17 @@ test_expect_code 1 "NOTMUCH_NEW --debug 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
 
+test_begin_subtest ".notmuch only ignored at top level"
+test_subtest_known_broken
+generate_message '[dir]=foo/bar/.notmuch/cur' '[subject]="Do not ignore, very important"'
+NOTMUCH_NEW > OUTPUT
+notmuch search subject:Do-not-ignore | notmuch_search_sanitize >> OUTPUT
+cat <<EOF > EXPECTED
+Added 1 new message to the database.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Do not ignore, very important (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "RFC822 group names are indexed"
 test_subtest_known_broken
 generate_message [to]="undisclosed-recipients:"
