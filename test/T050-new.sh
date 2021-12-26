@@ -352,7 +352,6 @@ test_expect_code 1 "NOTMUCH_NEW --debug 2>&1"
 notmuch config set new.tags $OLDCONFIG
 
 test_begin_subtest ".notmuch only ignored at top level"
-test_subtest_known_broken
 generate_message '[dir]=foo/bar/.notmuch/cur' '[subject]="Do not ignore, very important"'
 NOTMUCH_NEW > OUTPUT
 notmuch search subject:Do-not-ignore | notmuch_search_sanitize >> OUTPUT

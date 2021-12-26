@@ -601,11 +601,12 @@ add_files (notmuch_database_t *notmuch,
 	    continue;
 	}
 
-	/* Ignore the .notmuch directory and any "tmp" directory
+	/* Ignore any top level .notmuch directory and any "tmp" directory
 	 * that appears within a maildir.
 	 */
 	if ((is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
-	    strcmp (entry->d_name, ".notmuch") == 0)
+	    (strcmp (entry->d_name, ".notmuch") == 0
+	     && (strcmp (path, state->mail_root)) == 0))
 	    continue;
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
