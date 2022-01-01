@@ -439,6 +439,7 @@ cat <<'EOF' >EXPECTED
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 unset MAILDIR
@@ -749,6 +750,7 @@ cat <<'EOF' >EXPECTED
 09: 'test_suite_other@notmuchmail.org;test_suite@otherdomain.org'
 10: 'Notmuch Test Suite'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -782,6 +784,7 @@ cat <<'EOF' >EXPECTED
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -858,6 +861,7 @@ maildir.synchronize_flags true
 new.ignore sekrit_junk
 new.tags unread;inbox
 search.exclude_tags foo;bar;fub
+show.extra_headers (null)
 test.key1 testvalue1
 test.key2 testvalue2
 user.name Notmuch Test Suite
