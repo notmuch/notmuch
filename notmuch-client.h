@@ -65,7 +65,7 @@ struct sprinter;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
-    struct sprinter *(*new_sprinter)(const void *ctx, FILE *stream);
+    struct sprinter *(*new_sprinter)(notmuch_database_t * db, FILE *stream);
     notmuch_status_t (*part)(const void *ctx, struct sprinter *sprinter,
 			     struct mime_node *node, int indent,
 			     const struct notmuch_show_params *params);

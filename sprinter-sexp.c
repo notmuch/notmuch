@@ -207,7 +207,7 @@ sexp_separator (struct sprinter *sp)
 }
 
 struct sprinter *
-sprinter_sexp_create (const void *ctx, FILE *stream)
+sprinter_sexp_create (notmuch_database_t *db, FILE *stream)
 {
     static const struct sprinter_sexp template = {
 	.vtable = {
@@ -227,11 +227,12 @@ sprinter_sexp_create (const void *ctx, FILE *stream)
     };
     struct sprinter_sexp *res;
 
-    res = talloc (ctx, struct sprinter_sexp);
+    res = talloc (db, struct sprinter_sexp);
     if (! res)
 	return NULL;
 
     *res = template;
+    res->vtable.notmuch = db;
     res->stream = stream;
     return &res->vtable;
 }

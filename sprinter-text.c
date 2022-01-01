@@ -114,7 +114,7 @@ text_map_key (unused (struct sprinter *sp), unused (const char *key))
 }
 
 struct sprinter *
-sprinter_text_create (const void *ctx, FILE *stream)
+sprinter_text_create (notmuch_database_t *db, FILE *stream)
 {
     static const struct sprinter_text template = {
 	.vtable = {
@@ -134,21 +134,22 @@ sprinter_text_create (const void *ctx, FILE *stream)
     };
     struct sprinter_text *res;
 
-    res = talloc (ctx, struct sprinter_text);
+    res = talloc (db, struct sprinter_text);
     if (! res)
 	return NULL;
 
     *res = template;
+    res->vtable.notmuch = db;
     res->stream = stream;
     return &res->vtable;
 }
 
 struct sprinter *
-sprinter_text0_create (const void *ctx, FILE *stream)
+sprinter_text0_create (notmuch_database_t *db, FILE *stream)
 {
     struct sprinter *sp;
 
-    sp = sprinter_text_create (ctx, stream);
+    sp = sprinter_text_create (db, stream);
     if (! sp)
 	return NULL;
 
