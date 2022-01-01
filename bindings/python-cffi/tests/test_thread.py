@@ -57,6 +57,13 @@ def test_iter(thread):
 def test_matched(thread):
     assert thread.matched == 1
 
+def test_matched_iter(thread):
+    count = 0
+    msgs = list(iter(thread))
+    for msg in msgs:
+        if msg.matched:
+            count += 1
+    assert count == thread.matched
 
 def test_authors_type(thread):
     assert isinstance(thread.authors, notmuch2.BinString)
