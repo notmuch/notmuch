@@ -12,8 +12,10 @@ main (int argc, char **argv)
     if (argc != 3)
 	return 1;
 
-    if (notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_ONLY,
-				       &notmuch, &message)) {
+    if (notmuch_database_open_with_config (argv[1], NOTMUCH_DATABASE_MODE_READ_ONLY,
+					   "",
+					   NULL,
+					   &notmuch, &message)) {
 	if (message) {
 	    fputs (message, stderr);
 	    free (message);
