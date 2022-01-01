@@ -145,9 +145,11 @@ headers = {
     Cc?:            string,
     Bcc?:           string,
     Reply-To?:      string,
-    Date:           string
+    Date:           string,
+    extra_header_pair*
 }
 
+extra_header_pair=  (header_name: string)
 # Encryption status (format_part_sprinter)
 encstatus = [{status: "good"|"bad"}]
 
