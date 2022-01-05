@@ -785,7 +785,7 @@ Complete list of currently available key bindings:
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
 		    (string-to-number
-		     (car (notmuch--process-lines notmuch-command "count")))))
+		     (car (notmuch--process-lines notmuch-command "count" "--exclude=false")))))
     (widget-insert " messages.\n")))
 
 (defun notmuch-hello-insert-saved-searches ()
