@@ -139,7 +139,7 @@ class Database(base.NotmuchObject):
             path = os.fsencode(path)
         return path
 
-    def __init__(self, path=None, mode=MODE.READ_ONLY, config=CONFIG.EMPTY):
+    def __init__(self, path=None, mode=MODE.READ_ONLY, config=CONFIG.SEARCH):
         if isinstance(mode, str):
             mode = self.STR_MODE_MAP[mode]
         self.mode = mode

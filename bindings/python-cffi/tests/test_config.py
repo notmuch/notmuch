@@ -23,9 +23,9 @@ class TestIter:
 
     def test_set_get(self, maildir):
         # Ensure get-set works from different db objects
-        with dbmod.Database.create(maildir.path) as db0:
+        with dbmod.Database.create(maildir.path, config=dbmod.Database.CONFIG.EMPTY) as db0:
             db0.config['spam'] = 'ham'
-        with dbmod.Database(maildir.path) as db1:
+        with dbmod.Database(maildir.path, config=dbmod.Database.CONFIG.EMPTY) as db1:
             assert db1.config['spam'] == 'ham'
 
     def test_get_keyerror(self, db):
