@@ -357,14 +357,14 @@ class Message(base.NotmuchObject):
         This method will only work if the message was created from a
         thread.  Otherwise it will yield no results.
 
-        :returns: An iterator yielding :class:`Message` instances.
+        :returns: An iterator yielding :class:`OwnedMessage` instances.
         :rtype: MessageIter
         """
         # The notmuch_messages_valid call accepts NULL and this will
         # become an empty iterator, raising StopIteration immediately.
         # Hence no return value checking here.
         msgs_p = capi.lib.notmuch_message_get_replies(self._msg_p)
-        return MessageIter(self, msgs_p, db=self._db)
+        return MessageIter(self, msgs_p, db=self._db, msg_cls=OwnedMessage)
 
     def __hash__(self):
         return hash(self.messageid)

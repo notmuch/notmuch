@@ -24,13 +24,11 @@ show_msgs(thread, 0)
 EOF
 
 test_begin_subtest "recursive traversal of replies (no crash)"
-test_subtest_known_broken
 test_python < recurse.py
 error=$?
 test_expect_equal "${error}" 0
 
 test_begin_subtest "recursive traversal of replies (output)"
-test_subtest_known_broken
 test_python < recurse.py
 tail -n 10 < OUTPUT > OUTPUT.sample
 cat <<EOF > EXPECTED
