@@ -12,7 +12,6 @@ add_email_corpus
 TEST_CFLAGS="-fsanitize=address"
 
 test_begin_subtest "open and destroy"
-test_subtest_known_broken
 test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} <<EOF
 #include <notmuch.h>
 #include <stdio.h>

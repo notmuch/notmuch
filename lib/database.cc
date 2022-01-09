@@ -755,6 +755,8 @@ notmuch_database_destroy (notmuch_database_t *notmuch)
     notmuch->date_range_processor = NULL;
     delete notmuch->last_mod_range_processor;
     notmuch->last_mod_range_processor = NULL;
+    delete notmuch->stemmer;
+    notmuch->stemmer = NULL;
 
     talloc_free (notmuch);
 
