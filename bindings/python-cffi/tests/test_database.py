@@ -13,7 +13,7 @@ import notmuch2._message as message
 
 @pytest.fixture
 def db(maildir):
-    with dbmod.Database.create(maildir.path) as db:
+    with dbmod.Database.create(maildir.path, config=notmuch2.Database.CONFIG.EMPTY) as db:
         yield db
 
 
@@ -293,7 +293,7 @@ class TestQuery:
         maildir.deliver(body='baz',
                         headers=[('In-Reply-To', '<{}>'.format(msgid))])
         notmuch('new')
-        with dbmod.Database(maildir.path, 'rw') as db:
+        with dbmod.Database(maildir.path, 'rw', config=notmuch2.Database.CONFIG.EMPTY) as db:
             yield db
 
     def test_count_messages(self, db):

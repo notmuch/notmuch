@@ -13,7 +13,7 @@ def thread(maildir, notmuch):
     maildir.deliver(body='bar',
                     headers=[('In-Reply-To', '<{}>'.format(msgid))])
     notmuch('new')
-    with notmuch2.Database(maildir.path) as db:
+    with notmuch2.Database(maildir.path, config=notmuch2.Database.CONFIG.EMPTY) as db:
         yield next(db.threads('foo'))
 
 

@@ -14,7 +14,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'notmuch'
-copyright = u'2009-2021, Carl Worth and many others'
+copyright = u'2009-2022, Carl Worth and many others'
 
 location = os.path.dirname(__file__)
 
