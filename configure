@@ -410,6 +410,18 @@ EOF
     exit 1
 fi
 
+printf "C compiler supports address sanitizer... "
+test_cmdline="${CC} ${CFLAGS} ${CPPFLAGS} -fsanitize=address minimal.c ${LDFLAGS} -o minimal"
+if ${test_cmdline} >/dev/null 2>&1 && ./minimal
+then
+    printf "Yes.\n"
+    have_asan=1
+else
+    printf "Nope, skipping those tests.\n"
+    have_asan=0
+fi
+unset test_cmdline
+
 printf "Reading libnotmuch version from source... "
 cat > _libversion.c <<EOF
 #include <stdio.h>
@@ -1547,6 +1559,9 @@ NOTMUCH_GMIME_X509_CERT_VALIDITY=${gmime_x509_cert_validity}
 
 # Whether GMime can verify signatures when decrypting with a session key:
 NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY=${gmime_verify_with_session_key}
+
+# Does the C compiler support the address sanitizer
+NOTMUCH_HAVE_ASAN=${have_asan}
 
 # do we have man pages?
 NOTMUCH_HAVE_MAN=$((have_sphinx))
