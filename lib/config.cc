@@ -435,17 +435,18 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	for (gchar **keys_p = keys; *keys_p; keys_p++) {
 	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
 	    char *normalized_val;
-	    val = g_key_file_get_string (file, *grp, *keys_p, NULL);
-	    if (! val) {
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
 
 	    /* If we opened from a given path, do not overwrite it */
 	    if (strcmp (absolute_key, "database.path") == 0 &&
 		(notmuch->params & NOTMUCH_PARAM_DATABASE) &&
 		notmuch->xapian_db)
 		continue;
+
+	    val = g_key_file_get_string (file, *grp, *keys_p, NULL);
+	    if (! val) {
+		status = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
+	    }
 
 	    normalized_val = _expand_path (notmuch, absolute_key, val);
 	    _notmuch_string_map_set (notmuch->config, absolute_key, normalized_val);
