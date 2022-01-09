@@ -1,3 +1,24 @@
+Notmuch 0.34.3 (2022-01-09)
+===========================
+
+Library
+-------
+
+Do not crash when presented with a .notmuch directory without a
+xapian/ subdirectory.
+
+Python Bindings (notmuch2)
+--------------------------
+
+Database constructor now searches for configuration by default. Pass
+`config=Database.CONFIG.EMPTY` to disable.
+
+The `Message.replies()` method now returns OwnedMessage objects, to
+prevent certain memory de-allocation errors.
+
+Fix for importing `notmuch2` module when building bindings
+documentation.
+
 Notmuch 0.34.2 (2021-12-09)
 ===========================
 
