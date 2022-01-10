@@ -222,6 +222,9 @@ Display of messages can be controlled by the following variables
 :index:`notmuch-message-headers-visible`
        |docstring::notmuch-message-headers-visible|
 
+:index:`notmuch-show-header-line`
+       |docstring::notmuch-show-header-line|
+
 .. _show-copy:
 
 Copy to kill-ring

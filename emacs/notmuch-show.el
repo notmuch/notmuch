@@ -84,6 +84,11 @@ visible for any given message."
   :type 'boolean
   :group 'notmuch-show)
 
+(defcustom notmuch-show-header-line t
+  "Show a header line with the current message's subject."
+  :type 'boolean
+  :group 'notmuch-show)
+
 (defcustom notmuch-show-relative-dates t
   "Display relative dates in the message summary line."
   :type 'boolean
@@ -1345,11 +1350,12 @@ If no messages match the query return NIL."
       (notmuch-show-mapc
        (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
       ;; Set the header line to the subject of the first message.
-      (setq header-line-format
-	    (replace-regexp-in-string "%" "%%"
-				      (notmuch-sanitize
-				       (notmuch-show-strip-re
-					(notmuch-show-get-subject)))))
+      (when notmuch-show-header-line
+	(setq header-line-format
+	      (replace-regexp-in-string "%" "%%"
+					(notmuch-sanitize
+					 (notmuch-show-strip-re
+					  (notmuch-show-get-subject))))))
       (run-hooks 'notmuch-show-hook)
       (if state
 	  (notmuch-show-apply-state state)
