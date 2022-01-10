@@ -1,3 +1,9 @@
+notmuch (0.34.2-1~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- David Bremner <bremner@debian.org>  Mon, 10 Jan 2022 11:03:13 -0400
+
 notmuch (0.34.2-1) unstable; urgency=medium
 
   * New upstream bugfix with release, with fixes database location in
