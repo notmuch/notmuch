@@ -195,7 +195,7 @@ will be signaled.
 
 Otherwise the output will be returned."
   (with-temp-buffer
-    (let ((status (apply #'call-process notmuch-command nil t nil args))
+    (let ((status (apply #'notmuch--call-process notmuch-command nil t nil args))
 	  (output (buffer-string)))
       (notmuch-check-exit-status status (cons notmuch-command args) output)
       output)))
@@ -206,7 +206,7 @@ Otherwise the output will be returned."
 (defun notmuch-cli-sane-p ()
   "Return t if the cli seems to be configured sanely."
   (unless notmuch--cli-sane-p
-    (let ((status (call-process notmuch-command nil nil nil
+    (let ((status (notmuch--call-process notmuch-command nil nil nil
 				"config" "get" "user.primary_email")))
       (setq notmuch--cli-sane-p (= status 0))))
   notmuch--cli-sane-p)
@@ -286,7 +286,7 @@ depending on the value of `notmuch-poll-script'."
   (message "Polling mail...")
   (if (stringp notmuch-poll-script)
       (unless (string-empty-p notmuch-poll-script)
-	(unless (equal (call-process notmuch-poll-script nil nil) 0)
+	(unless (equal (notmuch--call-process notmuch-poll-script nil nil) 0)
 	  (error "Notmuch: poll script `%s' failed!" notmuch-poll-script)))
     (notmuch-call-notmuch-process "new"))
   (message "Polling mail...done"))
@@ -639,7 +639,7 @@ the given type."
 				  ;; charset is US-ASCII. RFC6657
 				  ;; complicates this somewhat.
 				  'us-ascii)))))
-		       (apply #'call-process
+		       (apply #'notmuch--call-process
 			      notmuch-command nil '(t nil) nil args)
 		       (buffer-string))))))
     (when (and cache data)
@@ -860,6 +860,32 @@ You may need to restart Emacs or upgrade your notmuch package."))
       ;; `notmuch-logged-error' does not return.
       ))))
 
+(defmacro notmuch--apply-with-env (func &rest args)
+  `(let ((default-directory "~"))
+     (apply ,func ,@args)))
+
+(defun notmuch--process-lines (program &rest args)
+  "Wrap process-lines, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env #'process-lines program args))
+
+(defun notmuch--make-process (&rest args)
+  "Wrap make-process, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env #'make-process args))
+
+(defun notmuch--call-process-region (start end program
+					   &optional delete buffer display
+					   &rest args)
+  "Wrap call-process-region, binding DEFAULT-DIRECTORY to a safe
+default"
+  (notmuch--apply-with-env
+   #'call-process-region start end program delete buffer display args))
+
+(defun notmuch--call-process (program &optional infile destination display &rest args)
+  "Wrap call-process, binding DEFAULT-DIRECTORY to a safe default"
+  (notmuch--apply-with-env #'call-process program infile destination display args))
+
 (defun notmuch-call-notmuch--helper (destination args)
   "Helper for synchronous notmuch invocation commands.
 
@@ -874,9 +900,9 @@ for `call-process'.  ARGS is as described for
 	(otherwise
 	 (error "Unknown keyword argument: %s" (car args)))))
     (if (null stdin-string)
-	(apply #'call-process notmuch-command nil destination nil args)
+	(apply #'notmuch--call-process notmuch-command nil destination nil args)
       (insert stdin-string)
-      (apply #'call-process-region (point-min) (point-max)
+      (apply #'notmuch--call-process-region (point-min) (point-max)
 	     notmuch-command t destination nil args))))
 
 (defun notmuch-call-notmuch-process (&rest args)
@@ -933,7 +959,7 @@ status."
   (let* ((command (or (executable-find notmuch-command)
 		      (error "Command not found: %s" notmuch-command)))
 	 (err-buffer (generate-new-buffer " *notmuch-stderr*"))
-	 (proc (make-process
+	 (proc (notmuch--make-process
 		:name name
 		:buffer buffer
 		:command (cons command args)

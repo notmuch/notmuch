@@ -2,6 +2,21 @@
 test_description='"notmuch tag"'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+test_query_syntax () {
+    # use a tag with a space to stress the query string munging code.
+    local new_tag="${RANDOM} ${RANDOM}"
+    test_begin_subtest "sexpr query: $1"
+    backup_database
+    notmuch tag --query=sexp "+${new_tag}" -- "$1"
+    notmuch dump > OUTPUT
+    restore_database
+    backup_database
+    notmuch tag "+${new_tag}" -- "$2"
+    notmuch dump > EXPECTED
+    restore_database
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
+}
+
 add_message '[subject]=One'
 add_message '[subject]=Two'
 
@@ -309,5 +324,33 @@ chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(notmuch tag +something '*' 2>&1 | sed 's/: .*$//' )
 chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
+
+add_email_corpus
+
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+
+    test_query_syntax '(and "wonderful" "wizard")' 'wonderful and wizard'
+    test_query_syntax '(or "php" "wizard")' 'php or wizard'
+    test_query_syntax 'wizard' 'wizard'
+    test_query_syntax 'Wizard' 'Wizard'
+    test_query_syntax '(attachment notmuch-help.patch)' 'attachment:notmuch-help.patch'
+    test_query_syntax '(mimetype text/html)' 'mimetype:text/html'
+
+    test_begin_subtest "--batch --query=sexp"
+    notmuch dump --format=batch-tag > backup.tags
+    notmuch tag --batch --query=sexp  <<EOF
+    +all -- (or One Two)
+    +none -- (and One Two)
+    EOF
+    notmuch dump > OUTPUT
+    cat <<EOF > EXPECTED
+    #notmuch-dump batch-tag:3 config,properties,tags
+    +all +inbox +tag5 +unread -- id:msg-001@notmuch-test-suite
+    +all +inbox +tag4 +tag5 +unread -- id:msg-002@notmuch-test-suite
+EOF
+    notmuch restore --format=batch-tag < backup.tags
+    test_expect_equal_file EXPECTED OUTPUT
+
+fi
 
 test_done

@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION        5
-#define LIBNOTMUCH_MINOR_VERSION        4
+#define LIBNOTMUCH_MINOR_VERSION        5
 #define LIBNOTMUCH_MICRO_VERSION        0
 
 
@@ -220,6 +220,10 @@ typedef enum _notmuch_status {
      * Database exists, so not (re)-created
      */
     NOTMUCH_STATUS_DATABASE_EXISTS,
+    /**
+     * Syntax error in query
+     */
+    NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
     /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
@@ -429,6 +433,8 @@ notmuch_database_open_verbose (const char *path,
  * @retval NOTMUCH_STATUS_NULL_POINTER: The given \a database
  * argument is NULL.
  *
+ * @retval NOTMUCH_STATUS_NO_CONFIG: No config file was found. Fatal.
+ *
  * @retval NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
  * @retval NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
@@ -453,6 +459,9 @@ notmuch_database_open_with_config (const char *database_path,
  * Loads configuration from config file, database, and/or defaults
  *
  * For description of arguments, @see notmuch_database_open_with_config
+ *
+ * For errors other then NO_DATABASE and NO_CONFIG, *database is set to
+ * NULL.
  *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully loaded configuration.
  *
@@ -484,6 +493,9 @@ notmuch_database_load_config (const char *database_path,
  * configuration in 'config_path'.
  *
  * For description of arguments, @see notmuch_database_open_with_config
+ *
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL.
  *
  * @retval NOTMUCH_STATUS_SUCCESS: Successfully created the database.
  *
@@ -961,6 +973,16 @@ notmuch_query_t *
 notmuch_query_create (notmuch_database_t *database,
 		      const char *query_string);
 
+typedef enum {
+    NOTMUCH_QUERY_SYNTAX_XAPIAN,
+    NOTMUCH_QUERY_SYNTAX_SEXP
+} notmuch_query_syntax_t;
+
+notmuch_status_t
+notmuch_query_create_with_syntax (notmuch_database_t *database,
+				  const char *query_string,
+				  notmuch_query_syntax_t syntax,
+				  notmuch_query_t **output);
 /**
  * Sort values for notmuch_query_set_sort.
  */

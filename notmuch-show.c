@@ -1287,7 +1287,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     /* explicit decryption implies verification */
     if (params.crypto.decrypt == NOTMUCH_DECRYPT_NOSTASH ||
@@ -1353,8 +1353,6 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	}
     }
 
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
-
     query_string = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
@@ -1366,11 +1364,11 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch show", notmuch, status))
 	return EXIT_FAILURE;
-    }
 
     notmuch_query_set_sort (query, sort);
 

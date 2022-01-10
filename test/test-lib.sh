@@ -143,10 +143,8 @@ add_gpgsm_home () {
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
     mkdir -p -m 0700 "$GNUPGHOME"
-    openssl pkcs12 -export -passout pass: -inkey "$NOTMUCH_SRCDIR/test/smime/key+cert.pem" \
-	< "$NOTMUCH_SRCDIR/test/smime/test.crt" | \
-	gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
-	      --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<''
+    gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
+	  --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<'' <$NOTMUCH_SRCDIR/test/smime/0xE0972A47.p12
     fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
     echo "$fpr S relax" >> "$GNUPGHOME/trustlist.txt"
     gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
@@ -911,7 +909,7 @@ test_done () {
 test_python () {
     # Note: if there is need to print debug information from python program,
     # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
-    PYTHONPATH="$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+    PYTHONPATH="$NOTMUCH_BUILDDIR/bindings/python-cffi/build/stage:$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
 	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 

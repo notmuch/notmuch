@@ -25,7 +25,7 @@ for pathdir in ['.', '..']:
             version=infile.read().replace('\n','')
 
 # for autodoc
-sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'notmuch2'))
+sys.path.insert(0, os.path.join(location, '..', 'bindings', 'python-cffi', 'build', 'stage'))
 
 # read generated config
 for pathdir in ['.', '..']:
@@ -157,6 +157,10 @@ man_pages = [
 
     ('man7/notmuch-search-terms', 'notmuch-search-terms',
      u'syntax for notmuch queries',
+     [notmuch_authors], 7),
+
+    ('man7/notmuch-sexp-queries', 'notmuch-sexp-queries',
+     u's-expression syntax for notmuch queries',
      [notmuch_authors], 7),
 
     ('man1/notmuch-show', 'notmuch-show',

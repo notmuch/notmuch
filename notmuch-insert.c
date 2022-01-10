@@ -478,7 +478,7 @@ notmuch_insert_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     mail_root = notmuch_config_get (notmuch, NOTMUCH_CONFIG_MAIL_ROOT);
 
@@ -549,8 +549,6 @@ notmuch_insert_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (! newpath) {
 	return EXIT_FAILURE;
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     status = notmuch_process_shared_indexing_options (notmuch);
     if (status != NOTMUCH_STATUS_SUCCESS) {

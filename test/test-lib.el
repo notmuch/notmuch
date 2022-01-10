@@ -159,6 +159,33 @@ running, quit if it terminated."
 	 (lambda (x) `(prog1 ,x (notmuch-post-command)))
 	 body)))
 
+;; For testing functions in
+;; notmuch-{search,tree,unsorted}-result-format
+(defun notmuch-test-result-flags (format-string result)
+  (let ((tags-to-letters (quote (("attachment" . "&")
+				 ("signed" . "=")
+				 ("unread" . "u")
+				 ("inbox" . "i"))))
+	(tags (plist-get result :tags)))
+    (format format-string
+	    (mapconcat (lambda (t2l)
+			 (if (member (car t2l) tags)
+			     (cdr t2l)
+			   " "))
+		       tags-to-letters ""))))
+
+;; Log any signalled error (and other messages) to MESSAGES
+;; Log "COMPLETE" if forms complete without error.
+(defmacro test-log-error (&rest body)
+  `(progn
+     (with-current-buffer "*Messages*"
+       (let ((inhibit-read-only t)) (erase-buffer)))
+     (condition-case err
+       (progn ,@body
+	  (message "COMPLETE"))
+       (t (message "%s" err)))
+     (with-current-buffer "*Messages*" (test-output "MESSAGES"))))
+
 ;; For historical reasons, we hide deleted tags by default in the test
 ;; suite
 (setq notmuch-tag-deleted-formats

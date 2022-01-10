@@ -517,6 +517,7 @@ static const struct config_key
     { "index.decrypt",   false,  NULL },
     { "index.header.",   true,   validate_field_name },
     { "query.",          true,   NULL },
+    { "squery.",         true,   validate_field_name },
 };
 
 static const config_key_info_t *
@@ -679,6 +680,9 @@ _notmuch_config_list_built_with ()
     printf ("%sretry_lock=%s\n",
 	    BUILT_WITH_PREFIX,
 	    notmuch_built_with ("retry_lock") ? "true" : "false");
+    printf ("%ssexpr_query=%s\n",
+	    BUILT_WITH_PREFIX,
+	    notmuch_built_with ("sexpr_query") ? "true" : "false");
 }
 
 static int
@@ -707,10 +711,6 @@ notmuch_config_command (notmuch_database_t *notmuch, int argc, char *argv[])
     opt_index = notmuch_minimal_options ("config", argc, argv);
     if (opt_index < 0)
 	return EXIT_FAILURE;
-
-    if (notmuch_requested_db_uuid)
-	fprintf (stderr, "Warning: ignoring --uuid=%s\n",
-		 notmuch_requested_db_uuid);
 
     /* skip at least subcommand argument */
     argc -= opt_index;

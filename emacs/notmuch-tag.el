@@ -397,7 +397,7 @@ Return all tags if no search terms are given."
   (split-string
    (with-output-to-string
      (with-current-buffer standard-output
-       (apply 'call-process notmuch-command nil t
+       (apply 'notmuch--call-process notmuch-command nil t
 	      nil "search" "--output=tags" "--exclude=false" search-terms)))
    "\n+" t))
 
@@ -553,7 +553,7 @@ and vice versa."
 				name)
 			    (mapconcat #'identity tag-change " "))))
 	(push (list key name-string
-		    `(lambda () (,tag-function ',tag-change)))
+		    (lambda () (funcall tag-function tag-change)))
 	      action-map)))
     (push (list notmuch-tag-jump-reverse-key
 		(if reverse

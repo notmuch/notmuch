@@ -74,24 +74,55 @@
       notmuch-unthreaded-show-out
     notmuch-tree-show-out))
 
+(defcustom notmuch-tree-thread-symbols
+  '((prefix . " ")
+    (top . "─")
+    (top-tee . "┬")
+    (vertical . "│")
+    (vertical-tee . "├")
+    (bottom . "╰")
+    (arrow . "►"))
+  "Strings used to draw trees in notmuch tree results.
+Symbol keys denote where the corresponding string value is used:
+`prefix' is used at the top of the tree, followed by `top' if it
+has no children or `top-tee' if it does; `vertical' is a bar
+connecting with a response down the list skipping the current
+one, while `vertical-tee' marks the current message as a reply to
+the previous one; `bottom' is used at the bottom of threads.
+Finally, the `arrrow' string in the list is used as a pointer to
+every message.
+
+Common customizations include setting `prefix' to \"-\", to see
+equal-length prefixes, and `arrow' to an empty string or to a
+different kind of arrow point."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'notmuch-tree)
+
 (defcustom notmuch-tree-result-format
   `(("date" . "%12s  ")
     ("authors" . "%-20s")
-    ((("tree" . "%s")("subject" . "%s")) ." %-54s ")
+    ((("tree" . "%s")
+      ("subject" . "%s"))
+     . " %-54s ")
     ("tags" . "(%s)"))
-  "Result formatting for tree view. Supported fields are: date,
-authors, subject, tree, tags.  Tree means the thread tree
-box graphics. The field may also be a list in which case
-the formatting rules are applied recursively and then the
-output of all the fields in the list is inserted
-according to format-string.
+  "Result formatting for tree view.
 
-Note the author string should not contain
-whitespace (put it in the neighbouring fields instead).
-For example:
-        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
-                                          \(\"subject\" . \"%s\"\)\)\)"
-  :type '(alist :key-type (string) :value-type (string))
+Supported fields are: date, authors, subject, tree, tags.
+
+Tree means the thread tree box graphics. The field may
+also be a list in which case the formatting rules are
+applied recursively and then the output of all the fields
+in the list is inserted according to format-string.
+
+Note that the author string should not contain whitespace
+\(put it in the neighbouring fields instead). For example:
+    (setq notmuch-tree-result-format
+          '((\"authors\" . \"%-40s\")
+            (\"subject\" . \"%s\")))"
+  :type '(alist :key-type (choice string
+				  (alist :key-type string
+					 :value-type string))
+		:value-type string)
   :group 'notmuch-tree)
 
 (defcustom notmuch-unthreaded-result-format
@@ -99,19 +130,24 @@ For example:
     ("authors" . "%-20s")
     ((("subject" . "%s")) ." %-54s ")
     ("tags" . "(%s)"))
-  "Result formatting for unthreaded tree view. Supported fields are: date,
-authors, subject, tree, tags.  Tree means the thread tree
-box graphics. The field may also be a list in which case
-the formatting rules are applied recursively and then the
-output of all the fields in the list is inserted
-according to format-string.
+  "Result formatting for unthreaded tree view.
 
-Note the author string should not contain
-whitespace (put it in the neighbouring fields instead).
-For example:
-        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
-                                          \(\"subject\" . \"%s\"\)\)\)"
-  :type '(alist :key-type (string) :value-type (string))
+Supported fields are: date, authors, subject, tree, tags.
+
+Tree means the thread tree box graphics. The field may
+also be a list in which case the formatting rules are
+applied recursively and then the output of all the fields
+in the list is inserted according to format-string.
+
+Note that the author string should not contain whitespace
+\(put it in the neighbouring fields instead). For example:
+    (setq notmuch-unthreaded-result-format
+          '((\"authors\" . \"%-40s\")
+            (\"subject\" . \"%s\")))"
+  :type '(alist :key-type (choice string
+				  (alist :key-type string
+					 :value-type string))
+		:value-type string)
   :group 'notmuch-tree)
 
 (defun notmuch-tree-result-format ()
@@ -873,6 +909,9 @@ unchanged ADDRESS if parsing fails."
      ((listp field)
       (format format-string (notmuch-tree-format-field-list field msg)))
 
+     ((functionp field)
+      (funcall field format-string msg))
+
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-tree-match-date-face
@@ -968,20 +1007,20 @@ message together with all its descendents."
 	(replies (cadr tree)))
     (cond
      ((and (< 0 depth) (not last))
-      (push "├" tree-status))
+      (push (alist-get 'vertical-tee  notmuch-tree-thread-symbols) tree-status))
      ((and (< 0 depth) last)
-      (push "╰" tree-status))
+      (push (alist-get 'bottom notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) first last)
-      ;; Choice between these two variants is a matter of taste.
-      ;; (push "─" tree-status))
-      (push " " tree-status))
+      (push (alist-get 'prefix notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) first (not last))
-      (push "┬" tree-status))
+      (push (alist-get 'top-tee notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) (not first) last)
-      (push "╰" tree-status))
+      (push (alist-get 'bottom notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) (not first) (not last))
-      (push "├" tree-status)))
-    (push (concat (if replies "┬" "─") "►") tree-status)
+      (push (alist-get 'vertical-tee notmuch-tree-thread-symbols) tree-status)))
+    (push (concat (alist-get (if replies 'top-tee 'top) notmuch-tree-thread-symbols)
+		  (alist-get 'arrow notmuch-tree-thread-symbols))
+	  tree-status)
     (setq msg (plist-put msg :first (and first (eq 0 depth))))
     (setq msg (plist-put msg :tree-status tree-status))
     (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
@@ -990,7 +1029,7 @@ message together with all its descendents."
     (pop tree-status)
     (if last
 	(push " " tree-status)
-      (push "│" tree-status))
+      (push (alist-get 'vertical notmuch-tree-thread-symbols) tree-status))
     (notmuch-tree-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-tree-insert-thread (thread depth tree-status)
@@ -1098,7 +1137,7 @@ the same as for the function notmuch-tree."
 				   (concat " and (" query-context ")"))))
 	 (sort-arg (if oldest-first "--sort=oldest-first" "--sort=newest-first"))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
-    (when (equal (car (process-lines notmuch-command "count" search-args)) "0")
+    (when (equal (car (notmuch--process-lines notmuch-command "count" search-args)) "0")
       (setq search-args basic-query))
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch

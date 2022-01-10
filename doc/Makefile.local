@@ -4,7 +4,7 @@ dir := doc
 
 # You can set these variables from the command line.
 SPHINXOPTS    := -q
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = env LD_LIBRARY_PATH=${NOTMUCH_BUILDDIR}/lib sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
 # Internal variables.
@@ -35,7 +35,7 @@ endif
 
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 
-.PHONY: sphinx-html sphinx-texinfo sphinx-info
+.PHONY: sphinx-html sphinx-texinfo sphinx-info doc-prereqs
 
 .PHONY: install-man build-man apidocs install-apidocs
 
@@ -46,15 +46,19 @@ ifeq ($(WITH_EMACS),1)
 $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.texi.stamp : docstring.stamp
 endif
 
+ifeq ($(HAVE_PYTHON3_CFFI),1)
+doc-prereqs: python-cffi-bindings
+endif
+
 sphinx-html: $(DOCBUILDDIR)/.html.stamp
 
-$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES)
+$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES) doc-prereqs
 	$(SPHINXBUILD) -b html -d $(DOCBUILDDIR)/html_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 	touch $@
 
 sphinx-texinfo: $(DOCBUILDDIR)/.texi.stamp
 
-$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES)
+$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES) doc-prereqs
 	$(SPHINXBUILD) -b texinfo -d $(DOCBUILDDIR)/texinfo_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
 	touch $@
 

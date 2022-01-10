@@ -179,4 +179,25 @@ output=$(test_emacs '(notmuch-tree "tag:inbox")
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258493565-13508-1-git-send-email-keithp@keithp.com\""
 
+test_begin_subtest "Functions in tree-result-format"
+test_emacs '
+(let
+    ((notmuch-tree-result-format
+     (quote (("date" . "%12s  ")
+	     ("authors" . "%-20s")
+	     ((("tree" . "%s")
+	       ("subject" . "%s")) . " %-54s ")
+	     (notmuch-test-result-flags . "(%s)")))))
+  (notmuch-tree "tag:inbox")
+  (notmuch-test-wait)
+  (test-output))
+'
+test_expect_equal_file $EXPECTED/result-format-function OUTPUT
+
+test_begin_subtest "notmuch-tree with nonexistent CWD"
+test_emacs '(test-log-error
+	      (let ((default-directory "/nonexistent"))
+	        (notmuch-tree "*")))'
+test_expect_equal "$(cat MESSAGES)" "COMPLETE"
+
 test_done

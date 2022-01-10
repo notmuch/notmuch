@@ -226,6 +226,7 @@ output=$(notmuch dump | LC_ALL=C sort)
 expected='#= simple-encrypted@crypto.notmuchmail.org index.decryption=failure
 #notmuch-dump batch-tag:3 config,properties,tags
 +encrypted +inbox +unread -- id:basic-encrypted@crypto.notmuchmail.org
++encrypted +inbox +unread -- id:encrypted-rfc822-attachment@crypto.notmuchmail.org
 +encrypted +inbox +unread -- id:encrypted-signed@crypto.notmuchmail.org
 +encrypted +inbox +unread -- id:simple-encrypted@crypto.notmuchmail.org'
 test_expect_equal \

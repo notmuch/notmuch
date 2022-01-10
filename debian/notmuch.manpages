@@ -17,3 +17,4 @@ usr/share/man/man1/notmuch.1.gz
 usr/share/man/man5/notmuch-hooks.5.gz
 usr/share/man/man7/notmuch-properties.7.gz
 usr/share/man/man7/notmuch-search-terms.7.gz
+usr/share/man/man7/notmuch-sexp-queries.7.gz

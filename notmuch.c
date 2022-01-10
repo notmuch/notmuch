@@ -49,22 +49,38 @@ notmuch_command (notmuch_database_t *notmuch, int argc, char *argv[]);
 static int
 _help_for (const char *topic);
 
+static void
+notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
+
 static bool print_version = false, print_help = false;
-const char *notmuch_requested_db_uuid = NULL;
+static const char *notmuch_requested_db_uuid = NULL;
+static int query_syntax = NOTMUCH_QUERY_SYNTAX_XAPIAN;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
     { .opt_bool = &print_version, .name = "version" },
     { .opt_bool = &print_help, .name = "help" },
     { .opt_string = &notmuch_requested_db_uuid, .name = "uuid" },
+    { .opt_keyword = &query_syntax, .name = "query", .keywords =
+	  (notmuch_keyword_t []){ { "infix", NOTMUCH_QUERY_SYNTAX_XAPIAN },
+				  { "sexp", NOTMUCH_QUERY_SYNTAX_SEXP },
+				  { 0, 0 } } },
+
     { }
 };
 
+notmuch_query_syntax_t
+shared_option_query_syntax ()
+{
+    return query_syntax;
+}
+
 /* any subcommand wanting to support these options should call
  * inherit notmuch_shared_options and call
- * notmuch_process_shared_options (subcommand_name);
+ * notmuch_process_shared_options (notmuch, subcommand_name);
+ * with notmuch = an open database, or NULL.
  */
 void
-notmuch_process_shared_options (const char *subcommand_name)
+notmuch_process_shared_options (notmuch_database_t *notmuch, const char *subcommand_name)
 {
     if (print_version) {
 	printf ("notmuch " STRINGIFY (NOTMUCH_VERSION) "\n");
@@ -74,6 +90,14 @@ notmuch_process_shared_options (const char *subcommand_name)
     if (print_help) {
 	int ret = _help_for (subcommand_name);
 	exit (ret);
+    }
+
+    if (notmuch) {
+	notmuch_exit_if_unmatched_db_uuid (notmuch);
+    } else {
+	if (notmuch_requested_db_uuid)
+	    fprintf (stderr, "Warning: ignoring --uuid=%s\n",
+		     notmuch_requested_db_uuid);
     }
 }
 
@@ -97,7 +121,7 @@ notmuch_minimal_options (const char *subcommand_name,
 	return -1;
 
     /* We can't use argv here as it is sometimes NULL */
-    notmuch_process_shared_options (subcommand_name);
+    notmuch_process_shared_options (NULL, subcommand_name);
     return opt_index;
 }
 
@@ -280,7 +304,7 @@ be supported in the future.\n", notmuch_format_version);
     }
 }
 
-void
+static void
 notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch)
 {
     const char *uuid = NULL;
@@ -480,7 +504,7 @@ main (int argc, char *argv[])
     if (opt_index < argc)
 	command_name = argv[opt_index];
 
-    notmuch_process_shared_options (command_name);
+    notmuch_process_shared_options (NULL, command_name);
 
     command = find_command (command_name);
     /* if command->function is NULL, try external command */

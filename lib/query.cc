@@ -30,6 +30,7 @@ struct _notmuch_query {
     notmuch_string_list_t *exclude_terms;
     notmuch_exclude_t omit_excluded;
     bool parsed;
+    notmuch_query_syntax_t syntax;
     Xapian::Query xapian_query;
     std::set<std::string> terms;
 };
@@ -84,9 +85,9 @@ _notmuch_query_destructor (notmuch_query_t *query)
     return 0;
 }
 
-notmuch_query_t *
-notmuch_query_create (notmuch_database_t *notmuch,
-		      const char *query_string)
+static notmuch_query_t *
+_notmuch_query_constructor (notmuch_database_t *notmuch,
+			    const char *query_string)
 {
     notmuch_query_t *query;
 
@@ -105,7 +106,10 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->notmuch = notmuch;
 
-    query->query_string = talloc_strdup (query, query_string);
+    if (query_string)
+	query->query_string = talloc_strdup (query, query_string);
+    else
+	query->query_string = NULL;
 
     query->sort = NOTMUCH_SORT_NEWEST_FIRST;
 
@@ -116,42 +120,142 @@ notmuch_query_create (notmuch_database_t *notmuch,
     return query;
 }
 
+notmuch_query_t *
+notmuch_query_create (notmuch_database_t *notmuch,
+		      const char *query_string)
+{
+
+    notmuch_query_t *query;
+    notmuch_status_t status;
+
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       NOTMUCH_QUERY_SYNTAX_XAPIAN,
+					       &query);
+    if (status)
+	return NULL;
+
+    return query;
+}
+
+notmuch_status_t
+notmuch_query_create_with_syntax (notmuch_database_t *notmuch,
+				  const char *query_string,
+				  notmuch_query_syntax_t syntax,
+				  notmuch_query_t **output)
+{
+
+    notmuch_query_t *query;
+
+    if (! output)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    query = _notmuch_query_constructor (notmuch, query_string);
+    if (! query)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    if (syntax == NOTMUCH_QUERY_SYNTAX_SEXP && ! HAVE_SFSEXP) {
+	_notmuch_database_log (notmuch, "sexp query parser not available");
+	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+    }
+
+    query->syntax = syntax;
+
+    *output = query;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static void
+_notmuch_query_cache_terms (notmuch_query_t *query)
+{
+    /* Xapian doesn't support skip_to on terms from a query since
+     *  they are unordered, so cache a copy of all terms in
+     *  something searchable.
+     */
+
+    for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
+	 t != query->xapian_query.get_terms_end (); ++t)
+	query->terms.insert (*t);
+}
+
+notmuch_status_t
+_notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
+				       std::string query_string,
+				       Xapian::Query &output,
+				       std::string &msg)
+{
+    try {
+	if (query_string == "" || query_string == "*") {
+	    output = Xapian::Query::MatchAll;
+	} else {
+	    output =
+		notmuch->query_parser->
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+	}
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    _notmuch_database_log (notmuch,
+				   "A Xapian exception occurred parsing query: %s\n",
+				   error.get_msg ().c_str ());
+	    _notmuch_database_log_append (notmuch,
+					  "Query string was: %s\n",
+					  query_string.c_str ());
+	    notmuch->exception_reported = true;
+	}
+
+	msg = error.get_msg ();
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
+{
+    notmuch_status_t status;
+    std::string msg; /* ignored */
+
+    status =  _notmuch_query_string_to_xapian_query (query->notmuch, query->query_string,
+						     query->xapian_query, msg);
+    if (status)
+	return status;
+
+    query->parsed = true;
+
+    _notmuch_query_cache_terms (query);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+_notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
+{
+    notmuch_status_t status;
+
+    if (query->parsed)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    status = _notmuch_sexp_string_to_xapian_query (query->notmuch, query->query_string,
+						   query->xapian_query);
+    if (status)
+	return status;
+
+    _notmuch_query_cache_terms (query);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static notmuch_status_t
 _notmuch_query_ensure_parsed (notmuch_query_t *query)
 {
     if (query->parsed)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    try {
-	query->xapian_query =
-	    query->notmuch->query_parser->
-	    parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+#if HAVE_SFSEXP
+    if (query->syntax == NOTMUCH_QUERY_SYNTAX_SEXP)
+	return _notmuch_query_ensure_parsed_sexpr (query);
+#endif
 
-	/* Xapian doesn't support skip_to on terms from a query since
-	 *  they are unordered, so cache a copy of all terms in
-	 *  something searchable.
-	 */
-
-	for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
-	     t != query->xapian_query.get_terms_end (); ++t)
-	    query->terms.insert (*t);
-
-	query->parsed = true;
-
-    } catch (const Xapian::Error &error) {
-	if (! query->notmuch->exception_reported) {
-	    _notmuch_database_log (query->notmuch,
-				   "A Xapian exception occurred parsing query: %s\n",
-				   error.get_msg ().c_str ());
-	    _notmuch_database_log_append (query->notmuch,
-					  "Query string was: %s\n",
-					  query->query_string);
-	    query->notmuch->exception_reported = true;
-	}
-
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-    }
-    return NOTMUCH_STATUS_SUCCESS;
+    return _notmuch_query_ensure_parsed_xapian (query);
 }
 
 const char *
@@ -249,7 +353,6 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 				 notmuch_messages_t **out)
 {
     notmuch_database_t *notmuch = query->notmuch;
-    const char *query_string = query->query_string;
     notmuch_mset_messages_t *messages;
     notmuch_status_t status;
 
@@ -279,13 +382,9 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	Xapian::MSet mset;
 	Xapian::MSetIterator iterator;
 
-	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0) {
-	    final_query = mail_query;
-	} else {
-	    final_query = Xapian::Query (Xapian::Query::OP_AND,
-					 mail_query, query->xapian_query);
-	}
+	final_query = Xapian::Query (Xapian::Query::OP_AND,
+				     mail_query, query->xapian_query);
+
 	messages->base.excluded_doc_ids = NULL;
 
 	if ((query->omit_excluded != NOTMUCH_EXCLUDE_FALSE) && (query->exclude_terms)) {
@@ -606,7 +705,6 @@ notmuch_status_t
 _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsigned *count_out)
 {
     notmuch_database_t *notmuch = query->notmuch;
-    const char *query_string = query->query_string;
     Xapian::doccount count = 0;
     notmuch_status_t status;
 
@@ -622,13 +720,8 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	Xapian::Query final_query, exclude_query;
 	Xapian::MSet mset;
 
-	if (strcmp (query_string, "") == 0 ||
-	    strcmp (query_string, "*") == 0) {
-	    final_query = mail_query;
-	} else {
-	    final_query = Xapian::Query (Xapian::Query::OP_AND,
-					 mail_query, query->xapian_query);
-	}
+	final_query = Xapian::Query (Xapian::Query::OP_AND,
+				     mail_query, query->xapian_query);
 
 	exclude_query = _notmuch_exclude_tags (query);
 
@@ -727,4 +820,52 @@ notmuch_database_t *
 notmuch_query_get_database (const notmuch_query_t *query)
 {
     return query->notmuch;
+}
+
+notmuch_status_t
+_notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Query subquery,
+		       Xapian::Query &output, std::string &msg)
+{
+    std::set<std::string> terms;
+    const std::string term_prefix =  _find_prefix (field);
+
+    if (_debug_query ()) {
+	fprintf (stderr, "Expanding subquery:\n%s\n",
+		 subquery.get_description ().c_str ());
+    }
+
+    try {
+	Xapian::Enquire enquire (*notmuch->xapian_db);
+	Xapian::MSet mset;
+
+	enquire.set_weighting_scheme (Xapian::BoolWeight ());
+	enquire.set_query (subquery);
+
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+
+	for (Xapian::MSetIterator iterator = mset.begin (); iterator != mset.end (); iterator++) {
+	    Xapian::docid doc_id = *iterator;
+	    Xapian::Document doc = notmuch->xapian_db->get_document (doc_id);
+	    Xapian::TermIterator i = doc.termlist_begin ();
+
+	    for (i.skip_to (term_prefix);
+		 i != doc.termlist_end () && ((*i).rfind (term_prefix, 0) == 0); i++) {
+		terms.insert (*i);
+	    }
+	}
+	output = Xapian::Query (Xapian::Query::OP_OR, terms.begin (), terms.end ());
+	if (_debug_query ()) {
+	    fprintf (stderr, "Expanded query:\n%s\n",
+		     subquery.get_description ().c_str ());
+	}
+
+    } catch (const Xapian::Error &error) {
+	_notmuch_database_log (notmuch,
+			       "A Xapian exception occurred expanding query: %s\n",
+			       error.get_msg ().c_str ());
+	msg = error.get_msg ();
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
 }

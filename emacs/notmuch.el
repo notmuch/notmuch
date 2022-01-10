@@ -88,18 +88,21 @@
     ("authors" . "%-20s ")
     ("subject" . "%s ")
     ("tags" . "(%s)"))
-  "Search result formatting. Supported fields are:
-	date, count, authors, subject, tags
+  "Search result formatting.
+
+Supported fields are: date, count, authors, subject, tags.
 For example:
-	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
-					     \(\"subject\" . \"%s\"\)\)\)
+    (setq notmuch-search-result-format
+          '((\"authors\" . \"%-40s\")
+            (\"subject\" . \"%s\")))
+
 Line breaks are permitted in format strings (though this is
 currently experimental).  Note that a line break at the end of an
 \"authors\" field will get elided if the authors list is long;
 place it instead at the beginning of the following field.  To
 enter a line break when setting this variable with setq, use \\n.
 To enter a line break in customize, press \\[quoted-insert] C-j."
-  :type '(alist :key-type (string) :value-type (string))
+  :type '(alist :key-type string :value-type string)
   :group 'notmuch-search)
 
 ;; The name of this variable `notmuch-init-file' is consistent with the
@@ -830,26 +833,28 @@ non-authors is found, assume that all of the authors match."
       (insert padding))))
 
 (defun notmuch-search-insert-field (field format-string result)
-  (cond
-   ((string-equal field "date")
-    (insert (propertize (format format-string (plist-get result :date_relative))
-			'face 'notmuch-search-date)))
-   ((string-equal field "count")
-    (insert (propertize (format format-string
-				(format "[%s/%s]" (plist-get result :matched)
-					(plist-get result :total)))
-			'face 'notmuch-search-count)))
-   ((string-equal field "subject")
-    (insert (propertize (format format-string
-				(notmuch-sanitize (plist-get result :subject)))
-			'face 'notmuch-search-subject)))
-   ((string-equal field "authors")
-    (notmuch-search-insert-authors
-     format-string (notmuch-sanitize (plist-get result :authors))))
-   ((string-equal field "tags")
-    (let ((tags (plist-get result :tags))
-	  (orig-tags (plist-get result :orig-tags)))
-      (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
+  (pcase field
+    ((pred functionp)
+     (insert (funcall field format-string result)))
+    ("date"
+     (insert (propertize (format format-string (plist-get result :date_relative))
+			 'face 'notmuch-search-date)))
+    ("count"
+     (insert (propertize (format format-string
+				 (format "[%s/%s]" (plist-get result :matched)
+					 (plist-get result :total)))
+			 'face 'notmuch-search-count)))
+    ("subject"
+     (insert (propertize (format format-string
+				 (notmuch-sanitize (plist-get result :subject)))
+			 'face 'notmuch-search-subject)))
+    ("authors"
+     (notmuch-search-insert-authors format-string
+				    (notmuch-sanitize (plist-get result :authors))))
+    ("tags"
+     (let ((tags (plist-get result :tags))
+	   (orig-tags (plist-get result :orig-tags)))
+       (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
 
 (defun notmuch-search-show-result (result pos)
   "Insert RESULT at POS."
@@ -935,7 +940,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (let* ((all-tags
 	  (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
-		  (process-lines notmuch-command "search" "--output=tags" "*")))
+		  (notmuch--process-lines notmuch-command "search" "--output=tags" "*")))
 	 (completions
 	  (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
 			"subject:" "attachment:")

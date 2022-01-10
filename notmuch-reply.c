@@ -464,8 +464,8 @@ guess_from_in_received_by (notmuch_database_t *notmuch, const char *received)
  * (last Received: header added) and try to extract from them
  * indications to which email address this message was delivered.
  *
- * The Received: header is special in our get_header function and is
- * always concatenated.
+ * The Received: header is among special ones in our get_header function
+ * and is always concatenated.
  *
  * Return the address that was found, if any, and NULL otherwise.
  */
@@ -498,6 +498,9 @@ guess_from_in_received_headers (notmuch_message_t *message)
  * Try to find user's email address in one of the extra To-like
  * headers: Envelope-To, X-Original-To, and Delivered-To (searched in
  * that order).
+ *
+ * The Delivered-To: header is among special ones in our get_header
+ * function and is always concatenated.
  *
  * Return the address that was found, if any, and NULL otherwise.
  */
@@ -716,6 +719,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
     };
     int format = FORMAT_DEFAULT;
     int reply_all = true;
+    notmuch_status_t status;
 
     notmuch_opt_desc_t options[] = {
 	{ .opt_keyword = &format, .name = "format", .keywords =
@@ -743,7 +747,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     notmuch_exit_if_unsupported_format ();
 
@@ -758,13 +762,11 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
-
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch reply", notmuch, status))
 	return EXIT_FAILURE;
-    }
 
     if (do_reply (notmuch, query, &params, format, reply_all) != 0)
 	return EXIT_FAILURE;

@@ -325,4 +325,11 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+if [[ NOTMUCH_HAVE_SFSEXP = 1 ]]; then
+    test_begin_subtest "sexpr query: all messages"
+    notmuch address '*' > EXPECTED
+    notmuch address --query=sexp '()' > OUTPUT
+    test_expect_equal_file EXPECTED OUTPUT
+fi
+
 test_done

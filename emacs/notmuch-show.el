@@ -279,7 +279,7 @@ position of the message in the thread."
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
 	 (with-current-buffer buf
 	   (let ((coding-system-for-read 'no-conversion))
-	     (call-process notmuch-command nil t nil "show" "--format=raw" id))
+	     (notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
 	   ,@body)
 	 (kill-buffer buf)))))
 
@@ -719,21 +719,23 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-message/rfc822 (msg part _content-type _nth depth _button)
-  (let* ((message (car (plist-get part :content)))
-	 (body (car (plist-get message :body)))
-	 (start (point)))
-    ;; Override `notmuch-message-headers' to force `From' to be
-    ;; displayed.
-    (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
-      (notmuch-show-insert-headers (plist-get message :headers)))
-    ;; Blank line after headers to be compatible with the normal
-    ;; message display.
-    (insert "\n")
-    ;; Show the body
-    (notmuch-show-insert-bodypart msg body depth)
-    (when notmuch-show-indent-multipart
-      (indent-rigidly start (point) 1)))
-  t)
+  (let ((message (car (plist-get part :content))))
+    (and
+     message
+     (let ((body (car (plist-get message :body)))
+	   (start (point)))
+       ;; Override `notmuch-message-headers' to force `From' to be
+       ;; displayed.
+       (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
+	 (notmuch-show-insert-headers (plist-get message :headers)))
+       ;; Blank line after headers to be compatible with the normal
+       ;; message display.
+       (insert "\n")
+       ;; Show the body
+       (notmuch-show-insert-bodypart msg body depth)
+       (when notmuch-show-indent-multipart
+	 (indent-rigidly start (point) 1))
+       t))))
 
 (defun notmuch-show-insert-part-text/plain (msg part _content-type _nth depth button)
   ;; For backward compatibility we want to apply the text/plain hook
@@ -2032,7 +2034,7 @@ to show, nil otherwise."
     (pop-to-buffer-same-window buf)
     (erase-buffer)
     (let ((coding-system-for-read 'no-conversion))
-      (call-process notmuch-command nil t nil "show" "--format=raw" id))
+      (notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
@@ -2078,19 +2080,19 @@ message."
     (let ((cwd default-directory)
 	  (buf (get-buffer-create (concat "*notmuch-pipe*"))))
       (with-current-buffer buf
-	(setq buffer-read-only nil)
-	(erase-buffer)
-	;; Use the originating buffer's working directory instead of
-	;; that of the pipe buffer.
-	(cd cwd)
-	(let ((exit-code (call-process-shell-command shell-command nil buf)))
-	  (goto-char (point-max))
-	  (set-buffer-modified-p nil)
-	  (setq buffer-read-only t)
-	  (unless (zerop exit-code)
-	    (pop-to-buffer buf)
-	    (message (format "Command '%s' exited abnormally with code %d"
-			     shell-command exit-code))))))))
+	(setq buffer-read-only t)
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  ;; Use the originating buffer's working directory instead of
+	  ;; that of the pipe buffer.
+	  (cd cwd)
+	  (let ((exit-code (call-process-shell-command shell-command nil buf)))
+	    (goto-char (point-max))
+	    (set-buffer-modified-p nil)
+	    (unless (zerop exit-code)
+	      (pop-to-buffer buf)
+	      (message (format "Command '%s' exited abnormally with code %d"
+			       shell-command exit-code)))))))))
 
 (defun notmuch-show-tag-message (&rest tag-changes)
   "Change tags for the current message.

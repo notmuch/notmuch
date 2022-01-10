@@ -56,6 +56,7 @@ typedef struct {
     int format_sel;
     sprinter_t *format;
     int exclude;
+    int query_syntax;
     notmuch_query_t *query;
     int sort;
     int output;
@@ -709,8 +710,6 @@ _notmuch_search_prepare (search_context_t *ctx, int argc, char *argv[])
 
     notmuch_exit_if_unsupported_format ();
 
-    notmuch_exit_if_unmatched_db_uuid (ctx->notmuch);
-
     query_str = query_string_from_args (ctx->notmuch, argc, argv);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
@@ -721,11 +720,11 @@ _notmuch_search_prepare (search_context_t *ctx, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    ctx->query = notmuch_query_create (ctx->notmuch, query_str);
-    if (ctx->query == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    if (print_status_database ("notmuch search", ctx->notmuch,
+			       notmuch_query_create_with_syntax (ctx->notmuch, query_str,
+								 shared_option_query_syntax (),
+								 &ctx->query)))
 	return EXIT_FAILURE;
-    }
 
     notmuch_query_set_sort (ctx->query, ctx->sort);
 
@@ -771,6 +770,7 @@ static search_context_t search_context = {
     .format_sel = NOTMUCH_FORMAT_TEXT,
     .exclude = NOTMUCH_EXCLUDE_TRUE,
     .sort = NOTMUCH_SORT_NEWEST_FIRST,
+    .query_syntax = NOTMUCH_QUERY_SYNTAX_XAPIAN,
     .output = 0,
     .offset = 0,
     .limit = -1, /* unlimited */
@@ -827,7 +827,7 @@ notmuch_search_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (ctx->output != OUTPUT_FILES && ctx->output != OUTPUT_MESSAGES &&
 	ctx->dupe != -1) {
@@ -893,7 +893,7 @@ notmuch_address_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (! (ctx->output & (OUTPUT_SENDER | OUTPUT_RECIPIENTS)))
 	ctx->output |= OUTPUT_SENDER;

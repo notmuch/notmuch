@@ -2,15 +2,14 @@
 test_description="\"notmuch reply\" in several variations"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-test_begin_subtest "Basic reply"
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite@notmuchmail.org \
 	     [subject]=notmuch-reply-test \
 	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
 	    '[body]="basic reply test"'
 
-output=$(notmuch reply id:${gen_msg_id} 2>&1 && echo OK)
-test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+cat <<EOF > basic.expected
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
 In-Reply-To: <${gen_msg_id}>
@@ -18,7 +17,19 @@ References: <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > basic reply test
-OK"
+OK
+EOF
+
+test_begin_subtest "Basic reply"
+notmuch reply id:${gen_msg_id} >OUTPUT 2>&1 && echo OK >> OUTPUT
+test_expect_equal_file basic.expected OUTPUT
+
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+
+    test_begin_subtest "Basic reply (query=sexp)"
+    notmuch reply --query=sexp "(id ${gen_msg_id})" >OUTPUT 2>&1 && echo OK >> OUTPUT
+    test_expect_equal_file basic.expected OUTPUT
+fi
 
 test_begin_subtest "Multiple recipients"
 add_message '[from]="Sender <sender@example.com>"' \
@@ -245,6 +256,26 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > From guessing
 OK"
 
+test_begin_subtest "From guessing: multiple Delivered-To"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Recipient <recipient@example.com>"' \
+	    '[subject]="From guessing"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="From guessing"' \
+	    '[header]="Delivered-To: test_suite_other@notmuchmail.org
+Delivered-To: test_suite@notmuchmail.org"'
+
+output=$(notmuch reply id:${gen_msg_id} 2>&1 && echo OK)
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: From guessing
+To: Sender <sender@example.com>, Recipient <recipient@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> From guessing
+OK"
+
 test_begin_subtest "Reply with RFC 2047-encoded headers"
 add_message '[subject]="=?iso-8859-1?q?=e0=df=e7?="' \
 	    '[from]="=?utf-8?q?=e2=98=83?= <snowman@example.com>"' \
@@ -281,7 +312,7 @@ test_expect_equal_json "$output" '
         "crypto": {},
         "date_relative": "2010-01-05",
         "excluded": false,
-        "filename": ["'${MAIL_DIR}'/msg-014"],
+        "filename": ["'${MAIL_DIR}'/msg-015"],
         "headers": {
             "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
             "From": "\u2603 <snowman@example.com>",

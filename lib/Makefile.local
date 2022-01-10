@@ -63,7 +63,8 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/features.cc	\
 	$(dir)/prefix.cc	\
 	$(dir)/open.cc		\
-	$(dir)/init.cc
+	$(dir)/init.cc		\
+	$(dir)/parse-sexp.cc
 
 libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 

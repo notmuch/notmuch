@@ -40,6 +40,10 @@
 
 #include <xapian.h>
 
+#if HAVE_SFSEXP
+#include <sexp.h>
+#endif
+
 /* Bit masks for _notmuch_database::features.  Features are named,
  * independent aspects of the database schema.
  *
@@ -186,6 +190,39 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_WILDCARD | \
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
+/*
+ * Which parameters were explicit when the database was opened */
+typedef enum {
+    NOTMUCH_PARAM_NONE		= 0,
+    NOTMUCH_PARAM_DATABASE	= 1 << 0,
+    NOTMUCH_PARAM_CONFIG	= 1 << 1,
+    NOTMUCH_PARAM_PROFILE	= 1 << 2,
+} notmuch_open_param_t;
+
+/*
+ * define bitwise operators to hide casts */
+
+inline notmuch_open_param_t
+operator| (notmuch_open_param_t a, notmuch_open_param_t b)
+{
+    return static_cast<notmuch_open_param_t>(
+	static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+inline notmuch_open_param_t&
+operator|= (notmuch_open_param_t &a, notmuch_open_param_t b)
+{
+    a = a | b;
+    return a;
+}
+
+inline notmuch_open_param_t
+operator& (notmuch_open_param_t a, notmuch_open_param_t b)
+{
+    return static_cast<notmuch_open_param_t>(
+	static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
+
 struct _notmuch_database {
     bool exception_reported;
 
@@ -232,6 +269,7 @@ struct _notmuch_database {
      */
     unsigned long view;
     Xapian::QueryParser *query_parser;
+    Xapian::Stem *stemmer;
     Xapian::TermGenerator *term_gen;
     Xapian::RangeProcessor *value_range_processor;
     Xapian::RangeProcessor *date_range_processor;
@@ -244,6 +282,9 @@ struct _notmuch_database {
 
     /* Cached and possibly overridden configuration */
     notmuch_string_map_t *config;
+
+    /* Track what parameters were specified when opening */
+    notmuch_open_param_t params;
 };
 
 /* Prior to database version 3, features were implied by the database
@@ -300,4 +341,38 @@ _notmuch_database_setup_standard_query_fields (notmuch_database_t *notmuch);
 notmuch_status_t
 _notmuch_database_setup_user_query_fields (notmuch_database_t *notmuch);
 
+#if __cplusplus
+/* query.cc */
+notmuch_status_t
+_notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
+				       std::string query_string,
+				       Xapian::Query &output,
+				       std::string &msg);
+/* parse-sexp.cc */
+notmuch_status_t
+_notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
+				      Xapian::Query &output);
+
+notmuch_status_t
+_notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Query subquery,
+		       Xapian::Query &output, std::string &msg);
+
+/* regexp-fields.cc */
+notmuch_status_t
+_notmuch_regexp_to_query (notmuch_database_t *notmuch, Xapian::valueno slot, std::string field,
+			  std::string regexp_str,
+			  Xapian::Query &output, std::string &msg);
+
+/* thread-fp.cc */
+notmuch_status_t
+_notmuch_query_name_to_query (notmuch_database_t *notmuch, const std::string name,
+			      Xapian::Query &output);
+
+#if HAVE_SFSEXP
+/* parse-sexp.cc */
+notmuch_status_t
+_notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
+				      Xapian::Query &output);
+#endif
+#endif
 #endif

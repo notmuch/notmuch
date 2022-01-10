@@ -122,7 +122,8 @@ const notmuch_opt_desc_t notmuch_shared_options[] = {
 const char *notmuch_requested_db_uuid = NULL;
 
 void
-notmuch_process_shared_options (unused (const char *dummy))
+notmuch_process_shared_options (unused (notmuch_database_t *notmuch),
+				unused (const char *dummy))
 {
 }
 

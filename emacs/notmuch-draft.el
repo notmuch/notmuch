@@ -42,7 +42,7 @@
   :group 'notmuch)
 
 (defcustom notmuch-draft-tags '("+draft")
-  "List of tags changes to apply to a draft message when it is saved in the database.
+  "List of tag changes to apply when saving a draft message in the database.
 
 Tags starting with \"+\" (or not starting with either \"+\" or
 \"-\") in the list will be added, and tags starting with \"-\"
@@ -239,7 +239,7 @@ applied to newly inserted messages)."
 (defun notmuch-draft-resume (id)
   "Resume editing of message with id ID."
   ;; Used by command `notmuch-show-resume-message'.
-  (let* ((tags (process-lines notmuch-command "search" "--output=tags"
+  (let* ((tags (notmuch--process-lines notmuch-command "search" "--output=tags"
 			      "--exclude=false" id))
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
     (when (or draft
@@ -249,7 +249,7 @@ applied to newly inserted messages)."
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((coding-system-for-read 'no-conversion))
-	(call-process notmuch-command nil t nil "show" "--format=raw" id))
+	(notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
       (mime-to-mml)
       (goto-char (point-min))
       (when (re-search-forward "^$" nil t)

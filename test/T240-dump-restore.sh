@@ -117,6 +117,19 @@ test_begin_subtest "dump -- from:cworth"
 notmuch dump -- from:cworth > dump-dash-cworth.actual
 test_expect_equal_file dump-cworth.expected dump-dash-cworth.actual
 
+
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+
+    test_begin_subtest "dump --query=sexp -- '(from cworth)'"
+    notmuch dump --query=sexp -- '(from cworth)' > dump-dash-cworth.actual2
+    test_expect_equal_file_nonempty dump-cworth.expected dump-dash-cworth.actual2
+
+    test_begin_subtest "dump --query=sexp --output=outfile '(from cworth)'"
+    notmuch dump --output=dump-outfile-cworth.actual2 --query=sexp '(from cworth)'
+    test_expect_equal_file dump-cworth.expected dump-outfile-cworth.actual2
+
+fi
+
 test_begin_subtest "dump --output=outfile from:cworth"
 notmuch dump --output=dump-outfile-cworth.actual from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-cworth.actual

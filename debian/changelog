@@ -1,3 +1,44 @@
+notmuch (0.34.2-1) unstable; urgency=medium
+
+  * New upstream bugfix with release, with fixes database location in
+    library and notmuch2 python module.
+  * Build only against the default version of python, to avoid including
+    multiple .abi3.so files in python3-notmuch2
+
+ -- David Bremner <bremner@debian.org>  Fri, 10 Dec 2021 09:35:43 -0400
+
+notmuch (0.34.1-1) unstable; urgency=medium
+
+  * New upstream bugfix release. Fixes a memory deallocation error in
+    libnotmuch.
+
+ -- David Bremner <bremner@debian.org>  Wed, 03 Nov 2021 10:20:33 -0300
+
+notmuch (0.34-1) unstable; urgency=medium
+
+  * New upstream release
+  * Adds s-expression based query parser (man notmuch-sexp-queries).
+  * Bug fix: "notmuch breaks on directory removal", thanks to Joerg
+    Jaspert (Closes: #922536).
+  * Respect notmuch-show-text/html-blocked-images for renderer w3m
+    (Closes: #934082).
+  * Bug fix: "add an option to change the database path", thanks to
+    Michael Gold (Closes: #887041) (actually fixed in 0.32)
+
+ -- David Bremner <bremner@debian.org>  Wed, 20 Oct 2021 11:15:23 -0300
+
+notmuch (0.34~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Fri, 15 Oct 2021 08:50:57 -0300
+
+notmuch (0.33.2-1) unstable; urgency=medium
+
+  * Upstream fix for flaky/hanging tests in T355-smime
+
+ -- David Bremner <bremner@debian.org>  Thu, 30 Sep 2021 08:27:10 -0300
+
 notmuch (0.33.1-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Rebuild for bullseye-backports.

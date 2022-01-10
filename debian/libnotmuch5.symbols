@@ -114,6 +114,7 @@ libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_query_count_threads@Base 0.10~rc1
  notmuch_query_count_threads_st@Base 0.21~rc1
  notmuch_query_create@Base 0.3
+ notmuch_query_create_with_syntax@Base 0.34~rc0
  notmuch_query_destroy@Base 0.3
  notmuch_query_get_database@Base 0.21~rc1
  notmuch_query_get_query_string@Base 0.4

@@ -39,8 +39,8 @@ handle_sigint (unused (int sig))
 
 
 static char *
-_optimize_tag_query (void *ctx, const char *orig_query_string,
-		     const tag_op_list_t *list)
+_optimize_tag_query_infix (void *ctx, const char *orig_query_string,
+			   const tag_op_list_t *list)
 {
     /* This is subtler than it looks.  Xapian ignores the '-' operator
      * at the beginning both queries and parenthesized groups and,
@@ -88,6 +88,33 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     return query_string;
 }
 
+static char *
+_optimize_tag_query (void *ctx, const char *orig_query_string,
+		     notmuch_query_syntax_t stx,
+		     const tag_op_list_t *list)
+{
+    char *query_string;
+
+    if (stx == NOTMUCH_QUERY_SYNTAX_XAPIAN)
+	return _optimize_tag_query_infix (ctx, orig_query_string, list);
+
+    /* Don't optimize if there are no tag changes. */
+    if (tag_op_list_size (list) == 0)
+	return talloc_strdup (ctx, orig_query_string);
+
+    query_string = talloc_asprintf (ctx, "(and %s", orig_query_string);
+    for (size_t i = 0; i < tag_op_list_size (list) && query_string; i++) {
+	query_string = talloc_asprintf_append_buffer (
+	    query_string, tag_op_list_isremove (list, i) ? " (tag \"%s\")" : " (not (tag \"%s\"))",
+	    tag_op_list_tag (list, i));
+    }
+
+    if (query_string)
+	query_string = talloc_strdup_append_buffer (query_string, ")");
+
+    return query_string;
+}
+
 /* Tag messages matching 'query_string' according to 'tag_ops'
  */
 static int
@@ -104,7 +131,9 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     if (! (flags & TAG_FLAG_REMOVE_ALL)) {
 	/* Optimize the query so it excludes messages that already
 	 * have the specified set of tags. */
-	query_string = _optimize_tag_query (ctx, query_string, tag_ops);
+	query_string = _optimize_tag_query (ctx, query_string,
+					    shared_option_query_syntax (),
+					    tag_ops);
 	if (query_string == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
 	    return 1;
@@ -112,11 +141,11 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
 	flags |= TAG_FLAG_PRE_OPTIMIZED;
     }
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory.\n");
+    status = notmuch_query_create_with_syntax (notmuch, query_string,
+					       shared_option_query_syntax (),
+					       &query);
+    if (print_status_database ("notmuch tag", notmuch, status))
 	return 1;
-    }
 
     /* tagging is not interested in any special sort order */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
@@ -220,7 +249,7 @@ notmuch_tag_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    notmuch_process_shared_options (argv[0]);
+    notmuch_process_shared_options (notmuch, argv[0]);
 
     if (input_file_name) {
 	batch = true;
@@ -260,8 +289,6 @@ notmuch_tag_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	    return EXIT_FAILURE;
 	}
     }
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     if (print_status_database (
 	    "notmuch restore",

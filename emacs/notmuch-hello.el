@@ -144,9 +144,11 @@ a plist. Supported properties are
                    Possible values are `oldest-first', `newest-first'
                    or nil. Nil means use the default sort order.
   :search-type     Specify whether to run the search in search-mode,
-                   tree mode or unthreaded mode. Set to 'tree to specify tree
-                   mode, 'unthreaded to specify unthreaded mode, and set to nil
-                   (or anything except tree and unthreaded) to specify search mode.
+                   tree mode or unthreaded mode. Set to `tree' to
+                   specify tree mode, 'unthreaded to specify
+                   unthreaded mode, and set to nil (or anything
+                   except tree and unthreaded) to specify search
+                   mode.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
@@ -494,7 +496,7 @@ diagonal."
 		    (widget-get widget :notmuch-search-oldest-first)))))
 
 (defun notmuch-saved-search-count (search)
-  (car (process-lines notmuch-command "count" search)))
+  (car (notmuch--process-lines notmuch-command "count" search)))
 
 (defun notmuch-hello-tags-per-line (widest)
   "Determine how many tags to show per line and how wide they
@@ -567,7 +569,7 @@ options will be handled as specified for
 					(or (plist-get options :filter-count)
 					    (plist-get options :filter))))
 	 "\n")))
-    (unless (= (call-process-region (point-min) (point-max) notmuch-command
+    (unless (= (notmuch--call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
       (notmuch-logged-error
        "notmuch count --batch failed"
@@ -746,7 +748,7 @@ Complete list of currently available key bindings:
 		    (list (cons tag
 				(concat "tag:"
 					(notmuch-escape-boolean-term tag))))))
-	     (process-lines notmuch-command "search" "--output=tags" "*")))
+	     (notmuch--process-lines notmuch-command "search" "--output=tags" "*")))
 
 (defun notmuch-hello-insert-header ()
   "Insert the default notmuch-hello header."
@@ -784,7 +786,7 @@ Complete list of currently available key bindings:
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
 		    (string-to-number
-		     (car (process-lines notmuch-command "count")))))
+		     (car (notmuch--process-lines notmuch-command "count")))))
     (widget-insert " messages.\n")))
 
 (defun notmuch-hello-insert-saved-searches ()
@@ -869,16 +871,16 @@ Supports the following entries in OPTIONS as a plist:
 	(start (point)))
     (if is-hidden
 	(widget-create 'push-button
-		       :notify `(lambda (widget &rest _ignore)
-				  (setq notmuch-hello-hidden-sections
-					(delete ,title notmuch-hello-hidden-sections))
-				  (notmuch-hello-update))
+		       :notify (lambda (&rest _ignore)
+				 (setq notmuch-hello-hidden-sections
+				       (delete title notmuch-hello-hidden-sections))
+				 (notmuch-hello-update))
 		       "show")
       (widget-create 'push-button
-		     :notify `(lambda (widget &rest _ignore)
-				(add-to-list 'notmuch-hello-hidden-sections
-					     ,title)
-				(notmuch-hello-update))
+		     :notify (lambda (&rest _ignore)
+			       (add-to-list 'notmuch-hello-hidden-sections
+					    title)
+			       (notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
     (unless is-hidden

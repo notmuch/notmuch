@@ -56,6 +56,8 @@ class NotmuchError(Exception):
                 NoDatabaseError,
             capi.lib.NOTMUCH_STATUS_DATABASE_EXISTS:
                 DatabaseExistsError,
+            capi.lib.NOTMUCH_STATUS_BAD_QUERY_SYNTAX:
+                QuerySyntaxError,
         }
         return types[status]
 
@@ -81,7 +83,8 @@ class NotmuchError(Exception):
         if self.message:
             return self.message
         elif self.status:
-            return capi.lib.notmuch_status_to_string(self.status)
+            char_str = capi.lib.notmuch_status_to_string(self.status)
+            return capi.ffi.string(char_str).decode(errors='replace')
         else:
             return 'Unknown error'
 
@@ -103,6 +106,7 @@ class IllegalArgumentError(NotmuchError): pass
 class NoConfigError(NotmuchError): pass
 class NoDatabaseError(NotmuchError): pass
 class DatabaseExistsError(NotmuchError): pass
+class QuerySyntaxError(NotmuchError): pass
 
 class ObjectDestroyedError(NotmuchError):
     """The object has already been destroyed and it's memory freed.

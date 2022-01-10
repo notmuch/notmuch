@@ -291,11 +291,16 @@ _notmuch_message_file_get_header (notmuch_message_file_t *message,
     if (value)
 	return value;
 
-    if (strcasecmp (header, "received") == 0) {
+    if (strcasecmp (header, "received") == 0 ||
+	strcasecmp (header, "delivered-to") == 0) {
 	/*
-	 * The Received: header is special. We concatenate all
-	 * instances of the header as we use this when analyzing the
-	 * path the mail has taken from sender to recipient.
+	 * The Received: header is special. We concatenate all instances of the
+	 * header as we use this when analyzing the path the mail has taken
+	 * from sender to recipient.
+	 *
+	 * Similarly, multiple instances of Delivered-To may be present. We
+	 * concatenate them so the one with highest priority may be picked (eg.
+	 * primary_email before other_email).
 	 */
 	decoded = _notmuch_message_file_get_combined_header (message, header);
     } else {
