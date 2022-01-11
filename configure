@@ -312,11 +312,21 @@ for option; do
 	true
     elif [ "${option%%=*}" = '--host' ] ; then
 	true
+    elif [ "${option%%=*}" = '--bindir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--sbindir' ] ; then
+	true
     elif [ "${option%%=*}" = '--datadir' ] ; then
 	true
     elif [ "${option%%=*}" = '--localstatedir' ] ; then
 	true
+    elif [ "${option%%=*}" = '--sharedstatedir' ] ; then
+	true
     elif [ "${option%%=*}" = '--libexecdir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--exec-prefix' ] ; then
+	true
+    elif [ "${option%%=*}" = '--program-prefix' ] ; then
 	true
     elif [ "${option}" = '--disable-maintainer-mode' ] ; then
 	true
