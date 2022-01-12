@@ -145,7 +145,7 @@ add_gpgsm_home () {
     mkdir -p -m 0700 "$GNUPGHOME"
     gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
 	  --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<'' <$NOTMUCH_SRCDIR/test/smime/0xE0972A47.p12
-    fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
+    fpr=$(gpgsm --batch --with-colons --list-key test_suite@notmuchmail.org | awk -F: '/^fpr/ {print $10}')
     echo "$fpr S relax" >> "$GNUPGHOME/trustlist.txt"
     gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
     echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
