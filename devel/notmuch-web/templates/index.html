@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Common tags</h2>
+<ul>
+{% for tag in tags %}
+  <li><a href="search/tag:{{ tag|url }}">{{ tag|e }}</a></li>
+{% endfor %}
+</ul>
+{% endblock content %}

@@ -1,3 +1,15 @@
+New add-on tool: notmuch-web
+-----------------------------
+
+The new contrib/ tool `notmuch-web` is a very thin web client.  It
+supports a full search interface for one user: there is no facility
+for multiple users provided today.  See the notmuch-web README file
+for more information.
+
+Be careful about running it on a network-connected system: it will
+expose a web interface that requires no authentication but exposes
+your mail store.
+
 Notmuch 0.35 (2022-02-06)
 =========================
 

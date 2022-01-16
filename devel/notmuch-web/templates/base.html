@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"
+  />
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<link type="text/css" href="{{sprefix}}/css/jquery-ui.css" rel="stylesheet" />
+<link type="text/css" href="{{sprefix}}/css/notmuch-0.1.css" rel="stylesheet" />
+<script type="text/javascript" src="{{sprefix}}/js/jquery.js"></script>
+<script type="text/javascript" src="{{sprefix}}/js/jquery-ui.js"></script>
+<script type="text/javascript" src="{{sprefix}}/js/notmuch-0.1.js"></script>
+<title>{{title}}</title>
+</head><body>
+<div data-role="page">
+<div data-role="header">
+{% block searchform %}
+<form action="{{prefix}}/search/" method="GET" data-ajax="false">
+<label for="terms">Terms</label><input id="terms" name="terms">
+<label for="after">After</label><input id="after"
+name="after"><input type="hidden" id="afters" name="afters">
+<label for="before">Before</label><input id="before"
+name="before"><input id="befores" type="hidden" name="befores">
+<input type="submit" name="submit" id="submit" value="Search">
+</form>
+{% endblock searchform %}
+<h2>{{title}}</h2>
+</div>
+<div data-role="content">
+{% block content %}
+<h2>Common tags</h2>
+<ul>
+{% for tag in tags %}
+  <li><a href="search/tag:{{ tag|url }}">{{ tag|e }}</a></li>
+{% endfor %}
+</ul>
+</div>
+{% endblock content %}
+</div>
+</body></html>
