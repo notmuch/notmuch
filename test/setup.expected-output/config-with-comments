@@ -31,7 +31,7 @@ path=/path/to/maildir
 [user]
 name=Test Suite
 primary_email=test.suite@example.com
-other_email=another.suite@example.com;
+other_email=another.suite@example.com
 
 # Configuration for "notmuch new"
 #
@@ -60,7 +60,7 @@ tags=foo;bar;
 #		query will override that exclusion.
 #
 [search]
-exclude_tags=baz;
+exclude_tags=baz
 
 # Maildir compatibility configuration
 #

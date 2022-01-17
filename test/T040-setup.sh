@@ -24,7 +24,6 @@ expected_dir=$NOTMUCH_SRCDIR/test/setup.expected-output
 test_expect_equal_file ${expected_dir}/config-with-comments new-notmuch-config
 
 test_begin_subtest "setup consistent with config-set for single items"
-test_subtest_known_broken
 # note this relies on the config state from the previous test.
 notmuch --config=new-notmuch-config config list > list.setup
 notmuch --config=new-notmuch-config config set search.exclude_tags baz

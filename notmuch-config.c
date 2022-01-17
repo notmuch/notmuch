@@ -383,7 +383,10 @@ _config_set_list (notmuch_conffile_t *config,
 		  const char *list[],
 		  size_t length)
 {
-    g_key_file_set_string_list (config->key_file, group, key, list, length);
+    if (length > 1)
+	g_key_file_set_string_list (config->key_file, group, key, list, length);
+    else
+	g_key_file_set_string (config->key_file, group, key, list[0]);
 }
 
 void
