@@ -221,6 +221,13 @@ email messages. For this, use a search term of "thread:<thread-id>" as
 can be seen in the first column of output from the
 :any:`notmuch-search(1)` command.
 
+CONFIGURATION
+=============
+
+Structured output (json / sexp) is influenced by the configuration
+option :ref:`show.extra_headers <show.extra_headers>`. See
+:any:`notmuch-config(1)` for details.
+
 EXIT STATUS
 ===========
 

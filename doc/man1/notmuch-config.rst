@@ -145,6 +145,20 @@ search.exclude\_tags
     Default: empty list. Note that :any:`notmuch-setup(1)` puts
     ``deleted;spam`` here when creating new configuration file.
 
+.. _show.extra_headers:
+
+show.extra\_headers
+
+    By default :any:`notmuch-show(1)` includes the following headers
+    in structured output if they are present in the message:
+    `Subject`, `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Date`. This
+    option allows the specification of a list of further
+    headers to output.
+
+    History: This configuration value was introduced in notmuch 0.35.
+
+    Default: empty list.
+
 maildir.synchronize\_flags
     If true, then the following maildir flags (in message filenames)
     will be synchronized with the corresponding notmuch tags:
