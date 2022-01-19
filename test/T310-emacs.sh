@@ -486,7 +486,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply with show.extra_headers set"
-test_subtest_known_broken
 notmuch config set show.extra_headers Received
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite_other@notmuchmail.org

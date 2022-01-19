@@ -294,7 +294,8 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     }
 
     /* Output extra headers the user has configured, if any */
-    format_extra_headers_sprinter (sp, message);
+    if (! reply)
+	format_extra_headers_sprinter (sp, message);
     sp->end (sp);
     talloc_free (local);
 }
