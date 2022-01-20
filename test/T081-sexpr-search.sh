@@ -769,7 +769,6 @@ notmuch search --query=sexp  '(and (infix "date:2009-11-18..2009-11-18") (infix 
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, empty"
-test_subtest_known_broken
 notmuch search from:keithp | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  '(and (date) (from keithp))'| notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
@@ -787,7 +786,6 @@ notmuch search --query=sexp  '(and (date 2009-11-17 2009-11-18) (from keithp))' 
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, illegal nesting 1"
-test_subtest_known_broken
 notmuch search --query=sexp '(to (date))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
@@ -796,7 +794,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, illegal nesting 2"
-test_subtest_known_broken
 notmuch search --query=sexp '(to (date 2021-11-18))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query

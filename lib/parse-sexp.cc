@@ -32,6 +32,7 @@ typedef enum {
     SEXP_FLAG_EXPAND	= 1 << 6,
     SEXP_FLAG_DO_EXPAND = 1 << 7,
     SEXP_FLAG_ORPHAN	= 1 << 8,
+    SEXP_FLAG_RANGE	= 1 << 9,
 } _sexp_flag_t;
 
 /*
@@ -66,6 +67,8 @@ static _sexp_prefix_t prefixes[] =
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD },
+    { "date",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+      SEXP_FLAG_RANGE },
     { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
@@ -446,6 +449,19 @@ _sexp_expand_param (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
     return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 }
 
+static notmuch_status_t
+_sexp_parse_date (notmuch_database_t *notmuch, const sexp_t *sx, Xapian::Query &output)
+{
+    /* empty date matches everything */
+    if (! sx) {
+	output = Xapian::Query::MatchAll;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    _notmuch_database_log (notmuch, "unimplemented date query\n");
+    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -519,7 +535,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
 	if (strcmp (prefix->name, sx->list->val) == 0) {
-	    if (prefix->flags & SEXP_FLAG_FIELD) {
+	    if (prefix->flags & (SEXP_FLAG_FIELD | SEXP_FLAG_RANGE)) {
 		if (parent) {
 		    _notmuch_database_log (notmuch, "nested field: '%s' inside '%s'\n",
 					   prefix->name, parent->name);
@@ -539,6 +555,10 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		_notmuch_database_log (notmuch, "'%s' expects single atom as argument\n",
 				       prefix->name);
 		return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	    }
+
+	    if (strcmp (prefix->name, "date") == 0) {
+		return _sexp_parse_date (notmuch, sx->list->next, output);
 	    }
 
 	    if (strcmp (prefix->name, "infix") == 0) {
