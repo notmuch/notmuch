@@ -450,15 +450,52 @@ _sexp_expand_param (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 }
 
 static notmuch_status_t
-_sexp_parse_date (notmuch_database_t *notmuch, const sexp_t *sx, Xapian::Query &output)
+_sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
+		   const sexp_t *sx, Xapian::Query &output)
 {
-    /* empty date matches everything */
+    const char *from, *to;
+    std::string msg;
+
+    /* empty range matches everything */
     if (! sx) {
 	output = Xapian::Query::MatchAll;
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    _notmuch_database_log (notmuch, "unimplemented date query\n");
+    if (sx->ty == SEXP_LIST) {
+	_notmuch_database_log (notmuch, "expected atom as first argument of '%s'\n", prefix->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    from = sx->val;
+    to = from;
+
+    if (sx->next) {
+	if (sx->next->ty == SEXP_LIST) {
+	    _notmuch_database_log (notmuch, "expected atom as second argument of '%s'\n",
+				   prefix->name);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	if (sx->next->next) {
+	    _notmuch_database_log (notmuch, "'%s' expects maximum of two arguments\n", prefix->name);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	to = sx->next->val;
+    }
+
+    if (strcmp (prefix->name, "date") == 0) {
+	notmuch_status_t status;
+	status = _notmuch_date_strings_to_query (NOTMUCH_VALUE_TIMESTAMP, from, to, output, msg);
+	if (status) {
+	    if (! msg.empty ())
+		_notmuch_database_log (notmuch, "%s\n", msg.c_str ());
+	}
+	return status;
+    }
+
+    _notmuch_database_log (notmuch, "unimplimented range prefix: '%s'\n", prefix->name);
     return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 }
 
@@ -557,9 +594,8 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	    }
 
-	    if (strcmp (prefix->name, "date") == 0) {
-		return _sexp_parse_date (notmuch, sx->list->next, output);
-	    }
+	    if (prefix->flags & SEXP_FLAG_RANGE)
+		return _sexp_parse_range (notmuch, prefix, sx->list->next, output);
 
 	    if (strcmp (prefix->name, "infix") == 0) {
 		return _sexp_parse_infix (notmuch, sx->list->next, output);

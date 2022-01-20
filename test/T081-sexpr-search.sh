@@ -774,13 +774,11 @@ notmuch search --query=sexp  '(and (date) (from keithp))'| notmuch_search_saniti
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, one argument"
-test_subtest_known_broken
 notmuch search date:2009-11-18 and from:keithp | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  '(and (date 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, two arguments"
-test_subtest_known_broken
 notmuch search date:2009-11-17..2009-11-18 and from:keithp | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  '(and (date 2009-11-17 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
@@ -802,7 +800,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, illegal nesting 3"
-test_subtest_known_broken
 notmuch search --query=sexp '(date (to))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
@@ -811,7 +808,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, illegal nesting 4"
-test_subtest_known_broken
 notmuch search --query=sexp '(date today (to))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
@@ -820,7 +816,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, too many arguments"
-test_subtest_known_broken
 notmuch search --query=sexp '(date yesterday and tommorow)' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
@@ -829,7 +824,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "date query, bad date"
-test_subtest_known_broken
 notmuch search --query=sexp '(date "hawaiian-pizza-day")' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
