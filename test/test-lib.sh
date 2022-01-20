@@ -432,6 +432,20 @@ test_expect_equal_file () {
     test_diff_file_ "$1" "$2"
 }
 
+# Like test_expect_equal_file, but compare the part of the two files after the first blank line
+test_expect_equal_message_body () {
+    exec 1>&6 2>&7		# Restore stdout and stderr
+    if [ -z "$inside_subtest" ]; then
+	error "bug in the test script: test_expect_equal_file without test_begin_subtest"
+    fi
+    test "$#" = 2 ||
+	error "bug in the test script: not 2 parameters to test_expect_equal_file"
+
+    expected=$(sed '1,/^$/d' "$1")
+    output=$(sed '1,/^$/d' "$2")
+    test_expect_equal "$expected" "$output"
+}
+
 # Like test_expect_equal, but takes two filenames. Fails if either is empty
 test_expect_equal_file_nonempty () {
     exec 1>&6 2>&7		# Restore stdout and stderr
