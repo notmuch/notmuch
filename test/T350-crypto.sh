@@ -21,7 +21,6 @@ test_expect_success \
     "(mml-secure-message-sign)"'
 
 test_begin_subtest "emacs delivery of signed message via fcc and smtp"
-test_subtest_known_broken
 emacs_deliver_message \
     'signed message sent via SMTP' \
     'This is a test that messages are sent via SMTP' \
