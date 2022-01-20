@@ -831,6 +831,91 @@ Didn't understand date specification 'hawaiian-pizza-day'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "lastmod query, empty"
+test_subtest_known_broken
+notmuch search from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (lastmod) (from keithp))'| notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, one argument"
+test_subtest_known_broken
+notmuch tag +4EFC743A.3060609@april.org id:4EFC743A.3060609@april.org
+revision=$(notmuch count --lastmod '*' | cut -f3)
+notmuch search lastmod:$revision..$revision | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(and (lastmod $revision))" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, two arguments"
+test_subtest_known_broken
+notmuch tag +keithp from:keithp
+revision2=$(notmuch count --lastmod '*' | cut -f3)
+notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 1"
+test_subtest_known_broken
+notmuch search --query=sexp '(to (lastmod))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'lastmod' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, bad from revision"
+test_subtest_known_broken
+notmuch search --query=sexp '(lastmod apples)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+bad 'from' revision: 'apples'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, bad to revision"
+test_subtest_known_broken
+notmuch search --query=sexp '(lastmod 0 apples)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+bad 'to' revision: 'apples'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 2"
+test_subtest_known_broken
+notmuch search --query=sexp '(to (lastmod 2021-11-18))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'lastmod' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 3"
+test_subtest_known_broken
+notmuch search --query=sexp '(lastmod (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as first argument of 'lastmod'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 4"
+test_subtest_known_broken
+notmuch search --query=sexp '(lastmod today (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as second argument of 'lastmod'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, too many arguments"
+test_subtest_known_broken
+notmuch search --query=sexp '(lastmod yesterday and tommorow)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'lastmod' expects maximum of two arguments
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "user header (unknown header)"
 notmuch search --query=sexp '(FooBar)' >& OUTPUT
 cat <<EOF > EXPECTED
