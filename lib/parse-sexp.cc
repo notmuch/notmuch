@@ -79,6 +79,8 @@ static _sexp_prefix_t prefixes[] =
       SEXP_FLAG_SINGLE | SEXP_FLAG_ORPHAN },
     { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
+    { "lastmod",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+      SEXP_FLAG_RANGE },
     { "matching",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_DO_EXPAND },
     { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
@@ -493,6 +495,29 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 		_notmuch_database_log (notmuch, "%s\n", msg.c_str ());
 	}
 	return status;
+    }
+
+    if (strcmp (prefix->name, "lastmod") == 0) {
+	long from_idx, to_idx;
+
+	try {
+	    from_idx = std::stol (from);
+	} catch (std::logic_error &e) {
+	    _notmuch_database_log (notmuch, "bad 'from' revision: '%s'\n", from);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	try {
+	    to_idx = std::stol (to);
+	} catch (std::logic_error &e) {
+	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	output = Xapian::Query (Xapian::Query::OP_VALUE_RANGE, NOTMUCH_VALUE_LAST_MOD,
+				Xapian::sortable_serialise (from_idx),
+				Xapian::sortable_serialise (to_idx));
+	return NOTMUCH_STATUS_SUCCESS;
     }
 
     _notmuch_database_log (notmuch, "unimplimented range prefix: '%s'\n", prefix->name);
