@@ -165,6 +165,7 @@ typedef enum {
     NOTMUCH_FIELD_EXTERNAL	= 1 << 0,
     NOTMUCH_FIELD_PROBABILISTIC = 1 << 1,
     NOTMUCH_FIELD_PROCESSOR	= 1 << 2,
+    NOTMUCH_FIELD_STRIP_TRAILING_SLASH	= 1 << 3,
 } notmuch_field_flag_t;
 
 /*

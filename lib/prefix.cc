@@ -46,7 +46,7 @@ prefix_t prefix_table[] = {
     { "mid",                    "Q",            NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
     { "path",                   "P",            NOTMUCH_FIELD_EXTERNAL |
-      NOTMUCH_FIELD_PROCESSOR },
+      NOTMUCH_FIELD_PROCESSOR | NOTMUCH_FIELD_STRIP_TRAILING_SLASH },
     { "property",               "XPROPERTY",    NOTMUCH_FIELD_EXTERNAL },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
@@ -55,7 +55,7 @@ prefix_t prefix_table[] = {
      * discussion.
      */
     { "folder",                 "XFOLDER:",     NOTMUCH_FIELD_EXTERNAL |
-      NOTMUCH_FIELD_PROCESSOR },
+      NOTMUCH_FIELD_PROCESSOR | NOTMUCH_FIELD_STRIP_TRAILING_SLASH },
     { "date",                   NULL,           NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
     { "query",                  NULL,           NOTMUCH_FIELD_EXTERNAL |

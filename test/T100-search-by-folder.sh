@@ -32,7 +32,6 @@ test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "Folder search with --output=files (trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --output=files folder:bad/news/ | notmuch_search_files_sanitize)
 test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
@@ -127,7 +126,6 @@ MAIL_DIR/bar/18:2,
 MAIL_DIR/cur/51:2,"
 
 test_begin_subtest "path: search (trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --output=files path:"bar/" | notmuch_search_files_sanitize | sort)
 # cur/51:2, is a duplicate of bar/18:2,
 test_expect_equal "$output" "MAIL_DIR/bar/17:2,
