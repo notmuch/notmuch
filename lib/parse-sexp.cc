@@ -33,6 +33,7 @@ typedef enum {
     SEXP_FLAG_DO_EXPAND = 1 << 7,
     SEXP_FLAG_ORPHAN	= 1 << 8,
     SEXP_FLAG_RANGE	= 1 << 9,
+    SEXP_FLAG_PATHNAME	= 1 << 10,
 } _sexp_flag_t;
 
 /*
@@ -72,7 +73,8 @@ static _sexp_prefix_t prefixes[] =
     { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND |
+      SEXP_FLAG_PATHNAME },
     { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
     { "infix",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
@@ -94,7 +96,8 @@ static _sexp_prefix_t prefixes[] =
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
     { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX |
+      SEXP_FLAG_PATHNAME },
     { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "query",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchNothing,
@@ -545,8 +548,13 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    return _sexp_parse_wildcard (notmuch, parent, env, "", output);
 	}
 
+	char *atom = sx->val;
+
+	if (parent && parent->flags & SEXP_FLAG_PATHNAME)
+	    strip_trailing (atom, '/');
+
 	if (parent && (parent->flags & SEXP_FLAG_BOOLEAN)) {
-	    output = Xapian::Query (term_prefix + sx->val);
+	    output = Xapian::Query (term_prefix + atom);
 	    return NOTMUCH_STATUS_SUCCESS;
 	}
 

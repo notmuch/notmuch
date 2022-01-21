@@ -191,7 +191,6 @@ test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "Search by 'folder' with --output=files (trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --output=files --query=sexp '(folder bad/news/)' | notmuch_search_files_sanitize)
 test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
@@ -203,7 +202,6 @@ thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
 test_begin_subtest "Search by 'folder' (multiple, trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --query=sexp '(folder bad bad/news/ things/bad)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
 thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
@@ -215,7 +213,6 @@ test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "Search by 'path' with --output=files (trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --output=files --query=sexp '(path bad/news/)' | notmuch_search_files_sanitize)
 test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
 MAIL_DIR/duplicate/bad/news/msg-XXX"
@@ -227,7 +224,6 @@ thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
 test_begin_subtest "Search by 'path' specification (multiple, trailing /)"
-test_subtest_known_broken
 output=$(notmuch search --query=sexp '(path bad bad/news/ things/bad)' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
 thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
