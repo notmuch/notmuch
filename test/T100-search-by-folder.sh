@@ -18,6 +18,12 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; T
 thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
+test_begin_subtest "search by path: specification (multiple)"
+output=$(notmuch search path:bad path:bad/news path:things/bad | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
 test_begin_subtest "Top level folder"
 output=$(notmuch search folder:'""' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Top level (inbox unread)"
