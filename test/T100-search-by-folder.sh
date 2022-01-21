@@ -28,8 +28,8 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite
 
 test_begin_subtest "Folder search with --output=files"
 output=$(notmuch search --output=files folder:bad/news | notmuch_search_files_sanitize)
-test_expect_equal "$output" "MAIL_DIR/bad/news/msg-003
-MAIL_DIR/duplicate/bad/news/msg-003"
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "After removing duplicate instance of matching path"
 rm -r "${MAIL_DIR}/bad/news"
@@ -39,7 +39,7 @@ test_expect_equal "$output" ""
 
 test_begin_subtest "Folder search with --output=files part #2"
 output=$(notmuch search --output=files folder:duplicate/bad/news | notmuch_search_files_sanitize)
-test_expect_equal "$output" "MAIL_DIR/duplicate/bad/news/msg-003"
+test_expect_equal "$output" "MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "After removing duplicate instance of matching path part #2"
 output=$(notmuch search folder:duplicate/bad/news | notmuch_search_sanitize)

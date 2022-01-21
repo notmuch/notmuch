@@ -24,8 +24,8 @@ test_expect_equal "$output" "No new mail."
 
 test_begin_subtest "Multiple files for same message"
 cat <<EOF >EXPECTED
-MAIL_DIR/msg-001
-MAIL_DIR/spam/msg-001
+MAIL_DIR/msg-XXX
+MAIL_DIR/spam/msg-XXX
 EOF
 notmuch search --output=files id:$id_x | notmuch_search_files_sanitize >OUTPUT
 test_expect_equal_file EXPECTED OUTPUT

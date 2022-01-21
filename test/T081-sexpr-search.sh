@@ -346,7 +346,7 @@ output=$(notmuch search --query=sexp '(attachment (starts-with not))' | notmuch_
 test_expect_equal "$output" 'thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] "notmuch help" outputs to stderr? (attachment inbox signed unread)'
 
 test_begin_subtest "starts-with, folder"
-notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_dir_sanitize | sed 's/[0-9]*$/XXX/' > OUTPUT
+notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_search_files_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 MAIL_DIR/bad/msg-XXX
 MAIL_DIR/bad/news/msg-XXX

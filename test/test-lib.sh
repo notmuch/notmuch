@@ -551,7 +551,7 @@ notmuch_search_sanitize () {
 }
 
 notmuch_search_files_sanitize () {
-    notmuch_dir_sanitize
+    notmuch_dir_sanitize |  sed 's/msg-[0-9][0-9][0-9]/msg-XXX/'
 }
 
 notmuch_dir_sanitize () {

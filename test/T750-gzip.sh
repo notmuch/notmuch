@@ -58,13 +58,13 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "notmuch search --output=files with partially gzipped mail store"
 notmuch search --output=files '*' | notmuch_search_files_sanitize > OUTPUT
 cat <<EOF > EXPECTED
-MAIL_DIR/msg-001.gz
-MAIL_DIR/msg-002.gz
-MAIL_DIR/msg-003.gz
-MAIL_DIR/msg-004
-MAIL_DIR/msg-005.gz
-MAIL_DIR/msg-006
-MAIL_DIR/msg-007.gz
+MAIL_DIR/msg-XXX.gz
+MAIL_DIR/msg-XXX.gz
+MAIL_DIR/msg-XXX.gz
+MAIL_DIR/msg-XXX
+MAIL_DIR/msg-XXX.gz
+MAIL_DIR/msg-XXX
+MAIL_DIR/msg-XXX.gz
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
