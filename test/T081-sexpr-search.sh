@@ -185,6 +185,28 @@ notmuch search folder:'""' > EXPECTED
 notmuch search --query=sexp '(folder "")'  > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Search by 'folder' with --output=files"
+output=$(notmuch search --output=files --query=sexp '(folder bad/news)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'folder' with --output=files (trailing /)"
+test_subtest_known_broken
+output=$(notmuch search --output=files --query=sexp '(folder bad/news/)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'path' with --output=files"
+output=$(notmuch search --output=files --query=sexp '(path bad/news)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'path' with --output=files (trailing /)"
+test_subtest_known_broken
+output=$(notmuch search --output=files --query=sexp '(path bad/news/)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
 test_begin_subtest "Search by 'id'"
 add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$(notmuch search --query=sexp "(id ${gen_msg_id})" | notmuch_search_sanitize)
