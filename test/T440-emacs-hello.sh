@@ -69,6 +69,7 @@ notmuch tag -$tag '*'
 test_expect_equal_file $EXPECTED/notmuch-hello-long-names OUTPUT
 
 test_begin_subtest "All tags show up"
+test_subtest_known_broken
 tag=exclude_me
 notmuch tag +$tag '*'
 notmuch config set search.exclude_tags $tag

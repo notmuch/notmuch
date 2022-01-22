@@ -570,7 +570,7 @@ options will be handled as specified for
 					    (plist-get options :filter))))
 	 "\n")))
     (unless (= (notmuch--call-process-region (point-min) (point-max) notmuch-command
-					     t t nil "count" "--exclude=false" "--batch") 0)
+				    t t nil "count" "--batch") 0)
       (notmuch-logged-error
        "notmuch count --batch failed"
        "Please check that the notmuch CLI is new enough to support `count
