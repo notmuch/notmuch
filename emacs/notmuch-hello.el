@@ -557,7 +557,8 @@ with any properties in the original saved-search.
 
 The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
-`notmuch-hello-insert-searches'."
+`notmuch-hello-insert-searches'. :disable-includes can be used to
+turn off the default exclude processing in `notmuch-count(1)'"
   (with-temp-buffer
     (dolist (elem query-list nil)
       (let ((count-query (or (notmuch-saved-search-get elem :count-query)
@@ -570,7 +571,11 @@ options will be handled as specified for
 					    (plist-get options :filter))))
 	 "\n")))
     (unless (= (notmuch--call-process-region (point-min) (point-max) notmuch-command
-				    t t nil "count" "--batch") 0)
+					     t t nil "count"
+					     (if (plist-get options :disable-excludes)
+						 "--exclude=false"
+					       "--exclude=true")
+					     "--batch") 0)
       (notmuch-logged-error
        "notmuch count --batch failed"
        "Please check that the notmuch CLI is new enough to support `count
@@ -917,7 +922,8 @@ following:
    nil
    :initially-hidden (not notmuch-show-all-tags-list)
    :hide-tags notmuch-hello-hide-tags
-   :filter notmuch-hello-tag-list-make-query))
+   :filter notmuch-hello-tag-list-make-query
+   :disable-excludes t))
 
 (defun notmuch-hello-insert-footer ()
   "Insert the notmuch-hello footer."
