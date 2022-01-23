@@ -915,7 +915,39 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	  (notmuch-search-get-tags-region (point-min) (point-max)) "Tag all")))
   (notmuch-search-tag tag-changes (point-min) (point-max) t))
 
-(defun notmuch-search-buffer-title (query)
+(defcustom notmuch-search-buffer-name-format "*notmuch-%t-%s*"
+  "Format for the name of search results buffers.
+
+In this spec, %s will be replaced by a description of the search
+query and %t by its type (search, tree or unthreaded).  The
+buffer name is formatted using `format-spec': see its docstring
+for additional parameters for the s and t format specifiers.
+
+See also `notmuch-saved-search-buffer-name-format'"
+  :type 'string
+  :group 'notmuch-search)
+
+(defcustom notmuch-saved-search-buffer-name-format "*notmuch-saved-%t-%s*"
+  "Format for the name of search results buffers for saved searches.
+
+In this spec, %s will be replaced by the saved search name and %t
+by its type (search, tree or unthreaded).  The buffer name is
+formatted using `format-spec': see its docstring for additional
+parameters for the s and t format specifiers.
+
+See also `notmuch-search-buffer-name-format'"
+  :type 'string
+  :group 'notmuch-search)
+
+(defun notmuch-search-format-buffer-name (query type saved)
+  "Compose a buffer name for the given QUERY, TYPE (search, tree,
+unthreaded) and whether it's SAVED (t or nil)."
+  (let ((fmt (if saved
+		 notmuch-saved-search-buffer-name-format
+	       notmuch-search-buffer-name-format)))
+    (format-spec fmt `((?t . ,(or type "search")) (?s . ,query)))))
+
+(defun notmuch-search-buffer-title (query &optional type)
   "Returns the title for a buffer with notmuch search results."
   (let* ((saved-search
 	  (let (longest
@@ -930,19 +962,20 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 		     do (setq longest tuple))
 	    longest))
 	 (saved-search-name (notmuch-saved-search-get saved-search :name))
+	 (saved-search-type (notmuch-saved-search-get saved-search :search-type))
 	 (saved-search-query (notmuch-saved-search-get saved-search :query)))
     (cond ((and saved-search (equal saved-search-query query))
 	   ;; Query is the same as saved search (ignoring case)
-	   (concat "*notmuch-saved-search-" saved-search-name "*"))
+	   (notmuch-search-format-buffer-name saved-search-name
+					      saved-search-type
+					      t))
 	  (saved-search
-	   (concat "*notmuch-search-"
-		   (replace-regexp-in-string
-		    (concat "^" (regexp-quote saved-search-query))
-		    (concat "[ " saved-search-name " ]")
-		    query)
-		   "*"))
-	  (t
-	   (concat "*notmuch-search-" query "*")))))
+	   (let ((query (replace-regexp-in-string
+			 (concat "^" (regexp-quote saved-search-query))
+			 (concat "[ " saved-search-name " ]")
+			 query)))
+	     (notmuch-search-format-buffer-name query saved-search-type t)))
+	  (t (notmuch-search-format-buffer-name query type nil)))))
 
 (defun notmuch-read-query (prompt)
   "Read a notmuch-query from the minibuffer with completion.

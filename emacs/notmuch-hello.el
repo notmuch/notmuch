@@ -486,11 +486,14 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest _ignore)
   (cl-case (widget-get widget :notmuch-search-type)
    (tree
-    (notmuch-tree (widget-get widget :notmuch-search-terms)
-		  nil nil nil nil nil nil
-		  (widget-get widget :notmuch-search-oldest-first)))
+    (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
+      (notmuch-tree (widget-get widget :notmuch-search-terms)
+		    nil nil n nil nil nil
+		    (widget-get widget :notmuch-search-oldest-first))))
    (unthreaded
-    (notmuch-unthreaded (widget-get widget :notmuch-search-terms)))
+    (let ((n (notmuch-search-format-buffer-name (widget-value widget)
+						"unthreaded" t)))
+      (notmuch-unthreaded (widget-get widget :notmuch-search-terms) nil nil n)))
    (t
     (notmuch-search (widget-get widget :notmuch-search-terms)
 		    (widget-get widget :notmuch-search-oldest-first)))))

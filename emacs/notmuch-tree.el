@@ -1191,11 +1191,11 @@ The arguments are:
     (setq query (notmuch-read-query (concat "Notmuch "
 					    (if unthreaded "unthreaded " "tree ")
 					    "view search: "))))
-  (let ((buffer (get-buffer-create (generate-new-buffer-name
-				    (or buffer-name
-					(concat "*notmuch-"
-						(if unthreaded "unthreaded-" "tree-")
-						query "*")))))
+  (let* ((name
+	  (or buffer-name
+	      (notmuch-search-buffer-title query
+					   (if unthreaded "unthreaded" "tree"))))
+	 (buffer (get-buffer-create (generate-new-buffer-name name)))
 	(inhibit-read-only t))
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer

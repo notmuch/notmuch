@@ -175,6 +175,16 @@ variables.
 :index:`notmuch-search-oldest-first`
     Display the oldest threads at the top of the buffer
 
+It is also possible to customize how the name of buffers containing
+search results is formatted using the following variables:
+
+:index:`notmuch-search-buffer-name-format`
+       |docstring::notmuch-search-buffer-name-format|
+
+:index:`notmuch-saved-search-buffer-name-format`
+       |docstring::notmuch-saved-search-buffer-name-format|
+
+
 .. _notmuch-show:
 
 notmuch-show
