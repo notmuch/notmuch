@@ -336,10 +336,10 @@ NOTES
                in notmuch, this modifier is not supported in the
                ``path`` field.
 
-.. |q1| replace:: :math:`q_1`
-.. |q2| replace:: :math:`q_2`
-.. |qn| replace:: :math:`q_n`
+.. |q1| replace:: `q`\ :sub:`1`
+.. |q2| replace:: `q`\ :sub:`2`
+.. |qn| replace:: `q`\ :sub:`n`
 
-.. |p1| replace:: :math:`p_1`
-.. |p2| replace:: :math:`p_2`
-.. |pn| replace:: :math:`p_n`
+.. |p1| replace:: `p`\ :sub:`1`
+.. |p2| replace:: `p`\ :sub:`2`
+.. |pn| replace:: `p`\ :sub:`n`
