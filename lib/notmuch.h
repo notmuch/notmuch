@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION        5
-#define LIBNOTMUCH_MINOR_VERSION        5
+#define LIBNOTMUCH_MINOR_VERSION        6
 #define LIBNOTMUCH_MICRO_VERSION        0
 
 
