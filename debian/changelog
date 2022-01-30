@@ -1,3 +1,9 @@
+notmuch (0.35~rc0-2) experimental; urgency=medium
+
+  * Reupload with binaries
+
+ -- David Bremner <bremner@debian.org>  Sat, 29 Jan 2022 21:53:29 -0400
+
 notmuch (0.35~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate
