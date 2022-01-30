@@ -1,6 +1,74 @@
 Notmuch 0.35 (UNRELEASED)
 =========================
 
+Library
+-------
+
+Implement the `date` and `lastmod` fields in the S-expression parser.
+
+Ignore trailing `/` for pathnames in both query parsers.
+
+Rename configuration option `built_with.sexpr_query` to
+`built_with.sexp_queries`.
+
+Do not assume a default mail root in split (e.g. XDG) configurations.
+
+Fix some small memory leaks in `notmuch_database_open_with_config`.
+
+CLI
+---
+
+Improve handling of leading/trailing punctation and space for
+configuration lists.
+
+Only ignore `.notmuch` at the top level in `notmuch new`.
+
+Optionally show extra headers in `notmuch show`. See
+`show.extra_headers` in notmuch-config(1).
+
+Emacs
+-----
+
+Drop `C-TAB` binding in hello mode, document `backtab`.
+
+Fix visual glitch in search mode by running `notmuch-search-hook`
+lazily.
+
+Don't add space to completion candidates, improves compatibility with
+third party completion frameworks.
+
+Make citation formating more robust against whitespace.
+
+Use `--excludes=false` when generating the 'All tags' section.
+
+Use cached copy of message body for `Fcc`, avoiding variant bodies for
+signed and/or encrypted messages.
+
+Build
+-----
+
+Fix out-of-tree build for `python-cffi` bindings.
+
+Rearrange position of {C,CXX,CPP,LD}FLAGS, prevent some clashes with
+installed version of notmuch.
+
+Test Suite
+----------
+
+Replace some uses of `gdb` in the test suite with `LD_PRELOAD` based
+shims.
+
+Use `--with-colons` for gpgsm, fix compatibility with newer gnupg.
+
+Python bindings
+---------------
+
+Add `matched` property to message objects.
+
+Users are reminded that the old python bindings in bindings/python are
+deprecated; this will probably be the last major release that ships
+them.
+
 Notmuch 0.34.3 (2022-01-09)
 ===========================
 
