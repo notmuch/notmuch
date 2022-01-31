@@ -44,6 +44,9 @@ Use `--excludes=false` when generating the 'All tags' section.
 Use cached copy of message body for `Fcc`, avoiding variant bodies for
 signed and/or encrypted messages.
 
+Add notmuch-logo.svg and use it in notmuch-hello view, replacing
+the .png version.
+
 Build
 -----
 
