@@ -47,6 +47,10 @@ signed and/or encrypted messages.
 Add notmuch-logo.svg and use it in notmuch-hello view, replacing
 the .png version.
 
+Make header line in show buffers optional.
+
+Add customizable names for search buffers.
+
 Build
 -----
 
@@ -54,6 +58,8 @@ Fix out-of-tree build for `python-cffi` bindings.
 
 Rearrange position of {C,CXX,CPP,LD}FLAGS, prevent some clashes with
 installed version of notmuch.
+
+Ignore more configure options.
 
 Test Suite
 ----------
@@ -71,6 +77,11 @@ Add `matched` property to message objects.
 Users are reminded that the old python bindings in bindings/python are
 deprecated; this will probably be the last major release that ships
 them.
+
+Completion
+----------
+
+Use `database.mail_root` for path completion in bash/zsh.
 
 Notmuch 0.34.3 (2022-01-09)
 ===========================
