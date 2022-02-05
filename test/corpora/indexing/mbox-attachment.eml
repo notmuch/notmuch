@@ -1,0 +1,83 @@
+From david@tethera.net  Sat Feb  5 09:19:10 2022
+From: David Bremner <david@tethera.net>
+To: David Bremner <david@tethera.net>
+Subject: Re: [RFC PATCH v2 12/12] emacs: whitespace cleanup for keybindings
+Date: Sat, 05 Feb 2022 10:19:09 -0400
+Message-ID: <87k0e9o0pu.fsf@tethera.net>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-=-="
+
+--=-=-=
+Content-Type: text/plain
+Content-Disposition: inline
+
+
+I figured out the race condition in the tests. The previous test was
+still running when the failing test started, the joys of using a shared
+emacs for running all of the tests in one file.
+
+The attached diff is split into the the commits that introduce the tests
+in question in my working series, but you should be able to just apply
+it on top of the posted series if you want.
+
+
+--=-=-=
+Content-Type: text/x-diff
+Content-Disposition: inline; filename=0001-test-fixups.patch
+
+From fc88cba7f1f37b9cf3b296eace2422dd0e173502 Mon Sep 17 00:00:00 2001
+From: David Bremner <david@tethera.net>
+Date: Thu, 3 Feb 2022 21:05:05 -0400
+Subject: [PATCH] test fixups
+
+---
+ test/T315-emacs-tagging.sh | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/test/T315-emacs-tagging.sh b/test/T315-emacs-tagging.sh
+index c9e3e53a..c26413ce 100755
+--- a/test/T315-emacs-tagging.sh
++++ b/test/T315-emacs-tagging.sh
+@@ -119,7 +119,8 @@ for mode in search show tree unthreaded; do
+       (notmuch-$mode \"$os_x_darwin_thread\")
+       (notmuch-test-wait)
+       (execute-kbd-macro \"+tag-to-be-undone-$mode\")
+-      (notmuch-tag-undo))"
++      (notmuch-tag-undo)
++      (notmuch-test-wait))"
+     count=$(notmuch count "tag:tag-to-be-undone-$mode")
+     test_expect_equal "$count" "0"
+ 
+@@ -128,9 +129,7 @@ for mode in search show tree unthreaded; do
+       (notmuch-$mode \"$os_x_darwin_thread\")
+       (notmuch-test-wait)
+       (execute-kbd-macro \"+one-$mode\")
+-      (notmuch-test-wait)
+       (execute-kbd-macro \"+two-$mode\")
+-      (notmuch-test-wait)
+       (notmuch-tag-undo)
+       (notmuch-test-wait)
+       (execute-kbd-macro \"+three-$mode\"))"
+@@ -143,7 +142,6 @@ for mode in search show tree unthreaded; do
+       (notmuch-$mode \"$os_x_darwin_thread\")
+       (notmuch-test-wait)
+       (execute-kbd-macro \"+one-$mode\")
+-      (notmuch-test-wait)
+       (execute-kbd-macro \"+two-$mode\")
+       (notmuch-tag-undo)
+       (notmuch-test-wait)
+@@ -159,7 +157,8 @@ for mode in search show tree unthreaded; do
+       (notmuch-$mode \"$os_x_darwin_thread\")
+       (notmuch-test-wait)
+       (execute-kbd-macro \"+tag-to-be-undone-$mode\")
+-      (execute-kbd-macro (kbd \"C-x u\")))"
++      (execute-kbd-macro (kbd \"C-x u\"))
++      (notmuch-test-wait))"
+     count=$(notmuch count "tag:tag-to-be-undone-$mode")
+     test_expect_equal "$count" "0"
+ done
+-- 
+2.30.2
+
+
+--=-=-=--
