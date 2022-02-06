@@ -85,6 +85,8 @@ database.hook_dir
 
     Default: See HOOKS, below.
 
+.. _database.mail_root:
+
 database.mail_root
     The top-level directory where your mail currently exists and to
     where mail will be delivered in the future. Files should be
