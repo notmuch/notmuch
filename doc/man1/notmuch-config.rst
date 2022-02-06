@@ -102,6 +102,8 @@ database.path
 
     Default: see :ref:`database`
 
+.. _index.decrypt:
+
 index.decrypt
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
@@ -155,6 +157,8 @@ index.decrypt
 
     Default: ``auto``.
 
+.. _index.header:
+
 index.header.<prefix>
     Define the query prefix <prefix>, based on a mail header. For
     example ``index.header.List=List-Id`` will add a probabilistic
@@ -163,6 +167,8 @@ index.header.<prefix>
     adding a prefix with same name as a predefined prefix is not
     supported. See :any:`notmuch-search-terms(7)` for a list of existing
     prefixes, and an explanation of probabilistic prefixes.
+
+.. _maildir.synchronize_flags:
 
 maildir.synchronize\_flags
     If true, then the following maildir flags (in message filenames)
@@ -197,6 +203,8 @@ maildir.synchronize\_flags
 
     Default: ``true``.
 
+.. _new.ignore:
+
 new.ignore
     A list to specify files and directories that will not be searched
     for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
@@ -214,6 +222,8 @@ new.ignore
     not "foo" or "bar/foobar".
 
     Default: empty list.
+
+.. _new.tags:
 
 new.tags
     A list of tags that will be added to all messages incorporated by

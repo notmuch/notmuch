@@ -78,6 +78,16 @@ Supported options for **new** include
    to optimize the scanning of directories for new mail. This option turns
    that optimization off.
 
+CONFIGURATION
+=============
+
+Indexing is influenced by the configuration options
+:ref:`index.decrypt <index.decrypt>`, :ref:`index.header
+<index.header>`, and :ref:`new.ignore <new.ignore>`.  Tagging
+is controlled by :ref:`new.tags <new.tags>` and
+:ref:`maildir.synchronize_flags <maildir.synchronize_flags>`.  See
+:any:`notmuch-config(1)` for details.
+
 EXIT STATUS
 ===========
 
