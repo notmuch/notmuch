@@ -88,6 +88,16 @@ Supported options for **insert** include
 
    See also ``index.decrypt`` in :any:`notmuch-config(1)`.
 
+CONFIGURATION
+=============
+
+Indexing is influenced by the configuration options
+:ref:`index.decrypt <index.decrypt>` and :ref:`index.header
+<index.header>`.  Tagging
+is controlled by :ref:`new.tags <new.tags>` and
+:ref:`maildir.synchronize_flags <maildir.synchronize_flags>`.  See
+:any:`notmuch-config(1)` for details.
+
 EXIT STATUS
 ===========
 
