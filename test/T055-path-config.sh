@@ -294,7 +294,6 @@ EOF
    test_expect_equal_file EXPECTED OUTPUT
 
    test_begin_subtest "Config list from python ($config)"
-   test_subtest_known_broken
    test_python <<EOF > OUTPUT
 from notmuch2 import Database
 db=Database(config=Database.CONFIG.SEARCH)

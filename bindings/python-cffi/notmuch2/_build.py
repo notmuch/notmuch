@@ -97,7 +97,7 @@ ffibuilder.cdef(
     typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
     typedef struct _notmuch_directory notmuch_directory_t;
     typedef struct _notmuch_filenames notmuch_filenames_t;
-    typedef struct _notmuch_config_list notmuch_config_list_t;
+    typedef struct _notmuch_config_pairs notmuch_config_pairs_t;
     typedef struct _notmuch_indexopts notmuch_indexopts_t;
 
     const char *
@@ -325,18 +325,18 @@ ffibuilder.cdef(
     notmuch_database_set_config (notmuch_database_t *db, const char *key, const char *value);
     notmuch_status_t
     notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
-    notmuch_status_t
-    notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix, notmuch_config_list_t **out);
+    notmuch_config_pairs_t *
+    notmuch_config_get_pairs (notmuch_database_t *db, const char *prefix);
     notmuch_bool_t
-    notmuch_config_list_valid (notmuch_config_list_t *config_list);
+    notmuch_config_pairs_valid (notmuch_config_pairs_t *config_list);
     const char *
-    notmuch_config_list_key (notmuch_config_list_t *config_list);
+    notmuch_config_pairs_key (notmuch_config_pairs_t *config_list);
     const char *
-    notmuch_config_list_value (notmuch_config_list_t *config_list);
+    notmuch_config_pairs_value (notmuch_config_pairs_t *config_list);
     void
-    notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
+    notmuch_config_pairs_move_to_next (notmuch_config_pairs_t *config_list);
     void
-    notmuch_config_list_destroy (notmuch_config_list_t *config_list);
+    notmuch_config_pairs_destroy (notmuch_config_pairs_t *config_list);
     """
 )
 

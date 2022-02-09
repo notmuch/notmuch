@@ -34,20 +34,24 @@ class TestIter:
             print(repr(val))
 
     def test_iter(self, db):
-        assert list(db.config) == []
-        db.config['spam'] = 'ham'
-        db.config['eggs'] = 'bacon'
-        assert set(db.config) == {'spam', 'eggs'}
-        assert set(db.config.keys()) == {'spam', 'eggs'}
-        assert set(db.config.values()) == {'ham', 'bacon'}
-        assert set(db.config.items()) == {('spam', 'ham'), ('eggs', 'bacon')}
+        def has_prefix(x):
+            return x.startswith('TEST.')
+
+        assert [ x for x in db.config if has_prefix(x) ] == []
+        db.config['TEST.spam'] = 'TEST.ham'
+        db.config['TEST.eggs'] = 'TEST.bacon'
+        assert { x for x in db.config if has_prefix(x) } == {'TEST.spam', 'TEST.eggs'}
+        assert { x for x in db.config.keys() if has_prefix(x) } == {'TEST.spam', 'TEST.eggs'}
+        assert { x for x in db.config.values() if has_prefix(x) } == {'TEST.ham', 'TEST.bacon'}
+        assert { (x, y) for (x,y) in db.config.items() if has_prefix(x) } == \
+            {('TEST.spam', 'TEST.ham'), ('TEST.eggs', 'TEST.bacon')}
 
     def test_len(self, db):
-        assert len(db.config) == 0
+        defaults = len(db.config)
         db.config['spam'] = 'ham'
-        assert len(db.config) == 1
+        assert len(db.config) == defaults + 1
         db.config['eggs'] = 'bacon'
-        assert len(db.config) == 2
+        assert len(db.config) == defaults + 2
 
     def test_del(self, db):
         db.config['spam'] = 'ham'
