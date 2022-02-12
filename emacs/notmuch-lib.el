@@ -166,6 +166,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
     (define-key map (kbd "M-=") 'notmuch-refresh-all-buffers)
     (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
     (define-key map "j" 'notmuch-jump-search)
+    (define-key map [remap undo] 'notmuch-tag-undo)
     map)
   "Keymap shared by all notmuch modes.")
 

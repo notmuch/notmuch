@@ -151,7 +151,16 @@ for mode in search show tree unthreaded; do
     output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
     notmuch tag "-one-$mode" "-three-$mode" $os_x_darwin_thread
     test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox three-$mode unread)"
-done
 
+    test_begin_subtest "undo tagging in $mode mode (via binding)"
+    test_emacs "(let ((notmuch-tag-history nil))
+      (notmuch-$mode \"$os_x_darwin_thread\")
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+tag-to-be-undone-$mode\")
+      (execute-kbd-macro (kbd \"C-x u\"))
+      (notmuch-test-wait))"
+    count=$(notmuch count "tag:tag-to-be-undone-$mode")
+    test_expect_equal "$count" "0"
+done
 
 test_done
