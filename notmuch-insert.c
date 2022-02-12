@@ -269,10 +269,13 @@ static bool
 copy_fd (int fdout, int fdin)
 {
     bool empty = true;
+    bool first = true;
+    const char *header = "X-Envelope-From: ";
 
     while (! interrupted) {
 	ssize_t remain;
 	char buf[4096];
+	const char *p = buf;
 
 	remain = read (fdin, buf, sizeof (buf));
 	if (remain == 0)
@@ -284,7 +287,17 @@ copy_fd (int fdout, int fdin)
 		     strerror (errno));
 	    return false;
 	}
-	if (! write_buf (buf, fdout, remain))
+
+	if (first && remain >= 5 && 0 == strncmp (buf, "From ", 5)) {
+	    if (! write_buf (header, fdout, strlen (header)))
+		return false;
+	    p += 5;
+	    remain -= 5;
+	}
+
+	first = false;
+
+	if (! write_buf (p, fdout, remain))
 	    return false;
 	empty = false;
     }
