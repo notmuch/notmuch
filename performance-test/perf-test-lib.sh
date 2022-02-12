@@ -210,6 +210,11 @@ print_header ()
     printf "\t\t\tWall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n"
 }
 
+print_emacs_header ()
+{
+    printf "\t\t\tWall(s)\tGCs\tGC time(s)\n"
+}
+
 time_run ()
 {
     printf "  %-22s" "$1"

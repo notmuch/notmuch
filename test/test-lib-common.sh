@@ -29,6 +29,20 @@ if [[ -z "$NOTMUCH_SRCDIR" ]] || [[ -z "$NOTMUCH_BUILDDIR" ]]; then
 	exit 1
 fi
 
+# Explicitly require external prerequisite.  Useful when binary is
+# called indirectly (e.g. from emacs).
+# Returns success if dependency is available, failure otherwise.
+test_require_external_prereq () {
+	local binary
+	binary="$1"
+	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
+		# dependency is missing, call the replacement function to note it
+		eval "$binary"
+	else
+		true
+	fi
+}
+
 backup_database () {
     test_name=$(basename $0 .sh)
     rm -rf $TMP_DIRECTORY/notmuch-dir-backup."$test_name"

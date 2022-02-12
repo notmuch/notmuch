@@ -603,20 +603,6 @@ $binary () {
 	fi
 }
 
-# Explicitly require external prerequisite.  Useful when binary is
-# called indirectly (e.g. from emacs).
-# Returns success if dependency is available, failure otherwise.
-test_require_external_prereq () {
-	local binary
-	binary="$1"
-	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
-		# dependency is missing, call the replacement function to note it
-		eval "$binary"
-	else
-		true
-	fi
-}
-
 # You are not expected to call test_ok_ and test_failure_ directly, use
 # the text_expect_* functions instead.
 

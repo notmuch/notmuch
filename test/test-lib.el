@@ -186,6 +186,11 @@ running, quit if it terminated."
        (t (message "%s" err)))
      (with-current-buffer "*Messages*" (test-output "MESSAGES"))))
 
+(defmacro test-time (&rest body)
+  `(let ((results (mapcar (lambda (x) (/ x 5.0)) (benchmark-run 5 ,@body))))
+     (message "\t\t%0.2f\t%0.2f\t%0.2f" (nth 0 results) (nth 1 results) (nth 2 results))
+     (with-current-buffer "*Messages*" (test-output "MESSAGES"))))
+
 ;; For historical reasons, we hide deleted tags by default in the test
 ;; suite
 (setq notmuch-tag-deleted-formats
