@@ -331,11 +331,21 @@ tags.
 As is the case with :ref:`notmuch-search`, the presentation of results
 can be controlled by the variable ``notmuch-search-oldest-first``.
 
+.. _notmuch-unthreaded:
+
+notmuch-unthreaded
+------------------
+
+``notmuch-unthreaded-mode`` is similar to :any:`notmuch-tree` in that
+each line corresponds to a single message, but no thread information
+is presented.
+
+Keybindings are the same as :any:`notmuch-tree`.
 
 Global key bindings
 ===================
 
-Several features are accessible from anywhere in notmuch through the
+Several features are accessible from most places in notmuch through the
 following key bindings:
 
 ``j``
