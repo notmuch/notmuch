@@ -278,6 +278,7 @@ This can be used with `notmuch-tag-format-image-data'."
 ;;; track history of tag operations
 (defvar-local notmuch-tag-history nil
   "Buffer local history of `notmuch-tag' function.")
+(put 'notmuch-tag-history 'permanent-local t)
 
 ;;; Format Handling
 
@@ -501,6 +502,19 @@ notmuch-after-tag-hook will be run."
   (notmuch-dlet ((tag-changes tag-changes)
 		 (query query))
     (run-hooks 'notmuch-after-tag-hook)))
+
+(defun notmuch-tag-undo ()
+  "Undo the previous tagging operation in the current buffer. Uses
+buffer local variable `notmuch-tag-history' to determine what
+that operation was."
+  (interactive)
+  (when (null notmuch-tag-history)
+    (error "no further notmuch undo information"))
+  (let* ((action (pop notmuch-tag-history))
+	 (query (plist-get action :query))
+	 (changes (notmuch-tag-change-list (plist-get action :tag-changes) t)))
+    (notmuch-tag query changes t))
+  (notmuch-refresh-this-buffer))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.

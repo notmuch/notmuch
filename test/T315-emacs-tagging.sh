@@ -103,5 +103,55 @@ test_emacs '(notmuch-search "subject:\"search race test\" -subject:two")
 output=$(notmuch search --output=messages 'tag:search-global-race-tag')
 test_expect_equal "$output" "id:$gen_msg_id_1"
 
+test_begin_subtest "undo with empty history is an error"
+test_emacs "(let ((notmuch-tag-history nil))
+  (test-log-error
+   (notmuch-tag-undo)))
+  "
+cat <<EOF > EXPECTED
+(error no further notmuch undo information)
+EOF
+test_expect_equal_file EXPECTED MESSAGES
+
+for mode in search show tree unthreaded; do
+    test_begin_subtest "undo tagging in $mode mode"
+    test_emacs "(let ((notmuch-tag-history nil))
+      (notmuch-$mode \"$os_x_darwin_thread\")
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+tag-to-be-undone-$mode\")
+      (notmuch-tag-undo)
+      (notmuch-test-wait))"
+    count=$(notmuch count "tag:tag-to-be-undone-$mode")
+    test_expect_equal "$count" "0"
+
+    test_begin_subtest "undo tagging in $mode mode (multiple operations)"
+    test_emacs "(let ((notmuch-tag-history nil))
+      (notmuch-$mode \"$os_x_darwin_thread\")
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+one-$mode\")
+      (execute-kbd-macro \"+two-$mode\")
+      (notmuch-tag-undo)
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+three-$mode\"))"
+    output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+    notmuch tag "-one-$mode" "-three-$mode" $os_x_darwin_thread
+    test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox one-$mode three-$mode unread)"
+
+    test_begin_subtest "undo tagging in $mode mode (multiple undo)"
+    test_emacs "(let ((notmuch-tag-history nil))
+      (notmuch-$mode \"$os_x_darwin_thread\")
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+one-$mode\")
+      (execute-kbd-macro \"+two-$mode\")
+      (notmuch-tag-undo)
+      (notmuch-test-wait)
+      (notmuch-tag-undo)
+      (notmuch-test-wait)
+      (execute-kbd-macro \"+three-$mode\"))"
+    output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+    notmuch tag "-one-$mode" "-three-$mode" $os_x_darwin_thread
+    test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox three-$mode unread)"
+done
+
 
 test_done

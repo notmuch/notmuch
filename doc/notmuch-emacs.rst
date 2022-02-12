@@ -383,6 +383,21 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 
   |docstring::notmuch-tagging-keys|
 
+.. _notmuch-tag-undo:
+
+notmuch-tag-undo
+----------------
+
+Each notmuch buffer supporting tagging operations (i.e buffers in
+:any:`notmuch-show`, :any:`notmuch-search`, :any:`notmuch-tree`, and
+:any:`notmuch-unthreaded` mode) keeps a local stack of tagging
+operations. These can be undone via ``notmuch-tag-undo``. By default
+this is bound to the usual Emacs keys for undo.
+
+:index:`notmuch-tag-undo`
+
+   |docstring::notmuch-tag-undo|
+
 Buffer navigation
 =================
 
