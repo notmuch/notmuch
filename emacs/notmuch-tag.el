@@ -458,7 +458,11 @@ from TAGS if present."
   "Use batch tagging if the tagging query is longer than this.
 
 This limits the length of arguments passed to the notmuch CLI to
-avoid system argument length limits and performance problems.")
+avoid system argument length limits and performance problems.
+
+NOTE: this variable is no longer used.")
+
+(make-obsolete-variable 'notmuch-tag-argument-limit nil "notmuch 0.36")
 
 (defun notmuch-tag (query tag-changes)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
@@ -481,16 +485,13 @@ notmuch-after-tag-hook will be run."
     (notmuch-dlet ((tag-changes tag-changes)
 		   (query query))
       (run-hooks 'notmuch-before-tag-hook))
-    (if (<= (length query) notmuch-tag-argument-limit)
-	(apply 'notmuch-call-notmuch-process "tag"
-	       (append tag-changes (list "--" query)))
-      ;; Use batch tag mode to avoid argument length limitations
-      (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
-			      " -- " query)))
-	(notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
-    (notmuch-dlet ((tag-changes tag-changes)
+    ;; Use batch tag mode to avoid argument length limitations
+    (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
+			    " -- " query)))
+      (notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
+  (notmuch-dlet ((tag-changes tag-changes)
 		   (query query))
-      (run-hooks 'notmuch-after-tag-hook))))
+      (run-hooks 'notmuch-after-tag-hook)))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.
