@@ -292,4 +292,10 @@ for code in OUT_OF_MEMORY XAPIAN_EXCEPTION ; do
     test_expect_code 0 "notmuch_with_shim shim-$code insert --keep < \"$gen_msg_filename\""
 done
 
+test_begin_subtest "insert converts mboxes on delivery"
+test_subtest_known_broken
+notmuch insert +unmboxed < "${TEST_DIRECTORY}"/corpora/indexing/mbox-attachment.eml
+output=$(notmuch count tag:unmboxed)
+test_expect_equal "${output}" 1
+
 test_done
