@@ -55,4 +55,5 @@
 | >         | notmuch-search-last-thread             |                                                       |                                         |
 | ?         | notmuch-help                           | notmuch-help                                          | notmuch-help                            |
 | \vert     |                                        | notmuch-show-pipe-message                             | notmuch-show-pipe-message               |
+| [remap undo] | notmuch-tag-undo                       | notmuch-tag-undo                                      | notmuch-tag-undo                        |
 |-----------+----------------------------------------+-------------------------------------------------------+-----------------------------------------|

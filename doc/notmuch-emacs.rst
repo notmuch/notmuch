@@ -354,6 +354,8 @@ following key bindings:
 ``k``
     Tagging operations using :ref:`notmuch-tag-jump`
 
+``C-_`` ``C-/`` ``C-x u``: Undo previous tagging operation using :ref:`notmuch-tag-undo`
+
 .. _notmuch-jump:
 
 notmuch-jump
