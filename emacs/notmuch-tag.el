@@ -275,6 +275,10 @@ This can be used with `notmuch-tag-format-image-data'."
   </g>
 </svg>")
 
+;;; track history of tag operations
+(defvar-local notmuch-tag-history nil
+  "Buffer local history of `notmuch-tag' function.")
+
 ;;; Format Handling
 
 (defvar notmuch-tag--format-cache (make-hash-table :test 'equal)
@@ -464,12 +468,13 @@ NOTE: this variable is no longer used.")
 
 (make-obsolete-variable 'notmuch-tag-argument-limit nil "notmuch 0.36")
 
-(defun notmuch-tag (query tag-changes)
+(defun notmuch-tag (query tag-changes &optional omit-hist)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
 QUERY should be a string containing the search-terms.
-TAG-CHANGES is a list of strings of the form \"+tag\" or
-\"-tag\" to add or remove tags, respectively.
+TAG-CHANGES is a list of strings of the form \"+tag\" or \"-tag\"
+to add or remove tags, respectively.  OMIT-HIST disables history
+tracking if non-nil.
 
 Note: Other code should always use this function to alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
@@ -485,13 +490,17 @@ notmuch-after-tag-hook will be run."
     (notmuch-dlet ((tag-changes tag-changes)
 		   (query query))
       (run-hooks 'notmuch-before-tag-hook))
-    ;; Use batch tag mode to avoid argument length limitations
-    (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
-			    " -- " query)))
-      (notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
+    (with-temp-buffer
+      (insert (concat (mapconcat #'notmuch-hex-encode tag-changes " ") " -- " query))
+      (unless (= 0
+		 (notmuch--call-process-region
+		  (point-min) (point-max) notmuch-command t t nil "tag" "--batch"))
+	(notmuch-logged-error "notmuch tag failed" (buffer-string))))
+    (unless omit-hist
+      (push (list :query query :tag-changes tag-changes) notmuch-tag-history)))
   (notmuch-dlet ((tag-changes tag-changes)
-		   (query query))
-      (run-hooks 'notmuch-after-tag-hook)))
+		 (query query))
+    (run-hooks 'notmuch-after-tag-hook)))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.
