@@ -241,6 +241,26 @@ maildir_mktemp (const void *ctx, const char *maildir, bool world_readable, char 
     return fd;
 }
 
+static bool
+write_buf (const char *buf, int fdout, ssize_t remain)
+{
+    const char *p = buf;
+
+    do {
+	ssize_t written = write (fdout, p, remain);
+	if (written < 0 && errno == EINTR)
+	    continue;
+	if (written <= 0) {
+	    fprintf (stderr, "Error: writing to temporary file: %s",
+		     strerror (errno));
+	    return false;
+	}
+	p += written;
+	remain -= written;
+    } while (remain > 0);
+    return true;
+}
+
 /*
  * Copy fdin to fdout, return true on success, and false on errors and
  * empty input.
@@ -253,7 +273,6 @@ copy_fd (int fdout, int fdin)
     while (! interrupted) {
 	ssize_t remain;
 	char buf[4096];
-	char *p;
 
 	remain = read (fdin, buf, sizeof (buf));
 	if (remain == 0)
@@ -265,21 +284,9 @@ copy_fd (int fdout, int fdin)
 		     strerror (errno));
 	    return false;
 	}
-
-	p = buf;
-	do {
-	    ssize_t written = write (fdout, p, remain);
-	    if (written < 0 && errno == EINTR)
-		continue;
-	    if (written <= 0) {
-		fprintf (stderr, "Error: writing to temporary file: %s",
-			 strerror (errno));
-		return false;
-	    }
-	    p += written;
-	    remain -= written;
-	    empty = false;
-	} while (remain > 0);
+	if (! write_buf (buf, fdout, remain))
+	    return false;
+	empty = false;
     }
 
     return (! interrupted && ! empty);
