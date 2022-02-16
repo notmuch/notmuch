@@ -93,7 +93,7 @@
 Supported fields are: date, count, authors, subject, tags.
 For example:
     (setq notmuch-search-result-format
-          '((\"authors\" . \"%-40s\")
+          \\='((\"authors\" . \"%-40s\")
             (\"subject\" . \"%s\")))
 
 Line breaks are permitted in format strings (though this is
