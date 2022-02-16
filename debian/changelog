@@ -1,3 +1,9 @@
+notmuch (0.35-1~bpo11+2) bullseye-backports; urgency=medium
+
+  * Once more with binaries
+
+ -- David Bremner <bremner@debian.org>  Tue, 15 Feb 2022 22:56:20 -0400
+
 notmuch (0.35-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Rebuild for bullseye-backports.
