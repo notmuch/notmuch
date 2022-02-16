@@ -10,11 +10,8 @@ test_begin_subtest "catching DatabaseModifiedError in _notmuch_message_ensure_me
 first_id=$(notmuch search --output=messages '*'| head -1 | sed s/^id://)
 
 test_C ${MAIL_DIR} <<EOF
-#include <unistd.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
-#include <talloc.h>
-#include <assert.h>
+
 int
 main (int argc, char **argv)
 {

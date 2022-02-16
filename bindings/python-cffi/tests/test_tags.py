@@ -23,7 +23,7 @@ class TestImmutable:
         """
         maildir.deliver()
         notmuch('new')
-        with database.Database(maildir.path) as db:
+        with database.Database(maildir.path, config=database.Database.CONFIG.EMPTY) as db:
             yield db.tags
 
     def test_type(self, tagset):
@@ -33,7 +33,7 @@ class TestImmutable:
     def test_hash(self, tagset, maildir, notmuch):
         h0 = hash(tagset)
         notmuch('tag', '+foo', '*')
-        with database.Database(maildir.path) as db:
+        with database.Database(maildir.path, config=database.Database.CONFIG.EMPTY) as db:
             h1 = hash(db.tags)
         assert h0 != h1
 
@@ -42,7 +42,7 @@ class TestImmutable:
 
     def test_neq(self, tagset, maildir, notmuch):
         notmuch('tag', '+foo', '*')
-        with database.Database(maildir.path) as db:
+        with database.Database(maildir.path, config=database.Database.CONFIG.EMPTY) as db:
             assert tagset != db.tags
 
     def test_contains(self, tagset):
@@ -159,7 +159,8 @@ class TestMutableTagset:
         _, pathname = maildir.deliver()
         notmuch('new')
         with database.Database(maildir.path,
-                               mode=database.Mode.READ_WRITE) as db:
+                               mode=database.Mode.READ_WRITE,
+                               config=database.Database.CONFIG.EMPTY) as db:
             msg = db.get(pathname)
             yield msg.tags
 
@@ -195,7 +196,8 @@ class TestMutableTagset:
         _, pathname = maildir.deliver(flagged=True)
         notmuch('new')
         with database.Database(maildir.path,
-                               mode=database.Mode.READ_WRITE) as db:
+                               mode=database.Mode.READ_WRITE,
+                               config=database.Database.CONFIG.EMPTY) as db:
             msg = db.get(pathname)
             msg.tags.discard('flagged')
             msg.tags.from_maildir_flags()
@@ -205,7 +207,8 @@ class TestMutableTagset:
         _, pathname = maildir.deliver(flagged=True)
         notmuch('new')
         with database.Database(maildir.path,
-                               mode=database.Mode.READ_WRITE) as db:
+                               mode=database.Mode.READ_WRITE,
+                               config=database.Database.CONFIG.EMPTY) as db:
             msg = db.get(pathname)
             flags = msg.path.name.split(',')[-1]
             assert 'F' in flags

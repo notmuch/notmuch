@@ -43,7 +43,7 @@ Supported options for **search** include
 
 .. option:: --output=(summary|threads|messages|files|tags)
 
-   **summary**
+   summary
      Output a summary of each thread with any message matching the
      search terms. The summary includes the thread ID, date, the
      number of messages in the thread (both the number matched and
@@ -52,19 +52,19 @@ Supported options for **search** include
      for some messages, the total number of files is printed in
      parentheses (see below for an example).
 
-   **threads**
+   threads
      Output the thread IDs of all threads with any message matching
      the search terms, either one per line (``--format=text``),
      separated by null characters (``--format=text0``), as a JSON array
      (``--format=json``), or an S-Expression list (``--format=sexp``).
 
-   **messages**
+   messages
      Output the message IDs of all messages matching the search
      terms, either one per line (``--format=text``), separated by null
      characters (``--format=text0``), as a JSON array (``--format=json``),
      or as an S-Expression list (``--format=sexp``).
 
-   **files**
+   files
      Output the filenames of all messages matching the search
      terms, either one per line (``--format=text``), separated by null
      characters (``--format=text0``), as a JSON array (``--format=json``),
@@ -78,7 +78,7 @@ Supported options for **search** include
      in other directories that are included in the output, although
      these files alone would not match the search.
 
-   **tags**
+   tags
      Output all tags that appear on any message matching the search
      terms, either one per line (``--format=text``), separated by null
      characters (``--format=text0``), as a JSON array (``--format=json``),
@@ -115,20 +115,20 @@ Supported options for **search** include
    terms. This option specifies whether to omit excluded messages in
    the search process.
 
-   **true** (default)
+   true (default)
      Prevent excluded messages from matching the search terms.
 
-   **all**
+   all
      Additionally prevent excluded messages from appearing in
      displayed results, in effect behaving as though the excluded
      messages do not exist.
 
-   **false**
+   false
      Allow excluded messages to match search terms and appear in
      displayed results. Excluded messages are still marked in the
      relevant outputs.
 
-   **flag**
+   flag
      Only has an effect when ``--output=summary``. The output is
      almost identical to **false**, but the "match count" is the
      number of matching non-excluded messages in the thread, rather

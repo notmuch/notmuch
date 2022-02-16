@@ -172,7 +172,7 @@ json_separator (struct sprinter *sp)
 }
 
 struct sprinter *
-sprinter_json_create (const void *ctx, FILE *stream)
+sprinter_json_create (notmuch_database_t *db, FILE *stream)
 {
     static const struct sprinter_json template = {
 	.vtable = {
@@ -192,11 +192,12 @@ sprinter_json_create (const void *ctx, FILE *stream)
     };
     struct sprinter_json *res;
 
-    res = talloc (ctx, struct sprinter_json);
+    res = talloc (db, struct sprinter_json);
     if (! res)
 	return NULL;
 
     *res = template;
+    res->vtable.notmuch = db;
     res->stream = stream;
     return &res->vtable;
 }

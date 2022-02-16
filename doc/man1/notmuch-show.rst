@@ -36,7 +36,7 @@ Supported options for **show** include
 
 .. option:: --format=(text|json|sexp|mbox|raw)
 
-   **text** (default for messages)
+   text (default for messages)
      The default plain-text format has all text-content MIME parts
      decoded. Various components in the output, (**message**,
      **header**, **body**, **attachment**, and MIME **part**), will
@@ -46,7 +46,7 @@ Supported options for **show** include
      '}'), to either open or close the component. For a multipart
      MIME message, these parts will be nested.
 
-   **json**
+   json
      The output is formatted with Javascript Object Notation
      (JSON). This format is more robust than the text format for
      automated processing. The nested structure of multipart MIME
@@ -58,7 +58,7 @@ Supported options for **show** include
      as UTF-8 and any message content included in the output will
      be charset-converted to UTF-8.
 
-   **sexp**
+   sexp
      The output is formatted as the Lisp s-expression (sexp)
      equivalent of the JSON format above. Objects are formatted as
      property lists whose keys are keywords (symbols preceded by a
@@ -66,7 +66,7 @@ Supported options for **show** include
      formatted as ``nil``. As for JSON, the s-expression output is
      always encoded as UTF-8.
 
-   **mbox**
+   mbox
      All matching messages are output in the traditional, Unix mbox
      format with each message being prefixed by a line beginning
      with "From " and a blank line separating each message. Lines
@@ -77,7 +77,7 @@ Supported options for **show** include
 
        http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 
-   **raw** (default if ``--part`` is given)
+   raw (default if ``--part`` is given)
      Write the raw bytes of the given MIME part of a message to
      standard out. For this format, it is an error to specify a
      query that matches more than one message.
@@ -220,6 +220,13 @@ A common use of **notmuch show** is to display a single thread of
 email messages. For this, use a search term of "thread:<thread-id>" as
 can be seen in the first column of output from the
 :any:`notmuch-search(1)` command.
+
+CONFIGURATION
+=============
+
+Structured output (json / sexp) is influenced by the configuration
+option :ref:`show.extra_headers <show.extra_headers>`. See
+:any:`notmuch-config(1)` for details.
 
 EXIT STATUS
 ===========

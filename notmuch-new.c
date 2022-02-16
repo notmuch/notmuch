@@ -45,6 +45,7 @@ typedef struct {
     const char *db_path;
     const char *mail_root;
 
+    notmuch_indexopts_t *indexopts;
     int output_is_a_tty;
     enum verbosity verbosity;
     bool debug;
@@ -376,7 +377,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     if (status)
 	goto DONE;
 
-    status = notmuch_database_index_file (notmuch, filename, indexing_cli_choices.opts, &message);
+    status = notmuch_database_index_file (notmuch, filename, state->indexopts, &message);
     switch (status) {
     /* Success. */
     case NOTMUCH_STATUS_SUCCESS:
@@ -600,11 +601,12 @@ add_files (notmuch_database_t *notmuch,
 	    continue;
 	}
 
-	/* Ignore the .notmuch directory and any "tmp" directory
+	/* Ignore any top level .notmuch directory and any "tmp" directory
 	 * that appears within a maildir.
 	 */
 	if ((is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
-	    strcmp (entry->d_name, ".notmuch") == 0)
+	    (strcmp (entry->d_name, ".notmuch") == 0
+	     && (strcmp (path, state->mail_root)) == 0))
 	    continue;
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
@@ -1150,6 +1152,8 @@ notmuch_new_command (notmuch_database_t *notmuch, int argc, char *argv[])
     else if (verbose)
 	add_files_state.verbosity = VERBOSITY_VERBOSE;
 
+    add_files_state.indexopts = notmuch_database_get_default_indexopts (notmuch);
+
     add_files_state.new_tags = notmuch_config_get_values (notmuch, NOTMUCH_CONFIG_NEW_TAGS);
 
     if (print_status_database (
@@ -1217,7 +1221,7 @@ notmuch_new_command (notmuch_database_t *notmuch, int argc, char *argv[])
     if (notmuch == NULL)
 	return EXIT_FAILURE;
 
-    status = notmuch_process_shared_indexing_options (notmuch);
+    status = notmuch_process_shared_indexing_options (add_files_state.indexopts);
     if (status != NOTMUCH_STATUS_SUCCESS) {
 	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
 		 notmuch_status_to_string (status));

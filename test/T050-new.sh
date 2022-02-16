@@ -329,6 +329,18 @@ notmuch config set new.tags "foo;;bar"
 output=$(NOTMUCH_NEW --quiet 2>&1)
 test_expect_equal "$output" ""
 
+test_begin_subtest "leading/trailing whitespace in new.tags is ignored"
+# avoid complications with leading spaces and "notmuch config"
+sed -i 's/^tags=.*$/tags= fu bar ; ; bar /' notmuch-config
+add_message
+NOTMUCH_NEW --quiet
+notmuch dump id:$gen_msg_id | sed 's/ --.*$//' > OUTPUT
+cat <<EOF >EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
++bar +fu%20bar
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"
 output=$(NOTMUCH_NEW --debug 2>&1)
@@ -338,6 +350,16 @@ test_begin_subtest "Invalid tags set exit code"
 test_expect_code 1 "NOTMUCH_NEW --debug 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
+
+test_begin_subtest ".notmuch only ignored at top level"
+generate_message '[dir]=foo/bar/.notmuch/cur' '[subject]="Do not ignore, very important"'
+NOTMUCH_NEW > OUTPUT
+notmuch search subject:Do-not-ignore | notmuch_search_sanitize >> OUTPUT
+cat <<EOF > EXPECTED
+Added 1 new message to the database.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Do not ignore, very important (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "RFC822 group names are indexed"
 test_subtest_known_broken
@@ -368,31 +390,26 @@ chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 
+make_shim dif-shim<<EOF
+#include <notmuch-test.h>
+
+WRAP_DLFUNC(notmuch_status_t, notmuch_database_index_file, \
+ (notmuch_database_t *database, const char *filename, notmuch_indexopts_t *indexopts, notmuch_message_t **message))
+
+  if (unlink ("${MAIL_DIR}/vanish")) {
+     fprintf (stderr, "unlink failed\n");
+     exit (42);
+  }
+  return notmuch_database_index_file_orig (database, filename, indexopts, message);
+}
+EOF
+
 test_begin_subtest "Handle files vanishing between scandir and add_file"
 
 # A file for scandir to find. It won't get indexed, so can be empty.
 touch ${MAIL_DIR}/vanish
-
-# Breakpoint to remove the file before indexing
-cat <<EOF > notmuch-new-vanish.gdb
-set breakpoint pending on
-set logging file notmuch-new-vanish-gdb.log
-set logging on
-break notmuch_database_index_file
-commands
-shell rm -f ${MAIL_DIR}/vanish
-continue
-end
-run
-EOF
-
-${TEST_GDB} --batch-silent --return-child-result -x notmuch-new-vanish.gdb \
-    --args notmuch new 2>OUTPUT 1>/dev/null
+notmuch_with_shim dif-shim new 2>OUTPUT 1>/dev/null
 echo "exit status: $?" >> OUTPUT
-
-# Clean up the file in case gdb isn't available.
-rm -f ${MAIL_DIR}/vanish
-
 cat <<EOF > EXPECTED
 Unexpected error with file ${MAIL_DIR}/vanish
 add_file: Something went wrong trying to read or write a file

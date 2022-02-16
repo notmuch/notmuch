@@ -55,14 +55,14 @@ The available configuration items are described below. Non-absolute
 paths are presumed relative to `$HOME` for items in section
 **database**.
 
-**database.path**
+database.path
     Notmuch will store its database here, (in
     sub-directory named ``.notmuch`` if **database.mail\_root**
     is unset).
 
     Default: see :ref:`database`
 
-**database.mail_root**
+database.mail_root
     The top-level directory where your mail currently exists and to
     where mail will be delivered in the future. Files should be
     individual email messages.
@@ -72,7 +72,7 @@ paths are presumed relative to `$HOME` for items in section
     Default: For compatibility with older configurations, the value of
     database.path is used if **database.mail\_root** is unset.
 
-**database.backup_dir**
+database.backup_dir
     Directory to store tag dumps when upgrading database.
 
     History: this configuration value was introduced in notmuch 0.32.
@@ -80,7 +80,7 @@ paths are presumed relative to `$HOME` for items in section
     Default: A sibling directory of the Xapian database called
     `backups`.
 
-**database.hook_dir**
+database.hook_dir
     Directory containing hooks run by notmuch commands. See
     :any:`notmuch-hooks(5)`.
 
@@ -88,7 +88,7 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: See HOOKS, below.
 
-**database.autocommit**
+database.autocommit
 
     How often to commit transactions to disk. `0` means wait until
     command completes, otherwise an integer `n` specifies to commit to
@@ -96,30 +96,30 @@ paths are presumed relative to `$HOME` for items in section
 
     History: this configuration value was introduced in notmuch 0.33.
 
-**user.name**
+user.name
     Your full name.
 
     Default: ``$NAME`` variable if set, otherwise read from
     ``/etc/passwd``.
 
-**user.primary\_email**
+user.primary\_email
     Your primary email address.
 
     Default: ``$EMAIL`` variable if set, otherwise constructed from
     the username and hostname of the current machine.
 
-**user.other\_email**
+user.other\_email
     A list of other email addresses at which you receive email.
 
     Default: not set.
 
-**new.tags**
+new.tags
     A list of tags that will be added to all messages incorporated by
     **notmuch new**.
 
     Default: ``unread;inbox``.
 
-**new.ignore**
+new.ignore
     A list to specify files and directories that will not be searched
     for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
 
@@ -137,7 +137,7 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: empty list.
 
-**search.exclude\_tags**
+search.exclude\_tags
     A list of tags that will be excluded from search results by
     default. Using an excluded tag in a query will override that
     exclusion.
@@ -145,7 +145,21 @@ paths are presumed relative to `$HOME` for items in section
     Default: empty list. Note that :any:`notmuch-setup(1)` puts
     ``deleted;spam`` here when creating new configuration file.
 
-**maildir.synchronize\_flags**
+.. _show.extra_headers:
+
+show.extra\_headers
+
+    By default :any:`notmuch-show(1)` includes the following headers
+    in structured output if they are present in the message:
+    `Subject`, `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Date`. This
+    option allows the specification of a list of further
+    headers to output.
+
+    History: This configuration value was introduced in notmuch 0.35.
+
+    Default: empty list.
+
+maildir.synchronize\_flags
     If true, then the following maildir flags (in message filenames)
     will be synchronized with the corresponding notmuch tags:
 
@@ -178,7 +192,7 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: ``true``.
 
-**index.decrypt**
+index.decrypt
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
 
@@ -231,7 +245,7 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: ``auto``.
 
-**index.header.<prefix>**
+index.header.<prefix>
     Define the query prefix <prefix>, based on a mail header. For
     example ``index.header.List=List-Id`` will add a probabilistic
     prefix ``List:`` that searches the ``List-Id`` field.  User
@@ -240,18 +254,18 @@ paths are presumed relative to `$HOME` for items in section
     supported. See :any:`notmuch-search-terms(7)` for a list of existing
     prefixes, and an explanation of probabilistic prefixes.
 
-**built_with.<name>**
+built_with.<name>
     Compile time feature <name>. Current possibilities include
     "retry_lock" (configure option, included by default).
     (since notmuch 0.30, "compact" and "field_processor" are
     always included.)
 
-**query.<name>**
+query.<name>
     Expansion for named query called <name>. See
     :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
-**squery.<name>**
+squery.<name>
     Expansion for named query called <name>, using s-expression syntax. See
     :any:`notmuch-sexp-queries(7)` for more information about s-expression
     queries.

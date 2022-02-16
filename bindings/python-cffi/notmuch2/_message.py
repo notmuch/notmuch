@@ -206,6 +206,20 @@ class Message(base.NotmuchObject):
         return bool(ret)
 
     @property
+    def matched(self):
+        """Indicates whether this message was matched by the query.
+
+        When a thread is created from a search, some of the
+        messages may not match the original query.  This property
+        is set to *True* for those that do match.
+
+        :raises ObjectDestroyedError: if used after destroyed.
+        """
+        ret = capi.lib.notmuch_message_get_flag(
+            self._msg_p, capi.lib.NOTMUCH_MESSAGE_FLAG_MATCH)
+        return bool(ret)
+
+    @property
     def date(self):
         """The message date as an integer.
 
@@ -357,14 +371,14 @@ class Message(base.NotmuchObject):
         This method will only work if the message was created from a
         thread.  Otherwise it will yield no results.
 
-        :returns: An iterator yielding :class:`Message` instances.
+        :returns: An iterator yielding :class:`OwnedMessage` instances.
         :rtype: MessageIter
         """
         # The notmuch_messages_valid call accepts NULL and this will
         # become an empty iterator, raising StopIteration immediately.
         # Hence no return value checking here.
         msgs_p = capi.lib.notmuch_message_get_replies(self._msg_p)
-        return MessageIter(self, msgs_p, db=self._db)
+        return MessageIter(self, msgs_p, db=self._db, msg_cls=OwnedMessage)
 
     def __hash__(self):
         return hash(self.messageid)

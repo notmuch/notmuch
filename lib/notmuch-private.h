@@ -121,7 +121,7 @@ typedef enum {
  */
 #define NOTMUCH_MESSAGE_ID_MAX (200 - sizeof (NOTMUCH_METADATA_THREAD_ID_PREFIX))
 
-typedef enum _notmuch_private_status {
+typedef enum {
     /* First, copy all the public status values. */
     NOTMUCH_PRIVATE_STATUS_SUCCESS			= NOTMUCH_STATUS_SUCCESS,
     NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY		= NOTMUCH_STATUS_OUT_OF_MEMORY,
@@ -173,7 +173,7 @@ typedef enum _notmuch_private_status {
      (notmuch_status_t) private_status)
 
 /* Flags shared by various lookup functions. */
-typedef enum _notmuch_find_flags {
+typedef enum {
     /* Lookup without creating any documents.  This is the default
      * behavior. */
     NOTMUCH_FIND_LOOKUP = 0,
@@ -711,9 +711,7 @@ _notmuch_thread_create (void *ctx,
 
 /* indexopts.c */
 
-struct _notmuch_indexopts {
-    _notmuch_crypto_t crypto;
-};
+struct _notmuch_indexopts;
 
 #define CONFIG_HEADER_PREFIX "index.header."
 

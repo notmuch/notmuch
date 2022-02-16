@@ -90,6 +90,7 @@ notmuch_reindex_command (notmuch_database_t *notmuch, int argc, char *argv[])
     int opt_index;
     int ret;
     notmuch_status_t status;
+    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (notmuch);
 
     /* Set up our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
@@ -110,7 +111,7 @@ notmuch_reindex_command (notmuch_database_t *notmuch, int argc, char *argv[])
 
     notmuch_process_shared_options (notmuch, argv[0]);
 
-    status = notmuch_process_shared_indexing_options (notmuch);
+    status = notmuch_process_shared_indexing_options (indexopts);
     if (status != NOTMUCH_STATUS_SUCCESS) {
 	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
 		 notmuch_status_to_string (status));
@@ -128,7 +129,7 @@ notmuch_reindex_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    ret = reindex_query (notmuch, query_string, indexing_cli_choices.opts);
+    ret = reindex_query (notmuch, query_string, indexopts);
 
     notmuch_database_destroy (notmuch);
 

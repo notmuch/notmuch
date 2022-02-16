@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-typedef enum hex_status {
+typedef enum {
     HEX_SUCCESS = 0,
     HEX_SYNTAX_ERROR,
     HEX_OUT_OF_MEMORY

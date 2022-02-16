@@ -185,6 +185,50 @@ notmuch search folder:'""' > EXPECTED
 notmuch search --query=sexp '(folder "")'  > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Search by 'folder' with --output=files"
+output=$(notmuch search --output=files --query=sexp '(folder bad/news)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'folder' with --output=files (trailing /)"
+output=$(notmuch search --output=files --query=sexp '(folder bad/news/)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'folder' (multiple)"
+output=$(notmuch search --query=sexp '(folder bad bad/news things/bad)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "Search by 'folder' (multiple, trailing /)"
+output=$(notmuch search --query=sexp '(folder bad bad/news/ things/bad)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "Search by 'path' with --output=files"
+output=$(notmuch search --output=files --query=sexp '(path bad/news)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'path' with --output=files (trailing /)"
+output=$(notmuch search --output=files --query=sexp '(path bad/news/)' | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Search by 'path' specification (multiple)"
+output=$(notmuch search --query=sexp '(path bad bad/news things/bad)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "Search by 'path' specification (multiple, trailing /)"
+output=$(notmuch search --query=sexp '(path bad bad/news/ things/bad)' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
 test_begin_subtest "Search by 'id'"
 add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$(notmuch search --query=sexp "(id ${gen_msg_id})" | notmuch_search_sanitize)
@@ -346,7 +390,7 @@ output=$(notmuch search --query=sexp '(attachment (starts-with not))' | notmuch_
 test_expect_equal "$output" 'thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] "notmuch help" outputs to stderr? (attachment inbox signed unread)'
 
 test_begin_subtest "starts-with, folder"
-notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_dir_sanitize | sed 's/[0-9]*$/XXX/' > OUTPUT
+notmuch search --output=files --query=sexp '(folder (starts-with bad))' | notmuch_search_files_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 MAIL_DIR/bad/msg-XXX
 MAIL_DIR/bad/news/msg-XXX
@@ -766,6 +810,144 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "compound infix query 2"
 notmuch search date:2009-11-18..2009-11-18 and tag:unread > EXPECTED
 notmuch search --query=sexp  '(and (infix "date:2009-11-18..2009-11-18") (infix "tag:unread"))' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, empty"
+notmuch search from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date) (from keithp))'| notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, one argument"
+notmuch search date:2009-11-18 and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, two arguments"
+notmuch search date:2009-11-17..2009-11-18 and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date 2009-11-17 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, illegal nesting 1"
+notmuch search --query=sexp '(to (date))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'date' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, illegal nesting 2"
+notmuch search --query=sexp '(to (date 2021-11-18))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'date' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, illegal nesting 3"
+notmuch search --query=sexp '(date (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as first argument of 'date'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, illegal nesting 4"
+notmuch search --query=sexp '(date today (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as second argument of 'date'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, too many arguments"
+notmuch search --query=sexp '(date yesterday and tommorow)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'date' expects maximum of two arguments
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "date query, bad date"
+notmuch search --query=sexp '(date "hawaiian-pizza-day")' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+Didn't understand date specification 'hawaiian-pizza-day'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, empty"
+notmuch search from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (lastmod) (from keithp))'| notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, one argument"
+notmuch tag +4EFC743A.3060609@april.org id:4EFC743A.3060609@april.org
+revision=$(notmuch count --lastmod '*' | cut -f3)
+notmuch search lastmod:$revision..$revision | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(and (lastmod $revision))" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, two arguments"
+notmuch tag +keithp from:keithp
+revision2=$(notmuch count --lastmod '*' | cut -f3)
+notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 1"
+notmuch search --query=sexp '(to (lastmod))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'lastmod' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, bad from revision"
+notmuch search --query=sexp '(lastmod apples)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+bad 'from' revision: 'apples'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, bad to revision"
+notmuch search --query=sexp '(lastmod 0 apples)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+bad 'to' revision: 'apples'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 2"
+notmuch search --query=sexp '(to (lastmod 2021-11-18))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+nested field: 'lastmod' inside 'to'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 3"
+notmuch search --query=sexp '(lastmod (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as first argument of 'lastmod'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, illegal nesting 4"
+notmuch search --query=sexp '(lastmod today (to))' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+expected atom as second argument of 'lastmod'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, too many arguments"
+notmuch search --query=sexp '(lastmod yesterday and tommorow)' > OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'lastmod' expects maximum of two arguments
+EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "user header (unknown header)"

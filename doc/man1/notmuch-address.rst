@@ -42,7 +42,7 @@ Supported options for **address** include
    neither ``--output=sender`` nor ``--output=recipients`` is
    given, ``--output=sender`` is implied.
 
-   **sender**
+   sender
      Output all addresses from the *From* header.
 
      Note: Searching for **sender** should be much faster than
@@ -50,17 +50,17 @@ Supported options for **address** include
      cached directly in the database whereas other addresses need
      to be fetched from message files.
 
-   **recipients**
+   recipients
      Output all addresses from the *To*, *Cc* and *Bcc* headers.
 
-   **count**
+   count
      Print the count of how many times was the address encountered
      during search.
 
      Note: With this option, addresses are printed only after the
      whole search is finished. This may take long time.
 
-   **address**
+   address
      Output only the email addresses instead of the full mailboxes
      with names and email addresses. This option has no effect on
      the JSON or S-Expression output formats.
@@ -69,17 +69,17 @@ Supported options for **address** include
 
    Control the deduplication of results.
 
-   **no**
+   no
      Output all occurrences of addresses in the matching
      messages. This is not applicable with ``--output=count``.
 
-   **mailbox**
+   mailbox
      Deduplicate addresses based on the full, case sensitive name
      and email address, or mailbox. This is effectively the same as
      piping the ``--deduplicate=no`` output to **sort | uniq**, except
      for the order of results. This is the default.
 
-   **address**
+   address
      Deduplicate addresses based on the case insensitive address
      part of the mailbox. Of all the variants (with different name
      or case), print the one occurring most frequently among the

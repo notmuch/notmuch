@@ -69,8 +69,8 @@ _notmuch_term_mimetype() {
 
 _notmuch_term_path() {
   local ret=1 expl
-  local maildir="$(notmuch config get database.path)"
-  [[ -d $maildir ]] || { _message -e "database.path not found" ; return $ret }
+  local maildir="$(notmuch config get database.mail_root)"
+  [[ -d $maildir ]] || { _message -e "database.mail_root not found" ; return $ret }
 
   _description notmuch-folder expl 'maildir folder'
   _files "$expl[@]" -W $maildir -/ && ret=0
@@ -79,8 +79,8 @@ _notmuch_term_path() {
 
 _notmuch_term_folder() {
   local ret=1 expl
-  local maildir="$(notmuch config get database.path)"
-  [[ -d $maildir ]] || { _message -e "database.path not found" ; return $ret }
+  local maildir="$(notmuch config get database.mail_root)"
+  [[ -d $maildir ]] || { _message -e "database.mail_root not found" ; return $ret }
 
   _description notmuch-folder expl 'maildir folder'
   local ignoredfolders=( '*/(cur|new|tmp)' )

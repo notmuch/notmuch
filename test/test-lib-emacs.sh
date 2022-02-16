@@ -54,8 +54,9 @@ emacs_deliver_message () {
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $*
-	   (notmuch-mua-send-and-exit))"
-
+	   (let ((mml-secure-smime-sign-with-sender t)
+		 (mml-secure-openpgp-sign-with-sender t))
+	     (notmuch-mua-send-and-exit)))"
     # In case message was sent properly, client waits for confirmation
     # before exiting and resuming control here; therefore making sure
     # that server exits by sending (KILL) signal to it is safe.

@@ -21,7 +21,7 @@ build of notmuch supports it with
 
 ::
 
-   $ notmuch config get built_with.sexpr_query
+   $ notmuch config get built_with.sexp_queries
 
 
 S-EXPRESSIONS
@@ -31,10 +31,12 @@ An *s-expression* is either an atom, or list of whitespace delimited
 s-expressions inside parentheses. Atoms are either
 
 *basic value*
+
     A basic value is an unquoted string containing no whitespace, double quotes, or
     parentheses.
 
 *quoted string*
+
     Double quotes (") delimit strings possibly containing whitespace
     or parentheses. These can contain double quote characters by
     escaping with backslash. E.g. ``"this is a quote \""``.
@@ -48,9 +50,11 @@ a *field*, *logical operation*, or *modifier*, and 0 or more
 subqueries.
 
 ``*``
+
    "*" matches any non-empty string in the current field.
 
 ``()``
+
     The empty list matches all messages
 
 *term*
@@ -62,19 +66,23 @@ subqueries.
     phrase splitting see :any:`fields`.
 
 ``(`` *field* |q1| |q2| ... |qn| ``)``
+
     Restrict the queries |q1| to |qn| to *field*, and combine with *and*
     (for most fields) or *or*. See :any:`fields` for more information.
 
 ``(`` *operator* |q1| |q2| ... |qn| ``)``
+
     Combine queries |q1| to |qn|. Currently supported operators are
     ``and``, ``or``, and ``not``. ``(not`` |q1| ... |qn| ``)`` is equivalent
     to ``(and (not`` |q1| ``) ... (not`` |qn| ``))``.
 
 ``(`` *modifier* |q1| |q2| ... |qn| ``)``
+
     Combine queries |q1| to |qn|, and reinterpret the result (e.g. as a regular expression).
     See :any:`modifiers` for more information.
 
 ``(macro (`` |p1| ... |pn| ``) body)``
+
     Define saved query with parameter substitution. The syntax is
     recognized only in saved s-expression queries (see ``squery.*`` in
     :any:`notmuch-config(1)`). Parameter names in ``body`` must be
@@ -164,26 +172,31 @@ MODIFIERS
 that are neither operators nor fields.
 
 ``(infix`` *atom* ``)``
+
     Interpret *atom* as an infix notmuch query (see
     :any:`notmuch-search-terms(7)`). Not supported inside fields.
 
 ``(matching`` |q1| |q2| ... |qn| ``)`` ``(of`` |q1| |q2| ... |qn|  ``)``
+
     Match all messages have the same values of the current field as
     those matching all of |q1| ... |qn|. Supported in most term [#not-path]_ or
     phrase fields. Most commonly used in the ``thread`` field.
 
 ``(query`` *atom* ``)``
+
     Expand to the saved query named by *atom*. See
     :any:`notmuch-config(1)` for more. Note that the saved query must
     be in infix syntax (:any:`notmuch-search-terms(7)`). Not supported
     inside fields.
 
 ``(regex`` *atom* ``)`` ``(rx`` *atom* ``)``
+
     Interpret *atom* as a POSIX.2 regular expression (see
     :manpage:`regex(7)`). This applies in term fields and a subset [#not-phrase]_ of
     phrase fields (see :any:`field-table`).
 
 ``(starts-with`` *subword* ``)``
+
     Matches any term starting with *subword*.  This applies in either
     phrase or term :any:`fields <fields>`, or outside of fields [#not-body]_. Note that
     a ``starts-with`` query cannot be part of a phrase. The
@@ -193,63 +206,80 @@ EXAMPLES
 ========
 
 ``Wizard``
+
     Match all messages containing the word "wizard", ignoring case.
 
 ``added``
+
     Match all messages containing "added", but also those containing "add", "additional",
     "Additional", "adds", etc... via stemming.
 
 ``(and Bob Marley)``
+
     Match messages containing words "Bob" and "Marley", or their stems
     The words need not be adjacent.
 
 ``(not Bob Marley)``
+
     Match messages containing neither "Bob" nor "Marley", nor their stems,
 
 ``"quick fox"`` ``quick-fox`` ``quick@fox``
+
     Match the *phrase* "quick" followed by "fox" in phrase fields (or
     outside a field). Match the literal string in a term field.
 
 ``(folder (of (id 1234@invalid)))``
+
     Match any message in the same folder as the one with Message-Id "1234@invalid"
 
 ``(id 1234@invalid blah@test)``
+
     Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
 
 ``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
+
     Match messages in the given date range with tag unread.
 
 ``(starts-with prelim)``
+
     Match any words starting with "prelim".
 
 ``(subject quick "brown fox")``
+
     Match messages whose subject contains "quick" (anywhere, stemmed) and
     the phrase "brown fox".
 
 ``(subject (starts-with prelim))``
+
     Matches any word starting with "prelim", inside a message subject.
 
 ``(subject (starts-wih quick) "brown fox")``
+
     Match messages whose subject contains "quick brown fox", but also
     "brown fox quicksand".
 
 ``(thread (of (id 1234@invalid)))``
+
     Match any message in the same thread as the one with Message-Id "1234@invalid"
 
 ``(thread (matching (from bob@example.com) (to bob@example.com)))``
+
     Match any (messages in) a thread containing a message from
     "bob@example.com" and a (possibly distinct) message to "bob at
     example.com")
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
+
     Match in the "To" or "Cc" headers, "bob@example.com",
     "mallory@example.org", and also "bob@example.com.au" since it
     contains the adjacent triple "bob", "example", "com".
 
 ``(not (to *))``
+
     Match messages with an empty or invalid 'To' and 'Cc' field.
 
 ``(List *)``
+
     Match messages with a non-empty List-Id header, assuming
     configuration ``index.header.List=List-Id``
 
@@ -306,10 +336,10 @@ NOTES
                in notmuch, this modifier is not supported in the
                ``path`` field.
 
-.. |q1| replace:: :math:`q_1`
-.. |q2| replace:: :math:`q_2`
-.. |qn| replace:: :math:`q_n`
+.. |q1| replace:: `q`\ :sub:`1`
+.. |q2| replace:: `q`\ :sub:`2`
+.. |qn| replace:: `q`\ :sub:`n`
 
-.. |p1| replace:: :math:`p_1`
-.. |p2| replace:: :math:`p_2`
-.. |pn| replace:: :math:`p_n`
+.. |p1| replace:: `p`\ :sub:`1`
+.. |p2| replace:: `p`\ :sub:`2`
+.. |pn| replace:: `p`\ :sub:`n`

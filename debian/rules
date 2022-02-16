@@ -3,7 +3,7 @@
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
-	dh $@ --with python3,elpa
+	dh $@ --with python3,elpa,sphinxdoc
 
 override_dh_auto_configure:
 	BASHCMD=/bin/bash ./configure --prefix=/usr \
@@ -19,7 +19,7 @@ override_dh_auto_test:
 	dh_auto_test -- V=1
 
 override_dh_auto_build:
-	dh_auto_build -- V=1
+	dh_auto_build -- V=1 all sphinx-html
 	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
 	PYBUILD_NAME=notmuch2 dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	$(MAKE) -C contrib/notmuch-mutt

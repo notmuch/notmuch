@@ -435,17 +435,18 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	for (gchar **keys_p = keys; *keys_p; keys_p++) {
 	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
 	    char *normalized_val;
-	    val = g_key_file_get_value (file, *grp, *keys_p, NULL);
-	    if (! val) {
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
 
 	    /* If we opened from a given path, do not overwrite it */
 	    if (strcmp (absolute_key, "database.path") == 0 &&
 		(notmuch->params & NOTMUCH_PARAM_DATABASE) &&
 		notmuch->xapian_db)
 		continue;
+
+	    val = g_key_file_get_string (file, *grp, *keys_p, NULL);
+	    if (! val) {
+		status = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
+	    }
 
 	    normalized_val = _expand_path (notmuch, absolute_key, val);
 	    _notmuch_string_map_set (notmuch->config, absolute_key, normalized_val);
@@ -596,6 +597,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 	return "user.name";
     case NOTMUCH_CONFIG_AUTOCOMMIT:
 	return "database.autocommit";
+    case NOTMUCH_CONFIG_EXTRA_HEADERS:
+	return "show.extra_headers";
     default:
 	return NULL;
     }
@@ -643,6 +646,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	return "";
     case NOTMUCH_CONFIG_AUTOCOMMIT:
 	return "8000";
+    case NOTMUCH_CONFIG_EXTRA_HEADERS:
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
@@ -657,6 +661,10 @@ notmuch_status_t
 _notmuch_config_load_defaults (notmuch_database_t *notmuch)
 {
     notmuch_config_key_t key;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
+    if (notmuch->config == NULL)
+	notmuch->config = _notmuch_string_map_create (notmuch);
 
     for (key = NOTMUCH_CONFIG_FIRST;
 	 key < NOTMUCH_CONFIG_LAST;
@@ -666,11 +674,14 @@ _notmuch_config_load_defaults (notmuch_database_t *notmuch)
 
 	val = _notmuch_string_map_get (notmuch->config, key_string);
 	if (! val) {
+	    if (key == NOTMUCH_CONFIG_MAIL_ROOT && (notmuch->params & NOTMUCH_PARAM_SPLIT))
+		status = NOTMUCH_STATUS_NO_MAIL_ROOT;
+
 	    _notmuch_string_map_set (notmuch->config, key_string, _notmuch_config_default (notmuch,
 											   key));
 	}
     }
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 const char *

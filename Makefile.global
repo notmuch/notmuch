@@ -50,9 +50,9 @@ DETACHED_SIG_FILE=$(TAR_FILE).asc
 PV_FILE=bindings/python/notmuch/version.py
 
 # Smash together user's values with our extra values
-FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(extra_cflags) $(CONFIGURE_CFLAGS)
-FINAL_CXXFLAGS = $(CPPFLAGS) $(CXXFLAGS) $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CONFIGURE_CXXFLAGS)
-FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lnotmuch_util -Llib -lnotmuch
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(WARN_CFLAGS) $(extra_cflags) $(CPPFLAGS) $(CONFIGURE_CFLAGS) $(CFLAGS)
+FINAL_CXXFLAGS = $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CPPFLAGS) $(CONFIGURE_CXXFLAGS) $(CXXFLAGS)
+FINAL_NOTMUCH_LDFLAGS = -Lutil -lnotmuch_util -Llib -lnotmuch $(LDFLAGS)
 ifeq ($(LIBDIR_IN_LDCONFIG),0)
 FINAL_NOTMUCH_LDFLAGS += $(RPATH_LDFLAGS)
 endif

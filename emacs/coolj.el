@@ -45,7 +45,7 @@ Otherwise respect `fill-column'."
   :group 'coolj
   :type 'boolean)
 
-(defcustom coolj-line-prefix-regexp "^\\(>+ \\)*"
+(defcustom coolj-line-prefix-regexp "^\\(>+ ?\\)*"
   "Regular expression that matches line prefixes."
   :group 'coolj
   :type 'regexp)

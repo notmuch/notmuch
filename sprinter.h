@@ -9,6 +9,11 @@
  * (strings, integers and booleans).
  */
 typedef struct sprinter {
+    /*
+     * Open notmuch database
+     */
+    notmuch_database_t *notmuch;
+
     /* Start a new map/dictionary structure. This should be followed by
      * a sequence of alternating calls to map_key and one of the
      * value-printing functions until the map is ended by end.
@@ -65,20 +70,20 @@ typedef struct sprinter {
 /* Create a new unstructured printer that emits the default text format
  * for "notmuch search". */
 struct sprinter *
-sprinter_text_create (const void *ctx, FILE *stream);
+sprinter_text_create (notmuch_database_t *db, FILE *stream);
 
 /* Create a new unstructured printer that emits the text format for
  * "notmuch search", with each field separated by a null character
  * instead of the newline character. */
 struct sprinter *
-sprinter_text0_create (const void *ctx, FILE *stream);
+sprinter_text0_create (notmuch_database_t *db, FILE *stream);
 
 /* Create a new structure printer that emits JSON. */
 struct sprinter *
-sprinter_json_create (const void *ctx, FILE *stream);
+sprinter_json_create (notmuch_database_t *db, FILE *stream);
 
 /* Create a new structure printer that emits S-Expressions. */
 struct sprinter *
-sprinter_sexp_create (const void *ctx, FILE *stream);
+sprinter_sexp_create (notmuch_database_t *db, FILE *stream);
 
 #endif // NOTMUCH_SPRINTER_H

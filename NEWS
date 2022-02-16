@@ -1,3 +1,109 @@
+Notmuch 0.35 (2022-02-06)
+=========================
+
+Library
+-------
+
+Implement the `date` and `lastmod` fields in the S-expression parser.
+
+Ignore trailing `/` for pathnames in both query parsers.
+
+Rename configuration option `built_with.sexpr_query` to
+`built_with.sexp_queries`.
+
+Do not assume a default mail root in split (e.g. XDG) configurations.
+
+Fix some small memory leaks in `notmuch_database_open_with_config`.
+
+CLI
+---
+
+Improve handling of leading/trailing punctation and space for
+configuration lists.
+
+Only ignore `.notmuch` at the top level in `notmuch new`.
+
+Optionally show extra headers in `notmuch show`. See
+`show.extra_headers` in notmuch-config(1).
+
+Emacs
+-----
+
+Drop `C-TAB` binding in hello mode, document `backtab`.
+
+Fix visual glitch in search mode by running `notmuch-search-hook`
+lazily.
+
+Don't add space to completion candidates, improves compatibility with
+third party completion frameworks.
+
+Make citation formating more robust against whitespace.
+
+Use `--excludes=false` when generating the 'All tags' section.
+
+Use cached copy of message body for `Fcc`, avoiding variant bodies for
+signed and/or encrypted messages.
+
+Add notmuch-logo.svg and use it in notmuch-hello view, replacing
+the .png version.
+
+Make header line in show buffers optional.
+
+Add customizable names for search buffers.
+
+Build
+-----
+
+Fix out-of-tree build for `python-cffi` bindings.
+
+Rearrange position of {C,CXX,CPP,LD}FLAGS, prevent some clashes with
+installed version of notmuch.
+
+Ignore more configure options.
+
+Test Suite
+----------
+
+Replace some uses of `gdb` in the test suite with `LD_PRELOAD` based
+shims.
+
+Use `--with-colons` for gpgsm, fix compatibility with newer gnupg.
+
+Python bindings
+---------------
+
+Add `matched` property to message objects.
+
+Users are reminded that the old python bindings in bindings/python are
+deprecated; this will probably be the last major release that ships
+them.
+
+Completion
+----------
+
+Use `database.mail_root` for path completion in bash/zsh.
+
+Notmuch 0.34.3 (2022-01-09)
+===========================
+
+Library
+-------
+
+Do not crash when presented with a .notmuch directory without a
+xapian/ subdirectory.
+
+Python Bindings (notmuch2)
+--------------------------
+
+Database constructor now searches for configuration by default. Pass
+`config=Database.CONFIG.EMPTY` to disable.
+
+The `Message.replies()` method now returns OwnedMessage objects, to
+prevent certain memory de-allocation errors.
+
+Fix for importing `notmuch2` module when building bindings
+documentation.
+
 Notmuch 0.34.2 (2021-12-09)
 ===========================
 

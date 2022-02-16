@@ -65,7 +65,7 @@ struct sprinter;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
-    struct sprinter *(*new_sprinter)(const void *ctx, FILE *stream);
+    struct sprinter *(*new_sprinter)(notmuch_database_t * db, FILE *stream);
     notmuch_status_t (*part)(const void *ctx, struct sprinter *sprinter,
 			     struct mime_node *node, int indent,
 			     const struct notmuch_show_params *params);
@@ -426,13 +426,13 @@ mime_node_seek_dfs (mime_node_t *node, int n);
 const _notmuch_message_crypto_t *
 mime_node_get_message_crypto_status (mime_node_t *node);
 
-typedef enum dump_formats {
+typedef enum {
     DUMP_FORMAT_AUTO,
     DUMP_FORMAT_BATCH_TAG,
     DUMP_FORMAT_SUP
 } dump_format_t;
 
-typedef enum dump_includes {
+typedef enum {
     DUMP_INCLUDE_TAGS		= 1,
     DUMP_INCLUDE_CONFIG		= 2,
     DUMP_INCLUDE_PROPERTIES	= 4
@@ -499,11 +499,10 @@ int notmuch_minimal_options (const char *subcommand_name,
 struct _notmuch_client_indexing_cli_choices {
     int decrypt_policy;
     bool decrypt_policy_set;
-    notmuch_indexopts_t *opts;
 };
 extern struct _notmuch_client_indexing_cli_choices indexing_cli_choices;
 extern const notmuch_opt_desc_t notmuch_shared_indexing_options [];
 notmuch_status_t
-notmuch_process_shared_indexing_options (notmuch_database_t *notmuch);
+notmuch_process_shared_indexing_options (notmuch_indexopts_t *opts);
 
 #endif

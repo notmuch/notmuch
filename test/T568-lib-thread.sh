@@ -24,9 +24,8 @@ cat <<'EOF' > c_tail
 EOF
 
 cat <<EOF > c_head
-#include <stdio.h>
-#include <notmuch.h>
 #include <notmuch-test.h>
+
 int main (int argc, char** argv)
 {
    notmuch_database_t *db;

@@ -23,6 +23,13 @@ EOF
 expected_dir=$NOTMUCH_SRCDIR/test/setup.expected-output
 test_expect_equal_file ${expected_dir}/config-with-comments new-notmuch-config
 
+test_begin_subtest "setup consistent with config-set for single items"
+# note this relies on the config state from the previous test.
+notmuch --config=new-notmuch-config config list > list.setup
+notmuch --config=new-notmuch-config config set search.exclude_tags baz
+notmuch --config=new-notmuch-config config list > list.config
+test_expect_equal_file list.setup list.config
+
 test_begin_subtest "notmuch with a config but without a database suggests notmuch new"
 notmuch 2>&1 | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED

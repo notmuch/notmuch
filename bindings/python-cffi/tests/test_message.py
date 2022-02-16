@@ -97,6 +97,9 @@ class TestMessage:
     def test_ghost_no(self, msg):
         assert not msg.ghost
 
+    def test_matched_no(self,msg):
+        assert not msg.matched
+
     def test_date(self, msg):
         # XXX Someone seems to treat things as local time instead of
         #     UTC or the other way around.

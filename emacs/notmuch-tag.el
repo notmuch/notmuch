@@ -241,7 +241,7 @@ DATA is the content of an SVG picture (e.g., as returned by
   "Return SVG data representing a star icon.
 This can be used with `notmuch-tag-format-image-data'."
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
-<svg version=\"1.1\" width=\"16\" height=\"16\">
+<svg version=\"1.1\" width=\"16\" height=\"16\" xmlns=\"http://www.w3.org/2000/svg\">
   <g transform=\"translate(-242.81601,-315.59635)\">
     <path
        d=\"m 290.25762,334.31206 -17.64143,-11.77975 -19.70508,7.85447 5.75171,-20.41814 -13.55925,-16.31348 21.19618,-0.83936 11.325,-17.93675 7.34825,19.89939 20.55849,5.22795 -16.65471,13.13786 z\"
@@ -254,7 +254,7 @@ This can be used with `notmuch-tag-format-image-data'."
   "Return SVG data representing an empty star icon.
 This can be used with `notmuch-tag-format-image-data'."
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
-<svg version=\"1.1\" width=\"16\" height=\"16\">
+<svg version=\"1.1\" width=\"16\" height=\"16\" xmlns=\"http://www.w3.org/2000/svg\">
   <g transform=\"translate(-242.81601,-315.59635)\">
     <path
        d=\"m 290.25762,334.31206 -17.64143,-11.77975 -19.70508,7.85447 5.75171,-20.41814 -13.55925,-16.31348 21.19618,-0.83936 11.325,-17.93675 7.34825,19.89939 20.55849,5.22795 -16.65471,13.13786 z\"
@@ -267,7 +267,7 @@ This can be used with `notmuch-tag-format-image-data'."
   "Return SVG data representing a tag icon.
 This can be used with `notmuch-tag-format-image-data'."
   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
-<svg version=\"1.1\" width=\"16\" height=\"16\">
+<svg version=\"1.1\" width=\"16\" height=\"16\" xmlns=\"http://www.w3.org/2000/svg\">
   <g transform=\"translate(0,-1036.3622)\">
     <path
        d=\"m 0.44642857,1040.9336 12.50000043,0 2.700893,3.6161 -2.700893,3.616 -12.50000043,0 z\"
@@ -429,17 +429,9 @@ initial input in the minibuffer."
 	    (set-keymap-parent map crm-local-completion-map)
 	    (define-key map " " 'self-insert-command)
 	    map)))
-    (delete "" (completing-read-multiple
-		prompt
-		;; Append the separator to each completion so when the
-		;; user completes a tag they can immediately begin
-		;; entering another.  `completing-read-multiple'
-		;; ultimately splits the input on crm-separator, so we
-		;; don't need to strip this back off (we just need to
-		;; delete "empty" entries caused by trailing spaces).
-		(mapcar (lambda (tag-op) (concat tag-op crm-separator)) tag-list)
-		nil nil initial-input
-		'notmuch-read-tag-changes-history))))
+    (completing-read-multiple prompt tag-list
+			      nil nil initial-input
+			      'notmuch-read-tag-changes-history)))
 
 ;;; Tagging
 

@@ -220,7 +220,9 @@ test_emacs '(notmuch-show "id:basic-encrypted@crypto.notmuchmail.org")
 test_expect_equal_file $EXPECTED/notmuch-show-decrypted-message OUTPUT
 
 test_begin_subtest "show encrypted rfc822 message"
-test_subtest_known_broken
+if ${TEST_EMACS} --quick --batch --eval '(kill-emacs (if (version< emacs-version "28") 0 1))'; then
+    test_subtest_known_broken
+fi
 test_emacs '(notmuch-show "id:encrypted-rfc822-attachment@crypto.notmuchmail.org")
             (test-visible-output)'
 test_expect_code 1 'fgrep "!!!" OUTPUT'

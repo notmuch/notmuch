@@ -383,7 +383,10 @@ _config_set_list (notmuch_conffile_t *config,
 		  const char *list[],
 		  size_t length)
 {
-    g_key_file_set_string_list (config->key_file, group, key, list, length);
+    if (length > 1)
+	g_key_file_set_string_list (config->key_file, group, key, list, length);
+    else
+	g_key_file_set_string (config->key_file, group, key, list[0]);
 }
 
 void
@@ -680,9 +683,9 @@ _notmuch_config_list_built_with ()
     printf ("%sretry_lock=%s\n",
 	    BUILT_WITH_PREFIX,
 	    notmuch_built_with ("retry_lock") ? "true" : "false");
-    printf ("%ssexpr_query=%s\n",
+    printf ("%ssexp_queries=%s\n",
 	    BUILT_WITH_PREFIX,
-	    notmuch_built_with ("sexpr_query") ? "true" : "false");
+	    notmuch_built_with ("sexp_queries") ? "true" : "false");
 }
 
 static int

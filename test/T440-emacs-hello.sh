@@ -68,6 +68,16 @@ test_emacs '(notmuch-hello)
 notmuch tag -$tag '*'
 test_expect_equal_file $EXPECTED/notmuch-hello-long-names OUTPUT
 
+test_begin_subtest "All tags show up"
+tag=exclude_me
+notmuch tag +$tag '*'
+notmuch config set search.exclude_tags $tag
+test_emacs '(notmuch-hello)
+            (test-output)'
+notmuch tag -$tag '*'
+test_expect_equal_file $EXPECTED/notmuch-hello-all-tags OUTPUT
+
+test_done
 test_begin_subtest "notmuch-hello with nonexistent CWD"
 test_emacs '
       (notmuch-hello)

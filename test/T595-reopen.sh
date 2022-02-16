@@ -6,8 +6,6 @@ test_description="library reopen API"
 add_email_corpus
 
 cat <<EOF > c_head
-#include <string.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
 
 int main (int argc, char** argv)

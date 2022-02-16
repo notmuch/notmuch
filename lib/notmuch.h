@@ -58,7 +58,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION        5
-#define LIBNOTMUCH_MINOR_VERSION        5
+#define LIBNOTMUCH_MINOR_VERSION        6
 #define LIBNOTMUCH_MICRO_VERSION        0
 
 
@@ -112,7 +112,7 @@ typedef int notmuch_bool_t;
  * A zero value (NOTMUCH_STATUS_SUCCESS) indicates that the function
  * completed without error. Any other value indicates an error.
  */
-typedef enum _notmuch_status {
+typedef enum {
     /**
      * No error occurred.
      */
@@ -225,6 +225,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
     /**
+     * No mail root could be deduced from parameters and environment
+     */
+    NOTMUCH_STATUS_NO_MAIL_ROOT,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -323,7 +327,7 @@ typedef enum {
  * config_path="" and error_message=NULL
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  */
-/* NOTMUCH_DEPRECATED(5, 4) */
+NOTMUCH_DEPRECATED(5, 4)
 notmuch_status_t
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode,
@@ -335,7 +339,7 @@ notmuch_database_open (const char *path,
  * @deprecated Deprecated as of libnotmuch 5.4 (notmuch 0.32)
  *
  */
-/* NOTMUCH_DEPRECATED(5, 4) */
+NOTMUCH_DEPRECATED(5, 4)
 notmuch_status_t
 notmuch_database_open_verbose (const char *path,
 			       notmuch_database_mode_t mode,
@@ -1686,7 +1690,7 @@ notmuch_message_reindex (notmuch_message_t *message,
 /**
  * Message flags.
  */
-typedef enum _notmuch_message_flag {
+typedef enum {
     NOTMUCH_MESSAGE_FLAG_MATCH,
     NOTMUCH_MESSAGE_FLAG_EXCLUDED,
 
@@ -2532,7 +2536,7 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 /**
  * Configuration keys known to libnotmuch
  */
-typedef enum _notmuch_config_key {
+typedef enum {
     NOTMUCH_CONFIG_FIRST,
     NOTMUCH_CONFIG_DATABASE_PATH = NOTMUCH_CONFIG_FIRST,
     NOTMUCH_CONFIG_MAIL_ROOT,
@@ -2546,6 +2550,7 @@ typedef enum _notmuch_config_key {
     NOTMUCH_CONFIG_OTHER_EMAIL,
     NOTMUCH_CONFIG_USER_NAME,
     NOTMUCH_CONFIG_AUTOCOMMIT,
+    NOTMUCH_CONFIG_EXTRA_HEADERS,
     NOTMUCH_CONFIG_LAST
 } notmuch_config_key_t;
 

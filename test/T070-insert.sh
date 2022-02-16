@@ -234,6 +234,18 @@ output=$(notmuch show --format=json id:$gen_msg_id)
 test_json_nodes <<<"$output" \
 		'new_tags:[0][0][0]["tags"] = ["bar", "foo"]'
 
+test_begin_subtest "leading/trailing whitespace in new.tags is ignored"
+# avoid complications with leading spaces and "notmuch config"
+sed -i 's/^tags=.*$/tags= fu bar ; ; bar /' notmuch-config
+gen_insert_msg
+notmuch insert < $gen_msg_filename
+notmuch dump id:$gen_msg_id | sed 's/ --.*$//' > OUTPUT
+cat <<EOF >EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
++bar +fu%20bar
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"
 gen_insert_msg

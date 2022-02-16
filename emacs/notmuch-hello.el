@@ -198,7 +198,7 @@ fields of the search."
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
 
-(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
+(defimage notmuch-hello-logo ((:type svg :file "notmuch-logo.svg")))
 
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
@@ -486,11 +486,14 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest _ignore)
   (cl-case (widget-get widget :notmuch-search-type)
    (tree
-    (notmuch-tree (widget-get widget :notmuch-search-terms)
-		  nil nil nil nil nil nil
-		  (widget-get widget :notmuch-search-oldest-first)))
+    (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
+      (notmuch-tree (widget-get widget :notmuch-search-terms)
+		    nil nil n nil nil nil
+		    (widget-get widget :notmuch-search-oldest-first))))
    (unthreaded
-    (notmuch-unthreaded (widget-get widget :notmuch-search-terms)))
+    (let ((n (notmuch-search-format-buffer-name (widget-value widget)
+						"unthreaded" t)))
+      (notmuch-unthreaded (widget-get widget :notmuch-search-terms) nil nil n)))
    (t
     (notmuch-search (widget-get widget :notmuch-search-terms)
 		    (widget-get widget :notmuch-search-oldest-first)))))
@@ -557,7 +560,8 @@ with any properties in the original saved-search.
 
 The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
-`notmuch-hello-insert-searches'."
+`notmuch-hello-insert-searches'. :disable-includes can be used to
+turn off the default exclude processing in `notmuch-count(1)'"
   (with-temp-buffer
     (dolist (elem query-list nil)
       (let ((count-query (or (notmuch-saved-search-get elem :count-query)
@@ -570,7 +574,11 @@ options will be handled as specified for
 					    (plist-get options :filter))))
 	 "\n")))
     (unless (= (notmuch--call-process-region (point-min) (point-max) notmuch-command
-				    t t nil "count" "--batch") 0)
+					     t t nil "count"
+					     (if (plist-get options :disable-excludes)
+						 "--exclude=false"
+					       "--exclude=true")
+					     "--batch") 0)
       (notmuch-logged-error
        "notmuch count --batch failed"
        "Please check that the notmuch CLI is new enough to support `count
@@ -702,7 +710,6 @@ with `notmuch-hello-query-counts'."
   ;; that when we modify map it does not modify widget-keymap).
   (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 
@@ -786,7 +793,7 @@ Complete list of currently available key bindings:
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
 		    (string-to-number
-		     (car (notmuch--process-lines notmuch-command "count")))))
+		     (car (notmuch--process-lines notmuch-command "count" "--exclude=false")))))
     (widget-insert " messages.\n")))
 
 (defun notmuch-hello-insert-saved-searches ()
@@ -918,7 +925,8 @@ following:
    nil
    :initially-hidden (not notmuch-show-all-tags-list)
    :hide-tags notmuch-hello-hide-tags
-   :filter notmuch-hello-tag-list-make-query))
+   :filter notmuch-hello-tag-list-make-query
+   :disable-excludes t))
 
 (defun notmuch-hello-insert-footer ()
   "Insert the notmuch-hello footer."

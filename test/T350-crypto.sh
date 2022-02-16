@@ -13,16 +13,29 @@ test_description='PGP/MIME signature verification and decryption'
 test_require_emacs
 add_gnupg_home
 
-test_begin_subtest "emacs delivery of signed message"
+test_begin_subtest "emacs delivery of signed message via fcc"
 test_expect_success \
 'emacs_fcc_message \
     "test signed message 001" \
     "This is a test signed message." \
     "(mml-secure-message-sign)"'
 
+test_begin_subtest "emacs delivery of signed message via fcc and smtp"
+emacs_deliver_message \
+    'signed message sent via SMTP' \
+    'This is a test that messages are sent via SMTP' \
+    "(add-hook 'message-send-mail-hook (lambda () (sleep-for 1)))
+     (mml-secure-message-sign)"
+msg_file=$(notmuch search --output=files subject:signed-message-sent-via-SMTP)
+test_expect_equal_message_body sent_message "$msg_file"
+
 test_begin_subtest "signed part content-type indexing"
-output=$(notmuch search mimetype:multipart/signed and mimetype:application/pgp-signature | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test signed message 001 (inbox signed)"
+notmuch search mimetype:multipart/signed and mimetype:application/pgp-signature | notmuch_search_sanitize > OUTPUT
+cat <<EOF >EXPECTED
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test signed message 001 (inbox signed)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; signed message sent via SMTP (inbox signed)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "signature verification"
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \

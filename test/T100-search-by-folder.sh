@@ -18,6 +18,12 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; T
 thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
 
+test_begin_subtest "search by path: specification (multiple)"
+output=$(notmuch search path:bad path:bad/news path:things/bad | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
 test_begin_subtest "Top level folder"
 output=$(notmuch search folder:'""' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Top level (inbox unread)"
@@ -28,8 +34,13 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite
 
 test_begin_subtest "Folder search with --output=files"
 output=$(notmuch search --output=files folder:bad/news | notmuch_search_files_sanitize)
-test_expect_equal "$output" "MAIL_DIR/bad/news/msg-003
-MAIL_DIR/duplicate/bad/news/msg-003"
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
+
+test_begin_subtest "Folder search with --output=files (trailing /)"
+output=$(notmuch search --output=files folder:bad/news/ | notmuch_search_files_sanitize)
+test_expect_equal "$output" "MAIL_DIR/bad/news/msg-XXX
+MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "After removing duplicate instance of matching path"
 rm -r "${MAIL_DIR}/bad/news"
@@ -39,7 +50,7 @@ test_expect_equal "$output" ""
 
 test_begin_subtest "Folder search with --output=files part #2"
 output=$(notmuch search --output=files folder:duplicate/bad/news | notmuch_search_files_sanitize)
-test_expect_equal "$output" "MAIL_DIR/duplicate/bad/news/msg-003"
+test_expect_equal "$output" "MAIL_DIR/duplicate/bad/news/msg-XXX"
 
 test_begin_subtest "After removing duplicate instance of matching path part #2"
 output=$(notmuch search folder:duplicate/bad/news | notmuch_search_sanitize)
@@ -115,6 +126,13 @@ MAIL_DIR/new/04:2,"
 
 test_begin_subtest "path: search"
 output=$(notmuch search --output=files path:"bar" | notmuch_search_files_sanitize | sort)
+# cur/51:2, is a duplicate of bar/18:2,
+test_expect_equal "$output" "MAIL_DIR/bar/17:2,
+MAIL_DIR/bar/18:2,
+MAIL_DIR/cur/51:2,"
+
+test_begin_subtest "path: search (trailing /)"
+output=$(notmuch search --output=files path:"bar/" | notmuch_search_files_sanitize | sort)
 # cur/51:2, is a duplicate of bar/18:2,
 test_expect_equal "$output" "MAIL_DIR/bar/17:2,
 MAIL_DIR/bar/18:2,

@@ -32,6 +32,8 @@ typedef enum {
     SEXP_FLAG_EXPAND	= 1 << 6,
     SEXP_FLAG_DO_EXPAND = 1 << 7,
     SEXP_FLAG_ORPHAN	= 1 << 8,
+    SEXP_FLAG_RANGE	= 1 << 9,
+    SEXP_FLAG_PATHNAME	= 1 << 10,
 } _sexp_flag_t;
 
 /*
@@ -66,16 +68,21 @@ static _sexp_prefix_t prefixes[] =
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD },
+    { "date",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+      SEXP_FLAG_RANGE },
     { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND |
+      SEXP_FLAG_PATHNAME },
     { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
     { "infix",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
       SEXP_FLAG_SINGLE | SEXP_FLAG_ORPHAN },
     { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
+    { "lastmod",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+      SEXP_FLAG_RANGE },
     { "matching",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_DO_EXPAND },
     { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
@@ -89,7 +96,8 @@ static _sexp_prefix_t prefixes[] =
     { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
       SEXP_FLAG_NONE },
     { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
-      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
+      SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX |
+      SEXP_FLAG_PATHNAME },
     { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
     { "query",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchNothing,
@@ -446,6 +454,79 @@ _sexp_expand_param (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
     return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 }
 
+static notmuch_status_t
+_sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
+		   const sexp_t *sx, Xapian::Query &output)
+{
+    const char *from, *to;
+    std::string msg;
+
+    /* empty range matches everything */
+    if (! sx) {
+	output = Xapian::Query::MatchAll;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    if (sx->ty == SEXP_LIST) {
+	_notmuch_database_log (notmuch, "expected atom as first argument of '%s'\n", prefix->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    from = sx->val;
+    to = from;
+
+    if (sx->next) {
+	if (sx->next->ty == SEXP_LIST) {
+	    _notmuch_database_log (notmuch, "expected atom as second argument of '%s'\n",
+				   prefix->name);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	if (sx->next->next) {
+	    _notmuch_database_log (notmuch, "'%s' expects maximum of two arguments\n", prefix->name);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	to = sx->next->val;
+    }
+
+    if (strcmp (prefix->name, "date") == 0) {
+	notmuch_status_t status;
+	status = _notmuch_date_strings_to_query (NOTMUCH_VALUE_TIMESTAMP, from, to, output, msg);
+	if (status) {
+	    if (! msg.empty ())
+		_notmuch_database_log (notmuch, "%s\n", msg.c_str ());
+	}
+	return status;
+    }
+
+    if (strcmp (prefix->name, "lastmod") == 0) {
+	long from_idx, to_idx;
+
+	try {
+	    from_idx = std::stol (from);
+	} catch (std::logic_error &e) {
+	    _notmuch_database_log (notmuch, "bad 'from' revision: '%s'\n", from);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	try {
+	    to_idx = std::stol (to);
+	} catch (std::logic_error &e) {
+	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
+	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	}
+
+	output = Xapian::Query (Xapian::Query::OP_VALUE_RANGE, NOTMUCH_VALUE_LAST_MOD,
+				Xapian::sortable_serialise (from_idx),
+				Xapian::sortable_serialise (to_idx));
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    _notmuch_database_log (notmuch, "unimplimented range prefix: '%s'\n", prefix->name);
+    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+}
+
 /* Here we expect the s-expression to be a proper list, with first
  * element defining and operation, or as a special case the empty
  * list */
@@ -467,8 +548,13 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 	    return _sexp_parse_wildcard (notmuch, parent, env, "", output);
 	}
 
+	char *atom = sx->val;
+
+	if (parent && parent->flags & SEXP_FLAG_PATHNAME)
+	    strip_trailing (atom, '/');
+
 	if (parent && (parent->flags & SEXP_FLAG_BOOLEAN)) {
-	    output = Xapian::Query (term_prefix + sx->val);
+	    output = Xapian::Query (term_prefix + atom);
 	    return NOTMUCH_STATUS_SUCCESS;
 	}
 
@@ -519,7 +605,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 
     for (_sexp_prefix_t *prefix = prefixes; prefix && prefix->name; prefix++) {
 	if (strcmp (prefix->name, sx->list->val) == 0) {
-	    if (prefix->flags & SEXP_FLAG_FIELD) {
+	    if (prefix->flags & (SEXP_FLAG_FIELD | SEXP_FLAG_RANGE)) {
 		if (parent) {
 		    _notmuch_database_log (notmuch, "nested field: '%s' inside '%s'\n",
 					   prefix->name, parent->name);
@@ -540,6 +626,9 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 				       prefix->name);
 		return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	    }
+
+	    if (prefix->flags & SEXP_FLAG_RANGE)
+		return _sexp_parse_range (notmuch, prefix, sx->list->next, output);
 
 	    if (strcmp (prefix->name, "infix") == 0) {
 		return _sexp_parse_infix (notmuch, sx->list->next, output);

@@ -311,6 +311,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Database exists, not recreated";
     case NOTMUCH_STATUS_BAD_QUERY_SYNTAX:
 	return "Syntax error in query";
+    case NOTMUCH_STATUS_NO_MAIL_ROOT:
+	return "No mail root found";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -590,10 +592,12 @@ notmuch_database_compact (const char *path,
     notmuch_database_t *notmuch = NULL;
     char *message = NULL;
 
-    ret = notmuch_database_open_verbose (path,
-					 NOTMUCH_DATABASE_MODE_READ_WRITE,
-					 &notmuch,
-					 &message);
+    ret = notmuch_database_open_with_config (path,
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     "",
+					     NULL,
+					     &notmuch,
+					     &message);
     if (ret) {
 	if (status_cb) status_cb (message, closure);
 	return ret;
@@ -751,6 +755,8 @@ notmuch_database_destroy (notmuch_database_t *notmuch)
     notmuch->date_range_processor = NULL;
     delete notmuch->last_mod_range_processor;
     notmuch->last_mod_range_processor = NULL;
+    delete notmuch->stemmer;
+    notmuch->stemmer = NULL;
 
     talloc_free (notmuch);
 

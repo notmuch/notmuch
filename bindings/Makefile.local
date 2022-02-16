@@ -3,21 +3,26 @@
 dir := bindings
 
 # force the shared library to be built
-ruby-bindings: lib/$(LINKER_NAME)
+ruby-bindings: $(dir)/ruby.stamp
+
+$(dir)/ruby.stamp: lib/$(LINKER_NAME)
 ifeq ($(HAVE_RUBY_DEV),1)
 	cd $(dir)/ruby && \
 		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
 		NOTMUCH_SRCDIR='$(NOTMUCH_SRCDIR)' \
 		$(RUBY) extconf.rb --vendor
-	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC"
+	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC" && touch $@
 endif
 
-python-cffi-bindings: lib/$(LINKER_NAME)
+python-cffi-bindings: $(dir)/python-cffi.stamp
+
+$(dir)/python-cffi.stamp: lib/$(LINKER_NAME)
 ifeq ($(HAVE_PYTHON3_CFFI),1)
 	cd $(dir)/python-cffi && \
 		${PYTHON} setup.py build --build-lib build/stage && \
-		mkdir -p build/stage/tests && cp tests/*.py build/stage/tests
+		mkdir -p build/stage/tests && cp tests/*.py build/stage/tests && \
+		touch ../python-cffi.stamp
 endif
 
 CLEAN += $(patsubst %,$(dir)/ruby/%, \
@@ -26,6 +31,6 @@ CLEAN += $(patsubst %,$(dir)/ruby/%, \
 	init.o message.o messages.o mkmf.log notmuch.so query.o \
 	status.o tags.o thread.o threads.o)
 
-CLEAN += bindings/ruby/.vendorarchdir.time
+CLEAN += bindings/ruby/.vendorarchdir.time $(dir)/ruby.stamp
 
-CLEAN += bindings/python-cffi/build
+CLEAN += bindings/python-cffi/build $(dir)/python-cffi.stamp

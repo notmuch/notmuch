@@ -1,6 +1,7 @@
 import setuptools
+from _notmuch_config import *
 
-with open('version.txt') as fp:
+with open(NOTMUCH_VERSION_FILE) as fp:
     VERSION = fp.read().strip()
 
 setuptools.setup(

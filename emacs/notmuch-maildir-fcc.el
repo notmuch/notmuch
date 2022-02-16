@@ -149,6 +149,7 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 	 (buf (current-buffer))
 	 (mml-externalize-attachments message-fcc-externalize-attachments))
      (with-current-buffer (get-buffer-create " *message temp*")
+       (message-clone-locals buf) ;; for message-encoded-mail-cache
        (erase-buffer)
        (insert-buffer-substring buf)
        ,@body)))
@@ -158,7 +159,10 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 
 This should be called on a temporary copy.
 This is taken from the function message-do-fcc."
-  (message-encode-message-body)
+  (if (not message-encoded-mail-cache)
+      (message-encode-message-body)
+    (erase-buffer)
+    (insert message-encoded-mail-cache))
   (save-restriction
     (message-narrow-to-headers)
     (mail-encode-encoded-word-buffer))
@@ -179,12 +183,12 @@ This is a rearranged version of message mode's message-do-fcc."
 	(setq file (message-fetch-field "fcc" t)))
       (when file
 	(with-temporary-notmuch-message-buffer
+	 (notmuch-maildir-setup-message-for-saving)
 	 (save-restriction
 	   (message-narrow-to-headers)
 	   (while (setq file (message-fetch-field "fcc" t))
 	     (push file files)
 	     (message-remove-header "fcc" nil t)))
-	 (notmuch-maildir-setup-message-for-saving)
 	 ;; Process FCC operations.
 	 (mapc #'notmuch-fcc-handler files)
 	 (kill-buffer (current-buffer)))))))

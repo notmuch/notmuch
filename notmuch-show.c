@@ -209,6 +209,30 @@ _is_from_line (const char *line)
 	return 0;
 }
 
+/* Output extra headers if configured with the `show.extra_headers'
+ * configuration option
+ */
+static void
+format_extra_headers_sprinter (sprinter_t *sp, GMimeMessage *message)
+{
+    GMimeHeaderList *header_list = g_mime_object_get_header_list (GMIME_OBJECT (message));
+
+    for (notmuch_config_values_t *extra_headers = notmuch_config_get_values (
+	     sp->notmuch, NOTMUCH_CONFIG_EXTRA_HEADERS);
+	 notmuch_config_values_valid (extra_headers);
+	 notmuch_config_values_move_to_next (extra_headers)) {
+	GMimeHeader *header;
+	const char *header_name = notmuch_config_values_get (extra_headers);
+
+	header = g_mime_header_list_get_header (header_list, header_name);
+	if (header == NULL)
+	    continue;
+
+	sp->map_key (sp, g_mime_header_get_name (header));
+	sp->string (sp, g_mime_header_get_value (header));
+    }
+}
+
 void
 format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 			 bool reply, const _notmuch_message_crypto_t *msg_crypto)
@@ -269,6 +293,9 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 	sp->string (sp, g_mime_message_get_date_string (sp, message));
     }
 
+    /* Output extra headers the user has configured, if any */
+    if (! reply)
+	format_extra_headers_sprinter (sp, message);
     sp->end (sp);
     talloc_free (local);
 }

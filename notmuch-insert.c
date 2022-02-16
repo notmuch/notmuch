@@ -461,6 +461,8 @@ notmuch_insert_command (notmuch_database_t *notmuch, int argc, char *argv[])
     char *maildir;
     char *newpath;
     int opt_index;
+    notmuch_indexopts_t *indexopts = notmuch_database_get_default_indexopts (notmuch);
+
     void *local = talloc_new (NULL);
 
     notmuch_opt_desc_t options[] = {
@@ -550,7 +552,7 @@ notmuch_insert_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    status = notmuch_process_shared_indexing_options (notmuch);
+    status = notmuch_process_shared_indexing_options (indexopts);
     if (status != NOTMUCH_STATUS_SUCCESS) {
 	fprintf (stderr, "Error: Failed to process index options. (%s)\n",
 		 notmuch_status_to_string (status));
@@ -558,7 +560,7 @@ notmuch_insert_command (notmuch_database_t *notmuch, int argc, char *argv[])
     }
 
     /* Index the message. */
-    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep, indexing_cli_choices.opts);
+    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep, indexopts);
 
     /* Commit changes. */
     close_status = notmuch_database_close (notmuch);

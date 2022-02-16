@@ -485,6 +485,31 @@ Sender <sender@example.com> writes:
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Reply with show.extra_headers set"
+notmuch config set show.extra_headers Received
+add_message '[from]="Sender <sender@example.com>"' \
+	     [to]=test_suite_other@notmuchmail.org
+
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
+	    (notmuch-test-wait)
+	    (notmuch-search-reply-to-thread)
+	    (test-output))"
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+To: Sender <sender@example.com>
+Subject: Re: ${test_subtest_name}
+In-Reply-To: <${gen_msg_id}>
+Fcc: ${MAIL_DIR}/sent
+References: <${gen_msg_id}>
+--text follows this line--
+Sender <sender@example.com> writes:
+
+> This is just a test message (#${gen_msg_cnt})
+EOF
+notmuch config set show.extra_headers
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Reply from address in named group list within emacs"
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
@@ -680,7 +705,7 @@ References: <XXX>
 --text follows this line--
 test_suite@notmuchmail.org writes:
 
-> This is just a test message (#7)
+> This is just a test message (#${gen_msg_cnt})
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

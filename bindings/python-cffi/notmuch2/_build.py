@@ -1,5 +1,5 @@
 import cffi
-
+from _notmuch_config import *
 
 ffibuilder = cffi.FFI()
 ffibuilder.set_source(
@@ -16,8 +16,8 @@ ffibuilder.set_source(
         #ERROR libnotmuch  version < 5.1 not supported
     #endif
     """,
-    include_dirs=['../../lib'],
-    library_dirs=['../../lib'],
+    include_dirs=[NOTMUCH_INCLUDE_DIR],
+    library_dirs=[NOTMUCH_LIB_DIR],
     libraries=['notmuch'],
 )
 ffibuilder.cdef(
@@ -54,6 +54,7 @@ ffibuilder.cdef(
         NOTMUCH_STATUS_NO_DATABASE,
         NOTMUCH_STATUS_DATABASE_EXISTS,
         NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
+        NOTMUCH_STATUS_NO_MAIL_ROOT,
         NOTMUCH_STATUS_LAST_STATUS
     } notmuch_status_t;
     typedef enum {

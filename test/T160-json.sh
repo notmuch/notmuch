@@ -156,4 +156,46 @@ EOF
 output=$(notmuch show --format=json --body=false --format-version=2 id:message-id@example.com)
 test_expect_equal_json "$output" "$(cat EXPECTED)"
 
+test_begin_subtest "show extra headers"
+add_message "[subject]=\"extra-headers\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[in-reply-to]=\"<parent@notmuch-test-suite>\"" "[body]=\"extra-headers test\""\
+	   "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])
+	by mail.notmuchmail.org (some MTA) with ESMTP id 12345678
+	for <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)\"" \
+
+notmuch config set show.extra_headers "in-reply-to;received"
+output=$(notmuch show --format=json --body=false id:${gen_msg_id} | notmuch_json_show_sanitize)
+cat <<EOF > EXPECTED
+[
+    [
+        [
+            {
+                "crypto": {},
+                "date_relative": "2000-01-01",
+                "excluded": false,
+                "filename": [
+                    "YYYYY"
+                ],
+                "headers": {
+                    "Date": "Sat, 01 Jan 2000 12:00:00 +0000",
+                    "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+                    "In-Reply-To": "<parent@notmuch-test-suite>",
+                    "Received": "from mail.example.com (mail.example.com [1.1.1.1])\tby mail.notmuchmail.org (some MTA) with ESMTP id 12345678\tfor <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)",
+                    "Subject": "extra-headers",
+                    "To": "Notmuch Test Suite <test_suite@notmuchmail.org>"
+                },
+                "id": "XXXXX",
+                "match": true,
+                "tags": [
+                    "inbox",
+                    "unread"
+                ],
+                "timestamp": 946728000
+            },
+            []
+        ]
+    ]
+]
+EOF
+test_expect_equal_json "${output}" "$(cat EXPECTED)"
+
 test_done

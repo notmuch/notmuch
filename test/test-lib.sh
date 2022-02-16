@@ -145,7 +145,7 @@ add_gpgsm_home () {
     mkdir -p -m 0700 "$GNUPGHOME"
     gpgsm --batch --no-tty --no-common-certs-import --pinentry-mode=loopback --passphrase-fd 3 \
 	  --disable-dirmngr --import  >"$GNUPGHOME"/import.log 2>&1 3<<<'' <$NOTMUCH_SRCDIR/test/smime/0xE0972A47.p12
-    fpr=$(gpgsm --batch --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')
+    fpr=$(gpgsm --batch --with-colons --list-key test_suite@notmuchmail.org | awk -F: '/^fpr/ {print $10}')
     echo "$fpr S relax" >> "$GNUPGHOME/trustlist.txt"
     gpgsm --quiet --batch --no-tty --no-common-certs-import --disable-dirmngr --import < $NOTMUCH_SRCDIR/test/smime/ca.crt
     echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$GNUPGHOME/trustlist.txt"
@@ -432,6 +432,20 @@ test_expect_equal_file () {
     test_diff_file_ "$1" "$2"
 }
 
+# Like test_expect_equal_file, but compare the part of the two files after the first blank line
+test_expect_equal_message_body () {
+    exec 1>&6 2>&7		# Restore stdout and stderr
+    if [ -z "$inside_subtest" ]; then
+	error "bug in the test script: test_expect_equal_file without test_begin_subtest"
+    fi
+    test "$#" = 2 ||
+	error "bug in the test script: not 2 parameters to test_expect_equal_file"
+
+    expected=$(sed '1,/^$/d' "$1")
+    output=$(sed '1,/^$/d' "$2")
+    test_expect_equal "$expected" "$output"
+}
+
 # Like test_expect_equal, but takes two filenames. Fails if either is empty
 test_expect_equal_file_nonempty () {
     exec 1>&6 2>&7		# Restore stdout and stderr
@@ -529,7 +543,7 @@ notmuch_debug_sanitize () {
 }
 
 notmuch_exception_sanitize () {
-    perl -pe 's/(A Xapian exception occurred at .*[.]cc?):([0-9]*)/\1:XXX/'
+    perl -pe 's,(A Xapian exception occurred at) .*?([^/]*[.]cc?):([0-9]*),\1 \2:XXX,'
 }
 
 notmuch_search_sanitize () {
@@ -537,7 +551,7 @@ notmuch_search_sanitize () {
 }
 
 notmuch_search_files_sanitize () {
-    notmuch_dir_sanitize
+    notmuch_dir_sanitize |  sed 's/msg-[0-9][0-9][0-9]/msg-XXX/'
 }
 
 notmuch_dir_sanitize () {

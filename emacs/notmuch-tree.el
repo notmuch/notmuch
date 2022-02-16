@@ -179,7 +179,7 @@ Note that the author string should not contain whitespace
      (:foreground "dark blue"))
     (t
      (:bold t)))
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for the author in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -236,7 +236,7 @@ Note that the author string should not contain whitespace
 
 (defface notmuch-tree-no-match-author-face
   nil
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for non-matching authors."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -1191,11 +1191,11 @@ The arguments are:
     (setq query (notmuch-read-query (concat "Notmuch "
 					    (if unthreaded "unthreaded " "tree ")
 					    "view search: "))))
-  (let ((buffer (get-buffer-create (generate-new-buffer-name
-				    (or buffer-name
-					(concat "*notmuch-"
-						(if unthreaded "unthreaded-" "tree-")
-						query "*")))))
+  (let* ((name
+	  (or buffer-name
+	      (notmuch-search-buffer-title query
+					   (if unthreaded "unthreaded" "tree"))))
+	 (buffer (get-buffer-create (generate-new-buffer-name name)))
 	(inhibit-read-only t))
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
@@ -1206,6 +1206,9 @@ The arguments are:
 
 (defun notmuch-unthreaded (&optional query query-context target buffer-name
 				     open-target)
+  "Display threads matching QUERY in unthreaded view.
+
+See function NOTMUCH-TREE for documentation of the arguments"
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
 

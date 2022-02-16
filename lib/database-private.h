@@ -160,11 +160,12 @@ operator&= (_notmuch_features &a, _notmuch_features b)
 
 /*
  * Configuration options for xapian database fields */
-typedef enum notmuch_field_flags {
+typedef enum {
     NOTMUCH_FIELD_NO_FLAGS	= 0,
     NOTMUCH_FIELD_EXTERNAL	= 1 << 0,
     NOTMUCH_FIELD_PROBABILISTIC = 1 << 1,
     NOTMUCH_FIELD_PROCESSOR	= 1 << 2,
+    NOTMUCH_FIELD_STRIP_TRAILING_SLASH	= 1 << 3,
 } notmuch_field_flag_t;
 
 /*
@@ -191,12 +192,17 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
 /*
- * Which parameters were explicit when the database was opened */
+ * explicit and implied parameters to open */
 typedef enum {
     NOTMUCH_PARAM_NONE		= 0,
+    /* database passed explicitely */
     NOTMUCH_PARAM_DATABASE	= 1 << 0,
+    /* config file passed explicitely */
     NOTMUCH_PARAM_CONFIG	= 1 << 1,
+    /* profile name passed explicitely */
     NOTMUCH_PARAM_PROFILE	= 1 << 2,
+    /* split (e.g. XDG) configuration */
+    NOTMUCH_PARAM_SPLIT		= 1 << 3,
 } notmuch_open_param_t;
 
 /*
@@ -374,5 +380,10 @@ notmuch_status_t
 _notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
 				      Xapian::Query &output);
 #endif
+
+/* parse-time-vrp.h */
+notmuch_status_t
+_notmuch_date_strings_to_query (Xapian::valueno slot, const std::string &from, const std::string &to,
+				Xapian::Query &output, std::string &msg);
 #endif
 #endif

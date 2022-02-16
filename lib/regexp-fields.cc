@@ -235,7 +235,15 @@ RegexpFieldProcessor::operator() (const std::string & str)
 	    return parser.parse_query (query_str, NOTMUCH_QUERY_PARSER_FLAGS, term_prefix);
 	} else {
 	    /* Boolean prefix */
-	    std::string term = term_prefix + str;
+	    std::string query_str;
+	    std::string term;
+
+	    if (str.length () > 1 && str.at (str.size () - 1) == '/')
+		query_str = str.substr (0, str.size () - 1);
+	    else
+		query_str = str;
+
+	    term = term_prefix + query_str;
 	    return Xapian::Query (term);
 	}
     }

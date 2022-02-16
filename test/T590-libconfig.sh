@@ -23,8 +23,6 @@ EOF
 }
 
 cat <<EOF > c_head
-#include <string.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
 
 int main (int argc, char** argv)
@@ -272,6 +270,29 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
 
+test_begin_subtest "notmuch_config_get_values (ignore leading/trailing whitespace)"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
+{
+    notmuch_config_values_t *values;
+    EXPECT0(notmuch_config_set (db, NOTMUCH_CONFIG_NEW_TAGS, " a ; b c ; d "));
+    for (values = notmuch_config_get_values (db, NOTMUCH_CONFIG_NEW_TAGS);
+	 notmuch_config_values_valid (values);
+	 notmuch_config_values_move_to_next (values))
+    {
+	  puts (notmuch_config_values_get (values));
+    }
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+a
+b c
+d
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_database
+
 test_begin_subtest "notmuch_config_get_values_string"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} %NULL%
 {
@@ -418,6 +439,7 @@ cat <<'EOF' >EXPECTED
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 unset MAILDIR
@@ -616,8 +638,6 @@ cp notmuch-config.bak notmuch-config
 test_expect_equal_file EXPECTED OUTPUT
 
 cat <<EOF > c_head2
-#include <string.h>
-#include <stdlib.h>
 #include <notmuch-test.h>
 
 int main (int argc, char** argv)
@@ -730,6 +750,7 @@ cat <<'EOF' >EXPECTED
 09: 'test_suite_other@notmuchmail.org;test_suite@otherdomain.org'
 10: 'Notmuch Test Suite'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -763,6 +784,7 @@ cat <<'EOF' >EXPECTED
 09: 'NULL'
 10: 'USER_FULL_NAME'
 11: '8000'
+12: 'NULL'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -839,6 +861,7 @@ maildir.synchronize_flags true
 new.ignore sekrit_junk
 new.tags unread;inbox
 search.exclude_tags foo;bar;fub
+show.extra_headers (null)
 test.key1 testvalue1
 test.key2 testvalue2
 user.name Notmuch Test Suite
@@ -953,6 +976,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "open: database parameter overrides implicit config"
+cp $NOTMUCH_CONFIG ${NOTMUCH_CONFIG}.bak
 notmuch config set database.path ${MAIL_DIR}/nonexistent
 cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   const char *path = NULL;
@@ -963,6 +987,7 @@ cat c_head3 - c_tail3 <<'EOF' | test_C ${MAIL_DIR}
   path = notmuch_database_get_path (db);
   printf ("path: %s\n", path ? path : "(null)");
 EOF
+cp ${NOTMUCH_CONFIG}.bak ${NOTMUCH_CONFIG}
 cat <<EOF> EXPECTED
 == stdout ==
 status: 0
@@ -972,5 +997,44 @@ db == NULL: 0
 EOF
 notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
 test_expect_equal_file EXPECTED OUTPUT.clean
+
+cat <<EOF > c_body
+  notmuch_status_t st = notmuch_database_open_with_config(NULL,
+							  NOTMUCH_DATABASE_MODE_READ_ONLY,
+							  "", NULL, &db, NULL);
+  printf ("status == SUCCESS: %d\n", st == NOTMUCH_STATUS_SUCCESS);
+  if (db) {
+    const char *mail_root = NULL;
+    mail_root = notmuch_config_get (db, NOTMUCH_CONFIG_MAIL_ROOT);
+    printf ("mail_root: %s\n", mail_root ? mail_root : "(null)");
+  }
+EOF
+
+cat <<EOF> EXPECTED.common
+== stdout ==
+status == SUCCESS: 0
+db == NULL: 1
+== stderr ==
+EOF
+
+test_begin_subtest "open/error: config=empty with no mail root in db "
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+cat c_head3 c_body c_tail3 | test_C
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED.common OUTPUT.clean
+
+test_begin_subtest "open/error: config=empty with no mail root in db (xdg)"
+old_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
+unset NOTMUCH_CONFIG
+backup_database
+mkdir -p home/.local/share/notmuch
+mv mail/.notmuch home/.local/share/notmuch/default
+cat c_head3 c_body c_tail3 | test_C
+restore_database
+export NOTMUCH_CONFIG=${old_NOTMUCH_CONFIG}
+notmuch_dir_sanitize < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED.common OUTPUT.clean
 
 test_done

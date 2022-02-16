@@ -51,7 +51,7 @@ cat <<EOF > EXPECTED
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
-built_with.sexpr_query=something
+built_with.sexp_queries=something
 database.autocommit=8000
 database.mail_root=MAIL_DIR
 database.path=MAIL_DIR
@@ -66,6 +66,35 @@ user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
 user.primary_email=test_suite@notmuchmail.org
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Round trip config item with leading spaces"
+test_subtest_known_broken
+notmuch config set foo.bar "  thing"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "  thing"
+
+test_begin_subtest "Round trip config item with leading tab"
+test_subtest_known_broken
+notmuch config set foo.bar "	thing"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "	thing"
+
+test_begin_subtest "Round trip config item with embedded tab"
+notmuch config set foo.bar "thing	other"
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing	other"
+
+test_begin_subtest "Round trip config item with embedded backslash"
+notmuch config set foo.bar 'thing\other'
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing\other"
+
+test_begin_subtest "Round trip config item with embedded NL/CR"
+notmuch config set foo.bar 'thing
+other'
+output=$(notmuch config get foo.bar)
+test_expect_equal "${output}" "thing
+other"
 
 test_begin_subtest "Top level --config=FILE option"
 cp "${NOTMUCH_CONFIG}" alt-config

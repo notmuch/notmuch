@@ -9,10 +9,8 @@ test_begin_subtest "building database"
 test_expect_success "NOTMUCH_NEW"
 
 cat <<EOF > c_head
-#include <stdio.h>
-#include <notmuch.h>
 #include <notmuch-test.h>
-#include <talloc.h>
+
 int main (int argc, char** argv)
 {
    notmuch_database_t *db;
@@ -82,7 +80,7 @@ cat <<EOF > EXPECTED
 == stdout ==
 0
 == stderr ==
-A Xapian exception occurred at lib/database.cc:XXX: Database has been closed
+A Xapian exception occurred at database.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -147,7 +145,7 @@ cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred at lib/database.cc:XXX: Database has been closed
+A Xapian exception occurred at database.cc:XXX: Database has been closed
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

@@ -277,7 +277,7 @@ EOF
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something
-built_with.sexpr_query=something
+built_with.sexp_queries=something
 database.autocommit=8000
 database.backup_dir
 database.hook_dir
@@ -318,7 +318,14 @@ to=m.header('To')
 print(to)
 EOF
 	   test_expect_equal_file EXPECTED OUTPUT
-	   ;& # fall through
+	   ;;
+       *)
+	   backup_database
+	   test_begin_subtest ".notmuch without xapian/ handled gracefully ($config)"
+	   rm -r $XAPIAN_PATH
+	   test_expect_success "notmuch new"
+	   restore_database
+	   ;;
    esac
 
    case $config in

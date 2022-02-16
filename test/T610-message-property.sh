@@ -6,10 +6,6 @@ test_description="message property API"
 add_email_corpus
 
 cat <<EOF > c_head
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <talloc.h>
 #include <notmuch-test.h>
 
 void print_properties (notmuch_message_t *message, const char *prefix, notmuch_bool_t exact) {

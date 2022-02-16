@@ -28,13 +28,13 @@ Supported options for **count** include
 
 .. option:: --output=(messages|threads|files)
 
-   **messages**
+   messages
      Output the number of matching messages. This is the default.
 
-   **threads**
+   threads
      Output the number of matching threads.
 
-   **files**
+   files
      Output the number of files associated with matching
      messages. This may be bigger than the number of matching
      messages due to duplicates (i.e. multiple files having the

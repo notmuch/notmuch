@@ -141,21 +141,18 @@ const notmuch_opt_desc_t notmuch_shared_indexing_options [] = {
 
 
 notmuch_status_t
-notmuch_process_shared_indexing_options (notmuch_database_t *notmuch)
+notmuch_process_shared_indexing_options (notmuch_indexopts_t *opts)
 {
-    if (indexing_cli_choices.opts == NULL)
-	indexing_cli_choices.opts = notmuch_database_get_default_indexopts (notmuch);
+    if (opts == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
     if (indexing_cli_choices.decrypt_policy_set) {
 	notmuch_status_t status;
-	if (indexing_cli_choices.opts == NULL)
-	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
-	status = notmuch_indexopts_set_decrypt_policy (indexing_cli_choices.opts,
+	status = notmuch_indexopts_set_decrypt_policy (opts,
 						       indexing_cli_choices.decrypt_policy);
 	if (status != NOTMUCH_STATUS_SUCCESS) {
 	    fprintf (stderr, "Error: Failed to set index decryption policy to %d. (%s)\n",
 		     indexing_cli_choices.decrypt_policy, notmuch_status_to_string (status));
-	    notmuch_indexopts_destroy (indexing_cli_choices.opts);
-	    indexing_cli_choices.opts = NULL;
 	    return status;
 	}
     }

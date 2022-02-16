@@ -9,9 +9,6 @@ if [ $NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK -ne 1 ]; then
     test_subtest_known_broken
 fi
 test_C ${MAIL_DIR} <<'EOF'
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/wait.h>
 #include <notmuch-test.h>
 
 void

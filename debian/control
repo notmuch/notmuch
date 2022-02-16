@@ -56,7 +56,8 @@ Recommends:
  gnupg-agent,
  gpgsm,
 Suggests:
- mailscripts
+ mailscripts,
+ notmuch-doc,
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -64,6 +65,21 @@ Description: thread-based email index, search and tagging
  convenient search syntax.
  .
  This package contains the notmuch command-line interface
+
+Package: notmuch-doc
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${sphinxdoc:Depends},
+Suggests:
+ notmuch
+Description: thread-based email index, search and tagging
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.
+ .
+ This package contains the HTML documentation
 
 Package: libnotmuch5
 Section: libs

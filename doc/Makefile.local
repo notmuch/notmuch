@@ -35,7 +35,7 @@ endif
 
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
 
-.PHONY: sphinx-html sphinx-texinfo sphinx-info doc-prereqs
+.PHONY: sphinx-html sphinx-texinfo sphinx-info
 
 .PHONY: install-man build-man apidocs install-apidocs
 
@@ -47,23 +47,28 @@ $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.texi.stamp
 endif
 
 ifeq ($(HAVE_PYTHON3_CFFI),1)
-doc-prereqs: python-cffi-bindings
+DOC_PREREQS=bindings/python-cffi.stamp
+else
+DOC_PREREQS=
 endif
 
 sphinx-html: $(DOCBUILDDIR)/.html.stamp
 
-$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES) doc-prereqs
+$(DOCBUILDDIR)/.html.stamp: $(ALL_RST_FILES) $(DOC_PREREQS)
 	$(SPHINXBUILD) -b html -d $(DOCBUILDDIR)/html_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 	touch $@
 
 sphinx-texinfo: $(DOCBUILDDIR)/.texi.stamp
 
-$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES) doc-prereqs
+$(DOCBUILDDIR)/.texi.stamp: $(ALL_RST_FILES) $(DOC_PREREQS)
 	$(SPHINXBUILD) -b texinfo -d $(DOCBUILDDIR)/texinfo_doctrees $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
 	touch $@
 
-sphinx-info: sphinx-texinfo
+sphinx-info: $(DOCBUILDDIR)/.info.stamp
+
+$(DOCBUILDDIR)/.info.stamp: $(DOCBUILDDIR)/.texi.stamp $(DOC_PREREQS)
 	$(MAKE) -C $(DOCBUILDDIR)/texinfo info
+	touch $@
 
 # Use the man page converter that is available. We should never depend
 # on MAN_ROFF_FILES if a converter is not available.
@@ -112,6 +117,11 @@ build-man:
 install-man:
 	@echo "No sphinx, will not install man pages."
 else
+
+# it should be safe to depend on the stamp file, because it is created
+# after all roff files are moved into place.
+${MAN_GZIP_FILES}: ${DOCBUILDDIR}/.roff.stamp
+
 build-man: ${MAN_GZIP_FILES}
 install-man: ${MAN_GZIP_FILES}
 	mkdir -m0755 -p "$(DESTDIR)$(mandir)/man1"
@@ -127,7 +137,7 @@ ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO),11)
 build-info:
 	@echo "Missing sphinx or makeinfo, not building info pages"
 else
-build-info: sphinx-info
+build-info: $(DOCBUILDDIR)/.info.stamp
 endif
 
 ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO)$(HAVE_INSTALL_INFO),111)
@@ -145,5 +155,5 @@ $(dir)/config.dox: version.stamp
 	echo "INPUT=${srcdir}/lib/notmuch.h" >> $@
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.texi.stamp
-CLEAN := $(CLEAN) $(DOCBUILDDIR)/.html.stamp
+CLEAN := $(CLEAN) $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.info.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
