@@ -683,7 +683,7 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
 test_begin_subtest "'notmuch show --part' does not corrupt a part with CRLF pair"
 notmuch show --format=raw --part=3 id:base64-part-with-crlf > crlf.out
-echo -n -e "\xEF\x0D\x0A" > crlf.expected
+printf "\xEF\x0D\x0A" > crlf.expected
 test_expect_equal_file crlf.out crlf.expected
 
 

@@ -120,8 +120,7 @@ release-message:
 	@echo "Which can be verified with:"
 	@echo ""
 	@echo "  $(RELEASE_URL)/$(SHA256_FILE)"
-	@echo -n "  "
-	@cat releases/$(SHA256_FILE)
+	@sed "s/^/  /" releases/$(SHA256_FILE)
 	@echo ""
 	@echo "  $(RELEASE_URL)/$(DETACHED_SIG_FILE)"
 	@echo "  (signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
@@ -169,7 +168,7 @@ release-checks:
 
 .PHONY: verify-newer
 verify-newer:
-	@echo -n "Checking that no $(VERSION) release already exists..."
+	@printf %s "Checking that no $(VERSION) release already exists..."
 	@wget -q --no-check-certificate -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
 	case $$? in \
           8) echo "Good." ;; \

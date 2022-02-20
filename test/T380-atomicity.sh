@@ -71,8 +71,8 @@ if test_require_external_prereq gdb; then
 
     # Check output against golden output
     outcount=$(cat outcount)
-    echo -n > searchall
-    echo -n > expectall
+    : > searchall
+    : > expectall
     for ((i = 0; i < $outcount; i++)); do
 	if ! cmp -s search.$i expected; then
 	    # Find the range of interruptions that match this output

@@ -59,7 +59,7 @@ readonly VERSION
 
 # In the rest of this file, tests collect list of errors to be fixed
 
-echo -n "Checking that git working directory is clean... "
+printf %s "Checking that git working directory is clean... "
 git_status=`git status --porcelain`
 if [ "$git_status" = '' ]
 then
@@ -77,7 +77,7 @@ verfail ()
 	append_emsg "  Please follow the instructions in RELEASING to choose a version"
 }
 
-echo -n "Checking that '$VERSION' is good with digits and periods... "
+printf %s "Checking that '$VERSION' is good with digits and periods... "
 case $VERSION in
 	*[!0-9.]*)
 		verfail "'$VERSION' contains other characters than digits and periods" ;;
@@ -88,7 +88,7 @@ case $VERSION in
 	*)	verfail "'$VERSION' is a single number" ;;
 esac
 
-echo -n "Checking that this is Debian package for notmuch... "
+printf %s "Checking that this is Debian package for notmuch... "
 read deb_notmuch deb_version rest < debian/changelog
 if [ "$deb_notmuch" = 'notmuch' ]
 then
@@ -98,7 +98,7 @@ else
 	append_emsg "Package name '$deb_notmuch' is not 'notmuch' in debian/changelog"
 fi
 
-echo -n "Checking that Debian package version is $VERSION-1... "
+printf %s "Checking that Debian package version is $VERSION-1... "
 
 if [ "$deb_version" = "($VERSION-1)" ]
 then
@@ -108,7 +108,7 @@ else
 	append_emsg "Version '$deb_version' is not '($VERSION-1)' in debian/changelog"
 fi
 
-echo -n "Checking that python bindings version is $VERSION... "
+printf %s "Checking that python bindings version is $VERSION... "
 py_version=`python3 -c "with open('$PV_FILE') as vf: exec(vf.read()); print(__VERSION__)"`
 if [ "$py_version" = "$VERSION" ]
 then
@@ -118,7 +118,7 @@ else
 	append_emsg "Version '$py_version' is not '$VERSION' in $PV_FILE"
 fi
 
-echo -n "Checking that NEWS header is tidy... "
+printf %s "Checking that NEWS header is tidy... "
 if [ "`exec sed 's/./=/g; 1q' NEWS`" = "`exec sed '1d; 2q' NEWS`" ]
 then
 	echo Yes.
@@ -132,7 +132,7 @@ else
 	fi
 fi
 
-echo -n "Checking that this is Notmuch NEWS... "
+printf %s "Checking that this is Notmuch NEWS... "
 read news_notmuch news_version news_date < NEWS
 if [ "$news_notmuch" = "Notmuch" ]
 then
@@ -142,7 +142,7 @@ else
 	append_emsg "First word '$news_notmuch' is not 'Notmuch' in NEWS file"
 fi
 
-echo -n "Checking that NEWS version is $VERSION... "
+printf %s "Checking that NEWS version is $VERSION... "
 if [ "$news_version" = "$VERSION" ]
 then
 	echo Yes.
@@ -154,7 +154,7 @@ fi
 #eval `date '+year=%Y mon=%m day=%d'`
 today0utc=`date --date=0Z +%s` # gnu date feature
 
-echo -n "Checking that NEWS date is right... "
+printf %s "Checking that NEWS date is right... "
 case $news_date in
  '('[2-9][0-9][0-9][0-9]-[01][0-9]-[0123][0-9]')')
 	newsdate0utc=`nd=${news_date#\\(}; date --date="${nd%)} 0Z" +%s`
@@ -176,7 +176,7 @@ case $news_date in
 esac
 
 year=`exec date +%Y`
-echo -n "Checking that copyright in documentation contains 2009-$year... "
+printf %s "Checking that copyright in documentation contains 2009-$year... "
 # Read the value of variable `copyright' defined in 'doc/conf.py'.
 copyrightline=$(grep ^copyright doc/conf.py)
 case $copyrightline in
