@@ -65,6 +65,24 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; - (inbox unread)
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "bracketed subject search (with dquotes)"
+test_subtest_known_broken
+notmuch search subject:notmuch and subject:show > EXPECTED
+notmuch search 'subject:"(show notmuch)"' > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "bracketed subject search (with dquotes and operator 'or')"
+test_subtest_known_broken
+notmuch search subject:notmuch or subject:show > EXPECTED
+notmuch search 'subject:"(notmuch or show)"' > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "bracketed subject search (with dquotes and operator 'and')"
+test_subtest_known_broken
+notmuch search subject:notmuch and subject:show > EXPECTED
+notmuch search 'subject:"(notmuch and show)"' > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "xapian wildcard search for from:"
 notmuch search --output=messages 'from:cwo*' > OUTPUT
 test_expect_equal_file cworth.msg-ids OUTPUT
