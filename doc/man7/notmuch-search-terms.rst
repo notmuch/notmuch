@@ -275,11 +275,13 @@ the same phrase.
 - a.list.of.words
 
 Both parenthesised lists of terms and quoted phrases are ok with
-probabilistic prefixes such as **to:**, **from:**, and **subject:**. In particular
+probabilistic prefixes such as **to:**, **from:**, and **subject:**.
+For prefixes supporting regex search, the parenthesised list should be
+quoted.  In particular
 
 ::
 
-   subject:(pizza free)
+   subject:"(pizza free)"
 
 is equivalent to
 
