@@ -245,4 +245,26 @@ test_emacs "(test-log-error
 	        (notmuch-show \"$tid\")))"
 test_expect_equal "$(cat MESSAGES)" "COMPLETE"
 
+add_email_corpus attachment
+
+test_begin_subtest "tar not inlined by default"
+test_emacs '(notmuch-show "id:874llc2bkp.fsf@curie.anarc.at")
+	(test-visible-output "OUTPUT")'
+cat <<EOF > EXPECTED
+Antoine Beaupré <anarcat@orangeseeds.org> (2018-03-19) (attachment inbox)
+Subject: Re: bug: "no top level messages" crash on Zen email loops
+To: David Bremner <david@tethera.net>, notmuch@notmuchmail.org
+Date: Mon, 19 Mar 2018 13:56:54 -0400
+
+[ multipart/mixed ]
+[ text/plain ]
+And obviously I forget the frigging attachment.
+[ zendesk-email-loop2.tgz: application/x-gtar-compressed ]
+[ text/plain ]
+
+PS: don't we have a "you forgot to actually attach the damn file" plugin
+when we detect the word "attachment" and there's no attach? :p
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
