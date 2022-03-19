@@ -1037,6 +1037,14 @@ region if the region is active, or both `point' otherwise."
   'notmuch-interactive-region
   "notmuch 0.29")
 
+(defun notmuch--inline-override-types ()
+  "Override mm-inline-override-types to stop application/*
+parts from being displayed unless the user has customized
+it themselves."
+  (if (equal mm-inline-override-types
+	     (eval (car (get 'mm-inline-override-types 'standard-value))))
+      (cons "application/.*" mm-inline-override-types)
+    mm-inline-override-types))
 ;;; _
 
 (provide 'notmuch-lib)
