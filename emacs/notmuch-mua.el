@@ -316,7 +316,9 @@ Typically this is added to `notmuch-mua-send-hook'."
 		;; text.
 		(notmuch-show-process-crypto process-crypto)
 		;; Don't indent multipart sub-parts.
-		(notmuch-show-indent-multipart nil))
+		(notmuch-show-indent-multipart nil)
+		;; Stop certain mime types from being inlined
+		(mm-inline-override-types (notmuch--inline-override-types)))
 	     ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
 	     (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
 		       ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))

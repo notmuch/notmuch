@@ -11,7 +11,6 @@ test_require_emacs
 add_email_corpus attachment
 
 test_begin_subtest "tar not inlined by default"
-test_subtest_known_broken
 test_emacs '(notmuch-mua-new-reply "id:874llc2bkp.fsf@curie.anarc.at")
 	(test-visible-output "OUTPUT.raw")'
 cat <<EOF > EXPECTED
