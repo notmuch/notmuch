@@ -50,9 +50,6 @@ except ImportError:  # Python 2
     from urllib import quote as _quote
     from urllib import unquote as _unquote
 
-
-__version__ = '0.3'
-
 _LOG = _logging.getLogger('nmbug')
 _LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
@@ -718,9 +715,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=__doc__.strip(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument(
-        '-v', '--version', action='version',
-        version='%(prog)s {}'.format(__version__))
     parser.add_argument(
         '-l', '--log-level',
         choices=['critical', 'error', 'warning', 'info', 'debug'],
