@@ -836,6 +836,10 @@ if __name__ == '__main__':
         level = getattr(_logging, args.log_level.upper())
         _LOG.setLevel(level)
 
+    # for test suite
+    for var in ['NMBGIT', 'NMBPREFIX', 'NOTMUCH_PROFILE', 'NOTMUCH_CONFIG' ]:
+        _LOG.debug('env {:s} = {:s}'.format(var, _os.getenv(var,'%None%')))
+
     if not getattr(args, 'func', None):
         parser.print_usage()
         _sys.exit(1)
