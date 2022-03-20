@@ -50,13 +50,9 @@ _LOG = _logging.getLogger('nmbug')
 _LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
 
-NMBGIT = _os.path.expanduser(
-    _os.getenv('NMBGIT', _os.path.join('~', '.nmbug')))
-_NMBGIT = _os.path.join(NMBGIT, '.git')
-if _os.path.isdir(_NMBGIT):
-    NMBGIT = _NMBGIT
+NMBGIT = None
+TAG_PREFIX = None
 
-TAG_PREFIX = _os.getenv('NMBPREFIX', 'notmuch::')
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
 _TAG_DIRECTORY = 'tags/'
 _TAG_FILE_REGEX = _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)')
@@ -76,10 +72,6 @@ def _hex_quote(string, safe='+@=:,'):
     return _HEX_ESCAPE_REGEX.sub(
         lambda match: match.group(0).lower(),
         uppercase_escapes)
-
-
-_ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
-
 
 def _xapian_quote(string):
     """
@@ -687,6 +679,13 @@ if __name__ == '__main__':
         description=__doc__.strip(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
+        '-C', '--git-dir', metavar='REPO',
+        help='Git repository to operate on.')
+    parser.add_argument(
+        '-p', '--tag-prefix', metavar='PREFIX',
+        default = _os.getenv('NMBPREFIX', 'notmuch::'),
+        help='Prefix of tags to operate on.')
+    parser.add_argument(
         '-l', '--log-level',
         choices=['critical', 'error', 'warning', 'info', 'debug'],
         help='Log verbosity.  Defaults to {!r}.'.format(
@@ -794,6 +793,18 @@ if __name__ == '__main__':
                     'git-push(1) for other possibilities.'))
 
     args = parser.parse_args()
+
+    if args.git_dir:
+        NMBGIT = args.git_dir
+    else:
+        NMBGIT = _os.path.expanduser(
+        _os.getenv('NMBGIT', _os.path.join('~', '.nmbug')))
+        _NMBGIT = _os.path.join(NMBGIT, '.git')
+        if _os.path.isdir(_NMBGIT):
+            NMBGIT = _NMBGIT
+
+    TAG_PREFIX = args.tag_prefix
+    _ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
 
     if args.log_level:
         level = getattr(_logging, args.log_level.upper())
