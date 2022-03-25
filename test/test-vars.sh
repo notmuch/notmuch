@@ -44,6 +44,10 @@ unset GREP_OPTIONS
 # For lib/open.cc:_load_key_file
 unset XDG_CONFIG_HOME
 
+# for lib/open.cc:_choose_database_path
+unset XDG_DATA_HOME
+unset MAILDIR
+
 # For emacsclient
 unset ALTERNATE_EDITOR
 
