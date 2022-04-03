@@ -351,7 +351,8 @@ def init(remote=None):
     This wraps 'git init' with a few extra steps to support subsequent
     status and commit commands.
     """
-    _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init', '--bare'], wait=True)
+    _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init',
+                 '--initial-branch=master', '--quiet', '--bare'], wait=True)
     _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
     # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
     _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
