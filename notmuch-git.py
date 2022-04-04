@@ -271,7 +271,13 @@ def clone(repository):
             wait=True)
     _git(args=['config', '--unset', 'core.worktree'], wait=True, expect=(0, 5))
     _git(args=['config', 'core.bare', 'true'], wait=True)
-    _git(args=['branch', 'config', 'origin/config'], wait=True)
+    (status, stdout, stderr) = _git(args=['show-ref', '--verify',
+                                          '--quiet',
+                                          'refs/remotes/origin/config'],
+                                    expect=(0,1),
+                                    wait=True)
+    if status == 0:
+        _git(args=['branch', 'config', 'origin/config'], wait=True)
     existing_tags = get_tags()
     if existing_tags:
         _LOG.warning(
