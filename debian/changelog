@@ -1,3 +1,10 @@
+notmuch (0.35-2) unstable; urgency=medium
+
+  * Disable test smime.4, which is broken by gmime 3.2.9 thanks to Lucas
+    Nussbaum for the report (Closes: #1008462).
+
+ -- David Bremner <bremner@debian.org>  Mon, 28 Mar 2022 11:45:11 -0600
+
 notmuch (0.35-1) unstable; urgency=medium
 
   * New upstream release
