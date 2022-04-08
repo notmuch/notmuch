@@ -123,6 +123,10 @@ man_pages = [
      u'send mail with notmuch and emacs',
      [notmuch_authors], 1),
 
+    ('man1/notmuch-git', 'notmuch-git',
+     u'manage notmuch tags with git',
+     [notmuch_authors], 1),
+
     ('man5/notmuch-hooks', 'notmuch-hooks',
      u'hooks for notmuch',
      [notmuch_authors], 5),
