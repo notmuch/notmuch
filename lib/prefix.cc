@@ -3,6 +3,7 @@
 #include "thread-fp.h"
 #include "regexp-fields.h"
 #include "parse-time-vrp.h"
+#include "sexp-fp.h"
 
 typedef struct {
     const char *name;
@@ -59,6 +60,8 @@ prefix_t prefix_table[] = {
     { "date",                   NULL,           NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
     { "query",                  NULL,           NOTMUCH_FIELD_EXTERNAL |
+      NOTMUCH_FIELD_PROCESSOR },
+    { "sexp",                  NULL,            NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROCESSOR },
     { "from",                   "XFROM",        NOTMUCH_FIELD_EXTERNAL |
       NOTMUCH_FIELD_PROBABILISTIC |
@@ -138,6 +141,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else if (STRNCMP_LITERAL (prefix->name, "thread") == 0)
 	    fp = (new ThreadFieldProcessor (*notmuch->query_parser, notmuch))->release ();
+	else if (STRNCMP_LITERAL (prefix->name, "sexp") == 0)
+	    fp = (new SexpFieldProcessor (notmuch))->release ();
 	else
 	    fp = (new RegexpFieldProcessor (prefix->name, prefix->flags,
 					    *notmuch->query_parser, notmuch))->release ();
