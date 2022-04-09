@@ -552,11 +552,7 @@ EOF
 	rm -rf "$TEMP_GPG"
     fi
 
-    # see https://github.com/jstedfast/gmime/pull/90
-    # should be fixed in GMime in 3.2.7, but some distros might patch
-    printf "Checking for GMime X.509 certificate validity... "
-
-    cat > _check_x509_validity.c <<EOF
+    cat > _check_gmime_cert.c <<EOF
 #include <stdio.h>
 #include <gmime/gmime.h>
 
@@ -589,16 +585,22 @@ int main () {
     if (sig == NULL) return !! fprintf (stderr, "no GMimeSignature found at position 0\n");
     cert = g_mime_signature_get_certificate (sig);
     if (cert == NULL) return !! fprintf (stderr, "no GMimeCertificate found\n");
+#ifdef CHECK_VALIDITY
     validity = g_mime_certificate_get_id_validity (cert);
     if (validity != GMIME_VALIDITY_FULL) return !! fprintf (stderr, "Got validity %d, expected %d\n", validity, GMIME_VALIDITY_FULL);
-
+#endif
     return 0;
 }
 EOF
+
+    # see https://github.com/jstedfast/gmime/pull/90
+    # should be fixed in GMime in 3.2.7, but some distros might patch
+    printf "Checking for GMime X.509 certificate validity... "
+
     if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
 	printf 'No.\nCould not make tempdir for testing X.509 certificate validity support.\n'
 	errors=$((errors + 1))
-    elif ${CC} ${CFLAGS} ${gmime_cflags} _check_x509_validity.c ${gmime_ldflags} -o _check_x509_validity \
+    elif ${CC} -DCHECK_VALIDITY ${CFLAGS} ${gmime_cflags} _check_gmime_cert.c ${gmime_ldflags} -o _check_x509_validity \
 	    && echo disable-crl-checks > "$TEMP_GPG/gpgsm.conf" \
 	    && echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$TEMP_GPG/trustlist.txt" \
 	    && GNUPGHOME=${TEMP_GPG} gpgsm --batch --quiet --import < "$srcdir"/test/smime/ca.crt
