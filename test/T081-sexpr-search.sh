@@ -31,6 +31,13 @@ thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "and of stemmed terms"
+notmuch search --query=sexp '(and wonderful wizard)' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "or of exact terms"
 notmuch search --query=sexp '(or "php" "wizard")' | notmuch_search_sanitize > OUTPUT
 cat <<EOF > EXPECTED
