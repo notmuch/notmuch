@@ -2,6 +2,11 @@
 test_description='"notmuch git" to save and restore tags'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ $NOTMUCH_HAVE_SFSEXP -ne 1 ]; then
+    printf "Skipping due to missing sfsexp library\n"
+    test_done
+fi
+
 add_email_corpus
 
 git config --global user.email notmuch@example.org
@@ -20,7 +25,6 @@ notmuch search --output=messages '*' | sort > EXPECTED
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "commit, with quoted tag"
-test_subtest_known_broken
 notmuch git -C clone2.git -p '' clone tags.git
 git -C clone2.git ls-tree -r --name-only HEAD | grep /inbox > BEFORE
 notmuch tag '+"quoted tag"' '*'

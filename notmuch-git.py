@@ -219,16 +219,17 @@ def _get_remote():
         stdout=_subprocess.PIPE, wait=True)
     return remote.strip()
 
+def _tag_query(prefix=None):
+    if prefix is None:
+        prefix = TAG_PREFIX
+    return '(tag (starts-with "{:s}"))'.format(prefix.replace('"','\\\"'))
 
 def get_tags(prefix=None):
     "Get a list of tags with a given prefix."
-    if prefix is None:
-        prefix = TAG_PREFIX
     (status, stdout, stderr) = _spawn(
-        args=['notmuch', 'search', '--output=tags', '*'],
+        args=['notmuch', 'search', '--query=sexp', '--output=tags', _tag_query(prefix)],
         stdout=_subprocess.PIPE, wait=True)
-    return [tag for tag in stdout.splitlines() if tag.startswith(prefix)]
-
+    return [tag for tag in stdout.splitlines()]
 
 def archive(treeish='HEAD', args=()):
     """
@@ -584,13 +585,12 @@ def get_status():
 def _index_tags():
     "Write notmuch tags to the nmbug.index."
     path = _os.path.join(NOTMUCH_GIT_DIR, 'nmbug.index')
-    query = ' '.join('tag:"{tag}"'.format(tag=tag) for tag in get_tags())
     prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
     _git(
         args=['read-tree', '--empty'],
         additional_env={'GIT_INDEX_FILE': path}, wait=True)
     with _spawn(
-            args=['notmuch', 'dump', '--format=batch-tag', '--', query],
+            args=['notmuch', 'dump', '--format=batch-tag', '--query=sexp', '--', _tag_query()],
             stdout=_subprocess.PIPE) as notmuch:
         with _git(
                 args=['update-index', '--index-info'],
@@ -690,6 +690,14 @@ def _help(parser, command=None):
     else:
         parser.parse_args(['--help'])
 
+def _notmuch_config_get(key):
+    (status, stdout, stderr) = _spawn(
+        args=['notmuch', 'config', 'get', key],
+        stdout=_subprocess.PIPE, wait=True)
+    if status != 0:
+        _LOG.error("failed to run notmuch config")
+        sys.exit(1)
+    return stdout.rstrip()
 
 if __name__ == '__main__':
     import argparse
@@ -833,6 +841,10 @@ if __name__ == '__main__':
     # for test suite
     for var in ['NOTMUCH_GIT_DIR', 'NOTMUCH_GIT_PREFIX', 'NOTMUCH_PROFILE', 'NOTMUCH_CONFIG' ]:
         _LOG.debug('env {:s} = {:s}'.format(var, _os.getenv(var,'%None%')))
+
+    if _notmuch_config_get('built_with.sexp_queries') != 'true':
+        _LOG.error("notmuch git needs sexp query support")
+        sys.exit(1)
 
     if not getattr(args, 'func', None):
         parser.print_usage()
