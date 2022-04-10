@@ -19,6 +19,16 @@ git -C tags.git ls-tree -r --name-only HEAD | xargs dirname | sort -u | sed s,ta
 notmuch search --output=messages '*' | sort > EXPECTED
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
+test_begin_subtest "commit, with quoted tag"
+test_subtest_known_broken
+notmuch git -C clone2.git -p '' clone tags.git
+git -C clone2.git ls-tree -r --name-only HEAD | grep /inbox > BEFORE
+notmuch tag '+"quoted tag"' '*'
+notmuch git -C clone2.git -p '' commit
+notmuch tag '-"quoted tag"' '*'
+git -C clone2.git ls-tree -r --name-only HEAD | grep /inbox > AFTER
+test_expect_equal_file_nonempty BEFORE AFTER
+
 test_begin_subtest "checkout"
 notmuch dump > BEFORE
 notmuch tag -inbox '*'
