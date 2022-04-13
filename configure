@@ -1272,7 +1272,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
-rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_x509_validity.c _check_x509_validity \
+rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_gmime_cert.c _check_x509_validity _check_email \
    _verify_sig_with_session_key.c _verify_sig_with_session_key
 
 # construct the Makefile.config
