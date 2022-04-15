@@ -30,10 +30,14 @@ SexpFieldProcessor::operator() (const std::string & query_string)
     notmuch_status_t status;
     Xapian::Query output;
 
+#if HAVE_SFSEXP
     status = _notmuch_sexp_string_to_xapian_query (notmuch, query_string.c_str (), output);
     if (status) {
 	throw Xapian::QueryParserError ("error parsing " + query_string);
     }
+#else
+    throw Xapian::QueryParserError ("sexp query parser not available");
+#endif
 
     return output;
 

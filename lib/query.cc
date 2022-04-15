@@ -227,6 +227,7 @@ _notmuch_query_ensure_parsed_xapian (notmuch_query_t *query)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+#if HAVE_SFSEXP
 static notmuch_status_t
 _notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
 {
@@ -243,6 +244,7 @@ _notmuch_query_ensure_parsed_sexpr (notmuch_query_t *query)
     _notmuch_query_cache_terms (query);
     return NOTMUCH_STATUS_SUCCESS;
 }
+#endif
 
 static notmuch_status_t
 _notmuch_query_ensure_parsed (notmuch_query_t *query)

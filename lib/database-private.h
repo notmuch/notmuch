@@ -354,10 +354,6 @@ _notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
 				       std::string query_string,
 				       Xapian::Query &output,
 				       std::string &msg);
-/* parse-sexp.cc */
-notmuch_status_t
-_notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *querystr,
-				      Xapian::Query &output);
 
 notmuch_status_t
 _notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Query subquery,
