@@ -93,6 +93,10 @@ pre-release:
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
 	mkdir -p releases
 	mv $(TAR_FILE) $(DEB_TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(UPSTREAM_TAG) release pristine-tar
+	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+endif
 
 .PHONY: debian-snapshot
 debian-snapshot:
