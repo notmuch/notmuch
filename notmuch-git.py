@@ -89,6 +89,20 @@ def _xapian_unquote(string):
     return string
 
 
+def timed(fn):
+    """Timer decorator"""
+    from time import perf_counter
+
+    def inner(*args, **kwargs):
+        start_time = perf_counter()
+        rval = fn(*args, **kwargs)
+        end_time = perf_counter()
+        _LOG.info('{0}: {1:.8f}s elapsed'.format(fn.__name__, end_time - start_time))
+        return rval
+
+    return inner
+
+
 class SubprocessError(RuntimeError):
     "A subprocess exited with a nonzero status"
     def __init__(self, args, status, stdout=None, stderr=None):
@@ -321,6 +335,7 @@ def commit(treeish='HEAD', message=None):
         _git(args=['read-tree', treeish], wait=True)
         raise
 
+@timed
 def _update_index(status):
     with _git(
             args=['update-index', '--index-info'],
@@ -561,6 +576,7 @@ def _is_unmerged(ref='@{upstream}'):
     return base != fetch_head
 
 
+@timed
 def get_status():
     status = {
         'deleted': {},
@@ -581,7 +597,7 @@ def get_status():
     _os.remove(index)
     return status
 
-
+@timed
 def _index_tags():
     "Write notmuch tags to the nmbug.index."
     path = _os.path.join(NOTMUCH_GIT_DIR, 'nmbug.index')
@@ -630,6 +646,7 @@ def _index_tags_for_message(id, status, tags):
         yield '{mode} {hash}\t{path}\n'.format(mode=mode, hash=hash, path=path)
 
 
+@timed
 def _diff_index(index, filter):
     """
     Get an {id: {tag, ...}} dict for a given filter.
