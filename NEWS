@@ -4,7 +4,7 @@ Notmuch 0.36 (UNRELEASED)
 New add-on tool: notmuch-web
 -----------------------------
 
-The new contrib/ tool `notmuch-web` is a very thin web client.  It
+The new devel/ tool `notmuch-web` is a very thin web client.  It
 supports a full search interface for one user: there is no facility
 for multiple users provided today.  See the notmuch-web README file
 for more information.
