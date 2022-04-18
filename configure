@@ -564,7 +564,6 @@ int main () {
     GMimeSignature *sig = NULL;
     GMimeCertificate *cert = NULL;
     GMimeObject *output = NULL;
-    GMimeValidity validity = GMIME_VALIDITY_UNKNOWN;
     int len;
 
     g_mime_init ();
@@ -586,7 +585,7 @@ int main () {
     cert = g_mime_signature_get_certificate (sig);
     if (cert == NULL) return !! fprintf (stderr, "no GMimeCertificate found\n");
 #ifdef CHECK_VALIDITY
-    validity = g_mime_certificate_get_id_validity (cert);
+    GMimeValidity validity = g_mime_certificate_get_id_validity (cert);
     if (validity != GMIME_VALIDITY_FULL) return !! fprintf (stderr, "Got validity %d, expected %d\n", validity, GMIME_VALIDITY_FULL);
 #endif
 #ifdef CHECK_EMAIL
