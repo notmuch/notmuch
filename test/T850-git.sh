@@ -33,6 +33,47 @@ notmuch tag '-"quoted tag"' '*'
 git -C clone2.git ls-tree -r --name-only HEAD | grep /inbox > AFTER
 test_expect_equal_file_nonempty BEFORE AFTER
 
+test_begin_subtest "commit (incremental)"
+notmuch tag +test id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C tags.git -p '' commit
+git -C tags.git ls-tree -r --name-only HEAD |
+    grep 20091117190054 | sort > OUTPUT
+echo "--------------------------------------------------" >> OUTPUT
+notmuch tag -test id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C tags.git -p '' commit
+git -C tags.git ls-tree -r --name-only HEAD |
+    grep 20091117190054 | sort >> OUTPUT
+cat <<EOF > EXPECTED
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/test
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+--------------------------------------------------
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+EOF
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "commit (change prefix)"
+notmuch tag +test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C tags.git -p 'test::' commit
+git -C tags.git ls-tree -r --name-only HEAD |
+    grep 20091117190054 | sort > OUTPUT
+echo "--------------------------------------------------" >> OUTPUT
+notmuch tag -test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C tags.git -p '' commit
+git -C tags.git ls-tree -r --name-only HEAD |
+    grep 20091117190054 | sort >> OUTPUT
+cat <<EOF > EXPECTED
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/one
+--------------------------------------------------
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+EOF
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "checkout"
 notmuch dump > BEFORE
 notmuch tag -inbox '*'

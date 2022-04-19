@@ -38,6 +38,7 @@ import tempfile as _tempfile
 import textwrap as _textwrap
 from urllib.parse import quote as _quote
 from urllib.parse import unquote as _unquote
+import json as _json
 
 _LOG = _logging.getLogger('nmbug')
 _LOG.setLevel(_logging.WARNING)
@@ -299,41 +300,98 @@ def _is_committed(status):
     return len(status['added']) + len(status['deleted']) == 0
 
 
+class CachedIndex:
+    def __init__(self, repo, treeish):
+        self.cache_path = _os.path.join(repo, 'notmuch', 'index_cache.json')
+        self.index_path = _os.path.join(repo, 'index')
+        self.current_treeish = treeish
+        # cached values
+        self.treeish = None
+        self.hash = None
+        self.index_checksum = None
+
+        self._load_cache_file()
+
+    def _load_cache_file(self):
+        try:
+            with open(self.cache_path) as f:
+                data = _json.load(f)
+                self.treeish = data['treeish']
+                self.hash = data['hash']
+                self.index_checksum = data['index_checksum']
+        except FileNotFoundError:
+            pass
+        except _json.JSONDecodeError:
+            _LOG.error("Error decoding cache")
+            _sys.exit(1)
+
+    def __enter__(self):
+        self.read_tree()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        checksum = _read_index_checksum(self.index_path)
+        (_, hash, _) = _git(
+            args=['rev-parse', self.current_treeish],
+            stdout=_subprocess.PIPE,
+            wait=True)
+
+        with open(self.cache_path, "w") as f:
+            _json.dump({'treeish': self.current_treeish,
+                        'hash': hash.rstrip(),  'index_checksum': checksum }, f)
+
+    @timed
+    def read_tree(self):
+        current_checksum = _read_index_checksum(self.index_path)
+        (_, hash, _) = _git(
+            args=['rev-parse', self.current_treeish],
+            stdout=_subprocess.PIPE,
+            wait=True)
+        current_hash = hash.rstrip()
+
+        if self.current_treeish == self.treeish and \
+           self.index_checksum and self.index_checksum == current_checksum and \
+           self.hash and self.hash == current_hash:
+            return
+
+        _git(args=['read-tree', self.current_treeish], wait=True)
+
+
 def commit(treeish='HEAD', message=None):
     """
     Commit prefix-matching tags from the notmuch database to Git.
     """
+
     status = get_status()
 
     if _is_committed(status=status):
         _LOG.warning('Nothing to commit')
         return
 
-    _git(args=['read-tree', '--empty'], wait=True)
-    _git(args=['read-tree', treeish], wait=True)
-    try:
-        _update_index(status=status)
-        (_, tree, _) = _git(
-            args=['write-tree'],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        (_, parent, _) = _git(
-            args=['rev-parse', treeish],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        (_, commit, _) = _git(
-            args=['commit-tree', tree.strip(), '-p', parent.strip()],
-            input=message,
-            stdout=_subprocess.PIPE,
-            wait=True)
-        _git(
-            args=['update-ref', treeish, commit.strip()],
-            stdout=_subprocess.PIPE,
-            wait=True)
-    except Exception as e:
-        _git(args=['read-tree', '--empty'], wait=True)
-        _git(args=['read-tree', treeish], wait=True)
-        raise
+    with CachedIndex(NOTMUCH_GIT_DIR, treeish) as index:
+        try:
+            _update_index(status=status)
+            (_, tree, _) = _git(
+                args=['write-tree'],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            (_, parent, _) = _git(
+                args=['rev-parse', treeish],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            (_, commit, _) = _git(
+                args=['commit-tree', tree.strip(), '-p', parent.strip()],
+                input=message,
+                stdout=_subprocess.PIPE,
+                wait=True)
+            _git(
+                args=['update-ref', treeish, commit.strip()],
+                stdout=_subprocess.PIPE,
+                wait=True)
+        except Exception as e:
+            _git(args=['read-tree', '--empty'], wait=True)
+            _git(args=['read-tree', treeish], wait=True)
+            raise
 
 @timed
 def _update_index(status):
@@ -582,50 +640,160 @@ def get_status():
         'deleted': {},
         'missing': {},
         }
-    index = _index_tags()
-    maybe_deleted = _diff_index(index=index, filter='D')
-    for id, tags in maybe_deleted.items():
-        (_, stdout, stderr) = _spawn(
-            args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        if stdout:
-            status['deleted'][id] = tags
-        else:
-            status['missing'][id] = tags
-    status['added'] = _diff_index(index=index, filter='A')
-    _os.remove(index)
+    with PrivateIndex(repo=NOTMUCH_GIT_DIR, prefix=TAG_PREFIX) as index:
+        maybe_deleted = index.diff(filter='D')
+        for id, tags in maybe_deleted.items():
+            (_, stdout, stderr) = _spawn(
+                args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            if stdout:
+                status['deleted'][id] = tags
+            else:
+                status['missing'][id] = tags
+        status['added'] = index.diff(filter='A')
+
     return status
 
-@timed
-def _index_tags():
-    "Write notmuch tags to the nmbug.index."
-    path = _os.path.join(NOTMUCH_GIT_DIR, 'nmbug.index')
-    prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
-    _git(
-        args=['read-tree', '--empty'],
-        additional_env={'GIT_INDEX_FILE': path}, wait=True)
-    with _spawn(
-            args=['notmuch', 'dump', '--format=batch-tag', '--query=sexp', '--', _tag_query()],
-            stdout=_subprocess.PIPE) as notmuch:
-        with _git(
-                args=['update-index', '--index-info'],
-                stdin=_subprocess.PIPE,
-                additional_env={'GIT_INDEX_FILE': path}) as git:
-            for line in notmuch.stdout:
-                if line.strip().startswith('#'):
-                    continue
-                (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
-                tags = [
-                    _unquote(tag[len(prefix):])
-                    for tag in tags_string.split()
-                    if tag.startswith(prefix)]
-                id = _xapian_unquote(string=id)
-                for line in _index_tags_for_message(
-                        id=id, status='A', tags=tags):
-                    git.stdin.write(line)
-    return path
+class PrivateIndex:
+    def __init__(self, repo, prefix):
+        try:
+            _os.makedirs(_os.path.join(repo, 'notmuch'))
+        except FileExistsError:
+            pass
 
+        file_name = 'notmuch/index'
+        self.index_path = _os.path.join(repo, file_name)
+        self.cache_path = _os.path.join(repo, 'notmuch', '{:s}.json'.format(_hex_quote(file_name)))
+
+        self.current_prefix = prefix
+
+        self.prefix = None
+        self.uuid = None
+        self.lastmod = None
+        self.checksum = None
+        self._load_cache_file()
+        self._index_tags()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        checksum = _read_index_checksum(self.index_path)
+        (count, uuid, lastmod) = _read_database_lastmod()
+        with open(self.cache_path, "w") as f:
+            _json.dump({'prefix': self.current_prefix, 'uuid': uuid, 'lastmod': lastmod,  'checksum': checksum }, f)
+
+    def _load_cache_file(self):
+        try:
+            with open(self.cache_path) as f:
+                data = _json.load(f)
+                self.prefix = data['prefix']
+                self.uuid = data['uuid']
+                self.lastmod = data['lastmod']
+                self.checksum = data['checksum']
+        except FileNotFoundError:
+            return None
+        except _json.JSONDecodeError:
+            _LOG.error("Error decoding cache")
+            _sys.exit(1)
+
+    @timed
+    def _index_tags(self):
+        "Write notmuch tags to private git index."
+        prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
+        current_checksum = _read_index_checksum(self.index_path)
+        if (self.prefix == None or self.prefix != self.current_prefix
+            or self.checksum == None or self.checksum != current_checksum):
+            _git(
+                args=['read-tree', '--empty'],
+                additional_env={'GIT_INDEX_FILE': self.index_path}, wait=True)
+
+        query = _tag_query()
+        clear_tags = False
+        (count,uuid,lastmod) = _read_database_lastmod()
+        if self.prefix == self.current_prefix and self.uuid \
+           and self.uuid == uuid and self.checksum == current_checksum:
+            query = '(and (infix "lastmod:{:d}..")) {:s})'.format(self.lastmod+1, query)
+            clear_tags = True
+        with _spawn(
+                args=['notmuch', 'dump', '--format=batch-tag', '--query=sexp', '--', query],
+                stdout=_subprocess.PIPE) as notmuch:
+            with _git(
+                    args=['update-index', '--index-info'],
+                    stdin=_subprocess.PIPE,
+                    additional_env={'GIT_INDEX_FILE': self.index_path}) as git:
+                for line in notmuch.stdout:
+                    if line.strip().startswith('#'):
+                        continue
+                    (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
+                    tags = [
+                        _unquote(tag[len(prefix):])
+                        for tag in tags_string.split()
+                        if tag.startswith(prefix)]
+                    id = _xapian_unquote(string=id)
+                    if clear_tags:
+                        for line in _clear_tags_for_message(index=self.index_path, id=id):
+                            git.stdin.write(line)
+                    for line in _index_tags_for_message(
+                            id=id, status='A', tags=tags):
+                        git.stdin.write(line)
+
+    @timed
+    def diff(self, filter):
+        """
+        Get an {id: {tag, ...}} dict for a given filter.
+
+        For example, use 'A' to find added tags, and 'D' to find deleted tags.
+        """
+        s = _collections.defaultdict(set)
+        with _git(
+                args=[
+                    'diff-index', '--cached', '--diff-filter', filter,
+                    '--name-only', 'HEAD'],
+                additional_env={'GIT_INDEX_FILE': self.index_path},
+                stdout=_subprocess.PIPE) as p:
+            # Once we drop Python < 3.3, we can use 'yield from' here
+            for id, tag in _unpack_diff_lines(stream=p.stdout):
+                s[id].add(tag)
+        return s
+
+def _read_index_checksum (index_path):
+    """Read the index checksum, as defined by index-format.txt in the git source
+    WARNING: assumes SHA1 repo"""
+    import binascii
+    try:
+        with open(index_path, 'rb') as f:
+            size=_os.path.getsize(index_path)
+            f.seek(size-20);
+            return binascii.hexlify(f.read(20)).decode('ascii')
+    except FileNotFoundError:
+        return None
+
+
+def _clear_tags_for_message(index, id):
+    """
+    Clear any existing index entries for message 'id'
+
+    Neither 'id' nor the tags in 'tags' should be encoded/escaped.
+    """
+
+    dir = 'tags/{id}'.format(id=_hex_quote(string=id))
+
+    with _git(
+            args=['ls-files', dir],
+            additional_env={'GIT_INDEX_FILE': index},
+            stdout=_subprocess.PIPE) as git:
+        for file in git.stdout:
+            line = '0 0000000000000000000000000000000000000000\t{:s}\n'.format(file.strip())
+            yield line
+
+def _read_database_lastmod():
+    with _spawn(
+            args=['notmuch', 'count', '--lastmod', '*'],
+            stdout=_subprocess.PIPE) as notmuch:
+        (count,uuid,lastmod_str) = notmuch.stdout.readline().split()
+        return (count,uuid,int(lastmod_str))
 
 def _index_tags_for_message(id, status, tags):
     """
@@ -644,26 +812,6 @@ def _index_tags_for_message(id, status, tags):
         path = 'tags/{id}/{tag}'.format(
             id=_hex_quote(string=id), tag=_hex_quote(string=tag))
         yield '{mode} {hash}\t{path}\n'.format(mode=mode, hash=hash, path=path)
-
-
-@timed
-def _diff_index(index, filter):
-    """
-    Get an {id: {tag, ...}} dict for a given filter.
-
-    For example, use 'A' to find added tags, and 'D' to find deleted tags.
-    """
-    s = _collections.defaultdict(set)
-    with _git(
-            args=[
-                'diff-index', '--cached', '--diff-filter', filter,
-                '--name-only', 'HEAD'],
-            additional_env={'GIT_INDEX_FILE': index},
-            stdout=_subprocess.PIPE) as p:
-        # Once we drop Python < 3.3, we can use 'yield from' here
-        for id, tag in _unpack_diff_lines(stream=p.stdout):
-            s[id].add(tag)
-    return s
 
 
 def _diff_refs(filter, a='HEAD', b='@{upstream}'):
