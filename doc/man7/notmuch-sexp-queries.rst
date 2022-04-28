@@ -230,11 +230,11 @@ EXAMPLES
 
 ``(folder (of (id 1234@invalid)))``
 
-    Match any message in the same folder as the one with Message-Id "1234@invalid"
+    Match any message in the same folder as the one with Message-Id "1234\@invalid"
 
 ``(id 1234@invalid blah@test)``
 
-    Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
+    Matches Message-Id "1234\@invalid" *or* Message-Id "blah\@test"
 
 ``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
 
@@ -260,18 +260,18 @@ EXAMPLES
 
 ``(thread (of (id 1234@invalid)))``
 
-    Match any message in the same thread as the one with Message-Id "1234@invalid"
+    Match any message in the same thread as the one with Message-Id "1234\@invalid"
 
 ``(thread (matching (from bob@example.com) (to bob@example.com)))``
 
     Match any (messages in) a thread containing a message from
-    "bob@example.com" and a (possibly distinct) message to "bob at
+    "bob\@example.com" and a (possibly distinct) message to "bob at
     example.com")
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
 
-    Match in the "To" or "Cc" headers, "bob@example.com",
-    "mallory@example.org", and also "bob@example.com.au" since it
+    Match in the "To" or "Cc" headers, "bob\@example.com",
+    "mallory\@example.org", and also "bob\@example.com.au" since it
     contains the adjacent triple "bob", "example", "com".
 
 ``(not (to *))``
