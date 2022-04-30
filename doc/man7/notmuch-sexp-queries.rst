@@ -265,8 +265,8 @@ EXAMPLES
 ``(thread (matching (from bob@example.com) (to bob@example.com)))``
 
     Match any (messages in) a thread containing a message from
-    "bob\@example.com" and a (possibly distinct) message to "bob at
-    example.com")
+    "bob\@example.com" and a (possibly distinct) message to
+    "bob\@example.com"
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
 
