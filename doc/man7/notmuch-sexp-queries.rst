@@ -221,7 +221,7 @@ EXAMPLES
 
 ``(not Bob Marley)``
 
-    Match messages containing neither "Bob" nor "Marley", nor their stems,
+    Match messages containing neither "Bob" nor "Marley", nor their stems.
 
 ``"quick fox"`` ``quick-fox`` ``quick@fox``
 
@@ -230,11 +230,11 @@ EXAMPLES
 
 ``(folder (of (id 1234@invalid)))``
 
-    Match any message in the same folder as the one with Message-Id "1234\@invalid"
+    Match any message in the same folder as the one with Message-Id "1234\@invalid".
 
 ``(id 1234@invalid blah@test)``
 
-    Matches Message-Id "1234\@invalid" *or* Message-Id "blah\@test"
+    Matches Message-Id "1234\@invalid" *or* Message-Id "blah\@test".
 
 ``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
 
@@ -260,13 +260,13 @@ EXAMPLES
 
 ``(thread (of (id 1234@invalid)))``
 
-    Match any message in the same thread as the one with Message-Id "1234\@invalid"
+    Match any message in the same thread as the one with Message-Id "1234\@invalid".
 
 ``(thread (matching (from bob@example.com) (to bob@example.com)))``
 
     Match any (messages in) a thread containing a message from
     "bob\@example.com" and a (possibly distinct) message to
-    "bob\@example.com"
+    "bob\@example.com".
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
 
@@ -281,7 +281,7 @@ EXAMPLES
 ``(List *)``
 
     Match messages with a non-empty List-Id header, assuming
-    configuration ``index.header.List=List-Id``
+    configuration ``index.header.List=List-Id``.
 
 .. _macro_examples:
 
