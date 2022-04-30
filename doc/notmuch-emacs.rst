@@ -331,11 +331,21 @@ tags.
 As is the case with :ref:`notmuch-search`, the presentation of results
 can be controlled by the variable ``notmuch-search-oldest-first``.
 
+.. _notmuch-unthreaded:
+
+notmuch-unthreaded
+------------------
+
+``notmuch-unthreaded-mode`` is similar to :any:`notmuch-tree` in that
+each line corresponds to a single message, but no thread information
+is presented.
+
+Keybindings are the same as :any:`notmuch-tree`.
 
 Global key bindings
 ===================
 
-Several features are accessible from anywhere in notmuch through the
+Several features are accessible from most places in notmuch through the
 following key bindings:
 
 ``j``
@@ -343,6 +353,8 @@ following key bindings:
 
 ``k``
     Tagging operations using :ref:`notmuch-tag-jump`
+
+``C-_`` ``C-/`` ``C-x u``: Undo previous tagging operation using :ref:`notmuch-tag-undo`
 
 .. _notmuch-jump:
 
@@ -372,6 +384,21 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 :index:`notmuch-tagging-keys`
 
   |docstring::notmuch-tagging-keys|
+
+.. _notmuch-tag-undo:
+
+notmuch-tag-undo
+----------------
+
+Each notmuch buffer supporting tagging operations (i.e buffers in
+:any:`notmuch-show`, :any:`notmuch-search`, :any:`notmuch-tree`, and
+:any:`notmuch-unthreaded` mode) keeps a local stack of tagging
+operations. These can be undone via ``notmuch-tag-undo``. By default
+this is bound to the usual Emacs keys for undo.
+
+:index:`notmuch-tag-undo`
+
+   |docstring::notmuch-tag-undo|
 
 Buffer navigation
 =================

@@ -30,9 +30,9 @@ pre-new
 
 post-new
     This hook is invoked by the :any:`notmuch-new(1)` command after
-    new messages have been imported into the database and initial tags
-    have been applied. The hook will not be run if there have been any
-    errors during the scan or import.
+    any new messages have been imported into the database and initial
+    tags have been applied. The hook will not be run if there have
+    been any errors during the scan or import.
 
     Typically this hook is used to perform additional query-based
     tagging on the imported messages.

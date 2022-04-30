@@ -31,8 +31,23 @@ thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "and of stemmed terms"
+notmuch search --query=sexp '(and wonderful wizard)' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "or of exact terms"
 notmuch search --query=sexp '(or "php" "wizard")' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2010-12-29 [1/1] François Boulogne; [aur-general] Guidelines: cp, mkdir vs install (inbox unread)
+thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "or of exact terms via field processor"
+notmuch search  'sexp:"(or ""php"" ""wizard"")"' | notmuch_search_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 thread:XXX   2010-12-29 [1/1] François Boulogne; [aur-general] Guidelines: cp, mkdir vs install (inbox unread)
 thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
@@ -707,6 +722,11 @@ notmuch search property:foo=bar > EXPECTED
 notmuch search --query=sexp '(property (rx foo=.*))' > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "regexp 'property' search via field processor"
+notmuch search property:foo=bar > EXPECTED
+notmuch search  'sexp:"(property (rx foo=.*))"' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "anchored 'tag' search"
 notmuch search tag:signed > EXPECTED
 notmuch search --query=sexp '(tag (rx ^si))' > OUTPUT
@@ -738,6 +758,13 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Compound subquery"
 notmuch search --query=sexp '(thread (of (from keithp) (subject Maildir)))' | notmuch_search_sanitize > OUTPUT
+cat<<EOF > EXPECTED
+thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Compound subquery via field processor"
+notmuch search 'sexp:"(thread (of (from keithp) (subject Maildir)))"' | notmuch_search_sanitize > OUTPUT
 cat<<EOF > EXPECTED
 thread:XXX   2009-11-18 [7/7] Lars Kellogg-Stedman, Mikhail Gusarov, Keith Packard, Carl Worth; [notmuch] Working with Maildir storage? (inbox signed unread)
 EOF
@@ -967,6 +994,11 @@ test_expect_code 0 'notmuch reindex "*"'
 test_begin_subtest "wildcard search for user header"
 grep -Ril List-Id ${MAIL_DIR} | sort | notmuch_dir_sanitize > EXPECTED
 notmuch search --output=files --query=sexp '(List *)' | sort | notmuch_dir_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "wildcard search for user header via field processor"
+grep -Ril List-Id ${MAIL_DIR} | sort | notmuch_dir_sanitize > EXPECTED
+notmuch search --output=files  'sexp:"(List *)"' | sort | notmuch_dir_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "wildcard search for user header 2"

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+<h1>{{ terms|e }}</h1>
+{% block content %}
+{% for t in ts %}
+  <h2>{{ t.subject|e }}</h2>
+  <p><i>{{ t.authors|e }}</i></p>
+  <p><b>{{ format_time_range(t.first,t.last)|e }}</b></p>
+  {{ show_msgs(t.toplevel())|safe }}
+{% endfor %}
+{% endblock content %}

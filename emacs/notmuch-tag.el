@@ -275,6 +275,11 @@ This can be used with `notmuch-tag-format-image-data'."
   </g>
 </svg>")
 
+;;; track history of tag operations
+(defvar-local notmuch-tag-history nil
+  "Buffer local history of `notmuch-tag' function.")
+(put 'notmuch-tag-history 'permanent-local t)
+
 ;;; Format Handling
 
 (defvar notmuch-tag--format-cache (make-hash-table :test 'equal)
@@ -458,14 +463,19 @@ from TAGS if present."
   "Use batch tagging if the tagging query is longer than this.
 
 This limits the length of arguments passed to the notmuch CLI to
-avoid system argument length limits and performance problems.")
+avoid system argument length limits and performance problems.
 
-(defun notmuch-tag (query tag-changes)
+NOTE: this variable is no longer used.")
+
+(make-obsolete-variable 'notmuch-tag-argument-limit nil "notmuch 0.36")
+
+(defun notmuch-tag (query tag-changes &optional omit-hist)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
 QUERY should be a string containing the search-terms.
-TAG-CHANGES is a list of strings of the form \"+tag\" or
-\"-tag\" to add or remove tags, respectively.
+TAG-CHANGES is a list of strings of the form \"+tag\" or \"-tag\"
+to add or remove tags, respectively.  OMIT-HIST disables history
+tracking if non-nil.
 
 Note: Other code should always use this function to alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
@@ -481,16 +491,30 @@ notmuch-after-tag-hook will be run."
     (notmuch-dlet ((tag-changes tag-changes)
 		   (query query))
       (run-hooks 'notmuch-before-tag-hook))
-    (if (<= (length query) notmuch-tag-argument-limit)
-	(apply 'notmuch-call-notmuch-process "tag"
-	       (append tag-changes (list "--" query)))
-      ;; Use batch tag mode to avoid argument length limitations
-      (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
-			      " -- " query)))
-	(notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
-    (notmuch-dlet ((tag-changes tag-changes)
-		   (query query))
-      (run-hooks 'notmuch-after-tag-hook))))
+    (with-temp-buffer
+      (insert (concat (mapconcat #'notmuch-hex-encode tag-changes " ") " -- " query))
+      (unless (= 0
+		 (notmuch--call-process-region
+		  (point-min) (point-max) notmuch-command t t nil "tag" "--batch"))
+	(notmuch-logged-error "notmuch tag failed" (buffer-string))))
+    (unless omit-hist
+      (push (list :query query :tag-changes tag-changes) notmuch-tag-history)))
+  (notmuch-dlet ((tag-changes tag-changes)
+		 (query query))
+    (run-hooks 'notmuch-after-tag-hook)))
+
+(defun notmuch-tag-undo ()
+  "Undo the previous tagging operation in the current buffer. Uses
+buffer local variable `notmuch-tag-history' to determine what
+that operation was."
+  (interactive)
+  (when (null notmuch-tag-history)
+    (error "no further notmuch undo information"))
+  (let* ((action (pop notmuch-tag-history))
+	 (query (plist-get action :query))
+	 (changes (notmuch-tag-change-list (plist-get action :tag-changes) t)))
+    (notmuch-tag query changes t))
+  (notmuch-refresh-this-buffer))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.

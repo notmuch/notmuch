@@ -1,3 +1,31 @@
+notmuch (0.36-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- David Bremner <bremner@debian.org>  Mon, 25 Apr 2022 08:47:41 -0300
+
+notmuch (0.36~rc1-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Fix for build in environments where libsexp is not available
+    (i.e. outside Debian).
+
+ -- David Bremner <bremner@debian.org>  Sat, 16 Apr 2022 08:37:12 -0300
+
+notmuch (0.36~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Re-enable test smime.4, allegedly fixed upstream.
+
+ -- David Bremner <bremner@debian.org>  Fri, 15 Apr 2022 08:45:10 -0300
+
+notmuch (0.35-2) unstable; urgency=medium
+
+  * Disable test smime.4, which is broken by gmime 3.2.9 thanks to Lucas
+    Nussbaum for the report (Closes: #1008462).
+
+ -- David Bremner <bremner@debian.org>  Mon, 28 Mar 2022 11:45:11 -0600
+
 notmuch (0.35-1~bpo11+2) bullseye-backports; urgency=medium
 
   * Once more with binaries

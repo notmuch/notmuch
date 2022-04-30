@@ -169,6 +169,12 @@ property:<key>=<value>
     can be present on a given message with several different values.
     See :any:`notmuch-properties(7)` for more details.
 
+sexp:<subquery>
+    The **sexp:** prefix allows subqueries in the format
+    documented in :any:`notmuch-sexp-queries(7)`. Note that subqueries containing
+    spaces must be quoted, and any embedded double quotes must be escaped
+    (see :any:`quoting`).
+
 User defined prefixes are also supported, see :any:`notmuch-config(1)` for
 details.
 
@@ -257,7 +263,7 @@ Boolean
 Probabilistic
   **body:**, **to:**, **attachment:**, **mimetype:**
 Special
-   **from:**, **query:**, **subject:**
+   **from:**, **query:**, **subject:**, **sexp:**
 
 Terms and phrases
 -----------------
@@ -275,11 +281,13 @@ the same phrase.
 - a.list.of.words
 
 Both parenthesised lists of terms and quoted phrases are ok with
-probabilistic prefixes such as **to:**, **from:**, and **subject:**. In particular
+probabilistic prefixes such as **to:**, **from:**, and **subject:**.
+For prefixes supporting regex search, the parenthesised list should be
+quoted.  In particular
 
 ::
 
-   subject:(pizza free)
+   subject:"(pizza free)"
 
 is equivalent to
 
@@ -294,6 +302,8 @@ Both of these will match a subject "Free Delicious Pizza" while
    subject:"pizza free"
 
 will not.
+
+.. _quoting:
 
 Quoting
 -------
@@ -321,6 +331,13 @@ e.g.
 
    % notmuch search 'folder:"/^.*/(Junk|Spam)$/"'
    % notmuch search 'thread:"{from:mallory and date:2009}" and thread:{to:mallory}'
+
+Double quotes within query strings need to be doubled to escape them.
+
+::
+
+   % notmuch search 'tag:"""quoted tag"""'
+   % notmuch search 'sexp:"(or ""wizard"" ""php"")"'
 
 DATE AND TIME SEARCH
 ====================

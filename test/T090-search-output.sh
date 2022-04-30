@@ -435,7 +435,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search for non-existent message prints nothing"
 notmuch search "no-message-matches-this" > OUTPUT
-echo -n >EXPECTED
+: >EXPECTED
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search --format=json for non-existent message prints proper empty json"

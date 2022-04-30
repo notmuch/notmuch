@@ -241,6 +241,26 @@ maildir_mktemp (const void *ctx, const char *maildir, bool world_readable, char 
     return fd;
 }
 
+static bool
+write_buf (const char *buf, int fdout, ssize_t remain)
+{
+    const char *p = buf;
+
+    do {
+	ssize_t written = write (fdout, p, remain);
+	if (written < 0 && errno == EINTR)
+	    continue;
+	if (written <= 0) {
+	    fprintf (stderr, "Error: writing to temporary file: %s",
+		     strerror (errno));
+	    return false;
+	}
+	p += written;
+	remain -= written;
+    } while (remain > 0);
+    return true;
+}
+
 /*
  * Copy fdin to fdout, return true on success, and false on errors and
  * empty input.
@@ -249,11 +269,13 @@ static bool
 copy_fd (int fdout, int fdin)
 {
     bool empty = true;
+    bool first = true;
+    const char *header = "X-Envelope-From: ";
 
     while (! interrupted) {
 	ssize_t remain;
 	char buf[4096];
-	char *p;
+	const char *p = buf;
 
 	remain = read (fdin, buf, sizeof (buf));
 	if (remain == 0)
@@ -266,20 +288,18 @@ copy_fd (int fdout, int fdin)
 	    return false;
 	}
 
-	p = buf;
-	do {
-	    ssize_t written = write (fdout, p, remain);
-	    if (written < 0 && errno == EINTR)
-		continue;
-	    if (written <= 0) {
-		fprintf (stderr, "Error: writing to temporary file: %s",
-			 strerror (errno));
+	if (first && remain >= 5 && 0 == strncmp (buf, "From ", 5)) {
+	    if (! write_buf (header, fdout, strlen (header)))
 		return false;
-	    }
-	    p += written;
-	    remain -= written;
-	    empty = false;
-	} while (remain > 0);
+	    p += 5;
+	    remain -= 5;
+	}
+
+	first = false;
+
+	if (! write_buf (p, fdout, remain))
+	    return false;
+	empty = false;
     }
 
     return (! interrupted && ! empty);

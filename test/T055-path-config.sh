@@ -293,6 +293,26 @@ user.primary_email=test_suite@notmuchmail.org
 EOF
    test_expect_equal_file EXPECTED OUTPUT
 
+   test_begin_subtest "Config list from python ($config)"
+   test_python <<EOF > OUTPUT
+from notmuch2 import Database
+db=Database(config=Database.CONFIG.SEARCH)
+for key in list(db.config):
+    print(key)
+EOF
+   cat <<EOF > EXPECTED
+database.autocommit
+database.backup_dir
+database.hook_dir
+database.mail_root
+database.path
+maildir.synchronize_flags
+new.tags
+user.name
+user.other_email
+user.primary_email
+EOF
+   test_expect_equal_file EXPECTED OUTPUT
    case $config in
        XDG*)
 	   test_begin_subtest "Set shadowed config value in database ($config)"

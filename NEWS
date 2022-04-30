@@ -1,3 +1,60 @@
+Notmuch 0.36 (2022-04-25)
+=========================
+
+Library
+-------
+
+Add the `sexp` prefix to the infix (traditional) query parser. This
+allows specific subqueries to be parsed by the sexp parser (with
+appropropriate quoting). See `notmuch-search-terms(7)` for details.
+
+Add another heuristic to regexp fields to prevent phrase parsing of
+bracketed sub-expressions.
+
+Command Line Interface
+----------------------
+
+Envelope from ("From ") headers are now escaped as X-Envelope-From: in
+input to `notmuch-insert`. This prevents creating mbox files when
+calling `notmuch-insert` from e.g. `postfix`.
+
+Python (CFFI) Bindings
+----------------------
+
+Use the `config_pairs` API in ConfigIterator. This returns all
+matching key-value pairs, not just those that happen to be stored in
+the database.
+
+Documentation
+-------------
+
+Reorganize documention for `notmuch-config`. Add a few links from
+other man pages.
+
+Emacs
+-----
+
+Bind the usual undo key sequences to new command
+"notmuch-tag-undo". This allows transparent undo of tagging
+operations.
+
+Tests
+-----
+
+Fix smime.4 with newer gmime. Unset `XDG_DATA_HOME` and `MAILDIR` for tests.
+
+New add-on tool: notmuch-web
+-----------------------------
+
+The new devel/ tool `notmuch-web` is a very thin web client.  It
+supports a full search interface for one user: there is no facility
+for multiple users provided today.  See the notmuch-web README file
+for more information.
+
+Be careful about running it on a network-connected system: it will
+expose a web interface that requires no authentication but exposes
+your mail store.
+
 Notmuch 0.35 (2022-02-06)
 =========================
 

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+{% set headers = ['Subject', 'Date'] %}
+{% set addr_headers = ['To', 'Cc', 'From'] %}
+{% for header in headers: %}
+<p><b>{{header}}:</b>{{m.header(header)|e}}</p>
+{% endfor %}
+{% for header in addr_headers: %}
+<p><b>{{header}}:</b>{{mailto_addrs(m,header)|safe}}</p>
+{% endfor %}
+<hr>
+{% for part in format_message(m,mid): %}{{ part|safe }}{% endfor %}
+{% for b in thread_nav(m): %}{{b|safe}}{% endfor %}
+<hr>
+{% endblock content %}

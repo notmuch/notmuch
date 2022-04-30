@@ -227,7 +227,8 @@ RegexpFieldProcessor::operator() (const std::string & str)
 	     * phrase parsing, when possible */
 	    std::string query_str;
 
-	    if (*str.rbegin () != '*' || str.find (' ') != std::string::npos)
+	    if ((str.at (0) != '(' || *str.rbegin () != ')') &&
+		(*str.rbegin () != '*' || str.find (' ') != std::string::npos))
 		query_str = '"' + str + '"';
 	    else
 		query_str = str;

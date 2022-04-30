@@ -710,6 +710,9 @@ with `notmuch-hello-query-counts'."
   ;; that when we modify map it does not modify widget-keymap).
   (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
+    ;; Currently notmuch-hello-mode supports free text entry, but not
+    ;; tagging operations, so provide standard undo.
+    (define-key map [remap notmuch-tag-undo] #'undo)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 

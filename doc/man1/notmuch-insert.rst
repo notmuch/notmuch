@@ -14,12 +14,12 @@ DESCRIPTION
 
 **notmuch insert** reads a message from standard input and delivers it
 into the maildir directory given by configuration option
-**database.mail_root**, then incorporates the message into the notmuch
+:ref:`database.mail_root <database.mail_root>`, then incorporates the message into the notmuch
 database. It is an alternative to using a separate tool to deliver the
 message then running :any:`notmuch-new(1)` afterwards.
 
 The new message will be tagged with the tags specified by the
-**new.tags** configuration option, then by operations specified on the
+:ref:`new.tags <new.tags>` configuration option, then by operations specified on the
 command-line: tags prefixed by '+' are added while those prefixed by '-'
 are removed.
 
@@ -86,7 +86,17 @@ Supported options for **insert** include
    ``--decrypt=nostash`` without considering the security of your
    index.
 
-   See also ``index.decrypt`` in :any:`notmuch-config(1)`.
+   See also :ref:`index.decrypt <index.decrypt>` in :any:`notmuch-config(1)`.
+
+CONFIGURATION
+=============
+
+Indexing is influenced by the configuration options
+:ref:`index.decrypt <index.decrypt>` and :ref:`index.header
+<index.header>`.  Tagging
+is controlled by :ref:`new.tags <new.tags>` and
+:ref:`maildir.synchronize_flags <maildir.synchronize_flags>`.  See
+:any:`notmuch-config(1)` for details.
 
 EXIT STATUS
 ===========

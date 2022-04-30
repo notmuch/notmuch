@@ -73,7 +73,7 @@ release: verify-source-tree-and-version
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
 	mkdir -p releases
-	mv $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
 ifeq ($(REALLY_UPLOAD),yes)
 	git push origin $(VERSION) release pristine-tar
@@ -92,7 +92,11 @@ pre-release:
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
 	mkdir -p releases
-	mv $(TAR_FILE) $(DEB_TAR_FILE) releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(UPSTREAM_TAG) release pristine-tar
+	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+endif
 
 .PHONY: debian-snapshot
 debian-snapshot:
@@ -120,8 +124,7 @@ release-message:
 	@echo "Which can be verified with:"
 	@echo ""
 	@echo "  $(RELEASE_URL)/$(SHA256_FILE)"
-	@echo -n "  "
-	@cat releases/$(SHA256_FILE)
+	@sed "s/^/  /" releases/$(SHA256_FILE)
 	@echo ""
 	@echo "  $(RELEASE_URL)/$(DETACHED_SIG_FILE)"
 	@echo "  (signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
@@ -169,7 +172,7 @@ release-checks:
 
 .PHONY: verify-newer
 verify-newer:
-	@echo -n "Checking that no $(VERSION) release already exists..."
+	@printf %s "Checking that no $(VERSION) release already exists..."
 	@wget -q --no-check-certificate -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
 	case $$? in \
           8) echo "Good." ;; \

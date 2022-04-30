@@ -55,22 +55,19 @@ The available configuration items are described below. Non-absolute
 paths are presumed relative to `$HOME` for items in section
 **database**.
 
-database.path
-    Notmuch will store its database here, (in
-    sub-directory named ``.notmuch`` if **database.mail\_root**
-    is unset).
+built_with.<name>
+    Compile time feature <name>. Current possibilities include
+    "retry_lock" (configure option, included by default).
+    (since notmuch 0.30, "compact" and "field_processor" are
+    always included.)
 
-    Default: see :ref:`database`
+database.autocommit
 
-database.mail_root
-    The top-level directory where your mail currently exists and to
-    where mail will be delivered in the future. Files should be
-    individual email messages.
+    How often to commit transactions to disk. `0` means wait until
+    command completes, otherwise an integer `n` specifies to commit to
+    disk after every `n` completed transactions.
 
-    History: this configuration value was introduced in notmuch 0.32.
-
-    Default: For compatibility with older configurations, the value of
-    database.path is used if **database.mail\_root** is unset.
+    History: this configuration value was introduced in notmuch 0.33.
 
 database.backup_dir
     Directory to store tag dumps when upgrading database.
@@ -88,109 +85,26 @@ database.hook_dir
 
     Default: See HOOKS, below.
 
-database.autocommit
+.. _database.mail_root:
 
-    How often to commit transactions to disk. `0` means wait until
-    command completes, otherwise an integer `n` specifies to commit to
-    disk after every `n` completed transactions.
+database.mail_root
+    The top-level directory where your mail currently exists and to
+    where mail will be delivered in the future. Files should be
+    individual email messages.
 
-    History: this configuration value was introduced in notmuch 0.33.
+    History: this configuration value was introduced in notmuch 0.32.
 
-user.name
-    Your full name.
+    Default: For compatibility with older configurations, the value of
+    database.path is used if **database.mail\_root** is unset.
 
-    Default: ``$NAME`` variable if set, otherwise read from
-    ``/etc/passwd``.
+database.path
+    Notmuch will store its database here, (in
+    sub-directory named ``.notmuch`` if **database.mail\_root**
+    is unset).
 
-user.primary\_email
-    Your primary email address.
+    Default: see :ref:`database`
 
-    Default: ``$EMAIL`` variable if set, otherwise constructed from
-    the username and hostname of the current machine.
-
-user.other\_email
-    A list of other email addresses at which you receive email.
-
-    Default: not set.
-
-new.tags
-    A list of tags that will be added to all messages incorporated by
-    **notmuch new**.
-
-    Default: ``unread;inbox``.
-
-new.ignore
-    A list to specify files and directories that will not be searched
-    for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
-
-    A file or a directory name, without path, that will be ignored,
-    regardless of the location in the mail store directory hierarchy.
-
-    Or:
-
-    A regular expression delimited with // that will be matched
-    against the path of the file or directory relative to the database
-    path. Matching files and directories will be ignored. The
-    beginning and end of string must be explicitly anchored. For
-    example, /.*/foo$/ would match "bar/foo" and "bar/baz/foo", but
-    not "foo" or "bar/foobar".
-
-    Default: empty list.
-
-search.exclude\_tags
-    A list of tags that will be excluded from search results by
-    default. Using an excluded tag in a query will override that
-    exclusion.
-
-    Default: empty list. Note that :any:`notmuch-setup(1)` puts
-    ``deleted;spam`` here when creating new configuration file.
-
-.. _show.extra_headers:
-
-show.extra\_headers
-
-    By default :any:`notmuch-show(1)` includes the following headers
-    in structured output if they are present in the message:
-    `Subject`, `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Date`. This
-    option allows the specification of a list of further
-    headers to output.
-
-    History: This configuration value was introduced in notmuch 0.35.
-
-    Default: empty list.
-
-maildir.synchronize\_flags
-    If true, then the following maildir flags (in message filenames)
-    will be synchronized with the corresponding notmuch tags:
-
-    +--------+-----------------------------------------------+
-    | Flag   | Tag                                           |
-    +========+===============================================+
-    | D      | draft                                         |
-    +--------+-----------------------------------------------+
-    | F      | flagged                                       |
-    +--------+-----------------------------------------------+
-    | P      | passed                                        |
-    +--------+-----------------------------------------------+
-    | R      | replied                                       |
-    +--------+-----------------------------------------------+
-    | S      | unread (added when 'S' flag is not present)   |
-    +--------+-----------------------------------------------+
-
-    The :any:`notmuch-new(1)` command will notice flag changes in
-    filenames and update tags, while the :any:`notmuch-tag(1)` and
-    :any:`notmuch-restore(1)` commands will notice tag changes and
-    update flags in filenames.
-
-    If there have been any changes in the maildir (new messages added,
-    old ones removed or renamed, maildir flags changed, etc.), it is
-    advisable to run :any:`notmuch-new(1)` before
-    :any:`notmuch-tag(1)` or :any:`notmuch-restore(1)` commands to
-    ensure the tag changes are properly synchronized to the maildir
-    flags, as the commands expect the database and maildir to be in
-    sync.
-
-    Default: ``true``.
+.. _index.decrypt:
 
 index.decrypt
     Policy for decrypting encrypted messages during indexing.  Must be
@@ -245,6 +159,8 @@ index.decrypt
 
     Default: ``auto``.
 
+.. _index.header:
+
 index.header.<prefix>
     Define the query prefix <prefix>, based on a mail header. For
     example ``index.header.List=List-Id`` will add a probabilistic
@@ -254,21 +170,120 @@ index.header.<prefix>
     supported. See :any:`notmuch-search-terms(7)` for a list of existing
     prefixes, and an explanation of probabilistic prefixes.
 
-built_with.<name>
-    Compile time feature <name>. Current possibilities include
-    "retry_lock" (configure option, included by default).
-    (since notmuch 0.30, "compact" and "field_processor" are
-    always included.)
+.. _maildir.synchronize_flags:
+
+maildir.synchronize\_flags
+    If true, then the following maildir flags (in message filenames)
+    will be synchronized with the corresponding notmuch tags:
+
+    +--------+-----------------------------------------------+
+    | Flag   | Tag                                           |
+    +========+===============================================+
+    | D      | draft                                         |
+    +--------+-----------------------------------------------+
+    | F      | flagged                                       |
+    +--------+-----------------------------------------------+
+    | P      | passed                                        |
+    +--------+-----------------------------------------------+
+    | R      | replied                                       |
+    +--------+-----------------------------------------------+
+    | S      | unread (added when 'S' flag is not present)   |
+    +--------+-----------------------------------------------+
+
+    The :any:`notmuch-new(1)` command will notice flag changes in
+    filenames and update tags, while the :any:`notmuch-tag(1)` and
+    :any:`notmuch-restore(1)` commands will notice tag changes and
+    update flags in filenames.
+
+    If there have been any changes in the maildir (new messages added,
+    old ones removed or renamed, maildir flags changed, etc.), it is
+    advisable to run :any:`notmuch-new(1)` before
+    :any:`notmuch-tag(1)` or :any:`notmuch-restore(1)` commands to
+    ensure the tag changes are properly synchronized to the maildir
+    flags, as the commands expect the database and maildir to be in
+    sync.
+
+    Default: ``true``.
+
+.. _new.ignore:
+
+new.ignore
+    A list to specify files and directories that will not be searched
+    for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
+
+    A file or a directory name, without path, that will be ignored,
+    regardless of the location in the mail store directory hierarchy.
+
+    Or:
+
+    A regular expression delimited with // that will be matched
+    against the path of the file or directory relative to the database
+    path. Matching files and directories will be ignored. The
+    beginning and end of string must be explicitly anchored. For
+    example, /.*/foo$/ would match "bar/foo" and "bar/baz/foo", but
+    not "foo" or "bar/foobar".
+
+    Default: empty list.
+
+.. _new.tags:
+
+new.tags
+    A list of tags that will be added to all messages incorporated by
+    **notmuch new**.
+
+    Default: ``unread;inbox``.
 
 query.<name>
     Expansion for named query called <name>. See
     :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
+search.exclude\_tags
+    A list of tags that will be excluded from search results by
+    default. Using an excluded tag in a query will override that
+    exclusion.
+
+    Default: empty list. Note that :any:`notmuch-setup(1)` puts
+    ``deleted;spam`` here when creating new configuration file.
+
+.. _show.extra_headers:
+
+show.extra\_headers
+
+    By default :any:`notmuch-show(1)` includes the following headers
+    in structured output if they are present in the message:
+    `Subject`, `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Date`. This
+    option allows the specification of a list of further
+    headers to output.
+
+    History: This configuration value was introduced in notmuch 0.35.
+
+    Default: empty list.
+
 squery.<name>
     Expansion for named query called <name>, using s-expression syntax. See
     :any:`notmuch-sexp-queries(7)` for more information about s-expression
     queries.
+
+user.name
+    Your full name.
+
+    Default: ``$NAME`` variable if set, otherwise read from
+    ``/etc/passwd``.
+
+user.other\_email
+    A list of other email addresses at which you receive email
+    (see also, :ref:`user.primary_email <user.primary_email>`).
+
+    Default: not set.
+
+.. _user.primary_email:
+
+user.primary\_email
+    Your primary email address.
+
+    Default: ``$EMAIL`` variable if set, otherwise constructed from
+    the username and hostname of the current machine.
 
 FILES
 =====

@@ -552,11 +552,7 @@ EOF
 	rm -rf "$TEMP_GPG"
     fi
 
-    # see https://github.com/jstedfast/gmime/pull/90
-    # should be fixed in GMime in 3.2.7, but some distros might patch
-    printf "Checking for GMime X.509 certificate validity... "
-
-    cat > _check_x509_validity.c <<EOF
+    cat > _check_gmime_cert.c <<EOF
 #include <stdio.h>
 #include <gmime/gmime.h>
 
@@ -589,16 +585,27 @@ int main () {
     if (sig == NULL) return !! fprintf (stderr, "no GMimeSignature found at position 0\n");
     cert = g_mime_signature_get_certificate (sig);
     if (cert == NULL) return !! fprintf (stderr, "no GMimeCertificate found\n");
+#ifdef CHECK_VALIDITY
     validity = g_mime_certificate_get_id_validity (cert);
     if (validity != GMIME_VALIDITY_FULL) return !! fprintf (stderr, "Got validity %d, expected %d\n", validity, GMIME_VALIDITY_FULL);
-
+#endif
+#ifdef CHECK_EMAIL
+    const char *email = g_mime_certificate_get_email (cert);
+    if (! email) return !! fprintf (stderr, "no email returned");
+    if (email[0] == '<') return 2;
+#endif
     return 0;
 }
 EOF
+
+    # see https://github.com/jstedfast/gmime/pull/90
+    # should be fixed in GMime in 3.2.7, but some distros might patch
+    printf "Checking for GMime X.509 certificate validity... "
+
     if ! TEMP_GPG=$(mktemp -d "${TMPDIR:-/tmp}/notmuch.XXXXXX"); then
 	printf 'No.\nCould not make tempdir for testing X.509 certificate validity support.\n'
 	errors=$((errors + 1))
-    elif ${CC} ${CFLAGS} ${gmime_cflags} _check_x509_validity.c ${gmime_ldflags} -o _check_x509_validity \
+    elif ${CC} -DCHECK_VALIDITY ${CFLAGS} ${gmime_cflags} _check_gmime_cert.c ${gmime_ldflags} -o _check_x509_validity \
 	    && echo disable-crl-checks > "$TEMP_GPG/gpgsm.conf" \
 	    && echo "4D:E0:FF:63:C0:E9:EC:01:29:11:C8:7A:EE:DA:3A:9A:7F:6E:C1:0D S" >> "$TEMP_GPG/trustlist.txt" \
 	    && GNUPGHOME=${TEMP_GPG} gpgsm --batch --quiet --import < "$srcdir"/test/smime/ca.crt
@@ -619,6 +626,15 @@ more details.
 EOF
 		errors=$((errors + 1))
 	    fi
+	fi
+	printf "Checking whether GMime emits email addresses with angle brackets... "
+	if ${CC} -DCHECK_EMAIL ${CFLAGS} ${gmime_cflags} _check_gmime_cert.c ${gmime_ldflags} -o _check_email &&
+		GNUPGHOME=${TEMP_GPG} ./_check_email; then
+	    gmime_emits_angle_brackets=0
+	    printf "No.\n"
+	else
+	    gmime_emits_angle_brackets=1
+	    printf "Yes.\n"
 	fi
     else
 	printf 'No.\nFailed to set up gpgsm for testing X.509 certificate validity support.\n'
@@ -1256,7 +1272,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
-rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_x509_validity.c _check_x509_validity \
+rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_gmime_cert.c _check_x509_validity _check_email \
    _verify_sig_with_session_key.c _verify_sig_with_session_key
 
 # construct the Makefile.config
@@ -1556,6 +1572,9 @@ NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${WITH_RETRY_LOCK}
 
 # Whether GMime can verify X.509 certificate validity
 NOTMUCH_GMIME_X509_CERT_VALIDITY=${gmime_x509_cert_validity}
+
+# Whether GMime emits addresses with angle brackets (with <>)
+NOTMUCH_GMIME_EMITS_ANGLE_BRACKETS=${gmime_emits_angle_brackets}
 
 # Whether GMime can verify signatures when decrypting with a session key:
 NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY=${gmime_verify_with_session_key}

@@ -15,9 +15,6 @@ override_dh_auto_configure:
 		--zshcompletiondir=/usr/share/zsh/vendor-completions \
 		--localstatedir=/var
 
-override_dh_auto_test:
-	dh_auto_test -- V=1
-
 override_dh_auto_build:
 	dh_auto_build -- V=1 all sphinx-html
 	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python

@@ -207,4 +207,12 @@ test_emacs () {
 	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(notmuch-test-progn $*)"
 }
 
+time_emacs () {
+    rm -f MESSAGES
+    printf "%s" "$1"
+    shift
+    test_emacs "(test-time $*)" > emacs.out
+    tail -n 1 MESSAGES
+}
+
 emacs_generate_script

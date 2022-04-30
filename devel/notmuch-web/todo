@@ -1,0 +1,14 @@
+review escaping and safety handling mail from Bad People
+
+revise template loader---can we make this faster?
+
+add reply-all link with email.urils.getaddresses
+
+change current reply links to quote body
+
+add forward link using mailto with body parameter?
+
+unescape the current search term, including translating back dates
+
+
+later: json support, iOS app?

@@ -35,6 +35,11 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "signature verification (notmuch CLI)"
+if [ $NOTMUCH_GMIME_EMITS_ANGLE_BRACKETS == 1 ]; then
+   EXPECTED_EMAIL_ADDR='<test_suite@notmuchmail.org>'
+else
+   EXPECTED_EMAIL_ADDR='test_suite@notmuchmail.org'
+fi
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [-1234567890]*|"created": 946728000|g' \
@@ -46,7 +51,7 @@ expected='[[[{"id": "XXXXX",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],
- "crypto": {"signed": {"status": [{"fingerprint": "'$FINGERPRINT'", "status": "good","userid": "CN=Notmuch Test Suite", "email": "<test_suite@notmuchmail.org>", "expires": 424242424, "created": 946728000}]}},
+ "crypto": {"signed": {"status": [{"fingerprint": "'$FINGERPRINT'", "status": "good","userid": "CN=Notmuch Test Suite", "email": "'$EXPECTED_EMAIL_ADDR'", "expires": 424242424, "created": 946728000}]}},
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
@@ -55,7 +60,7 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"fingerprint": "'$FINGERPRINT'",
  "status": "good",
  "userid": "CN=Notmuch Test Suite",
- "email": "<test_suite@notmuchmail.org>",
+ "email": "'$EXPECTED_EMAIL_ADDR'",
  "expires": 424242424,
  "created": 946728000}],
  "content-type": "multipart/signed",
