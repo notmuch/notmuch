@@ -425,6 +425,13 @@ def init(remote=None):
     This wraps 'git init' with a few extra steps to support subsequent
     status and commit commands.
     """
+    from pathlib import Path
+    parent = Path(NOTMUCH_GIT_DIR).parent
+    try:
+        _os.makedirs(parent)
+    except FileExistsError:
+        pass
+
     _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init',
                  '--initial-branch=master', '--quiet', '--bare'], wait=True)
     _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
@@ -861,8 +868,18 @@ def _notmuch_config_get(key):
         stdout=_subprocess.PIPE, wait=True)
     if status != 0:
         _LOG.error("failed to run notmuch config")
-        sys.exit(1)
+        _sys.exit(1)
     return stdout.rstrip()
+
+# based on BaseDirectory.save_data_path from pyxdg (LGPL2+)
+def xdg_data_path(profile):
+    resource = _os.path.join('notmuch',profile,'git')
+    assert not resource.startswith('/')
+    _home = _os.path.expanduser('~')
+    xdg_data_home = _os.environ.get('XDG_DATA_HOME') or \
+        _os.path.join(_home, '.local', 'share')
+    path = _os.path.join(xdg_data_home, resource)
+    return path
 
 if __name__ == '__main__':
     import argparse
@@ -875,8 +892,11 @@ if __name__ == '__main__':
         help='Git repository to operate on.')
     parser.add_argument(
         '-p', '--tag-prefix', metavar='PREFIX',
-        default = _os.getenv('NOTMUCH_GIT_PREFIX', 'notmuch::'),
+        default = None,
         help='Prefix of tags to operate on.')
+    parser.add_argument(
+        '-N', '--nmbug', action='store_true',
+        help='Set defaults for --tag-prefix and --git-dir for the notmuch bug tracker')
     parser.add_argument(
         '-l', '--log-level',
         choices=['critical', 'error', 'warning', 'info', 'debug'],
@@ -987,16 +1007,36 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    nmbug_mode = False
+    notmuch_profile = _os.getenv('NOTMUCH_PROFILE','default')
+
+    if args.nmbug or _os.path.basename(__file__) == 'nmbug':
+        nmbug_mode = True
+
     if args.git_dir:
         NOTMUCH_GIT_DIR = args.git_dir
     else:
-        NOTMUCH_GIT_DIR = _os.path.expanduser(
-        _os.getenv('NOTMUCH_GIT_DIR', _os.path.join('~', '.nmbug')))
-        _NOTMUCH_GIT_DIR = _os.path.join(NOTMUCH_GIT_DIR, '.git')
-        if _os.path.isdir(_NOTMUCH_GIT_DIR):
-            NOTMUCH_GIT_DIR = _NOTMUCH_GIT_DIR
+        if nmbug_mode:
+            default = _os.path.join('~', '.nmbug')
+        else:
+            default = xdg_data_path(notmuch_profile)
 
-    TAG_PREFIX = args.tag_prefix
+        NOTMUCH_GIT_DIR = _os.path.expanduser(_os.getenv('NOTMUCH_GIT_DIR', default))
+
+    _NOTMUCH_GIT_DIR = _os.path.join(NOTMUCH_GIT_DIR, '.git')
+    if _os.path.isdir(_NOTMUCH_GIT_DIR):
+        NOTMUCH_GIT_DIR = _NOTMUCH_GIT_DIR
+
+    if args.tag_prefix:
+        TAG_PREFIX = args.tag_prefix
+    else:
+        if nmbug_mode:
+            prefix = 'notmuch::'
+        else:
+            prefix = ''
+
+        TAG_PREFIX =  _os.getenv('NOTMUCH_GIT_PREFIX', prefix)
+
     _ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
 
     if args.log_level:
@@ -1009,11 +1049,15 @@ if __name__ == '__main__':
 
     if _notmuch_config_get('built_with.sexp_queries') != 'true':
         _LOG.error("notmuch git needs sexp query support")
-        sys.exit(1)
+        _sys.exit(1)
 
     if not getattr(args, 'func', None):
         parser.print_usage()
         _sys.exit(1)
+
+    # The following two lines are used by the test suite.
+    _LOG.debug('prefix = {:s}'.format(TAG_PREFIX))
+    _LOG.debug('repository = {:s}'.format(NOTMUCH_GIT_DIR))
 
     if args.func == help:
         arg_names = ['command']

@@ -7,7 +7,9 @@ notmuch-git
 SYNOPSIS
 ========
 
-**notmuch** **git** [-h] [-C *repo*] [-p *prefix*] [-v] [-l *log level*] *subcommand*
+**notmuch** **git** [-h] [-N] [-C *repo*] [-p *prefix*] [-v] [-l *log level*] *subcommand*
+
+**nmbug** [-h] [-C *repo*] [-p *prefix*] [-v] [-l *log level*] *subcommand*
 
 DESCRIPTION
 ===========
@@ -25,12 +27,17 @@ Supported options for `notmuch git` include
 
    show help message and exit
 
+.. option:: -N, --nmbug
+
+   Set defaults for :option:`--tag-prefix` and :option:`--git-dir` suitable for the
+   :any:`notmuch` bug tracker
+
 .. option:: -C <repo>, --git-dir <repo>
 
    Operate on git repository *repo*. See :ref:`repo_location` for
    defaults.
 
-.. option::  -p <prefix>, --tag-prefix <prefix>
+.. option:: -p <prefix>, --tag-prefix <prefix>
 
    Operate only on tags with prefix *prefix*. See :ref:`prefix_val` for
    defaults.
@@ -239,6 +246,10 @@ value to locate the git repository.
 
 - Environment variable :envvar:`NOTMUCH_GIT_DIR`.
 
+- If invoked as `nmbug` or with the :option:`--nmbug` option,
+  :code:`$HOME/.nmbug`; otherwise
+  :code:`$XDG_DATA_HOME/notmuch/$NOTMUCH_PROFILE/git`.
+
 .. _prefix_val:
 
 PREFIX VALUE
@@ -251,8 +262,14 @@ value to define the tag prefix.
 
 - Environment variable :envvar:`NOTMUCH_GIT_PREFIX`.
 
+- If invoked as `nmbug` or with the :option:`--nmbug` option,
+  :code:`notmuch::`, otherwise the empty string.
+
 ENVIRONMENT
 ===========
+
+Variable :envvar:`NOTMUCH_PROFILE` influences :ref:`repo_location`.
+If it is unset, 'default' is assumed.
 
 .. envvar:: NOTMUCH_GIT_DIR
 

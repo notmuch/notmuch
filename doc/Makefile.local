@@ -131,6 +131,7 @@ install-man: ${MAN_GZIP_FILES}
 	install -m0644 $(filter %.5.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(filter %.7.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
+	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch-git.1.gz nmbug.1.gz
 endif
 
 ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO),11)
