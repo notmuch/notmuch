@@ -43,12 +43,8 @@ import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import textwrap as _textwrap
-try:  # Python 3
-    from urllib.parse import quote as _quote
-    from urllib.parse import unquote as _unquote
-except ImportError:  # Python 2
-    from urllib import quote as _quote
-    from urllib import unquote as _unquote
+from urllib.parse import quote as _quote
+from urllib.parse import unquote as _unquote
 
 _LOG = _logging.getLogger('nmbug')
 _LOG.setLevel(_logging.WARNING)
@@ -67,31 +63,6 @@ _TAG_FILE_REGEX = _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)')
 
 # magic hash for Git (git hash-object -t blob /dev/null)
 _EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
-
-
-try:
-    getattr(_tempfile, 'TemporaryDirectory')
-except AttributeError:  # Python < 3.2
-    class _TemporaryDirectory(object):
-        """
-        Fallback context manager for Python < 3.2
-
-        See PEP 343 for details on context managers [1].
-
-        [1]: https://www.python.org/dev/peps/pep-0343/
-        """
-        def __init__(self, **kwargs):
-            self.name = _tempfile.mkdtemp(**kwargs)
-
-        def __enter__(self):
-            return self.name
-
-        def __exit__(self, type, value, traceback):
-            _shutil.rmtree(self.name)
-
-
-    _tempfile.TemporaryDirectory = _TemporaryDirectory
-
 
 def _hex_quote(string, safe='+@=:,'):
     """
