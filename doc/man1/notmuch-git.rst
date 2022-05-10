@@ -246,6 +246,8 @@ value to locate the git repository.
 
 - Environment variable :envvar:`NOTMUCH_GIT_DIR`.
 
+- Configuration item :nmconfig:`git.path`
+
 - If invoked as `nmbug` or with the :option:`--nmbug` option,
   :code:`$HOME/.nmbug`; otherwise
   :code:`$XDG_DATA_HOME/notmuch/$NOTMUCH_PROFILE/git`.
@@ -261,6 +263,8 @@ value to define the tag prefix.
 - Option :option:`--tag-prefix`.
 
 - Environment variable :envvar:`NOTMUCH_GIT_PREFIX`.
+
+- Configuration item :nmconfig:`git.tag_prefix`.
 
 - If invoked as `nmbug` or with the :option:`--nmbug` option,
   :code:`notmuch::`, otherwise the empty string.

@@ -15,6 +15,13 @@ git config --global user.name  "Notmuch Test Suite"
 test_begin_subtest "init"
 test_expect_success "notmuch git -p '' -C remote.git init"
 
+test_begin_subtest "init (git.path)"
+notmuch config set git.path configured.git
+notmuch git init
+notmuch config set git.path
+output=$(git -C configured.git rev-parse --is-bare-repository)
+test_expect_equal "$output" "true"
+
 test_begin_subtest "clone"
 test_expect_success "notmuch git -p '' -C tags.git clone remote.git"
 
@@ -102,6 +109,17 @@ EOF
 notmuch git -C tags.git checkout
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "status (global config argument)"
+cp notmuch-config notmuch-config.new
+notmuch --config=notmuch-config.new config set git.path tags.git
+notmuch tag +test id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch --config=./notmuch-config.new git status > OUTPUT
+cat <<EOF > EXPECTED
+A	20091117190054.GU3165@dottiness.seas.harvard.edu	test
+EOF
+notmuch --config=notmuch-config.new git checkout
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "fetch"
 notmuch tag +test2 id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C remote.git commit
@@ -175,6 +193,32 @@ repository = CWD/remote.git
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+
+test_begin_subtest "env variable NOTMUCH_GIT_DIR overrides config when invoked as 'nmbug'"
+notmuch config set git.path `pwd`/bar
+NOTMUCH_GIT_DIR=`pwd`/remote.git  "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^repository' | notmuch_dir_sanitize > OUTPUT
+notmuch config set git.path
+cat <<EOF > EXPECTED
+repository = CWD/remote.git
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "env variable NOTMUCH_GIT_DIR overrides config when invoked as 'notmuch git'"
+notmuch config set git.path `pwd`/bar
+NOTMUCH_GIT_DIR=`pwd`/remote.git notmuch git -ldebug status |& grep '^repository' | notmuch_dir_sanitize > OUTPUT
+notmuch config set git.path
+cat <<EOF > EXPECTED
+repository = CWD/remote.git
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "env variable NOTMUCH_GIT_PREFIX works when invoked as 'nmbug'"
+NOTMUCH_GIT_PREFIX=env:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+prefix = env::
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "env variable NOTMUCH_GIT_PREFIX works when invoked as nmbug"
 NOTMUCH_GIT_PREFIX=foo:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
@@ -182,8 +226,19 @@ prefix = foo::
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "env variable NOTMUCH_GIT_PREFIX works when invoked as 'notmuch git'"
+test_begin_subtest "env variable NOTMUCH_GIT_PREFIX overrides config when invoked as 'nmbug'"
+notmuch config set git.tag_prefix config::
+NOTMUCH_GIT_PREFIX=env:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
+notmuch config set git.path
+cat <<EOF > EXPECTED
+prefix = env::
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "env variable NOTMUCH_GIT_PREFIX overrides config when invoked as 'notmuch git'"
+notmuch config set git.tag_prefix config::
 NOTMUCH_GIT_PREFIX=env:: notmuch git -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
+notmuch config set git.path
 cat <<EOF > EXPECTED
 prefix = env::
 EOF
@@ -207,6 +262,27 @@ git -C $repo rev-parse --absolute-git-dir | notmuch_dir_sanitize >> OUTPUT
 cat <<EOF > EXPECTED
 repository = CWD/$repo
 CWD/$repo
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "init, configured location"
+repo=configured-tags
+notmuch config set git.path `pwd`/$repo
+notmuch git -ldebug init |& grep '^repository' | notmuch_dir_sanitize > OUTPUT
+notmuch config set git.path
+git -C $repo rev-parse --absolute-git-dir | notmuch_dir_sanitize >> OUTPUT
+cat <<EOF > EXPECTED
+repository = CWD/$repo
+CWD/$repo
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "configured tag prefix"
+notmuch config set git.tag_prefix test::
+notmuch git -ldebug status |& grep '^prefix' > OUTPUT
+notmuch config set git.tag_prefix
+cat <<EOF > EXPECTED
+prefix = test::
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

@@ -107,6 +107,14 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: see :ref:`database`
 
+.. nmconfig:: git.path
+
+    Default location for git repository for :any:`notmuch-git`.
+
+.. nmconfig:: git.tag_prefix
+
+    Default tag prefix (filter) for :any:`notmuch-git`.
+
 .. nmconfig:: index.decrypt
 
     Policy for decrypting encrypted messages during indexing.  Must be

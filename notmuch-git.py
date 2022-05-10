@@ -1019,7 +1019,9 @@ if __name__ == '__main__':
         if nmbug_mode:
             default = _os.path.join('~', '.nmbug')
         else:
-            default = xdg_data_path(notmuch_profile)
+            default = _notmuch_config_get ('git.path')
+            if default == '':
+                default = xdg_data_path(notmuch_profile)
 
         NOTMUCH_GIT_DIR = _os.path.expanduser(_os.getenv('NOTMUCH_GIT_DIR', default))
 
@@ -1033,7 +1035,7 @@ if __name__ == '__main__':
         if nmbug_mode:
             prefix = 'notmuch::'
         else:
-            prefix = ''
+            prefix = _notmuch_config_get ('git.tag_prefix')
 
         TAG_PREFIX =  _os.getenv('NOTMUCH_GIT_PREFIX', prefix)
 
