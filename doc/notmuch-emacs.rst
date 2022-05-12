@@ -221,6 +221,9 @@ pressing RET after positioning the cursor on a hidden part.
 ``+,-``
     Add or remove arbitrary tags from the current message.
 
+``!``
+    |docstring::notmuch-show-toggle-elide-non-matching|
+
 ``?``
     Display full set of key bindings
 
