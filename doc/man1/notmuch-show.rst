@@ -225,7 +225,7 @@ CONFIGURATION
 =============
 
 Structured output (json / sexp) is influenced by the configuration
-option :ref:`show.extra_headers <show.extra_headers>`. See
+option :nmconfig:`show.extra_headers`. See
 :any:`notmuch-config(1)` for details.
 
 EXIT STATUS

@@ -14,12 +14,12 @@ DESCRIPTION
 
 **notmuch insert** reads a message from standard input and delivers it
 into the maildir directory given by configuration option
-:ref:`database.mail_root <database.mail_root>`, then incorporates the message into the notmuch
+:nmconfig:`database.mail_root`, then incorporates the message into the notmuch
 database. It is an alternative to using a separate tool to deliver the
 message then running :any:`notmuch-new(1)` afterwards.
 
 The new message will be tagged with the tags specified by the
-:ref:`new.tags <new.tags>` configuration option, then by operations specified on the
+:nmconfig:`new.tags` configuration option, then by operations specified on the
 command-line: tags prefixed by '+' are added while those prefixed by '-'
 are removed.
 
@@ -38,7 +38,7 @@ Supported options for **insert** include
 .. option:: --folder=<folder>
 
    Deliver the message to the specified folder, relative to the
-   top-level directory given by the value of **database.mail_root**. The
+   top-level directory given by the value of :nmconfig:`database.mail_root`. The
    default is the empty string, which means delivering to the
    top-level directory.
 
@@ -86,16 +86,15 @@ Supported options for **insert** include
    ``--decrypt=nostash`` without considering the security of your
    index.
 
-   See also :ref:`index.decrypt <index.decrypt>` in :any:`notmuch-config(1)`.
+   See also :nmconfig:`index.decrypt` in :any:`notmuch-config(1)`.
 
 CONFIGURATION
 =============
 
 Indexing is influenced by the configuration options
-:ref:`index.decrypt <index.decrypt>` and :ref:`index.header
-<index.header>`.  Tagging
-is controlled by :ref:`new.tags <new.tags>` and
-:ref:`maildir.synchronize_flags <maildir.synchronize_flags>`.  See
+:nmconfig:`index.decrypt` and :nmconfig:`index.header.\<prefix\>`.  Tagging
+is controlled by options :nmconfig:`new.tags` and
+:nmconfig:`maildir.synchronize_flags`.  See
 :any:`notmuch-config(1)` for details.
 
 EXIT STATUS

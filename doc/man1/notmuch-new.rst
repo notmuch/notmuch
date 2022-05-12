@@ -82,10 +82,10 @@ CONFIGURATION
 =============
 
 Indexing is influenced by the configuration options
-:ref:`index.decrypt <index.decrypt>`, :ref:`index.header
-<index.header>`, and :ref:`new.ignore <new.ignore>`.  Tagging
-is controlled by :ref:`new.tags <new.tags>` and
-:ref:`maildir.synchronize_flags <maildir.synchronize_flags>`.  See
+:nmconfig:`index.decrypt`, :nmconfig:`index.header.\<prefix\>`
+and :nmconfig:`new.ignore`.  Tagging
+is controlled by :nmconfig:`new.tags` and
+:nmconfig:`maildir.synchronize_flags`.  See
 :any:`notmuch-config(1)` for details.
 
 EXIT STATUS

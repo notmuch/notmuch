@@ -200,3 +200,10 @@ texinfo_documents += [
         x[2],				# description
         'Miscellaneous'			# category
     ) for x in man_pages]
+
+def setup(app):
+    import docutils.nodes
+    # define nmconfig role and directive for config items.
+    app.add_object_type('nmconfig','nmconfig',
+                        indextemplate='pair: configuration item; %s',
+                        ref_nodeclass=docutils.nodes.generated)
