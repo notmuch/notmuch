@@ -73,12 +73,17 @@ Dump a tar archive of a committed tag set using 'git archive'. See
    :manpage:`git-archive(1)`. Arguments to `git-archive` are reordered
    so that *tree-ish* comes last.
 
-.. option:: checkout
+.. option:: checkout [-f|--force]
 
 Update the notmuch database from Git.
 
 This is mainly useful to discard your changes in notmuch relative
 to Git.
+
+   .. describe:: [-f|--force]
+
+   Override checks that prevent modifying tags for large fractions of
+   messages in the database. See also :nmconfig:`git.safe_fraction`.
 
 .. option:: clone <repository>
 
@@ -94,13 +99,18 @@ upstreams.
     section of :manpage:`git-clone(1)` for more information on
     specifying repositories.
 
-.. option:: commit [message]
+.. option:: commit [-f|--force] [message]
 
 Commit prefix-matching tags from the notmuch database to Git.
 
    .. describe:: message
 
    Optional text for the commit message.
+
+   .. describe:: -f|--force
+
+   Override checks that prevent modifying tags for large fractions of
+   messages in the database. See also :nmconfig:`git.safe_fraction`.
 
 .. option:: fetch [remote]
 

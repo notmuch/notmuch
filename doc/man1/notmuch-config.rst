@@ -111,6 +111,13 @@ paths are presumed relative to `$HOME` for items in section
 
     Default location for git repository for :any:`notmuch-git`.
 
+.. nmconfig:: git.safe_fraction
+
+   Some :any:`notmuch-git` operations check that the fraction of
+   messages changed (in the database or in git, as appropriate) is not
+   too large. This item controls what fraction of total messages is
+   considered "not too large".
+
 .. nmconfig:: git.tag_prefix
 
     Default tag prefix (filter) for :any:`notmuch-git`.

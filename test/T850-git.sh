@@ -7,6 +7,9 @@ if [ $NOTMUCH_HAVE_SFSEXP -ne 1 ]; then
     test_done
 fi
 
+# be very careful using backup_database / restore_database in this
+# file, as they fool the cache invalidation checks in notmuch-git.
+
 add_email_corpus
 
 git config --global user.email notmuch@example.org
@@ -25,11 +28,53 @@ test_expect_equal "$output" "true"
 test_begin_subtest "clone"
 test_expect_success "notmuch git -p '' -C tags.git clone remote.git"
 
+test_begin_subtest "initial commit needs force"
+test_expect_code 1 "notmuch git -C tags.git commit"
+
+test_begin_subtest "committing new prefix requires force"
+notmuch git -C force-prefix.git init
+notmuch tag +new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
+test_expect_code 1 "notmuch git -l debug -p 'new-prefix::' -C force-prefix.git commit"
+notmuch tag -new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
+
+test_begin_subtest "committing new prefix works with force"
+notmuch tag +new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -l debug -p 'new-prefix::' -C force-prefix.git commit --force
+git -C force-prefix.git ls-tree -r --name-only HEAD | xargs dirname | sort -u | sed s,tags/,id:, > OUTPUT
+notmuch tag -new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
+cat <<EOF>EXPECTED
+id:20091117190054.GU3165@dottiness.seas.harvard.edu
+EOF
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "checkout new prefix requires force"
+test_expect_code 1 "notmuch git -l debug -p 'new-prefix::' -C force-prefix.git checkout"
+
+test_begin_subtest "checkout new prefix works with force"
+notmuch dump > BEFORE
+notmuch git -l debug -p 'new-prefix::' -C force-prefix.git checkout --force
+notmuch dump --include=tags id:20091117190054.GU3165@dottiness.seas.harvard.edu | grep -v '^#' > OUTPUT
+notmuch restore < BEFORE
+cat <<EOF > EXPECTED
++inbox +new-prefix%3a%3afoo +signed +unread -- id:20091117190054.GU3165@dottiness.seas.harvard.edu
+EOF
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "commit"
-notmuch git -C tags.git commit
+notmuch git -C tags.git commit --force
 git -C tags.git ls-tree -r --name-only HEAD | xargs dirname | sort -u | sed s,tags/,id:, > OUTPUT
 notmuch search --output=messages '*' | sort > EXPECTED
 test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "commit --force succeeds"
+notmuch git -C force.git init
+test_expect_success "notmuch git -C force.git commit --force"
+
+test_begin_subtest "changing git.safe_fraction succeeds"
+notmuch config set git.safe_fraction 1
+notmuch git -C force2.git init
+test_expect_success "notmuch git -C force2.git commit"
+notmuch config set git.safe_fraction
 
 test_begin_subtest "commit, with quoted tag"
 notmuch git -C clone2.git clone tags.git
@@ -64,12 +109,12 @@ test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "commit (change prefix)"
 notmuch tag +test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
-notmuch git -C tags.git -p 'test::' commit
+notmuch git -C tags.git -p 'test::' commit --force
 git -C tags.git ls-tree -r --name-only HEAD |
     grep 20091117190054 | sort > OUTPUT
 echo "--------------------------------------------------" >> OUTPUT
 notmuch tag -test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
-notmuch git -C tags.git commit
+notmuch git -C tags.git commit --force
 git -C tags.git ls-tree -r --name-only HEAD |
     grep 20091117190054 | sort >> OUTPUT
 cat <<EOF > EXPECTED
@@ -81,10 +126,26 @@ tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
 EOF
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
+backup_database
+test_begin_subtest "large checkout needs --force"
+notmuch tag -inbox '*'
+test_expect_code 1 "notmuch git -C tags.git checkout"
+restore_database
+
+test_begin_subtest "checkout (git.safe_fraction)"
+notmuch git -C force3.git clone tags.git
+notmuch dump > BEFORE
+notmuch tag -inbox '*'
+notmuch config set git.safe_fraction 1
+notmuch git -C force3.git checkout
+notmuch config set git.safe_fraction
+notmuch dump > AFTER
+test_expect_equal_file_nonempty BEFORE AFTER
+
 test_begin_subtest "checkout"
 notmuch dump > BEFORE
 notmuch tag -inbox '*'
-notmuch git -C tags.git checkout
+notmuch git -C tags.git checkout --force
 notmuch dump > AFTER
 test_expect_equal_file_nonempty BEFORE AFTER
 
@@ -122,7 +183,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "fetch"
 notmuch tag +test2 id:20091117190054.GU3165@dottiness.seas.harvard.edu
-notmuch git -C remote.git commit
+notmuch git -C remote.git commit --force
 notmuch tag -test2 id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C tags.git fetch
 notmuch git -C tags.git status > OUTPUT

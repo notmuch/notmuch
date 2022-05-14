@@ -239,6 +239,16 @@ def _tag_query(prefix=None):
         prefix = TAG_PREFIX
     return '(tag (starts-with "{:s}"))'.format(prefix.replace('"','\\\"'))
 
+def count_messages(prefix=None):
+    "count messages with a given prefix."
+    (status, stdout, stderr) = _spawn(
+        args=['notmuch', 'count', '--query=sexp', _tag_query(prefix)],
+        stdout=_subprocess.PIPE, wait=True)
+    if status != 0:
+        _LOG.error("failed to run notmuch config")
+        sys.exit(1)
+    return int(stdout.rstrip())
+
 def get_tags(prefix=None):
     "Get a list of tags with a given prefix."
     (status, stdout, stderr) = _spawn(
@@ -357,7 +367,26 @@ class CachedIndex:
         _git(args=['read-tree', self.current_treeish], wait=True)
 
 
-def commit(treeish='HEAD', message=None):
+def check_safe_fraction(status):
+    safe = 0.1
+    conf = _notmuch_config_get ('git.safe_fraction')
+    if conf and conf != '':
+        safe=float(conf)
+
+    total = count_messages (TAG_PREFIX)
+    if total == 0:
+        _LOG.error('No existing tags with given prefix, stopping.'.format(safe))
+        _LOG.error('Use --force to override.')
+        exit(1)
+    change = len(status['added'])+len(status['deleted'])
+    fraction = change/total
+    _LOG.debug('total messages {:d}, change: {:d}, fraction: {:f}'.format(total,change,fraction))
+    if fraction > safe:
+        _LOG.error('safe fraction {:f} exceeded, stopping.'.format(safe))
+        _LOG.error('Use --force to override or reconfigure git.safe_fraction.')
+        exit(1)
+
+def commit(treeish='HEAD', message=None, force=False):
     """
     Commit prefix-matching tags from the notmuch database to Git.
     """
@@ -367,6 +396,9 @@ def commit(treeish='HEAD', message=None):
     if _is_committed(status=status):
         _LOG.warning('Nothing to commit')
         return
+
+    if not force:
+        check_safe_fraction (status)
 
     with CachedIndex(NOTMUCH_GIT_DIR, treeish) as index:
         try:
@@ -445,7 +477,7 @@ def init(remote=None):
         wait=True)
 
 
-def checkout():
+def checkout(force=None):
     """
     Update the notmuch database from Git.
 
@@ -453,6 +485,10 @@ def checkout():
     to Git.
     """
     status = get_status()
+
+    if not force:
+        check_safe_fraction(status)
+
     with _spawn(
             args=['notmuch', 'tag', '--batch'], stdin=_subprocess.PIPE) as p:
         for id, tags in status['added'].items():
@@ -943,6 +979,10 @@ if __name__ == '__main__':
                 help=(
                     "Argument passed through to 'git archive'.  Set anything "
                     'before <tree-ish>, see git-archive(1) for details.'))
+        elif command == 'checkout':
+            subparser.add_argument(
+                '-f', '--force', action='store_true',
+                help='checkout a large fraction of tags.')
         elif command == 'clone':
             subparser.add_argument(
                 'repository',
@@ -951,6 +991,9 @@ if __name__ == '__main__':
                     'URLS section of git-clone(1) for more information on '
                     'specifying repositories.'))
         elif command == 'commit':
+            subparser.add_argument(
+                '-f', '--force', action='store_true',
+                help='commit a large fraction of tags.')
             subparser.add_argument(
                 'message', metavar='MESSAGE', default='', nargs='?',
                 help='Text for the commit message.')
