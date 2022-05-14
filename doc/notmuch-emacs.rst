@@ -238,6 +238,27 @@ Display of messages can be controlled by the following variables
 :index:`notmuch-show-header-line`
        |docstring::notmuch-show-header-line|
 
+:index:`notmuch-multipart/alternative-discouraged`
+
+   Which mime types to hide by default for multipart messages.
+
+   Can either be a list of mime types (as strings) or a function
+   mapping a plist representing the current message to such a list.
+   The following example function would discourage `text/html` and
+   `multipart/related` generally, but discourage `text/plain` should
+   the message be sent from `whatever@example.com`.
+
+   .. code:: lisp
+
+      (defun my--determine-discouraged (msg)
+        (let* ((headers (plist-get msg :headers))
+               (from (or (plist-get headers :From) "")))
+          (cond
+           ((string-match "whatever@example.com" from)
+            (list "text/plain"))
+           (t
+            (list "text/html" "multipart/related")))))
+
 .. _show-copy:
 
 Copy to kill-ring

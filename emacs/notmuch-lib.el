@@ -567,12 +567,20 @@ Take wildcards into account."
 	   (string= (downcase t1)
 		    (downcase t2))))))
 
-(defvar notmuch-multipart/alternative-discouraged
+(defcustom notmuch-multipart/alternative-discouraged
   '(;; Avoid HTML parts.
     "text/html"
     ;; multipart/related usually contain a text/html part and some
     ;; associated graphics.
-    "multipart/related"))
+    "multipart/related")
+  "Which mime types to hide by default for multipart messages.
+
+Can either be a list of mime types (as strings) or a function
+mapping a plist representing the current message to such a list.
+See Info node `(notmuch-emacs) notmuch-show' for a sample function."
+  :group 'notmuch-show
+  :type '(radio (repeat :tag "MIME Types" string)
+		(function :tag "Function")))
 
 (defun notmuch-multipart/alternative-determine-discouraged (msg)
   "Return the discouraged alternatives for the specified message."

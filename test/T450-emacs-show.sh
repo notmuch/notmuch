@@ -209,6 +209,10 @@ test_emacs '(notmuch-show "id:'$gen_msg_id'")
 output=$(head -1 OUTPUT.raw|cut -f1-4 -d' ')
 test_expect_equal "$output" "Notmuch Test Suite <test_suite@notmuchmail.org>"
 
+test_begin_subtest "multipart/alternative hides html by default"
+test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
+	    (test-visible-output)'
+test_expect_equal_file $EXPECTED/notmuch-show-multipart-alternative OUTPUT
 
 # switching to the crypto corpus, using gpg from here on:
 add_gnupg_home
