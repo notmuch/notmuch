@@ -18,13 +18,6 @@
 
 """
 Manage notmuch tags with Git
-
-Environment variables:
-
-* NMBGIT specifies the location of the git repository used by nmbug.
-  If not specified $HOME/.nmbug is used.
-* NMBPREFIX specifies the prefix in the notmuch database for tags of
-  interest to nmbug. If not specified 'notmuch::' is used.
 """
 
 from __future__ import print_function
@@ -50,7 +43,7 @@ _LOG = _logging.getLogger('nmbug')
 _LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
 
-NMBGIT = None
+NOTMUCH_GIT_DIR = None
 TAG_PREFIX = None
 
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
@@ -198,7 +191,7 @@ def _spawn(args, input=None, additional_env=None, wait=False, stdin=None,
 
 
 def _git(args, **kwargs):
-    args = ['git', '--git-dir', NMBGIT] + list(args)
+    args = ['git', '--git-dir', NOTMUCH_GIT_DIR] + list(args)
     return _spawn(args=args, **kwargs)
 
 
@@ -266,7 +259,7 @@ def clone(repository):
     with _tempfile.TemporaryDirectory(prefix='nmbug-clone.') as workdir:
         _spawn(
             args=[
-                'git', 'clone', '--no-checkout', '--separate-git-dir', NMBGIT,
+                'git', 'clone', '--no-checkout', '--separate-git-dir', NOTMUCH_GIT_DIR,
                 repository, workdir],
             wait=True)
     _git(args=['config', '--unset', 'core.worktree'], wait=True, expect=(0, 5))
@@ -358,7 +351,7 @@ def init(remote=None):
     This wraps 'git init' with a few extra steps to support subsequent
     status and commit commands.
     """
-    _spawn(args=['git', '--git-dir', NMBGIT, 'init', '--bare'], wait=True)
+    _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init', '--bare'], wait=True)
     _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
     # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
     _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
@@ -366,7 +359,7 @@ def init(remote=None):
         args=[
             'commit', '--allow-empty', '-m', 'Start a new nmbug repository'
         ],
-        additional_env={'GIT_WORK_TREE': NMBGIT},
+        additional_env={'GIT_WORK_TREE': NOTMUCH_GIT_DIR},
         wait=True)
 
 
@@ -589,7 +582,7 @@ def get_status():
 
 def _index_tags():
     "Write notmuch tags to the nmbug.index."
-    path = _os.path.join(NMBGIT, 'nmbug.index')
+    path = _os.path.join(NOTMUCH_GIT_DIR, 'nmbug.index')
     query = ' '.join('tag:"{tag}"'.format(tag=tag) for tag in get_tags())
     prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
     _git(
@@ -708,7 +701,7 @@ if __name__ == '__main__':
         help='Git repository to operate on.')
     parser.add_argument(
         '-p', '--tag-prefix', metavar='PREFIX',
-        default = _os.getenv('NMBPREFIX', 'notmuch::'),
+        default = _os.getenv('NOTMUCH_GIT_PREFIX', 'notmuch::'),
         help='Prefix of tags to operate on.')
     parser.add_argument(
         '-l', '--log-level',
@@ -821,13 +814,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.git_dir:
-        NMBGIT = args.git_dir
+        NOTMUCH_GIT_DIR = args.git_dir
     else:
-        NMBGIT = _os.path.expanduser(
-        _os.getenv('NMBGIT', _os.path.join('~', '.nmbug')))
-        _NMBGIT = _os.path.join(NMBGIT, '.git')
-        if _os.path.isdir(_NMBGIT):
-            NMBGIT = _NMBGIT
+        NOTMUCH_GIT_DIR = _os.path.expanduser(
+        _os.getenv('NOTMUCH_GIT_DIR', _os.path.join('~', '.nmbug')))
+        _NOTMUCH_GIT_DIR = _os.path.join(NOTMUCH_GIT_DIR, '.git')
+        if _os.path.isdir(_NOTMUCH_GIT_DIR):
+            NOTMUCH_GIT_DIR = _NOTMUCH_GIT_DIR
 
     TAG_PREFIX = args.tag_prefix
     _ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
@@ -837,7 +830,7 @@ if __name__ == '__main__':
         _LOG.setLevel(level)
 
     # for test suite
-    for var in ['NMBGIT', 'NMBPREFIX', 'NOTMUCH_PROFILE', 'NOTMUCH_CONFIG' ]:
+    for var in ['NOTMUCH_GIT_DIR', 'NOTMUCH_GIT_PREFIX', 'NOTMUCH_PROFILE', 'NOTMUCH_CONFIG' ]:
         _LOG.debug('env {:s} = {:s}'.format(var, _os.getenv(var,'%None%')))
 
     if not getattr(args, 'func', None):

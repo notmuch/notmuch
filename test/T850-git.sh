@@ -80,11 +80,11 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "environment passed through when run as 'notmuch git'"
-env NMBGIT=foo NMBPREFIX=bar NOTMUCH_PROFILE=default notmuch git -C tags.git -p '' -ldebug status |& \
+env NOTMUCH_GIT_DIR=foo NOTMUCH_GIT_PREFIX=bar NOTMUCH_PROFILE=default notmuch git -C tags.git -p '' -ldebug status |& \
     grep '^env ' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
-env NMBGIT = foo
-env NMBPREFIX = bar
+env NOTMUCH_GIT_DIR = foo
+env NOTMUCH_GIT_PREFIX = bar
 env NOTMUCH_PROFILE = default
 env NOTMUCH_CONFIG = CWD/notmuch-config
 EOF
