@@ -46,8 +46,47 @@ a mouse or by positioning the cursor and pressing ``<return>``
 |		      Customize Notmuch or this page.
 
 You can change the overall appearance of the notmuch-hello screen by
-customizing the variable :index:`notmuch-hello-sections`.
+customizing the variables
 
+:index:`notmuch-hello-sections`
+       |docstring::notmuch-hello-sections|
+
+:index:`notmuch-hello-thousands-separator`
+       |docstring::notmuch-hello-thousands-separator|
+
+:index:`notmuch-show-logo`
+       |docstring::notmuch-show-logo|
+
+:index:`!notmuch-column-control`
+    Controls the number of columns for saved searches/tags in notmuch view.
+
+    This variable has three potential types of values:
+
+    .. describe:: t
+
+       Automatically calculate the number of columns possible based
+       on the tags to be shown and the window width.
+
+    .. describe:: integer <n>
+
+       A lower bound on the number of characters that will
+       be used to display each column.
+
+    .. describe:: float <f>
+
+       A fraction of the window width that is the lower bound on the
+       number of characters that should be used for each column.
+
+    So:
+
+    - if you would like two columns of tags, set this to 0.5.
+
+    - if you would like a single column of tags, set this to 1.0.
+
+    - if you would like tags to be 30 characters wide, set this to 30.
+
+    - if you don't want to worry about all of this nonsense, leave
+      this set to `t`.
 
 
 notmuch-hello key bindings
