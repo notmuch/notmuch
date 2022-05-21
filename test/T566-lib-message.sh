@@ -29,7 +29,9 @@ int main (int argc, char** argv)
    notmuch_message_t *message = NULL;
    const char *id = "1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
