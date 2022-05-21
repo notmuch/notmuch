@@ -60,7 +60,10 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create ("./nonexistent/foo", &db);
+    char *msg = NULL;
+
+    stat = notmuch_database_create_with_config ("./nonexistent/foo", "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -99,7 +102,10 @@ test_C <<'EOF'
 int main (int argc, char** argv)
 {
     notmuch_status_t stat;
-    stat = notmuch_database_create (NULL, NULL);
+    char *msg;
+
+    stat = notmuch_database_create_with_config (NULL, "", NULL, NULL, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -117,7 +123,10 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create (argv[1], &db);
+    char *msg;
+
+    stat = notmuch_database_create_with_config (argv[1], "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
