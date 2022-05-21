@@ -40,15 +40,25 @@ main (int argc, char **argv)
 
     if (child == 0) {
 	notmuch_database_t *db2;
+	char* msg = NULL;
 
 	sleep (1);
-	EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_WRITE, &db2));
+
+        EXPECT0(notmuch_database_open_with_config (argv[1],
+					           NOTMUCH_DATABASE_MODE_READ_WRITE,
+					           "", NULL, &db2, &msg));
+        if (msg) fputs (msg, stderr);
+
 	taggit (db2, "child");
 	EXPECT0 (notmuch_database_close (db2));
     } else {
 	notmuch_database_t *db;
+	char* msg = NULL;
 
-	EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_WRITE, &db));
+        EXPECT0(notmuch_database_open_with_config (argv[1],
+					           NOTMUCH_DATABASE_MODE_READ_WRITE,
+					           "", NULL, &db, &msg));
+        if (msg) fputs (msg, stderr);
 	taggit (db, "parent");
 	sleep (2);
 	EXPECT0 (notmuch_database_close (db));

@@ -23,7 +23,13 @@ int main (int argc, char** argv)
 {
    notmuch_database_t *db;
    notmuch_status_t stat;
-   stat = notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_ONLY, &db);
+   char* msg = NULL;
+
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_ONLY,
+					     "", NULL, &db, &msg);
+   if (msg) fputs (msg, stderr);
+
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
      exit (1);
