@@ -342,6 +342,38 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "_notmuch_message_add_filename on closed db"
+cat c_head - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	status = _notmuch_message_add_filename (message, "some-filename");
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "_notmuch_message_remove_filename on closed db"
+cat c_head - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	status = _notmuch_message_remove_filename (message, "some-filename");
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Handle removing all tags with closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
