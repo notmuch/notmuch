@@ -1490,24 +1490,30 @@ _notmuch_message_add_term (notmuch_message_t *message,
 {
 
     char *term;
+    notmuch_private_status_t status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     if (value == NULL)
 	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
 
     term = talloc_asprintf (message, "%s%s",
 			    _find_prefix (prefix_name), value);
+    if (strlen (term) > NOTMUCH_TERM_MAX) {
+	status = NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+	goto DONE;
+    }
 
-    if (strlen (term) > NOTMUCH_TERM_MAX)
-	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+    try {
+	message->doc.add_term (term, 0);
+	message->modified = true;
+	_notmuch_message_invalidate_metadata (message, prefix_name);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+    }
 
-    message->doc.add_term (term, 0);
-    message->modified = true;
-
+  DONE:
     talloc_free (term);
-
-    _notmuch_message_invalidate_metadata (message, prefix_name);
-
-    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+    return status;
 }
 
 /* Parse 'text' and add a term to 'message' for each parsed word. Each
@@ -1571,11 +1577,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     try {
 	message->doc.remove_term (term);
 	message->modified = true;
-    } catch (const Xapian::InvalidArgumentError) {
+    } catch (const Xapian::InvalidArgumentError &error) {
 	/* We'll let the philosophers try to wrestle with the
 	 * question of whether failing to remove that which was not
 	 * there in the first place is failure. For us, we'll silently
 	 * consider it all good. */
+	LOG_XAPIAN_EXCEPTION (message, error);
     }
 
     talloc_free (term);
