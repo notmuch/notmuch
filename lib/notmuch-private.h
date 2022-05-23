@@ -750,6 +750,12 @@ _notmuch_talloc_steal (const void *new_ctx, const T *ptr)
 #undef talloc_steal
 #define talloc_steal _notmuch_talloc_steal
 #endif
+
+#if __cplusplus >= 201703L || __cppcheck__
+#define NODISCARD [[nodiscard]]
+#else
+#define NODISCARD /**/
+#endif
 #endif
 
 #endif
