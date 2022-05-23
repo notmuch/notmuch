@@ -341,23 +341,6 @@ _notmuch_message_get_term (notmuch_message_t *message,
     return value;
 }
 
-/*
- * For special applications where we only want the thread id, reading
- * in all metadata is a heavy I/O penalty.
- */
-const char *
-_notmuch_message_get_thread_id_only (notmuch_message_t *message)
-{
-
-    Xapian::TermIterator i = message->doc.termlist_begin ();
-    Xapian::TermIterator end = message->doc.termlist_end ();
-
-    message->thread_id = _notmuch_message_get_term (message, i, end,
-						    _find_prefix ("thread"));
-    return message->thread_id;
-}
-
-
 static void
 _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 {
