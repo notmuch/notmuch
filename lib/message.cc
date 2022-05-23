@@ -792,7 +792,7 @@ is_maildir (const char *p)
 }
 
 /* Add "folder:" term for directory. */
-static notmuch_status_t
+NODISCARD static notmuch_status_t
 _notmuch_message_add_folder_terms (notmuch_message_t *message,
 				   const char *directory)
 {
@@ -842,7 +842,7 @@ _notmuch_message_add_folder_terms (notmuch_message_t *message,
 #define RECURSIVE_SUFFIX "/**"
 
 /* Add "path:" terms for directory. */
-static notmuch_status_t
+NODISCARD static notmuch_status_t
 _notmuch_message_add_path_terms (notmuch_message_t *message,
 				 const char *directory)
 {
@@ -898,6 +898,7 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 	const char *direntry, *directory;
 	char *colon;
 	const std::string &term = *i;
+	notmuch_status_t term_status;
 
 	/* Terminate loop at first term without desired prefix. */
 	if (strncmp (term.c_str (), direntry_prefix, direntry_prefix_len))
@@ -918,8 +919,13 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 							  message->notmuch,
 							  directory_id);
 
-	_notmuch_message_add_folder_terms (message, directory);
-	_notmuch_message_add_path_terms (message, directory);
+	term_status = _notmuch_message_add_folder_terms (message, directory);
+	if (term_status)
+	    return term_status;
+
+	term_status = _notmuch_message_add_path_terms (message, directory);
+	if (term_status)
+	    return term_status;
     }
 
     return status;
@@ -963,8 +969,13 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
-    _notmuch_message_add_folder_terms (message, directory);
-    _notmuch_message_add_path_terms (message, directory);
+    status = _notmuch_message_add_folder_terms (message, directory);
+    if (status)
+	return status;
+
+    status = _notmuch_message_add_path_terms (message, directory);
+    if (status)
+	return status;
 
     talloc_free (local);
 
