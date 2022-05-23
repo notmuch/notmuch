@@ -324,6 +324,24 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "_notmuch_message_remove_term catches exceptions"
+cat c_head0 - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	/* Xapian throws the same exception for empty and non-existent terms;
+	 * error string varies between Xapian versions. */
+	status = _notmuch_message_remove_term (message, "tag", "nonexistent");
+	printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_SUCCESS );
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Handle removing all tags with closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
