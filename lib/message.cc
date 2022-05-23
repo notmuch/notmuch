@@ -828,7 +828,10 @@ _notmuch_message_add_folder_terms (notmuch_message_t *message,
 	*folder = '\0';
     }
 
-    _notmuch_message_add_term (message, "folder", folder);
+    if (notmuch_status_t status = COERCE_STATUS (_notmuch_message_add_term (message, "folder",
+									    folder),
+						 "adding folder term"))
+	return status;
 
     talloc_free (folder);
 
@@ -843,8 +846,13 @@ static notmuch_status_t
 _notmuch_message_add_path_terms (notmuch_message_t *message,
 				 const char *directory)
 {
+    notmuch_status_t status;
+
     /* Add exact "path:" term. */
-    _notmuch_message_add_term (message, "path", directory);
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "path", directory),
+			    "adding path term");
+    if (status)
+	return status;
 
     if (strlen (directory)) {
 	char *path, *p;
@@ -857,7 +865,10 @@ _notmuch_message_add_path_terms (notmuch_message_t *message,
 	for (p = path + strlen (path) - 1; p > path; p--) {
 	    if (*p == '/') {
 		strcpy (p, RECURSIVE_SUFFIX);
-		_notmuch_message_add_term (message, "path", path);
+		status = COERCE_STATUS (_notmuch_message_add_term (message, "path", path),
+					"adding path term");
+		if (status)
+		    return status;
 	    }
 	}
 
@@ -865,7 +876,10 @@ _notmuch_message_add_path_terms (notmuch_message_t *message,
     }
 
     /* Recursive all-matching path:** for consistency. */
-    _notmuch_message_add_term (message, "path", "**");
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "path", "**"),
+			    "adding path term");
+    if (status)
+	return status;
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -944,7 +958,10 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     /* New file-direntry allows navigating to this message with
      * notmuch_directory_get_child_files() . */
-    _notmuch_message_add_term (message, "file-direntry", direntry);
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "file-direntry", direntry),
+			    "adding file-direntry term");
+    if (status)
+	return status;
 
     _notmuch_message_add_folder_terms (message, directory);
     _notmuch_message_add_path_terms (message, directory);
@@ -1466,7 +1483,7 @@ _notmuch_message_close (notmuch_message_t *message)
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync. */
-notmuch_private_status_t
+NODISCARD notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
 			   const char *prefix_name,
 			   const char *value)
@@ -1541,7 +1558,7 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync. */
-notmuch_private_status_t
+NODISCARD notmuch_private_status_t
 _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *prefix_name,
 			      const char *value)
@@ -2274,7 +2291,11 @@ notmuch_message_reindex (notmuch_message_t *message,
 	if (thread_id == NULL)
 	    thread_id = orig_thread_id;
 
-	_notmuch_message_add_term (message, "thread", thread_id);
+	ret = COERCE_STATUS (_notmuch_message_add_term (message, "thread", thread_id),
+			     "adding thread term");
+	if (ret)
+	    goto DONE;
+
 	/* Take header values only from first filename */
 	if (found == 0)
 	    _notmuch_message_set_header_values (message, date, from, subject);
@@ -2292,7 +2313,11 @@ notmuch_message_reindex (notmuch_message_t *message,
     }
     if (found == 0) {
 	/* put back thread id to help cleanup */
-	_notmuch_message_add_term (message, "thread", orig_thread_id);
+	ret = COERCE_STATUS (_notmuch_message_add_term (message, "thread", orig_thread_id),
+			     "adding thread term");
+	if (ret)
+	    goto DONE;
+
 	ret = _notmuch_message_delete (message);
     } else {
 	_notmuch_message_sync (message);
