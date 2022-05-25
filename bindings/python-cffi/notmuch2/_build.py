@@ -55,6 +55,7 @@ ffibuilder.cdef(
         NOTMUCH_STATUS_DATABASE_EXISTS,
         NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
         NOTMUCH_STATUS_NO_MAIL_ROOT,
+        NOTMUCH_STATUS_CLOSED_DATABASE,
         NOTMUCH_STATUS_LAST_STATUS
     } notmuch_status_t;
     typedef enum {

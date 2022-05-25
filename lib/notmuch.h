@@ -229,6 +229,10 @@ typedef enum {
      */
     NOTMUCH_STATUS_NO_MAIL_ROOT,
     /**
+     * Database is not fully opened, or has been closed
+     */
+    NOTMUCH_STATUS_CLOSED_DATABASE,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */

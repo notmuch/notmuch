@@ -231,7 +231,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_add_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -247,7 +247,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_remove_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -427,7 +427,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_remove_all_tags (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -443,7 +443,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_freeze (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_SUCCESS);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -459,7 +459,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_thaw (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
