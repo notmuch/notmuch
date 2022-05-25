@@ -2262,6 +2262,9 @@ notmuch_message_properties_destroy (notmuch_message_properties_t *properties);
  * valid string. Whereas when this function returns FALSE,
  * notmuch_tags_get will return NULL.
  *
+ * It is acceptable to pass NULL for 'tags', in which case this
+ * function will always return FALSE.
+
  * See the documentation of notmuch_message_get_tags for example code
  * showing how to iterate over a notmuch_tags_t object.
  */

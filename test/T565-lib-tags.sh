@@ -68,7 +68,6 @@ test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database
 
 test_begin_subtest "NULL tags are not valid"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
        notmuch_bool_t valid = TRUE;
