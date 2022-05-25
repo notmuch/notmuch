@@ -275,24 +275,6 @@ test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database
 
 backup_database
-test_begin_subtest "Xapian exception getting tags"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
-   {
-       notmuch_tags_t *tags = NULL;
-       tags = notmuch_database_get_all_tags (db);
-       stat = (tags == NULL);
-   }
-EOF
-sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
-cat <<'EOF' >EXPECTED
-== stdout ==
-== stderr ==
-A Xapian exception occurred getting tags
-EOF
-test_expect_equal_file EXPECTED OUTPUT.clean
-restore_database
-
-backup_database
 test_begin_subtest "Xapian exception creating directory"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
    {
