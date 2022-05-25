@@ -2039,6 +2039,10 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     char *to_set, *to_clear;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     _get_maildir_flag_actions (message, &to_set, &to_clear);
 
     for (filenames = notmuch_message_get_filenames (message);
