@@ -24,7 +24,7 @@ http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg016808.htmlspecifically
 uses 64 as the
 buffer size.
 [ text/html (hidden) ]
-[ 0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch: application/octet-stream (as text/x-diff) ]
+[ 0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch: text/x-diff ]
 From e3bc4bbd7b9d0d086816ab5f8f2d6ffea1dd3ea4 Mon Sep 17 00:00:00 2001
 From: Alexander Botero-Lowry <alex.boterolowry@gmail.com>
 Date: Tue, 17 Nov 2009 11:30:39 -0800
