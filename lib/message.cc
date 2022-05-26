@@ -169,7 +169,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
 
     message->doc = doc;
     message->termpos = 0;
-    message->modified = FALSE;
+    message->modified = false;
 
     return message;
 }
