@@ -329,9 +329,7 @@ exec_man (const char *page)
 static int
 _help_for (const char *topic_name)
 {
-    const command_t *command;
-    const help_topic_t *topic;
-    unsigned int i;
+    char *page;
 
     if (! topic_name) {
 	printf ("The notmuch mail system.\n\n");
@@ -348,23 +346,9 @@ _help_for (const char *topic_name)
 	return EXIT_SUCCESS;
     }
 
-    command = find_command (topic_name);
-    if (command) {
-	char *page = talloc_asprintf (NULL, "notmuch-%s", command->name);
-	exec_man (page);
-    }
+    page = talloc_asprintf (NULL, "notmuch-%s", topic_name);
+    exec_man (page);
 
-    for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
-	topic = &help_topics[i];
-	if (strcmp (topic_name, topic->name) == 0) {
-	    char *page = talloc_asprintf (NULL, "notmuch-%s", topic->name);
-	    exec_man (page);
-	}
-    }
-
-    fprintf (stderr,
-	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
-	     topic_name);
     return EXIT_FAILURE;
 }
 
