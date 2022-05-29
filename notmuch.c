@@ -211,12 +211,14 @@ typedef struct help_topic {
 } help_topic_t;
 
 static const help_topic_t help_topics[] = {
-    { "search-terms",
-      "Common search term syntax." },
     { "hooks",
       "Hooks that will be run before or after certain commands." },
     { "properties",
       "Message property conventions and documentation." },
+    { "search-terms",
+      "Common infix search term syntax." },
+    { "sexp-queries",
+      "Common s-expression search term syntax." },
 };
 
 static const command_t *
