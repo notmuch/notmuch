@@ -44,7 +44,6 @@ EOF
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "NOTMUCH_CONFIG is set by --config"
-test_subtest_known_broken
 cp "${NOTMUCH_CONFIG}" "${NOTMUCH_CONFIG}.alternate"
 cat <<EOF > EXPECTED
 ${NOTMUCH_CONFIG}.alternate

@@ -429,10 +429,17 @@ notmuch_command (notmuch_database_t *notmuch,
  * false on errors.
  */
 static bool
-try_external_command (char *argv[])
+try_external_command (const char *config_file_name, char *argv[])
 {
     char *old_argv0 = argv[0];
     bool ret = true;
+
+    if (config_file_name) {
+	if (setenv ("NOTMUCH_CONFIG", config_file_name, 1)) {
+	    perror ("setenv");
+	    exit (1);
+	}
+    }
 
     argv[0] = talloc_asprintf (NULL, "notmuch-%s", old_argv0);
 
@@ -493,7 +500,7 @@ main (int argc, char *argv[])
     /* if command->function is NULL, try external command */
     if (! command || ! command->function) {
 	/* This won't return if the external command is found. */
-	if (try_external_command (argv + opt_index))
+	if (try_external_command (config_file_name, argv + opt_index))
 	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 		     command_name);
 	ret = EXIT_FAILURE;
