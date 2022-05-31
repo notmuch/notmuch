@@ -185,6 +185,14 @@ of notmuch.
    If set to a non-empty value, the notmuch library will print (to
    stderr) Xapian queries it constructs.
 
+EXTERNAL COMMANDS
+=================
+
+When given a subcommand `foo` not recognized as built-in, notmuch will
+try to run the command (e.g. script) `notmuch-foo` in the user's
+path. The :envvar:`NOTMUCH_CONFIG` will be set according to
+:option:`--config`, if the latter is present.
+
 SEE ALSO
 ========
 
