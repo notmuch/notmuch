@@ -85,8 +85,30 @@ visible for any given message."
   :group 'notmuch-show)
 
 (defcustom notmuch-show-header-line t
-  "Show a header line with the current message's subject."
-  :type 'boolean
+  "Show a header line in notmuch show buffers.
+
+If t (the default), the header line will contain the current
+message's subject.
+
+If a string, this value is interpreted as a format string to be
+passed to `format-spec` with `%s` as the substitution variable
+for the message's subject.  E.g., to display the subject trimmed
+to a maximum of 80 columns, you could use \"%>-80s\" as format.
+
+If you assign to this variable a function, it will be called with
+the subject as argument, and the return value will be used as the
+header line format.  Since the function is called with the
+message buffer as the current buffer, it is also possible to
+access any other properties of the message, using for instance
+notmuch-show functions such as
+`notmuch-show-get-message-properties'.
+
+Finally, if this variable is set to nil, no header is
+displayed."
+  :type '(choice (const :tag "No header" ni)
+                 (const :tag "Subject" t)
+                 (string :tag "Format")
+		 (function :tag "Function"))
   :group 'notmuch-show)
 
 (defcustom notmuch-show-relative-dates t
@@ -1313,6 +1335,18 @@ fallback if the prior matches no messages."
       (push (list thread "and (" context ")") queries))
     queries))
 
+(defun notmuch-show--header-line-format ()
+  "Compute the header line format of a notmuch-show buffer."
+  (when notmuch-show-header-line
+    (let* ((s (notmuch-sanitize
+	       (notmuch-show-strip-re (notmuch-show-get-subject))))
+	   (subject (replace-regexp-in-string "%" "%%" s)))
+      (cond ((stringp notmuch-show-header-line)
+             (format-spec notmuch-show-header-line `((?s . ,subject))))
+	    ((functionp notmuch-show-header-line)
+	     (funcall notmuch-show-header-line subject))
+	    (notmuch-show-header-line subject)))))
+
 (defun notmuch-show--build-buffer (&optional state)
   "Display messages matching the current buffer context.
 
@@ -1343,13 +1377,7 @@ If no messages match the query return NIL."
       ;; display changes.
       (notmuch-show-mapc
        (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
-      ;; Set the header line to the subject of the first message.
-      (when notmuch-show-header-line
-	(setq header-line-format
-	      (replace-regexp-in-string "%" "%%"
-					(notmuch-sanitize
-					 (notmuch-show-strip-re
-					  (notmuch-show-get-subject))))))
+      (setq header-line-format (notmuch-show--header-line-format))
       (run-hooks 'notmuch-show-hook)
       (if state
 	  (notmuch-show-apply-state state)
