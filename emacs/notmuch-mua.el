@@ -385,7 +385,13 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 (defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest ignored)
-  "Invoke the notmuch mail composition window."
+  "Invoke the notmuch mail composition window.
+
+The position of point when the function returns differs depending
+on the values of TO and SUBJECT.  If both are non-nil, point is
+moved to the message's body.  If SUBJECT is nil but TO isn't,
+point is moved to the \"Subject:\" header.  Otherwise, point is
+moved to the \"To:\" header."
   (interactive)
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
@@ -420,7 +426,10 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (message-hide-headers)
   (set-buffer-modified-p nil)
   (notmuch-mua-maybe-set-window-dedicated)
-  (message-goto-to))
+  (cond
+   ((and to subject) (message-goto-body))
+   (to (message-goto-subject))
+   (t (message-goto-to))))
 
 (defvar notmuch-mua-sender-history nil)
 

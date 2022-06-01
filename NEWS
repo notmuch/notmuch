@@ -1,3 +1,12 @@
+Notmuch 0.37 (UNRELEASED)
+=========================
+
+Emacs
+-----
+
+The function `notmuch-mua-mail` now moves point depending on the
+provided arguments.
+
 Notmuch 0.36 (2022-04-25)
 =========================
 
