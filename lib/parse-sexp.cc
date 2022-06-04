@@ -473,6 +473,9 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
     }
 
     from = sx->val;
+    if (strcmp (from, "*") == 0)
+	from = "";
+
     to = from;
 
     if (sx->next) {
@@ -488,6 +491,8 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	}
 
 	to = sx->next->val;
+	if (strcmp (to, "*") == 0)
+	    to = "";
     }
 
     if (strcmp (prefix->name, "date") == 0) {
