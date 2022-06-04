@@ -932,13 +932,11 @@ notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_se
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "lastmod query, lower bound only"
-test_subtest_known_broken
 notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(lastmod $revision \"\")" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "lastmod query, upper bound only"
-test_subtest_known_broken
 notmuch search lastmod:..$revision2 | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(lastmod \"\" $revision2)" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file_nonempty EXPECTED OUTPUT

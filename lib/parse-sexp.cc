@@ -504,14 +504,20 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	long from_idx, to_idx;
 
 	try {
-	    from_idx = std::stol (from);
+	    if (EMPTY_STRING (from))
+		from_idx = 0L;
+	    else
+		from_idx = std::stol (from);
 	} catch (std::logic_error &e) {
 	    _notmuch_database_log (notmuch, "bad 'from' revision: '%s'\n", from);
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	}
 
 	try {
-	    to_idx = std::stol (to);
+	    if (EMPTY_STRING (to))
+		to_idx = LONG_MAX;
+	    else
+		to_idx = std::stol (to);
 	} catch (std::logic_error &e) {
 	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
