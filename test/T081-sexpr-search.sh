@@ -854,6 +854,16 @@ notmuch search date:2009-11-17..2009-11-18 and from:keithp | notmuch_search_sani
 notmuch search --query=sexp  '(and (date 2009-11-17 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "date query, lower bound only"
+notmuch search date:2009-11-18.. and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date 2009-11-18 "") (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "date query, upper bound only"
+notmuch search date:..2009-11-17 and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date "" 2009-11-17) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "date query, illegal nesting 1"
 notmuch search --query=sexp '(to (date))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
@@ -920,6 +930,18 @@ revision2=$(notmuch count --lastmod '*' | cut -f3)
 notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, lower bound only"
+test_subtest_known_broken
+notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod $revision \"\")" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, upper bound only"
+test_subtest_known_broken
+notmuch search lastmod:..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod \"\" $revision2)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "lastmod query, illegal nesting 1"
 notmuch search --query=sexp '(to (lastmod))' > OUTPUT 2>&1
