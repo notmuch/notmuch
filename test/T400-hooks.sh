@@ -215,9 +215,6 @@ EOF
     test_expect_equal_file EXPECTED OUTPUT
 
     test_begin_subtest "NOTMUCH_CONFIG is set"
-    if [ "${config}" = "profile" ]; then
-	test_subtest_known_broken
-    fi
     create_printenv_hook "pre-new" NOTMUCH_CONFIG OUTPUT
     NOTMUCH_NEW
     cat <<EOF > EXPECTED
@@ -226,7 +223,6 @@ EOF
     test_expect_equal_file_nonempty EXPECTED OUTPUT
 
     test_begin_subtest "NOTMUCH_CONFIG is set by --config"
-    test_subtest_known_broken
     create_printenv_hook "pre-new" NOTMUCH_CONFIG OUTPUT
     cp "${EXPECTED_CONFIG}" "${EXPECTED_CONFIG}.alternate"
     notmuch --config "${EXPECTED_CONFIG}.alternate" new

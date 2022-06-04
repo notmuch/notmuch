@@ -27,6 +27,7 @@ int
 notmuch_run_hook (notmuch_database_t *notmuch, const char *hook)
 {
     char *hook_path;
+    const char *config_path;
     int status = 0;
     pid_t pid;
 
@@ -35,6 +36,12 @@ notmuch_run_hook (notmuch_database_t *notmuch, const char *hook)
 				 hook);
     if (hook_path == NULL) {
 	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    config_path = notmuch_config_path (notmuch);
+    if (setenv ("NOTMUCH_CONFIG", config_path, 1)) {
+	perror ("setenv");
 	return 1;
     }
 
