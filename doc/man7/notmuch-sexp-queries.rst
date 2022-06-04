@@ -119,6 +119,12 @@ a message has one such attribute, and ``and`` otherwise.
 Term or phrase fields can contain arbitrarily complex queries made up
 from terms, operators, and modifiers, but not other fields.
 
+Range fields take one or two arguments specifying lower and upper
+bounds.  One argument is interpreted as identical upper and lower
+bounds. Either upper or lower bound may be specified as ``""`` or
+``*`` to specify the lowest possible lower bound or highest possible
+upper bound.
+
 .. _field-table:
 
 .. table:: Fields with supported modifiers
@@ -239,6 +245,18 @@ EXAMPLES
 ``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
 
     Match messages in the given date range with tag unread.
+
+``(and (date 2009-11-18 2009-11-18) (tag unread))``
+
+    Match messages in the given date range with tag unread.
+
+``(and (date 2009-11-18 *) (tag unread))``
+
+    Match messages from 2009-11-18 or later with tag unread.
+
+``(and (date * 2009-11-18) (tag unread))``
+
+    Match messages from 2009-11-18 or earlier with tag unread.
 
 ``(starts-with prelim)``
 
