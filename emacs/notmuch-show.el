@@ -2227,7 +2227,9 @@ argument, hide all of the messages."
 If SHOW is non-nil, open the next item in a show
 buffer. Otherwise just highlight the next item in the search
 buffer. If PREVIOUS is non-nil, move to the previous item in the
-search results instead."
+search results instead.
+
+Return non-nil on success."
   (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
     (notmuch-bury-or-kill-this-buffer)

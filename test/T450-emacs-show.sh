@@ -62,6 +62,17 @@ test_emacs '(let ((notmuch-crypto-process-mime nil))
 	(test-visible-output))'
 test_expect_equal_file $EXPECTED/notmuch-show-process-crypto-mime-parts-on OUTPUT
 
+test_begin_subtest "notmuch-search-show-thread returns non-nil on success"
+test_emacs_expect_t  '(notmuch-search "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+		      (notmuch-test-wait)
+		      (and (notmuch-search-show-thread)
+			   (not (notmuch-show-next-thread)))'
+
+test_begin_subtest "notmuch-search-show-thread returns nil when there are no messages"
+test_emacs_expect_t  '(notmuch-search "id:non-existing-id")
+		      (notmuch-test-wait)
+		      (not (notmuch-search-show-thread))'
+
 test_begin_subtest "notmuch-show: don't elide non-matching messages"
 test_emacs '(let ((notmuch-show-only-matching-messages nil))
 	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")

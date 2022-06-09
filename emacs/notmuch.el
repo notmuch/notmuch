@@ -520,7 +520,9 @@ no messages in the region then return nil."
 
 With a prefix argument, invert the default value of
 `notmuch-show-only-matching-messages' when displaying the
-thread."
+thread.
+
+Return non-nil on success."
   (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id)))
     (if thread-id
@@ -532,7 +534,8 @@ thread."
 		      (format "*%s*" (truncate-string-to-width
 				      (notmuch-search-find-subject)
 				      30 nil nil t)))
-      (message "End of search results."))))
+      (message "End of search results.")
+      nil)))
 
 (defun notmuch-tree-from-search-current-query ()
   "Tree view of current query."
