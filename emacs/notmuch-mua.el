@@ -21,7 +21,10 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'subr-x))
+
 (require 'message)
+(require 'gmm-utils)
 (require 'mm-view)
 (require 'format-spec)
 
@@ -382,6 +385,21 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
     (erase-buffer)
     (notmuch-message-mode)))
 
+(defun notmuch-mua--remove-dont-reply-to-names ()
+  (when-let* ((nr (if (functionp message-dont-reply-to-names)
+		      message-dont-reply-to-names
+		    (gmm-regexp-concat message-dont-reply-to-names)))
+	      (nr-filter
+	       (if (functionp nr)
+		   (lambda (mail) (and (not (funcall nr mail)) mail))
+		 (lambda (mail) (and (not (string-match-p nr mail)) mail)))))
+    (dolist (header '("To" "Cc"))
+      (when-let ((v (message-fetch-field header)))
+	(let* ((tokens (mapcar #'string-trim (message-tokenize-header v)))
+	       (good-tokens (delq nil (mapcar nr-filter tokens)))
+	       (addr (and good-tokens (mapconcat #'identity good-tokens ", "))))
+	  (message-replace-header header addr))))))
+
 (defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest ignored)
@@ -422,6 +440,7 @@ moved to the \"To:\" header."
 	(message-this-is-mail t))
     (message-setup-1 headers yank-action send-actions return-action))
   (notmuch-fcc-header-setup)
+  (notmuch-mua--remove-dont-reply-to-names)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)

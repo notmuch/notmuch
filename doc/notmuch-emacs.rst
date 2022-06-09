@@ -493,6 +493,15 @@ Sending Mail
        :code:`compose-mail`.  To use ``notmuch`` for this, customize this
        variable to the symbol :code:`notmuch-user-agent`.
 
+:index:`message-dont-reply-to-names`
+
+       When composing mail replies, Emacs's message mode uses the
+       variable :code:`message-dont-reply-to-names` to exclude
+       recipients matching a given collection of regular expressions
+       or satisfying an arbitrary predicate.  Notmuch's MUA inherits
+       this standard mechanism and will honour your customization of
+       this variable.
+
 Init File
 ---------
 
