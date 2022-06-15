@@ -1156,7 +1156,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Saved Search: bad parameter syntax 5"
-test_subtest_known_broken
 notmuch config set squery.Bad5 '(macro (thing) (tag (rx ,thing)))'
 notmuch search --query=sexp '(Bad5 (1 2))' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
@@ -1166,12 +1165,19 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Saved Search: bad parameter syntax 6"
-test_subtest_known_broken
 notmuch config set squery.Bad6 '(macro (thing) (tag (starts-with ,thing)))'
 notmuch search --query=sexp '(Bad6 (1 2))' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
 'starts-with' expects single atom as argument
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 7"
+notmuch search --query=sexp '(subject (rx ,unknown))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+undefined parameter 'unknown'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -1204,7 +1210,7 @@ notmuch config set squery.Bad6  '(macro (a) (and ,b (subject maildir)))'
 notmuch search --query=sexp '(Bad6 foo)' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
-undefined parameter b
+undefined parameter 'b'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -1227,14 +1233,12 @@ notmuch search --query=sexp '(TagSubject2 inbox maildir)' | notmuch_search_sanit
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "macro in regex"
-test_subtest_known_broken
 notmuch search tag:inbox and date:2009-11-17 | notmuch_search_sanitize > EXPECTED
 notmuch config set squery.D  '(macro (tagname)  (and (date 2009-11-17) (tag (rx ,tagname))))'
 notmuch search --query=sexp '(D inbo)' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "macro in wildcard"
-test_subtest_known_broken
 notmuch search tag:inbox and date:2009-11-17 | notmuch_search_sanitize > EXPECTED
 notmuch config set squery.W  '(macro (tagname)  (and (date 2009-11-17) (tag (starts-with ,tagname))))'
 notmuch search --query=sexp '(W inbo)' | notmuch_search_sanitize > OUTPUT
@@ -1253,12 +1257,11 @@ notmuch config set squery.Outer2  '(macro (x y) (and (tag ,x) (Inner2 ,y)))'
 notmuch search --query=sexp '(Outer2 inbox maildir)' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
-undefined parameter y
+undefined parameter 'y'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "nested macros (shadowing, regex)"
-test_subtest_known_broken
 notmuch search tag:/inbo/ and subject:/Maildi/ | notmuch_search_sanitize > EXPECTED
 notmuch config set squery.Inner3 '(macro (x) (subject (rx ,x)))'
 notmuch config set squery.Outer3  '(macro (x y) (and (tag (rx ,x)) (Inner3 ,y)))'
@@ -1266,7 +1269,6 @@ notmuch search --query=sexp '(Outer3 inbo Maildi)' | notmuch_search_sanitize > O
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "nested macros (shadowing, wildcard)"
-test_subtest_known_broken
 notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
 notmuch config set squery.Inner4 '(macro (x) (subject (starts-with ,x)))'
 notmuch config set squery.Outer4  '(macro (x y) (and (tag (starts-with ,x)) (Inner4 ,y)))'
