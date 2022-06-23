@@ -46,7 +46,7 @@ _LOG.addHandler(_logging.StreamHandler())
 
 NOTMUCH_GIT_DIR = None
 TAG_PREFIX = None
-FORMAT_VERSION = 0
+FORMAT_VERSION = 1
 
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
 _TAG_DIRECTORY = 'tags/'
@@ -452,7 +452,7 @@ def fetch(remote=None):
     _git(args=args, wait=True)
 
 
-def init(remote=None):
+def init(remote=None,format_version=None):
     """
     Create an empty notmuch-git repository.
 
@@ -466,22 +466,34 @@ def init(remote=None):
     except FileExistsError:
         pass
 
+    if not format_version:
+        format_version = 1
+
+    format_version=int(format_version)
+
+    if format_version > 1 or format_version < 0:
+        _LOG.error("Illegal format version {:d}".format(format_version))
+        _sys.exit(1)
+
     _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init',
                  '--initial-branch=master', '--quiet', '--bare'], wait=True)
     _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
     # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
     _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
-    # create a blob for the FORMAT file
-    (status, stdout, _) = _git(args=['hash-object', '-w', '--stdin'], stdout=_subprocess.PIPE,
-                               input='1\n', wait=True)
-    verhash=stdout.rstrip()
-    _LOG.debug('hash of FORMAT blob = {:s}'.format(verhash))
-    # Add FORMAT to the index
-    _git(args=['update-index', '--add', '--cacheinfo', '100644,{:s},FORMAT'.format(verhash)], wait=True)
+    allow_empty=('--allow-empty',)
+    if format_version >= 1:
+        allow_empty=()
+        # create a blob for the FORMAT file
+        (status, stdout, _) = _git(args=['hash-object', '-w', '--stdin'], stdout=_subprocess.PIPE,
+                                   input='{:d}\n'.format(format_version), wait=True)
+        verhash=stdout.rstrip()
+        _LOG.debug('hash of FORMAT blob = {:s}'.format(verhash))
+        # Add FORMAT to the index
+        _git(args=['update-index', '--add', '--cacheinfo', '100644,{:s},FORMAT'.format(verhash)], wait=True)
 
     _git(
         args=[
-            'commit', '-m', 'Start a new notmuch-git repository'
+            'commit', *allow_empty, '-m', 'Start a new notmuch-git repository'
         ],
         additional_env={'GIT_WORK_TREE': NOTMUCH_GIT_DIR},
         wait=True)
@@ -1043,6 +1055,11 @@ if __name__ == '__main__':
             subparser.add_argument(
                 'command', metavar='COMMAND', nargs='?',
                 help='The command to show help for.')
+        elif command == 'init':
+            subparser.add_argument(
+                '--format-version', metavar='VERSION',
+                default = None,
+                help='create format VERSION repository.')
         elif command == 'log':
             subparser.add_argument(
                 'args', metavar='ARG', nargs='*',
@@ -1139,7 +1156,9 @@ if __name__ == '__main__':
     _LOG.debug('prefix = {:s}'.format(TAG_PREFIX))
     _LOG.debug('repository = {:s}'.format(NOTMUCH_GIT_DIR))
 
-    FORMAT_VERSION = read_format_version()
+    if args.func != init:
+        FORMAT_VERSION = read_format_version()
+
     _LOG.debug('FORMAT_VERSION={:d}'.format(FORMAT_VERSION))
 
     if args.func == help:

@@ -125,12 +125,18 @@ Fetch changes from the remote repository.
 
 Show brief help for an `notmuch git` command.
 
-.. option:: init
+.. option:: init [--format-version=N]
 
 Create an empty `notmuch git` repository.
 
 This wraps 'git init' with a few extra steps to support subsequent
 status and commit commands.
+
+   .. describe:: --format-version=N
+
+   Create a repo in format version N. By default :any:`notmuch-git`
+   uses the highest supported version, which is the best choice for
+   most use-cases.
 
 .. option:: log [arg ...]
 

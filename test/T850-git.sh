@@ -347,4 +347,50 @@ prefix = test::
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "default version is 1"
+notmuch git -l debug -C default-version.git init
+output=$(git -C default-version.git cat-file blob HEAD:FORMAT)
+test_expect_equal "${output}" 1
+
+test_begin_subtest "illegal version"
+test_expect_code 1 "notmuch git -l debug -C default-version.git init --format-version=42"
+
+hash=("" "8d/c3/") # for use in synthetic repo contents.
+for ver in {0..1}; do
+    test_begin_subtest "init version=${ver}"
+    notmuch git -C version-${ver}.git  -p "test${ver}::" init --format-version=${ver}
+    output=$(git -C version-${ver}.git ls-tree -r --name-only HEAD)
+    expected=("" "FORMAT")
+    test_expect_equal "${output}" "${expected[${ver}]}"
+
+    test_begin_subtest "initial commit version=${ver}"
+    notmuch tag "+test${ver}::a" "+test${ver}::b" id:20091117190054.GU3165@dottiness.seas.harvard.edu
+    notmuch git -C version-${ver}.git -p "test${ver}::" commit --force
+    git -C version-${ver}.git ls-tree -r --name-only HEAD | grep -v FORMAT > OUTPUT
+cat <<EOF > EXPECTED
+tags/${hash[${ver}]}20091117190054.GU3165@dottiness.seas.harvard.edu/a
+tags/${hash[${ver}]}20091117190054.GU3165@dottiness.seas.harvard.edu/b
+EOF
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+    test_begin_subtest "second commit repo=${ver}"
+    notmuch tag "+test${ver}::c" "+test${ver}::d" id:20091117190054.GU3165@dottiness.seas.harvard.edu
+    notmuch git -C version-${ver}.git  -p "test${ver}::" commit --force
+    git -C version-${ver}.git ls-tree -r --name-only HEAD | grep -v FORMAT > OUTPUT
+cat <<EOF > EXPECTED
+tags/${hash[$ver]}20091117190054.GU3165@dottiness.seas.harvard.edu/a
+tags/${hash[$ver]}20091117190054.GU3165@dottiness.seas.harvard.edu/b
+tags/${hash[$ver]}20091117190054.GU3165@dottiness.seas.harvard.edu/c
+tags/${hash[$ver]}20091117190054.GU3165@dottiness.seas.harvard.edu/d
+EOF
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+    test_begin_subtest "checkout repo=${ver} "
+    notmuch dump > BEFORE
+    notmuch tag -test::${ver}::a '*'
+    notmuch git -C version-${ver}.git  -p "test${ver}::" checkout --force
+    notmuch dump > AFTER
+    test_expect_equal_file_nonempty BEFORE AFTER
+done
+
 test_done
