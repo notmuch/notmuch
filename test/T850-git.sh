@@ -40,10 +40,10 @@ notmuch tag -new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
 test_begin_subtest "committing new prefix works with force"
 notmuch tag +new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -l debug -p 'new-prefix::' -C force-prefix.git commit --force
-git -C force-prefix.git ls-tree -r --name-only HEAD | xargs dirname | sort -u | sed s,tags/,id:, > OUTPUT
+git -C force-prefix.git ls-tree -r --name-only HEAD |  notmuch_git_sanitize | xargs dirname | sort -u > OUTPUT
 notmuch tag -new-prefix::foo id:20091117190054.GU3165@dottiness.seas.harvard.edu
 cat <<EOF>EXPECTED
-id:20091117190054.GU3165@dottiness.seas.harvard.edu
+20091117190054.GU3165@dottiness.seas.harvard.edu
 EOF
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
@@ -62,8 +62,8 @@ test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "commit"
 notmuch git -C tags.git commit --force
-git -C tags.git ls-tree -r --name-only HEAD | xargs dirname | sort -u | sed s,tags/,id:, > OUTPUT
-notmuch search --output=messages '*' | sort > EXPECTED
+git -C tags.git ls-tree -r --name-only HEAD | notmuch_git_sanitize | xargs dirname | sort -u > OUTPUT
+notmuch search --output=messages '*' | sed s/^id:// | sort > EXPECTED
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "commit --force succeeds"
@@ -88,22 +88,22 @@ test_expect_equal_file_nonempty BEFORE AFTER
 test_begin_subtest "commit (incremental)"
 notmuch tag +test id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C tags.git commit
-git -C tags.git ls-tree -r --name-only HEAD |
+git -C tags.git ls-tree -r --name-only HEAD | notmuch_git_sanitize | \
     grep 20091117190054 | sort > OUTPUT
 echo "--------------------------------------------------" >> OUTPUT
 notmuch tag -test id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C tags.git commit
-git -C tags.git ls-tree -r --name-only HEAD |
+git -C tags.git ls-tree -r --name-only HEAD | notmuch_git_sanitize | \
     grep 20091117190054 | sort >> OUTPUT
 cat <<EOF > EXPECTED
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/test
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+20091117190054.GU3165@dottiness.seas.harvard.edu/test
+20091117190054.GU3165@dottiness.seas.harvard.edu/unread
 --------------------------------------------------
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+20091117190054.GU3165@dottiness.seas.harvard.edu/unread
 EOF
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
@@ -111,18 +111,18 @@ test_begin_subtest "commit (change prefix)"
 notmuch tag +test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C tags.git -p 'test::' commit --force
 git -C tags.git ls-tree -r --name-only HEAD |
-    grep 20091117190054 | sort > OUTPUT
+    grep 20091117190054 | notmuch_git_sanitize | sort > OUTPUT
 echo "--------------------------------------------------" >> OUTPUT
 notmuch tag -test::one id:20091117190054.GU3165@dottiness.seas.harvard.edu
 notmuch git -C tags.git commit --force
-git -C tags.git ls-tree -r --name-only HEAD |
+git -C tags.git ls-tree -r --name-only HEAD | notmuch_git_sanitize | \
     grep 20091117190054 | sort >> OUTPUT
 cat <<EOF > EXPECTED
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/one
+20091117190054.GU3165@dottiness.seas.harvard.edu/one
 --------------------------------------------------
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+20091117190054.GU3165@dottiness.seas.harvard.edu/unread
 EOF
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
@@ -151,12 +151,12 @@ test_expect_equal_file_nonempty BEFORE AFTER
 
 test_begin_subtest "archive"
 notmuch git -C tags.git archive | tar tf - | \
-    grep 20091117190054.GU3165@dottiness.seas.harvard.edu | sort > OUTPUT
+    grep 20091117190054.GU3165@dottiness.seas.harvard.edu | notmuch_git_sanitize | sort > OUTPUT
 cat <<EOF > EXPECTED
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/signed
-tags/20091117190054.GU3165@dottiness.seas.harvard.edu/unread
+20091117190054.GU3165@dottiness.seas.harvard.edu/
+20091117190054.GU3165@dottiness.seas.harvard.edu/inbox
+20091117190054.GU3165@dottiness.seas.harvard.edu/signed
+20091117190054.GU3165@dottiness.seas.harvard.edu/unread
 EOF
 notmuch git -C tags.git checkout
 test_expect_equal_file EXPECTED OUTPUT

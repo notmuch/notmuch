@@ -559,6 +559,10 @@ notmuch_date_sanitize () {
 	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
 
+# remove redundant parts of notmuch-git internal paths
+notmuch_git_sanitize () {
+    sed  -e 's,tags/\([0-9a-f]\{2\}/\)\{2\},,' -e '/FORMAT/d'
+}
 notmuch_uuid_sanitize () {
     sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }

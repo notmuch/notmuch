@@ -235,14 +235,46 @@ REPOSITORY CONTENTS
 ===================
 
 The tags are stored in the git repo (and exported) as a set of empty
-files. For a message with Message-Id *id*, for each tag *tag*, there
+files. These empty files are contained within a directory named after
+the message-id.
+
+In what follows `encode()` represents a POSIX filesystem safe
+encoding. The encoding preserves alphanumerics, and the characters
+`+-_@=.,:`.  All other octets are replaced with `%` followed by a two
+digit hex number.
+
+Currently :any:`notmuch-git` can read any format version, but can only
+create (via :any:`init`) :ref:`version 1 <format_version_1>` repositories.
+
+.. _format_version_0:
+
+Version 0
+---------
+
+This is the legacy format created by the `nmbug` tool prior to release
+0.37.  For a message with Message-Id *id*, for each tag *tag*, there
 is an empty file with path
 
        tags/ `encode` (*id*) / `encode` (*tag*)
 
-The encoding preserves alphanumerics, and the characters `+-_@=.,:`.
-All other octets are replaced with `%` followed by a two digit hex
-number.
+.. _format_version_1:
+
+Version 1
+---------
+
+In format version 1 and later, the format version is contained in a
+top level file called FORMAT.
+
+For a message with Message-Id *id*, for each tag *tag*, there
+is an empty file with path
+
+       tags/ `hash1` (*id*) / `hash2` (*id*) `encode` (*id*) / `encode` (*tag*)
+
+The hash functions each represent one byte of the `blake2b` hex
+digest.
+
+Compared to :ref:`version 0 <format_version_0>`, this reduces the
+number of subdirectories within each directory.
 
 .. _repo_location:
 

@@ -46,10 +46,12 @@ _LOG.addHandler(_logging.StreamHandler())
 
 NOTMUCH_GIT_DIR = None
 TAG_PREFIX = None
+FORMAT_VERSION = 0
 
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
 _TAG_DIRECTORY = 'tags/'
-_TAG_FILE_REGEX = _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)')
+_TAG_FILE_REGEX = ( _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)'),
+                    _re.compile(_TAG_DIRECTORY + '([0-9a-f]{2}/){2}(?P<id>[^/]*)/(?P<tag>[^/]*)'))
 
 # magic hash for Git (git hash-object -t blob /dev/null)
 _EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
@@ -265,7 +267,7 @@ def archive(treeish='HEAD', args=()):
     Each tag $tag for message with Message-Id $id is written to
     an empty file
 
-      tags/encode($id)/encode($tag)
+      tags/hash1(id)/hash2(id)/encode($id)/encode($tag)
 
     The encoding preserves alphanumerics, and the characters
     "+-_@=.:," (not the quotes).  All other octets are replaced with
@@ -469,9 +471,17 @@ def init(remote=None):
     _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
     # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
     _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
+    # create a blob for the FORMAT file
+    (status, stdout, _) = _git(args=['hash-object', '-w', '--stdin'], stdout=_subprocess.PIPE,
+                               input='1\n', wait=True)
+    verhash=stdout.rstrip()
+    _LOG.debug('hash of FORMAT blob = {:s}'.format(verhash))
+    # Add FORMAT to the index
+    _git(args=['update-index', '--add', '--cacheinfo', '100644,{:s},FORMAT'.format(verhash)], wait=True)
+
     _git(
         args=[
-            'commit', '--allow-empty', '-m', 'Start a new nmbug repository'
+            'commit', '-m', 'Start a new notmuch-git repository'
         ],
         additional_env={'GIT_WORK_TREE': NOTMUCH_GIT_DIR},
         wait=True)
@@ -821,7 +831,7 @@ def _clear_tags_for_message(index, id):
     Neither 'id' nor the tags in 'tags' should be encoded/escaped.
     """
 
-    dir = 'tags/{id}'.format(id=_hex_quote(string=id))
+    dir = _id_path(id)
 
     with _git(
             args=['ls-files', dir],
@@ -838,6 +848,21 @@ def _read_database_lastmod():
         (count,uuid,lastmod_str) = notmuch.stdout.readline().split()
         return (count,uuid,int(lastmod_str))
 
+def _id_path(id):
+    hid=_hex_quote(string=id)
+    from hashlib import blake2b
+
+    if FORMAT_VERSION==0:
+        return 'tags/{hid}'.format(hid=hid)
+    elif FORMAT_VERSION==1:
+        idhash = blake2b(hid.encode('utf8'), digest_size=2).hexdigest()
+        return 'tags/{dir1}/{dir2}/{hid}'.format(
+            hid=hid,
+            dir1=idhash[0:2],dir2=idhash[2:])
+    else:
+        _LOG.error("Unknown format version",FORMAT_VERSION)
+        _sys.exit(1)
+
 def _index_tags_for_message(id, status, tags):
     """
     Update the Git index to either create or delete an empty file.
@@ -852,8 +877,7 @@ def _index_tags_for_message(id, status, tags):
         hash = '0000000000000000000000000000000000000000'
 
     for tag in tags:
-        path = 'tags/{id}/{tag}'.format(
-            id=_hex_quote(string=id), tag=_hex_quote(string=tag))
+        path = '{ipath}/{tag}'.format(ipath=_id_path(id),tag=_hex_quote(string=tag))
         yield '{mode} {hash}\t{path}\n'.format(mode=mode, hash=hash, path=path)
 
 
@@ -869,7 +893,7 @@ def _diff_refs(filter, a='HEAD', b='@{upstream}'):
 def _unpack_diff_lines(stream):
     "Iterate through (id, tag) tuples in a diff stream."
     for line in stream:
-        match = _TAG_FILE_REGEX.match(line.strip())
+        match = _TAG_FILE_REGEX[FORMAT_VERSION].match(line.strip())
         if not match:
             message = 'non-tag line in diff: {!r}'.format(line.strip())
             if line.startswith(_TAG_DIRECTORY):
@@ -906,6 +930,17 @@ def _notmuch_config_get(key):
         _LOG.error("failed to run notmuch config")
         _sys.exit(1)
     return stdout.rstrip()
+
+def read_format_version():
+    try:
+        (status, stdout, stderr) = _git(
+            args=['cat-file', 'blob', 'master:FORMAT'],
+            stdout=_subprocess.PIPE, stderr=_subprocess.PIPE, wait=True)
+    except SubprocessError as e:
+        _LOG.debug("failed to read FORMAT file from git, assuming format version 0")
+        return 0
+
+    return int(stdout)
 
 # based on BaseDirectory.save_data_path from pyxdg (LGPL2+)
 def xdg_data_path(profile):
@@ -1103,6 +1138,9 @@ if __name__ == '__main__':
     # The following two lines are used by the test suite.
     _LOG.debug('prefix = {:s}'.format(TAG_PREFIX))
     _LOG.debug('repository = {:s}'.format(NOTMUCH_GIT_DIR))
+
+    FORMAT_VERSION = read_format_version()
+    _LOG.debug('FORMAT_VERSION={:d}'.format(FORMAT_VERSION))
 
     if args.func == help:
         arg_names = ['command']
