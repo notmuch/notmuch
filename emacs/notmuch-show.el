@@ -1048,7 +1048,7 @@ is t, hide the part initially and show the button."
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (and (or deep
+	 (button (and (or deep long
 			  (funcall notmuch-show-insert-header-p-function part hide))
 		      (notmuch-show-insert-part-header
 		       nth mime-type

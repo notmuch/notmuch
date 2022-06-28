@@ -280,6 +280,9 @@ Display of messages can be controlled by the following variables
 :index:`notmuch-show-depth-limit`
        |docstring::notmuch-show-depth-limit|
 
+:index:`notmuch-show-max-text-part-size`
+       |docstring::notmuch-show-max-text-part-size|
+
 :index:`notmuch-multipart/alternative-discouraged`
 
    Which mime types to hide by default for multipart messages.
