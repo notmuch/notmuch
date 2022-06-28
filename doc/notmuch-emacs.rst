@@ -277,6 +277,9 @@ Display of messages can be controlled by the following variables
 :index:`notmuch-show-header-line`
        |docstring::notmuch-show-header-line|
 
+:index:`notmuch-show-depth-limit`
+       |docstring::notmuch-show-depth-limit|
+
 :index:`notmuch-multipart/alternative-discouraged`
 
    Which mime types to hide by default for multipart messages.

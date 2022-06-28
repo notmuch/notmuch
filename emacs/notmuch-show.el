@@ -110,6 +110,19 @@ displayed."
 		 (function :tag "Function"))
   :group 'notmuch-show)
 
+(defcustom notmuch-show-depth-limit nil
+  "Depth beyond which message bodies are displayed lazily.
+
+If bound to an integer, any message with tree depth greater than
+this will have its body display lazily, initially
+inserting only a button.
+
+If this variable is set to nil (the default) no such lazy
+insertion is done."
+  :type '(choice (const :tag "No limit" nil)
+                 (number :tag "Limit" 10))
+  :group 'notmuch-show)
+
 (defcustom notmuch-show-relative-dates t
   "Display relative dates in the message summary line."
   :type 'boolean
@@ -1030,17 +1043,21 @@ is t, hide the part initially and show the button."
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content))
 		       notmuch-show-max-text-part-size)))
+	 (deep (and notmuch-show-depth-limit
+		    (> depth notmuch-show-depth-limit)))
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (and (funcall notmuch-show-insert-header-p-function part hide)
+	 (button (and (or deep
+			  (funcall notmuch-show-insert-header-p-function part hide))
 		      (notmuch-show-insert-part-header
 		       nth mime-type
 		       (and content-type (downcase content-type))
 		       (plist-get part :filename))))
-	 ;; Hide the part initially if HIDE is t, or if it is too long
+	 ;; Hide the part initially if HIDE is t, or if it is too long/deep
 	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
+			     (and deep button)
 			     (and long button))))
 	 (content-beg (point)))
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).

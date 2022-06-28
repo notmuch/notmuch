@@ -91,6 +91,24 @@ test_emacs '(let ((notmuch-show-only-matching-messages t))
 	(test-visible-output))'
 test_expect_equal_file $EXPECTED/notmuch-show-elide-non-matching-messages-on OUTPUT
 
+test_begin_subtest "Hide bodies of messages by depth"
+test_emacs '(let ((notmuch-show-depth-limit -1))
+	(notmuch-search "thread:{id:87ocn0qh6d.fsf@yoom.home.cworth.org}")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file $EXPECTED/notmuch-show-depth OUTPUT
+
+test_begin_subtest "Hide bodies of messages (depth > 1)"
+test_emacs '(let ((notmuch-show-depth-limit 1))
+	(notmuch-search "thread:{id:87ocn0qh6d.fsf@yoom.home.cworth.org}")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file $EXPECTED/notmuch-show-depth-1 OUTPUT
+
 test_begin_subtest "notmuch-show: elide non-matching messages (w/ notmuch-show-toggle-elide-non-matching)"
 test_emacs '(let ((notmuch-show-only-matching-messages nil))
 	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
