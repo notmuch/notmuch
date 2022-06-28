@@ -27,7 +27,6 @@
 (require 'mail-parse)
 
 (require 'notmuch-lib)
-(require 'notmuch-query)
 (require 'notmuch-show)
 (require 'notmuch-tag)
 (require 'notmuch-parser)

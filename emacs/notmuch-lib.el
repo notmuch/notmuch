@@ -1029,6 +1029,18 @@ status."
 
 (defvar-local notmuch-show-process-crypto nil)
 
+(defun notmuch--run-show (search-terms)
+  "Return a list of threads of messages matching SEARCH-TERMS.
+
+A thread is a forest or list of trees. A tree is a two element
+list where the first element is a message, and the second element
+is a possibly empty forest of replies."
+  (let ((args '("show" "--format=sexp" "--format-version=5")))
+    (when notmuch-show-process-crypto
+      (setq args (append args '("--decrypt=true"))))
+    (setq args (append args search-terms))
+    (apply #'notmuch-call-notmuch-sexp args)))
+
 ;;; Generic Utilities
 
 (defun notmuch-interactive-region ()

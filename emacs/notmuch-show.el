@@ -32,7 +32,6 @@
 
 (require 'notmuch-lib)
 (require 'notmuch-tag)
-(require 'notmuch-query)
 (require 'notmuch-wash)
 (require 'notmuch-mua)
 (require 'notmuch-crypto)
@@ -1366,7 +1365,7 @@ If no messages match the query return NIL."
 	 (notmuch-show-previous-subject ""))
     ;; Use results from the first query that returns some.
     (while (and (not forest) queries)
-      (setq forest (notmuch-query-get-threads
+      (setq forest (notmuch--run-show
 		    (append cli-args (list "'") (car queries) (list "'"))))
       (when (and forest notmuch-show-single-message)
 	(setq forest (list (list (list forest)))))
