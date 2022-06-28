@@ -280,6 +280,9 @@ Display of messages can be controlled by the following variables
 :index:`notmuch-show-depth-limit`
        |docstring::notmuch-show-depth-limit|
 
+:index:`notmuch-show-height-limit`
+       |docstring::notmuch-show-height-limit|
+
 :index:`notmuch-show-max-text-part-size`
        |docstring::notmuch-show-max-text-part-size|
 

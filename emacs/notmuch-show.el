@@ -123,6 +123,19 @@ insertion is done."
                  (number :tag "Limit" 10))
   :group 'notmuch-show)
 
+(defcustom notmuch-show-height-limit nil
+  "Height (from leaves) beyond which message bodies are displayed lazily.
+
+If bound to an integer, any message with height in the message
+tree greater than this will have its body displayed lazily,
+initially only a button.
+
+If this variable is set to nil (the default) no such lazy
+display is done."
+  :type '(choice (const :tag "No limit" nil)
+                 (number :tag "Limit" 10))
+  :group 'notmuch-show)
+
 (defcustom notmuch-show-relative-dates t
   "Display relative dates in the message summary line."
   :type 'boolean
@@ -504,6 +517,18 @@ Return unchanged ADDRESS if parsing fails."
 	p-address
       ;; Otherwise format the name and address together.
       (concat p-name " <" p-address ">"))))
+
+(defun notmuch-show--mark-height (tree)
+  "Calculate and cache height (distance from deepest descendent)"
+  (let* ((msg (car tree))
+	 (children (cadr tree))
+	 (cached-height (plist-get msg :height)))
+    (or cached-height
+	(let ((height
+	       (if (null children) 0
+		 (1+ (apply #'max (mapcar #'notmuch-show--mark-height children))))))
+	  (plist-put msg :height height)
+	  height))))
 
 (defun notmuch-show-insert-headerline (headers date tags depth)
   "Insert a notmuch style headerline based on HEADERS for a
@@ -1039,16 +1064,19 @@ is t, hide the part initially and show the button."
   (let* ((content-type (plist-get part :content-type))
 	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
+	 (height (plist-get msg :height))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content))
 		       notmuch-show-max-text-part-size)))
 	 (deep (and notmuch-show-depth-limit
 		    (> depth notmuch-show-depth-limit)))
+	 (high (and notmuch-show-height-limit
+		    (> height notmuch-show-height-limit)))
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (and (or deep long
+	 (button (and (or deep long high
 			  (funcall notmuch-show-insert-header-p-function part hide))
 		      (notmuch-show-insert-part-header
 		       nth mime-type
@@ -1058,6 +1086,7 @@ is t, hide the part initially and show the button."
 	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
 			     (and deep button)
+			     (and high button)
 			     (and long button))))
 	 (content-beg (point)))
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
@@ -1201,6 +1230,7 @@ is t, hide the part initially and show the button."
 	(replies (cadr tree)))
     ;; We test whether there is a message or just some replies.
     (when msg
+      (notmuch-show--mark-height tree)
       (notmuch-show-insert-msg msg depth))
     (notmuch-show-insert-thread replies (1+ depth))))
 

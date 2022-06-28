@@ -100,6 +100,26 @@ test_emacs '(let ((notmuch-show-depth-limit -1))
 	(test-visible-output))'
 test_expect_equal_file $EXPECTED/notmuch-show-depth OUTPUT
 
+
+test_begin_subtest "Hide bodies of messages by height"
+test_emacs '(let ((notmuch-show-height-limit -1))
+	(notmuch-search "thread:{id:87ocn0qh6d.fsf@yoom.home.cworth.org}")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+# folding all messages by height or depth should look the same
+test_expect_equal_file $EXPECTED/notmuch-show-depth OUTPUT
+
+test_begin_subtest "Hide bodies of messages; show only leaves."
+test_emacs '(let ((notmuch-show-height-limit 0))
+	(notmuch-search "thread:{id:87ocn0qh6d.fsf@yoom.home.cworth.org}")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file $EXPECTED/notmuch-show-height-0 OUTPUT
+
 test_begin_subtest "Hide bodies of messages (depth > 1)"
 test_emacs '(let ((notmuch-show-depth-limit 1))
 	(notmuch-search "thread:{id:87ocn0qh6d.fsf@yoom.home.cworth.org}")
