@@ -266,7 +266,7 @@ pressing RET after positioning the cursor on a hidden part.
 ``?``
     Display full set of key bindings
 
-Display of messages can be controlled by the following variables
+Display of messages can be controlled by the following variables; see also :ref:`show-large`.
 
 :index:`notmuch-message-headers`
        |docstring::notmuch-message-headers|
@@ -276,15 +276,6 @@ Display of messages can be controlled by the following variables
 
 :index:`notmuch-show-header-line`
        |docstring::notmuch-show-header-line|
-
-:index:`notmuch-show-depth-limit`
-       |docstring::notmuch-show-depth-limit|
-
-:index:`notmuch-show-height-limit`
-       |docstring::notmuch-show-height-limit|
-
-:index:`notmuch-show-max-text-part-size`
-       |docstring::notmuch-show-max-text-part-size|
 
 :index:`notmuch-multipart/alternative-discouraged`
 
@@ -306,6 +297,36 @@ Display of messages can be controlled by the following variables
             (list "text/plain"))
            (t
             (list "text/html" "multipart/related")))))
+
+.. _show-large:
+
+Dealing with large messages and threads
+---------------------------------------
+
+If you are finding :ref:`notmuch-show` is annoyingly slow displaying
+large messages, you can customize
+:index:`notmuch-show-max-text-part-size`.  If you want to speed up the
+display of large threads (with or without large messages), there are
+several options.  First, you can display the same query in one of the
+other modes. :ref:`notmuch-unthreaded` is the most robust for
+extremely large queries, but :ref:`notmuch-tree` is also be faster
+than :ref:`notmuch-show` in general, since it only renders a single
+message a time. If you prefer to stay with the rendered thread
+("conversation") view of :ref:`notmuch-show`, you can customize the
+variables :index:`notmuch-show-depth-limit`,
+:index:`notmuch-show-height-limit` and
+:index:`notmuch-show-max-text-part-size` to limit the amount of
+rendering done initially. Note that these limits are implicitly
+*OR*-ed together, and combinations might have surprising effects.
+
+:index:`notmuch-show-depth-limit`
+       |docstring::notmuch-show-depth-limit|
+
+:index:`notmuch-show-height-limit`
+       |docstring::notmuch-show-height-limit|
+
+:index:`notmuch-show-max-text-part-size`
+       |docstring::notmuch-show-max-text-part-size|
 
 .. _show-copy:
 
