@@ -1,6 +1,8 @@
-=============
-notmuch-emacs
-=============
+.. _notmuch-emacs:
+
+==========================
+Emacs Frontend for Notmuch
+==========================
 
 About this Manual
 =================
