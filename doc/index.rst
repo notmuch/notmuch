@@ -13,9 +13,8 @@ Content
    notmuch-emacs
    python-bindings
    
-Indices and tables
-==================
+Index and search
+-----------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
