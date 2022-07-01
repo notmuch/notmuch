@@ -673,6 +673,7 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
+		      int duplicate,
 		      bool output_body,
 		      bool include_html)
 {
@@ -684,10 +685,13 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 	format_message_sprinter (sp, node->envelope_file);
 
+	sp->map_key (sp, "duplicate");
+	sp->integer (sp, duplicate > 0 ? duplicate : 1);
+
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), true, include_html);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), -1, true, include_html);
 	    sp->end (sp);
 	}
 
@@ -851,7 +855,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), true, include_html);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), -1, true, include_html);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -865,7 +869,8 @@ format_part_sprinter_entry (const void *ctx, sprinter_t *sp,
 			    mime_node_t *node, unused (int indent),
 			    const notmuch_show_params_t *params)
 {
-    format_part_sprinter (ctx, sp, node, params->output_body, params->include_html);
+    format_part_sprinter (ctx, sp, node, params->duplicate, params->output_body,
+			  params->include_html);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -1019,7 +1024,7 @@ show_message (void *ctx,
 	session_key_count_error = notmuch_message_count_properties (message, "session-key",
 								    &session_keys);
 
-    status = mime_node_open (local, message, &(params->crypto), &root);
+    status = mime_node_open (local, message, params->duplicate, &(params->crypto), &root);
     if (status)
 	goto DONE;
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));

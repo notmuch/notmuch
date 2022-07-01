@@ -663,7 +663,7 @@ do_reply (notmuch_database_t *notmuch,
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
 
-	if (mime_node_open (notmuch, message, &params->crypto, &node))
+	if (mime_node_open (notmuch, message, -1, &params->crypto, &node))
 	    return 1;
 
 	reply = create_reply_message (notmuch, message,
@@ -683,7 +683,7 @@ do_reply (notmuch_database_t *notmuch,
 
 	    /* Start the original */
 	    sp->map_key (sp, "original");
-	    format_part_sprinter (notmuch, sp, node, true, false);
+	    format_part_sprinter (notmuch, sp, node, -1, true, false);
 
 	    /* End */
 	    sp->end (sp);

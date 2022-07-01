@@ -49,7 +49,7 @@ output=$(notmuch show --format=json "id:$id")
 filename=$(notmuch search --output=files "id:$id")
 # Get length of README after base64-encoding, minus additional newline.
 attachment_length=$(( $(base64 $NOTMUCH_SRCDIR/test/README | wc -c) - 1 ))
-test_expect_equal_json "$output" "[[[{\"id\": \"$id\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"$filename\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\"], \"headers\": {\"Subject\": \"$subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"test_suite@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"multipart/mixed\", \"content\": [{\"id\": 2, \"content-type\": \"text/plain\", \"content\": \"This is a test message with inline attachment with a filename\"}, {\"id\": 3, \"content-type\": \"application/octet-stream\", \"content-length\": $attachment_length, \"content-transfer-encoding\": \"base64\", \"content-disposition\": \"inline\", \"filename\": \"README\"}]}]}, []]]]"
+test_expect_equal_json "$output" "[[[{\"id\": \"$id\", \"duplicate\": 1, \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"$filename\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\"], \"headers\": {\"Subject\": \"$subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"test_suite@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"multipart/mixed\", \"content\": [{\"id\": 2, \"content-type\": \"text/plain\", \"content\": \"This is a test message with inline attachment with a filename\"}, {\"id\": 3, \"content-type\": \"application/octet-stream\", \"content-length\": $attachment_length, \"content-transfer-encoding\": \"base64\", \"content-disposition\": \"inline\", \"filename\": \"README\"}]}]}, []]]]"
 
 test_begin_subtest "Search message: json, utf-8"
 add_message "[subject]=\"json-search-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-search-méssage\""
@@ -97,6 +97,7 @@ cat <<EOF > EXPECTED
         [
             {
                 "date_relative": "2001-01-05",
+		"duplicate": 1,
                 "excluded": false,
                 "filename": [
                     "${MAIL_DIR}/copy1",
@@ -132,6 +133,7 @@ cat <<EOF > EXPECTED
         [
             {
                 "date_relative": "2001-01-05",
+		"duplicate": 1,
                 "excluded": false,
                 "filename": "${MAIL_DIR}/copy1",
                 "headers": {
