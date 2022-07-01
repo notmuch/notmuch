@@ -1,0 +1,43 @@
+From: David Bremner <bremner@debian.org>
+To: Samuel Bronson <naesten@gmail.com>, 695159@bugs.debian.org, Debian Bug Tracking System <submit@bugs.debian.org>
+Subject: Re: Bug#695159: debian-el: Shouldn't put downloaded bugs loose in ~/
+In-Reply-To: <87vcch7hxy.fsf@naesten.dyndns.org>
+References: <87vcch7hxy.fsf@naesten.dyndns.org>
+Date: Thu, 25 Oct 2018 10:41:38 -0300
+Message-ID: <87r2geywh9.fsf@tethera.net>
+MIME-Version: 1.0
+Content-Type: text/plain
+
+
+Control: severity -1 minor
+Control: tag -1 moreinfo
+
+Samuel Bronson <naesten@gmail.com> writes:
+
+> Package: debian-el
+> Version: 35.2+nmu1
+> Severity: normal
+> File: /usr/share/emacs/site-lisp/debian-el/debian-bug.el
+>
+> Dear Maintainer,
+>
+> After being mildly annoyed with this for ages, it finally occurred to me
+> to file a bug about it:
+>
+> It's rather rude of `getdebian-bug-get-bug-as-email' to default to
+> sticking downloaded mbox files loose in ~/, isn't it?
+>
+> (And might it not make sense to try and use the same files as the bts(1)
+> command from the devscripts package?)
+>
+
+Hi Samuel
+
+There is already a variable "debian-bug-download-directory" which can be
+customized. Is there an obviously better default? I guess we could put
+things in /tmp by default, with a minor privacy leak on multiuser
+systems.
+
+d
+
+# body 1
