@@ -555,7 +555,7 @@ message at DEPTH in the current thread."
      (if (> file-count 1)
 	 (let ((txt (format "%d/%d\n" duplicate file-count)))
 	   (concat
-	    (notmuch-show-spaces-n (- (window-width) (+ (current-column) (length txt))))
+	    (notmuch-show-spaces-n (max 0 (- (window-width) (+ (current-column) (length txt)))))
 	    txt))
        "\n"))
     (overlay-put (make-overlay start (point))
