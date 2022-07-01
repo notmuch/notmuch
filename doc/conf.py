@@ -218,4 +218,5 @@ def setup(app):
     # define nmconfig role and directive for config items.
     app.add_object_type('nmconfig','nmconfig',
                         indextemplate='pair: configuration item; %s',
-                        ref_nodeclass=docutils.nodes.generated)
+                        ref_nodeclass=docutils.nodes.generated,
+                        objname='config item' )
