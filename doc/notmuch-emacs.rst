@@ -50,16 +50,20 @@ a mouse or by positioning the cursor and pressing ``<return>``
 You can change the overall appearance of the notmuch-hello screen by
 customizing the variables
 
-:index:`notmuch-hello-sections`
+.. emacsvar:: notmuch-hello-sections
+
        |docstring::notmuch-hello-sections|
 
-:index:`notmuch-hello-thousands-separator`
+.. emacsvar:: notmuch-hello-thousands-separator
+
        |docstring::notmuch-hello-thousands-separator|
 
-:index:`notmuch-show-logo`
+.. emacsvar:: notmuch-show-logo
+
        |docstring::notmuch-show-logo|
 
-:index:`!notmuch-column-control`
+.. emacsvar:: notmuch-column-control
+
     Controls the number of columns for saved searches/tags in notmuch view.
 
     This variable has three potential types of values:
@@ -137,17 +141,16 @@ The saved searches default to various common searches such as
 ``tag:inbox`` to access the inbox and ``tag:unread`` to access all
 unread mail, but there are several options for customization:
 
-:index:`notmuch-saved-searches`
+.. emacsvar:: notmuch-saved-searches
+
     The list of saved searches, including names, queries, and
     additional per-query options.
 
-:index:`notmuch-saved-search-sort-function`
+.. emacsvar:: notmuch-saved-search-sort-function
+
     This variable controls how saved searches should be sorted. A value
     of ``nil`` displays the saved searches in the order they are stored
     in ‘notmuch-saved-searches’.
-
-:index:`notmuch-column-control`
-    Controls the number of columns for displaying saved-searches/tags
 
 Search Box
 ----------
@@ -155,7 +158,11 @@ Search Box
 The search box lets the user enter a Notmuch query. See section
 “Description” in Notmuch Query Syntax, for more info on Notmuch query
 syntax. A history of recent searches is also displayed by default. The
-latter is controlled by the variable :index:`notmuch-hello-recent-searches-max`.
+latter is controlled by the variable `notmuch-hello-recent-searches-max`.
+
+.. emacsvar:: notmuch-hello-recent-searches-max
+
+              |docstring::notmuch-hello-recent-searches-max|
 
 Known Tags
 ----------
@@ -164,15 +171,14 @@ One special kind of saved search provided by default is for each
 individual tag defined in the database. This can be controlled via the
 following variables.
 
-:index:`notmuch-hello-tag-list-make-query`
+.. emacsvar:: notmuch-hello-tag-list-make-query
+
     Control how to construct a search (“virtual folder”) from a given
     tag.
 
-:index:`notmuch-hello-hide-tags`
-    Which tags not to display at all.
+.. emacsvar:: notmuch-hello-hide-tags
 
-:index:`notmuch-column-control`
-    Controls the number of columns for displaying saved-searches/tags
+    Which tags not to display at all.
 
 .. _notmuch-search:
 
@@ -209,20 +215,24 @@ menu of results that the user can explore further by pressing
 The presentation of results can be controlled by the following
 variables.
 
-:index:`notmuch-search-result-format`
+.. emacsvar:: notmuch-search-result-format
+
     Control how each thread of messages is presented in the
     ``notmuch-show-mode`` buffer
 
-:index:`notmuch-search-oldest-first`
+.. emacsvar:: notmuch-search-oldest-first
+
     Display the oldest threads at the top of the buffer
 
 It is also possible to customize how the name of buffers containing
 search results is formatted using the following variables:
 
-:index:`notmuch-search-buffer-name-format`
+.. emacsvar:: notmuch-search-buffer-name-format
+
        |docstring::notmuch-search-buffer-name-format|
 
-:index:`notmuch-saved-search-buffer-name-format`
+.. emacsvar:: notmuch-saved-search-buffer-name-format
+
        |docstring::notmuch-saved-search-buffer-name-format|
 
 
@@ -270,16 +280,19 @@ pressing RET after positioning the cursor on a hidden part.
 
 Display of messages can be controlled by the following variables; see also :ref:`show-large`.
 
-:index:`notmuch-message-headers`
+.. emacsvar:: notmuch-message-headers
+
        |docstring::notmuch-message-headers|
 
-:index:`notmuch-message-headers-visible`
+.. emacsvar:: notmuch-message-headers-visible
+
        |docstring::notmuch-message-headers-visible|
 
-:index:`notmuch-show-header-line`
+.. emacsvar:: notmuch-show-header-line
+
        |docstring::notmuch-show-header-line|
 
-:index:`notmuch-multipart/alternative-discouraged`
+.. emacsvar:: notmuch-multipart/alternative-discouraged
 
    Which mime types to hide by default for multipart messages.
 
@@ -307,7 +320,7 @@ Dealing with large messages and threads
 
 If you are finding :ref:`notmuch-show` is annoyingly slow displaying
 large messages, you can customize
-:index:`notmuch-show-max-text-part-size`.  If you want to speed up the
+:emacsvar:`notmuch-show-max-text-part-size`.  If you want to speed up the
 display of large threads (with or without large messages), there are
 several options.  First, you can display the same query in one of the
 other modes. :ref:`notmuch-unthreaded` is the most robust for
@@ -315,19 +328,22 @@ extremely large queries, but :ref:`notmuch-tree` is also be faster
 than :ref:`notmuch-show` in general, since it only renders a single
 message a time. If you prefer to stay with the rendered thread
 ("conversation") view of :ref:`notmuch-show`, you can customize the
-variables :index:`notmuch-show-depth-limit`,
-:index:`notmuch-show-height-limit` and
-:index:`notmuch-show-max-text-part-size` to limit the amount of
+variables :emacsvar:`notmuch-show-depth-limit`,
+:emacsvar:`notmuch-show-height-limit` and
+:emacsvar:`notmuch-show-max-text-part-size` to limit the amount of
 rendering done initially. Note that these limits are implicitly
 *OR*-ed together, and combinations might have surprising effects.
 
-:index:`notmuch-show-depth-limit`
+.. emacsvar:: notmuch-show-depth-limit
+
        |docstring::notmuch-show-depth-limit|
 
-:index:`notmuch-show-height-limit`
+.. emacsvar:: notmuch-show-height-limit
+
        |docstring::notmuch-show-height-limit|
 
-:index:`notmuch-show-max-text-part-size`
+.. emacsvar:: notmuch-show-max-text-part-size
+
        |docstring::notmuch-show-max-text-part-size|
 
 .. _show-copy:
@@ -476,7 +492,7 @@ prefix (:kbd:`C-u k`), notmuch displays a menu of the reverses of the
 operations specified in ``notmuch-tagging-keys``; i.e. each
 ``+tag`` is replaced by ``-tag`` and vice versa.
 
-:index:`notmuch-tagging-keys`
+.. emacsvar:: notmuch-tagging-keys
 
   |docstring::notmuch-tagging-keys|
 
@@ -488,17 +504,18 @@ notmuch-tag-undo
 Each notmuch buffer supporting tagging operations (i.e buffers in
 :any:`notmuch-show`, :any:`notmuch-search`, :any:`notmuch-tree`, and
 :any:`notmuch-unthreaded` mode) keeps a local stack of tagging
-operations. These can be undone via ``notmuch-tag-undo``. By default
+operations. These can be undone via :emacscmd:`notmuch-tag-undo`. By default
 this is bound to the usual Emacs keys for undo.
 
-:index:`notmuch-tag-undo`
+.. emacscmd:: notmuch-tag-undo
 
    |docstring::notmuch-tag-undo|
 
 Buffer navigation
 =================
 
-:index:`notmuch-cycle-notmuch-buffers`
+.. emacscmd:: notmuch-cycle-notmuch-buffers
+
    |docstring::notmuch-cycle-notmuch-buffers|
 
 Configuration
@@ -509,23 +526,25 @@ Configuration
 Importing Mail
 --------------
 
-:index:`notmuch-poll`
+.. emacscmd:: notmuch-poll
+
    |docstring::notmuch-poll|
 
-:index:`notmuch-poll-script`
+.. emacsvar:: notmuch-poll-script
+
    |docstring::notmuch-poll-script|
 
 Sending Mail
 ------------
 
-:index:`mail-user-agent`
+.. emacsvar:: mail-user-agent
 
        Emacs consults the variable :code:`mail-user-agent` to choose a mail
        sending package for commands like :code:`report-emacs-bug` and
        :code:`compose-mail`.  To use ``notmuch`` for this, customize this
        variable to the symbol :code:`notmuch-user-agent`.
 
-:index:`message-dont-reply-to-names`
+.. emacsvar:: message-dont-reply-to-names
 
        When composing mail replies, Emacs's message mode uses the
        variable :code:`message-dont-reply-to-names` to exclude
