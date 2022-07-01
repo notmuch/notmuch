@@ -24,6 +24,21 @@
 #include "zlib-extra.h"
 
 static const char *
+_get_filename (notmuch_message_t *message, int index)
+{
+    notmuch_filenames_t *filenames = notmuch_message_get_filenames (message);
+    int i = 1;
+
+    for (;
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames), i++) {
+	if (i >= index)
+	    return notmuch_filenames_get (filenames);
+    }
+    return NULL;
+}
+
+static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
@@ -925,7 +940,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	char buf[4096];
 	notmuch_status_t ret = NOTMUCH_STATUS_FILE_ERROR;
 
-	filename = notmuch_message_get_filename (node->envelope_file);
+	filename = _get_filename (node->envelope_file, params->duplicate);
 	if (filename == NULL) {
 	    fprintf (stderr, "Error: Cannot get message filename.\n");
 	    goto DONE;
@@ -1266,6 +1281,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     sprinter_t *sprinter;
     notmuch_show_params_t params = {
 	.part = -1,
+	.duplicate = 0,
 	.omit_excluded = true,
 	.output_body = true,
 	.crypto = { .decrypt = NOTMUCH_DECRYPT_AUTO },
@@ -1306,6 +1322,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
+	{ .opt_int = &params.duplicate, .name = "duplicate" },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -1323,6 +1340,9 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 
     /* specifying a part implies single message display */
     single_message = params.part >= 0;
+
+    /* specifying a duplicate also implies single message display */
+    single_message = single_message || (params.duplicate > 0);
 
     if (format == NOTMUCH_FORMAT_NOT_SPECIFIED) {
 	/* if part was requested and format was not specified, use format=raw */

@@ -75,6 +75,7 @@ typedef struct notmuch_show_params {
     bool entire_thread;
     bool omit_excluded;
     bool output_body;
+    int duplicate;
     int part;
     _notmuch_crypto_t crypto;
     bool include_html;
