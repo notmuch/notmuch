@@ -67,6 +67,8 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 html_theme = 'default'
 
+# prevent generation of python module index
+html_domain_indices=[]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
