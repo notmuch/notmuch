@@ -527,6 +527,20 @@ notmuch_json_show_sanitize () {
 	-e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
 }
 
+notmuch_sexp_show_sanitize () {
+    sed \
+	-e 's|:id "[^"]*"|:id "XXXXX"|g' \
+	-e 's|:Date "Sat, 01 Jan 2000 [^"]*0000"|:Date "GENERATED_DATE"|g' \
+	-e 's|:filename "signature.asc"||g' \
+	-e 's|:filename ("/[^"]*")|:filename ("YYYYY")|g' \
+	-e 's|:timestamp 9........|:timestamp 42|g' \
+	-e 's|:content-length [1-9][0-9]*|:content-length "NONZERO"|g'
+}
+
+notmuch_sexp_search_sanitize () {
+    sed -e 's|:thread "[^"]*"|:thread "XXX"|'
+}
+
 notmuch_emacs_error_sanitize () {
     local command
     command=$1
