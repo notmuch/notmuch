@@ -341,7 +341,7 @@ test_expect_equal_file EXPECTED OUTPUT
 add_email_corpus duplicate
 
 ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
-test_begin_subtest "duplicate=3"
+test_begin_subtest "duplicate=3, subject"
 test_emacs "(notmuch-show \"id:${ID3}\")
 	   (notmuch-show-choose-duplicate 3)
 	   (test-visible-output \"OUTPUT\")"
@@ -367,4 +367,10 @@ cat <<EOF > EXPECTED
 (error Duplicate 1000 out of range [1,5])
 EOF
 test_expect_equal_file EXPECTED MESSAGES
+test_begin_subtest "duplicate=4"
+test_emacs "(notmuch-show \"id:${ID3}\")
+	   (notmuch-show-choose-duplicate 4)
+	   (test-visible-output \"OUTPUT\")"
+test_expect_equal_file_nonempty $EXPECTED/notmuch-show-duplicate-4 OUTPUT
+
 test_done

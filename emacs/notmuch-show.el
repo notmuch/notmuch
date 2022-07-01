@@ -530,7 +530,7 @@ Return unchanged ADDRESS if parsing fails."
 	  (plist-put msg :height height)
 	  height))))
 
-(defun notmuch-show-insert-headerline (headers date tags depth)
+(defun notmuch-show-insert-headerline (headers date tags depth duplicate file-count)
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
   (let ((start (point))
@@ -550,7 +550,14 @@ message at DEPTH in the current thread."
 	    date
 	    ") ("
 	    (notmuch-tag-format-tags tags tags)
-	    ")\n")
+	    ")")
+    (insert
+     (if (> file-count 1)
+	 (let ((txt (format "%d/%d\n" duplicate file-count)))
+	   (concat
+	    (notmuch-show-spaces-n (- (window-width) (+ (current-column) (length txt))))
+	    txt))
+       "\n"))
     (overlay-put (make-overlay start (point))
 		 'face 'notmuch-message-summary-face)))
 
@@ -1154,6 +1161,8 @@ is t, hide the part initially and show the button."
 (defun notmuch-show-insert-msg (msg depth)
   "Insert the message MSG at depth DEPTH in the current thread."
   (let* ((headers (plist-get msg :headers))
+	 (duplicate (or (plist-get msg :duplicate) 0))
+	 (files (length (plist-get msg :filename)))
 	 ;; Indentation causes the buffer offset of the start/end
 	 ;; points to move, so we must use markers.
 	 message-start message-end
@@ -1165,7 +1174,7 @@ is t, hide the part initially and show the button."
 				    (or (and notmuch-show-relative-dates
 					     (plist-get msg :date_relative))
 					(plist-get headers :Date))
-				    (plist-get msg :tags) depth)
+				    (plist-get msg :tags) depth duplicate files)
     (setq content-start (point-marker))
     ;; Set `headers-start' to point after the 'Subject:' header to be
     ;; compatible with the existing implementation. This just sets it
