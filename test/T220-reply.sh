@@ -298,7 +298,8 @@ On Tue, 05 Jan 2010 15:43:56 -0000, ☃ <snowman@example.com> wrote:
 OK"
 
 test_begin_subtest "Reply with RFC 2047-encoded headers (JSON)"
-output=$(echo '{"answer":' && notmuch reply --format=json id:${gen_msg_id} 2>&1 && echo ', "success": "OK"}')
+output=$(echo '{"answer":' && notmuch reply --format=json id:${gen_msg_id} 2>&1 | notmuch_json_show_sanitize \
+	 && echo ', "success": "OK"}')
 test_expect_equal_json "$output" '
 {  "answer": {
     "original": {
@@ -312,14 +313,14 @@ test_expect_equal_json "$output" '
         "crypto": {},
         "date_relative": "2010-01-05",
         "excluded": false,
-        "filename": ["'${MAIL_DIR}'/msg-015"],
+        "filename": ["YYYYY"],
         "headers": {
             "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
             "From": "\u2603 <snowman@example.com>",
             "Subject": "\u00e0\u00df\u00e7",
             "To": "Notmuch Test Suite <test_suite@notmuchmail.org>"
         },
-        "id": "'${gen_msg_id}'",
+        "id": "XXXXX",
         "match": false,
         "tags": [
             "inbox",
