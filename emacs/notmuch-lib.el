@@ -1029,7 +1029,7 @@ status."
 
 (defvar-local notmuch-show-process-crypto nil)
 
-(defun notmuch--run-show (search-terms)
+(defun notmuch--run-show (search-terms &optional duplicate)
   "Return a list of threads of messages matching SEARCH-TERMS.
 
 A thread is a forest or list of trees. A tree is a two element
@@ -1038,6 +1038,8 @@ is a possibly empty forest of replies."
   (let ((args '("show" "--format=sexp" "--format-version=5")))
     (when notmuch-show-process-crypto
       (setq args (append args '("--decrypt=true"))))
+    (when duplicate
+      (setq args (append args (list (format "--duplicate=%d" duplicate)))))
     (setq args (append args search-terms))
     (apply #'notmuch-call-notmuch-sexp args)))
 

@@ -1127,6 +1127,30 @@ is t, hide the part initially and show the button."
 (defvar notmuch-show-previous-subject "")
 (make-variable-buffer-local 'notmuch-show-previous-subject)
 
+(defun notmuch-show-choose-duplicate (duplicate)
+  (interactive "Nduplicate: ")
+  (let ((count (length (notmuch-show-get-prop :filename))))
+    (when (or (> duplicate count)
+	      (< duplicate 1))
+      (error "Duplicate %d out of range [1,%d]" duplicate count)))
+  (notmuch-show-move-to-message-top)
+  (save-excursion
+    (let* ((extent (notmuch-show-message-extent))
+	   (id (notmuch-show-get-message-id))
+	   (depth (notmuch-show-get-depth))
+	   (inhibit-read-only t)
+	   (new-msg (notmuch--run-show (list id) duplicate)))
+      ;; clean up existing overlays to avoid extending them.
+      (dolist (o (overlays-in (car extent) (cdr extent)))
+	(delete-overlay o))
+      ;; pretend insertion is happening at end of buffer
+      (narrow-to-region (point-min) (car extent))
+      ;; Insert first, then delete, to avoid marker for start of next
+      ;; message being in same place as the start of this one.
+      (notmuch-show-insert-msg new-msg depth)
+      (widen)
+      (delete-region (point) (cdr extent)))))
+
 (defun notmuch-show-insert-msg (msg depth)
   "Insert the message MSG at depth DEPTH in the current thread."
   (let* ((headers (plist-get msg :headers))
@@ -1583,6 +1607,7 @@ reset based on the original query."
     (define-key map "#" 'notmuch-show-print-message)
     (define-key map "!" 'notmuch-show-toggle-elide-non-matching)
     (define-key map "$" 'notmuch-show-toggle-process-crypto)
+    (define-key map "%" 'notmuch-show-choose-duplicate)
     (define-key map "<" 'notmuch-show-toggle-thread-indentation)
     (define-key map "t" 'toggle-truncate-lines)
     (define-key map "." 'notmuch-show-part-map)

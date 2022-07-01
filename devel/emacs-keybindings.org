@@ -40,6 +40,7 @@
 | Z            | notmuch-tree-from-search-current-query | notmuch-tree-from-show-current-query                  |                                         |
 | =!=          |                                        | notmuch-show-toggle-elide-non-matching                |                                         |
 | =#=          |                                        | notmuch-show-print-message                            |                                         |
+| =%=          |                                        | notmuch-show-replace-msg                              |                                         |
 | =$=          |                                        | notmuch-show-toggle-process-crypto                    |                                         |
 | =*=          | notmuch-search-tag-all                 | notmuch-show-tag-all                                  | notmuch-tree-tag-thread                 |
 | +            | notmuch-search-add-tag                 | notmuch-show-add-tag                                  | notmuch-tree-add-tag                    |

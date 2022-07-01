@@ -200,4 +200,18 @@ test_emacs '(test-log-error
 	        (notmuch-tree "*")))'
 test_expect_equal "$(cat MESSAGES)" "COMPLETE"
 
+add_email_corpus duplicate
+
+ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
+test_begin_subtest "duplicate=3"
+test_emacs "(notmuch-tree \"id:${ID3}\")
+	   (notmuch-test-wait)
+	   (notmuch-tree-show-message t)
+	   (notmuch-show-choose-duplicate 3)
+	   (test-visible-output \"OUTPUT\")"
+output=$(grep "Subject:" OUTPUT)
+file=$(notmuch search --output=files id:${ID3} | head -n 3 | tail -n 1)
+subject=$(grep '^Subject:' $file)
+test_expect_equal "$output" "$subject"
+
 test_done

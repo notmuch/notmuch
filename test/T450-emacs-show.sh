@@ -338,4 +338,33 @@ when we detect the word "attachment" and there's no attach? :p
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+add_email_corpus duplicate
+
+ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
+test_begin_subtest "duplicate=3"
+test_emacs "(notmuch-show \"id:${ID3}\")
+	   (notmuch-show-choose-duplicate 3)
+	   (test-visible-output \"OUTPUT\")"
+output=$(grep "Subject:" OUTPUT)
+file=$(notmuch search --output=files id:${ID3} | head -n 3 | tail -n 1)
+subject=$(grep '^Subject:' $file)
+test_expect_equal "$output" "$subject"
+
+test_begin_subtest "duplicate=0"
+test_emacs "(test-log-error
+	      (notmuch-show \"id:${ID3}\")
+	      (notmuch-show-choose-duplicate 0))"
+cat <<EOF > EXPECTED
+(error Duplicate 0 out of range [1,5])
+EOF
+test_expect_equal_file EXPECTED MESSAGES
+
+test_begin_subtest "duplicate=1000"
+test_emacs "(test-log-error
+	      (notmuch-show \"id:${ID3}\")
+	      (notmuch-show-choose-duplicate 1000))"
+cat <<EOF > EXPECTED
+(error Duplicate 1000 out of range [1,5])
+EOF
+test_expect_equal_file EXPECTED MESSAGES
 test_done
