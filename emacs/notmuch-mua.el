@@ -237,11 +237,12 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 ;;; Mua reply
 
-(defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=sexp" "--format-version=5"))
-	(process-crypto notmuch-show-process-crypto)
-	reply
-	original)
+(defun notmuch-mua-reply (query-string &optional sender reply-all duplicate)
+  (let* ((duparg (and duplicate (list (format "--duplicate=%d" duplicate))))
+	 (args `("reply" "--format=sexp" "--format-version=5" ,@duparg))
+	 (process-crypto notmuch-show-process-crypto)
+	 reply
+	 original)
     (when process-crypto
       (setq args (append args '("--decrypt=true"))))
     (if reply-all
@@ -540,12 +541,13 @@ the From: address."
       (message-hide-headers)
       (set-buffer-modified-p nil))))
 
-(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
+(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all duplicate)
   "Compose a reply to the message identified by QUERY-STRING.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
-will be addressed to all recipients of the source message."
+will be addressed to all recipients of the source message.  If
+DUPLICATE is non-nil, based the reply on that duplicate file"
   ;; `select-active-regions' is t by default. The reply insertion code
   ;; sets the region to the quoted message to make it easy to delete
   ;; (kill-region or C-w). These two things combine to put the quoted
@@ -560,7 +562,7 @@ will be addressed to all recipients of the source message."
   (let ((sender (and prompt-for-sender
 		     (notmuch-mua-prompt-for-sender)))
 	(select-active-regions nil))
-    (notmuch-mua-reply query-string sender reply-all)
+    (notmuch-mua-reply query-string sender reply-all duplicate)
     (deactivate-mark)))
 
 ;;; Checks

@@ -2020,13 +2020,15 @@ any effects from previous calls to
 (defun notmuch-show-reply (&optional prompt-for-sender)
   "Reply to the sender and all recipients of the current message."
   (interactive "P")
-  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t))
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t
+			 (notmuch-show-get-prop :duplicate)))
 
 (put 'notmuch-show-reply-sender 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply-sender (&optional prompt-for-sender)
   "Reply to the sender of the current message."
   (interactive "P")
-  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil))
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil
+			 (notmuch-show-get-prop :duplicate)))
 
 (put 'notmuch-show-forward-message 'notmuch-prefix-doc
      "... and prompt for sender")
