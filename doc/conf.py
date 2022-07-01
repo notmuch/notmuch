@@ -127,6 +127,10 @@ man_pages = [
      u'manage notmuch tags with git',
      [notmuch_authors], 1),
 
+    ('man1/notmuch-git', 'nmbug',
+     u'manage notmuch bugs with git',
+     [notmuch_authors], 1),
+
     ('man5/notmuch-hooks', 'notmuch-hooks',
      u'hooks for notmuch',
      [notmuch_authors], 5),
@@ -162,6 +166,10 @@ man_pages = [
     ('man7/notmuch-search-terms', 'notmuch-search-terms',
      u'syntax for notmuch queries',
      [notmuch_authors], 7),
+
+    ('man1/notmuch', 'notmuch-setup',
+     u'getting started with notmuch',
+     [notmuch_authors], 1),
 
     ('man7/notmuch-sexp-queries', 'notmuch-sexp-queries',
      u's-expression syntax for notmuch queries',
