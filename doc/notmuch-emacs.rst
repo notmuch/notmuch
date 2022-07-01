@@ -94,6 +94,9 @@ customizing the variables
     - if you don't want to worry about all of this nonsense, leave
       this set to `t`.
 
+.. emacsvar:: notmuch-show-empty-saved-searches
+
+   |docstring::notmuch-show-empty-saved-searches|
 
 notmuch-hello key bindings
 --------------------------
