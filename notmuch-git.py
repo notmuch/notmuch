@@ -738,6 +738,7 @@ class PrivateIndex:
         self.lastmod = None
         self.checksum = None
         self._load_cache_file()
+        self.file_tree = None
         self._index_tags()
 
     def __enter__(self):
@@ -762,6 +763,43 @@ class PrivateIndex:
         except _json.JSONDecodeError:
             _LOG.error("Error decoding cache")
             _sys.exit(1)
+
+    @timed
+    def _read_file_tree(self):
+        self.file_tree = {}
+
+        with _git(
+                args=['ls-files', 'tags'],
+                additional_env={'GIT_INDEX_FILE': self.index_path},
+                stdout=_subprocess.PIPE) as git:
+            for file in git.stdout:
+                dir=_os.path.dirname(file)
+                tag=_os.path.basename(file).rstrip()
+                if dir not in self.file_tree:
+                    self.file_tree[dir]=[tag]
+                else:
+                    self.file_tree[dir].append(tag)
+
+
+    def _clear_tags_for_message(self, id):
+        """
+        Clear any existing index entries for message 'id'
+
+        Neither 'id' nor the tags in 'tags' should be encoded/escaped.
+        """
+
+        if self.file_tree == None:
+            self._read_file_tree()
+
+        dir = _id_path(id)
+
+        if dir not in self.file_tree:
+            return
+
+        for file in self.file_tree[dir]:
+            line = '0 0000000000000000000000000000000000000000\t{:s}/{:s}\n'.format(dir,file)
+            yield line
+
 
     @timed
     def _index_tags(self):
@@ -798,7 +836,7 @@ class PrivateIndex:
                         if tag.startswith(prefix)]
                     id = _xapian_unquote(string=id)
                     if clear_tags:
-                        for line in _clear_tags_for_message(index=self.index_path, id=id):
+                        for line in self._clear_tags_for_message(id=id):
                             git.stdin.write(line)
                     for line in _index_tags_for_message(
                             id=id, status='A', tags=tags):
@@ -834,24 +872,6 @@ def _read_index_checksum (index_path):
             return binascii.hexlify(f.read(20)).decode('ascii')
     except FileNotFoundError:
         return None
-
-
-def _clear_tags_for_message(index, id):
-    """
-    Clear any existing index entries for message 'id'
-
-    Neither 'id' nor the tags in 'tags' should be encoded/escaped.
-    """
-
-    dir = _id_path(id)
-
-    with _git(
-            args=['ls-files', dir],
-            additional_env={'GIT_INDEX_FILE': index},
-            stdout=_subprocess.PIPE) as git:
-        for file in git.stdout:
-            line = '0 0000000000000000000000000000000000000000\t{:s}\n'.format(file.strip())
-            yield line
 
 def _read_database_lastmod():
     with _spawn(
