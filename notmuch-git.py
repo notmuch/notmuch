@@ -40,7 +40,7 @@ from urllib.parse import quote as _quote
 from urllib.parse import unquote as _unquote
 import json as _json
 
-_LOG = _logging.getLogger('nmbug')
+_LOG = _logging.getLogger('notmuch-git')
 _LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
 
@@ -258,7 +258,7 @@ def get_tags(prefix=None):
 
 def archive(treeish='HEAD', args=()):
     """
-    Dump a tar archive of the current nmbug tag set.
+    Dump a tar archive of the current notmuch-git tag set.
 
     Using 'git archive'.
 
@@ -276,13 +276,13 @@ def archive(treeish='HEAD', args=()):
 
 def clone(repository):
     """
-    Create a local nmbug repository from a remote source.
+    Create a local notmuch-git repository from a remote source.
 
     This wraps 'git clone', adding some options to avoid creating a
     working tree while preserving remote-tracking branches and
     upstreams.
     """
-    with _tempfile.TemporaryDirectory(prefix='nmbug-clone.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-clone.') as workdir:
         _spawn(
             args=[
                 'git', 'clone', '--no-checkout', '--separate-git-dir', NOTMUCH_GIT_DIR,
@@ -452,7 +452,7 @@ def fetch(remote=None):
 
 def init(remote=None):
     """
-    Create an empty nmbug repository.
+    Create an empty notmuch-git repository.
 
     This wraps 'git init' with a few extra steps to support subsequent
     status and commit commands.
@@ -520,9 +520,9 @@ def _insist_committed():
         _LOG.error('\n'.join([
             'Uncommitted changes to {prefix}* tags in notmuch',
             '',
-            "For a summary of changes, run 'nmbug status'",
-            "To save your changes,     run 'nmbug commit' before merging/pull",
-            "To discard your changes,  run 'nmbug checkout'",
+            "For a summary of changes, run 'notmuch-git status'",
+            "To save your changes,     run 'notmuch-git commit' before merging/pull",
+            "To discard your changes,  run 'notmuch-git checkout'",
             ]).format(prefix=TAG_PREFIX))
         _sys.exit(1)
 
@@ -544,7 +544,7 @@ def pull(repository=None, refspecs=None):
         args.append(repository)
     if refspecs:
         args.extend(refspecs)
-    with _tempfile.TemporaryDirectory(prefix='nmbug-pull.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-pull.') as workdir:
         for command in [
                 ['reset', '--hard'],
                 args]:
@@ -562,7 +562,7 @@ def merge(reference='@{upstream}'):
     The default reference is '@{upstream}'.
     """
     _insist_committed()
-    with _tempfile.TemporaryDirectory(prefix='nmbug-merge.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-merge.') as workdir:
         for command in [
                 ['reset', '--hard'],
                 ['merge', reference]]:
@@ -577,8 +577,8 @@ def log(args=()):
     """
     A simple wrapper for 'git log'.
 
-    After running 'nmbug fetch', you can inspect the changes with
-    'nmbug log HEAD..@{upstream}'.
+    After running 'notmuch-git fetch', you can inspect the changes with
+    'notmuch-git log HEAD..@{upstream}'.
     """
     # we don't want output trapping here, because we want the pager.
     args = ['log', '--name-status', '--no-renames'] + list(args)
@@ -587,7 +587,7 @@ def log(args=()):
 
 
 def push(repository=None, refspecs=None):
-    "Push the local nmbug Git state to a remote repository."
+    "Push the local notmuch-git Git state to a remote repository."
     if refspecs and not repository:
         repository = _get_remote()
     args = ['push']
@@ -610,13 +610,13 @@ def status():
 
     * A
 
-      Tag is present in notmuch database, but not committed to nmbug
-      (equivalently, tag has been deleted in nmbug repo, e.g. by a
+      Tag is present in notmuch database, but not committed to notmuch-git
+      (equivalently, tag has been deleted in notmuch-git repo, e.g. by a
       pull, but not restored to notmuch database).
 
     * D
 
-      Tag is present in nmbug repo, but not restored to notmuch
+      Tag is present in notmuch-git repo, but not restored to notmuch
       database (equivalently, tag has been deleted in notmuch).
 
     * U
@@ -624,7 +624,7 @@ def status():
       Message is unknown (missing from local notmuch database).
 
     The second character (if present) represents a difference between
-    local and upstream branches. Typically 'nmbug fetch' needs to be
+    local and upstream branches. Typically 'notmuch-git fetch' needs to be
     run to update this.
 
     * a
@@ -883,15 +883,15 @@ def _unpack_diff_lines(stream):
 
 def _help(parser, command=None):
     """
-    Show help for an nmbug command.
+    Show help for an notmuch-git command.
 
     Because some folks prefer:
 
-      $ nmbug help COMMAND
+      $ notmuch-git help COMMAND
 
     to
 
-      $ nmbug COMMAND --help
+      $ notmuch-git COMMAND --help
     """
     if command:
         parser.parse_args([command, '--help'])
