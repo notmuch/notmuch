@@ -698,6 +698,32 @@ def _is_unmerged(ref='@{upstream}'):
         stdout=_subprocess.PIPE, wait=True)
     return base != fetch_head
 
+class DatabaseCache:
+    def __init__(self):
+        try:
+            from notmuch2 import Database
+            self._notmuch = Database()
+        except ImportError:
+            self._notmuch = None
+        self._known = {}
+
+    def known(self,id):
+        if id in self._known:
+            return self._known[id];
+
+        if self._notmuch:
+            try:
+                _ = self._notmuch.find(id)
+                self._known[id] = True
+            except LookupError:
+                self._known[id] = False
+        else:
+            (_, stdout, stderr) = _spawn(
+                args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            self._known[id] = stdout != None
+        return self._known[id]
 
 @timed
 def get_status():
@@ -705,14 +731,11 @@ def get_status():
         'deleted': {},
         'missing': {},
         }
+    db = DatabaseCache()
     with PrivateIndex(repo=NOTMUCH_GIT_DIR, prefix=TAG_PREFIX) as index:
         maybe_deleted = index.diff(filter='D')
         for id, tags in maybe_deleted.items():
-            (_, stdout, stderr) = _spawn(
-                args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
-                stdout=_subprocess.PIPE,
-                wait=True)
-            if stdout:
+            if db.known(id):
                 status['deleted'][id] = tags
             else:
                 status['missing'][id] = tags
