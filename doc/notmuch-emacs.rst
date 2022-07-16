@@ -220,8 +220,38 @@ variables.
 
 .. emacsvar:: notmuch-search-result-format
 
-    Control how each thread of messages is presented in the
-    ``notmuch-show-mode`` buffer
+   |docstring::notmuch-search-result-format|
+
+   If the car of an element in notmuch-search-result-format is a
+   function, insert the result of calling the function into the buffer.
+
+   This allows a user to generate custom fields in the output of a
+   search result. For example, with the following settings, the first
+   few characters on each line of the search result are used to show
+   information about some significant tags associated with the thread.
+
+   .. code:: lisp
+
+      (defun -notmuch-result-flags (format-string result)
+        (let ((tags-to-letters '(("flagged" . "!")
+                                 ("unread" . "u")
+                                 ("mine" . "m")
+                                 ("sent" . "s")
+                                 ("replied" . "r")))
+              (tags (plist-get result :tags)))
+          (format format-string
+                  (mapconcat (lambda (t2l)
+                               (if (member (car t2l) tags)
+                                   (cdr t2l)
+                                 " "))
+                             tags-to-letters ""))))
+
+      (setq notmuch-search-result-format '((-notmuch-result-flags . "%s ")
+                                           ("date" . "%12s ")
+                                           ("count" . "%9s ")
+                                           ("authors" . "%-30s ")
+                                           ("subject" . "%s ")
+                                           ("tags" . "(%s)")))
 
 .. emacsvar:: notmuch-search-oldest-first
 
