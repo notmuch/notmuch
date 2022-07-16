@@ -90,11 +90,11 @@
     ("tags" . "(%s)"))
   "Search result formatting.
 
-Supported fields are: date, count, authors, subject, tags.
-For example:
-    (setq notmuch-search-result-format
-          \\='((\"authors\" . \"%-40s\")
-            (\"subject\" . \"%s\")))
+List of pairs of (field . format-string).  Supported field
+strings are: \"date\", \"count\", \"authors\", \"subject\",
+\"tags\".  It is also supported to pass a function in place of a
+field name. In this case the function is passed the thread
+object (plist) and format string.
 
 Line breaks are permitted in format strings (though this is
 currently experimental).  Note that a line break at the end of an
@@ -102,7 +102,16 @@ currently experimental).  Note that a line break at the end of an
 place it instead at the beginning of the following field.  To
 enter a line break when setting this variable with setq, use \\n.
 To enter a line break in customize, press \\[quoted-insert] C-j."
-  :type '(alist :key-type string :value-type string)
+  :type '(alist
+	  :key-type
+	  (choice
+	   (const :tag "Date" "date")
+	   (const :tag "Count" "count")
+	   (const :tag "Authors" "authors")
+	   (const :tag "Subject" "subject")
+	   (const :tag "Tags" "tags")
+	   function)
+	  :value-type (string :tag "Format"))
   :group 'notmuch-search)
 
 ;; The name of this variable `notmuch-init-file' is consistent with the
