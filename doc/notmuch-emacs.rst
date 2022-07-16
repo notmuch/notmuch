@@ -253,7 +253,8 @@ variables.
                                            ("subject" . "%s ")
                                            ("tags" . "(%s)")))
 
-   See also :emacsvar:`notmuch-tree-result-format`.
+   See also :emacsvar:`notmuch-tree-result-format` and
+   :emacsvar:`notmuch-unthreaded-result-format`.
 
 .. emacsvar:: notmuch-search-oldest-first
 
@@ -508,7 +509,9 @@ can be controlled by the variable ``notmuch-search-oldest-first``.
                . " %-54s ")
               ("tags" . "(%s)")))
 
-   See also :emacsvar:`notmuch-search-result-format`.
+   See also :emacsvar:`notmuch-search-result-format` and
+   :emacsvar:`notmuch-unthreaded-result-format`.
+
 
 .. _notmuch-unthreaded:
 
@@ -520,6 +523,13 @@ each line corresponds to a single message, but no thread information
 is presented.
 
 Keybindings are the same as :any:`notmuch-tree`.
+
+.. emacsvar:: notmuch-unthreaded-result-format
+
+   |docstring::notmuch-unthreaded-result-format|
+
+   See also :emacsvar:`notmuch-search-result-format` and
+   :emacsvar:`notmuch-tree-result-format`.
 
 Global key bindings
 ===================
