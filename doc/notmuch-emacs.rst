@@ -253,6 +253,8 @@ variables.
                                            ("subject" . "%s ")
                                            ("tags" . "(%s)")))
 
+   See also :emacsvar:`notmuch-tree-result-format`.
+
 .. emacsvar:: notmuch-search-oldest-first
 
     Display the oldest threads at the top of the buffer
@@ -474,6 +476,39 @@ tags.
 
 As is the case with :ref:`notmuch-search`, the presentation of results
 can be controlled by the variable ``notmuch-search-oldest-first``.
+
+.. emacsvar:: notmuch-tree-result-format
+
+   |docstring::notmuch-tree-result-format|
+
+   The following example shows how to optionally display recipients instead
+   of authors for sent mail (assuming the user is named Mustermann).
+
+   .. code:: lisp
+
+      (defun -notmuch-authors-or-to (format-string result)
+        (let* ((headers (plist-get result :headers))
+               (to (plist-get headers :To))
+               (author (plist-get headers :From))
+               (face (if (plist-get result :match)
+                         'notmuch-tree-match-author-face
+                       'notmuch-tree-no-match-author-face)))
+          (propertize
+           (format format-string
+                   (if (string-match "Mustermann" author)
+                       (concat "To:" (notmuch-tree-clean-address to))
+                     author))
+           'face face)))
+
+      (setq notmuch-tree-result-format
+            '(("date" . "%12s  ")
+              (-notmuch-authors-or-to . "%-20.20s")
+              ((("tree" . "%s")
+                ("subject" . "%s"))
+               . " %-54s ")
+              ("tags" . "(%s)")))
+
+   See also :emacsvar:`notmuch-search-result-format`.
 
 .. _notmuch-unthreaded:
 
