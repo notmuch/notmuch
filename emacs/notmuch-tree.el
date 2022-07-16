@@ -142,7 +142,11 @@ Note that the author string should not contain whitespace
     ("tags" . "(%s)"))
   "Result formatting for unthreaded tree view.
 
-Supported fields are: date, authors, subject, tree, tags.
+List of pairs of (field . format-string).  Supported field
+strings are: \"date\", \"authors\", \"subject\", \"tree\",
+\"tags\".  It is also supported to pass a function in place of a
+field-name. In this case the function is passed the thread
+object (plist) and format string.
 
 Tree means the thread tree box graphics. The field may
 also be a list in which case the formatting rules are
@@ -150,14 +154,12 @@ applied recursively and then the output of all the fields
 in the list is inserted according to format-string.
 
 Note that the author string should not contain whitespace
-\(put it in the neighbouring fields instead). For example:
-    (setq notmuch-unthreaded-result-format
-          '((\"authors\" . \"%-40s\")
-            (\"subject\" . \"%s\")))"
-  :type '(alist :key-type (choice string
-				  (alist :key-type string
-					 :value-type string))
-		:value-type string)
+\(put it in the neighbouring fields instead)."
+
+  :type `(alist :key-type (choice ,notmuch-tree--field-names
+				  (alist :key-type ,notmuch-tree--field-names
+					 :value-type (string :tag "Format")))
+		:value-type (string :tag "Format"))
   :group 'notmuch-tree)
 
 (defun notmuch-tree-result-format ()
