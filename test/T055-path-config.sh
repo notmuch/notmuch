@@ -359,9 +359,6 @@ EOF
 	   ;;
    esac
 
-   case $config in
-       split|XDG*)
-   esac
    restore_config
    rm -rf home/.local
    rm -rf home/.config
