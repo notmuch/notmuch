@@ -313,6 +313,12 @@ user.other_email
 user.primary_email
 EOF
    test_expect_equal_file EXPECTED OUTPUT
+
+   test_begin_subtest "create database ($config)"
+   rm -r ${XAPIAN_PATH}
+   notmuch new
+   test_expect_equal "$(xapian-metadata get ${XAPIAN_PATH} version)" 3
+
    case $config in
        XDG*)
 	   test_begin_subtest "Set shadowed config value in database ($config)"
