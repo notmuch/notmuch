@@ -244,6 +244,18 @@ _choose_database_path (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static notmuch_status_t
+_mkdir (const char *path, char **message)
+{
+    if (g_mkdir_with_parents (path, 0755)) {
+	IGNORE_RESULT (asprintf (message, "Error: Cannot create directory %s: %s.\n",
+				 path, strerror (errno)));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+
 static notmuch_database_t *
 _alloc_notmuch (const char *database_path, const char *config_path, const char *profile)
 {
@@ -607,7 +619,6 @@ notmuch_database_create_with_config (const char *database_path,
     const char *notmuch_path = NULL;
     char *message = NULL;
     GKeyFile *key_file = NULL;
-    int err;
 
     _notmuch_init ();
 
@@ -653,15 +664,9 @@ notmuch_database_create_with_config (const char *database_path,
 	    goto DONE;
 	}
 
-	err = mkdir (notmuch_path, 0755);
-	if (err) {
-	    if (errno != EEXIST) {
-		IGNORE_RESULT (asprintf (&message, "Error: Cannot create directory %s: %s.\n",
-					 notmuch_path, strerror (errno)));
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
-	}
+	status = _mkdir (notmuch_path, &message);
+	if (status)
+	    goto DONE;
     }
 
     if (! (notmuch->xapian_path = talloc_asprintf (notmuch, "%s/%s", notmuch_path, "xapian"))) {
