@@ -92,7 +92,20 @@ xdg_config () {
     notmuch --config=${CONFIG_PATH} config set database.path
 }
 
-for config in traditional split XDG XDG+profile symlink home_mail maildir_env; do
+mailroot_only_config () {
+    local dir
+
+    backup_config
+    notmuch config set database.mail_root ${TMP_DIRECTORY}/mail
+    notmuch config set database.path
+    DATABASE_PATH="${HOME}/.local/share/notmuch/default"
+    rm -rf $DATABASE_PATH
+    mkdir -p $DATABASE_PATH
+    XAPIAN_PATH="${DATABASE_PATH}/xapian"
+    mv mail/.notmuch/xapian $DATABASE_PATH
+}
+
+for config in traditional split XDG XDG+profile symlink home_mail maildir_env mailroot_only; do
     #start each set of tests with an known set of messages
     add_email_corpus
 
@@ -121,6 +134,9 @@ for config in traditional split XDG XDG+profile symlink home_mail maildir_env; d
 	    ;;
 	maildir_env)
 	    maildir_env_config
+	    ;;
+	mailroot_only)
+	    mailroot_only_config
 	    ;;
     esac
 
@@ -314,11 +330,6 @@ user.primary_email
 EOF
    test_expect_equal_file EXPECTED OUTPUT
 
-   test_begin_subtest "create database ($config)"
-   rm -r ${XAPIAN_PATH}
-   notmuch new
-   test_expect_equal "$(xapian-metadata get ${XAPIAN_PATH} version)" 3
-
    case $config in
        XDG*)
 	   test_begin_subtest "Set shadowed config value in database ($config)"
@@ -355,6 +366,13 @@ Added 1 new message to the database.
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Do not ignore, very important (inbox unread)
 EOF
 	   test_expect_equal_file EXPECTED OUTPUT
+	   ;&
+       mailroot_only)
+	   test_begin_subtest "create database parent dir ($config)"
+	   test_subtest_known_broken
+	   rm -r ${DATABASE_PATH}
+	   notmuch new
+	   test_expect_equal "$(xapian-metadata get ${XAPIAN_PATH} version)" 3
 	   ;;
        *)
 	   backup_database
