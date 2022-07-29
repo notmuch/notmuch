@@ -91,7 +91,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot open database at CWD/nonexistent/foo: No such file or directory.
+Error: database path 'CWD/nonexistent/foo' does not exist or is not a directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -132,7 +132,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot open database at CWD/nonexistent/foo: No such file or directory.
+Error: database path 'CWD/nonexistent/foo' does not exist or is not a directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

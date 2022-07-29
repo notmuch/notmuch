@@ -192,6 +192,8 @@ _choose_database_path (notmuch_database_t *notmuch,
 		       const char **database_path,
 		       char **message)
 {
+    notmuch_status_t status;
+
     if (! *database_path) {
 	*database_path = getenv ("NOTMUCH_DATABASE");
     }
@@ -207,8 +209,6 @@ _choose_database_path (notmuch_database_t *notmuch,
 	}
     }
     if (! *database_path) {
-	notmuch_status_t status;
-
 	*database_path = _xdg_dir (notmuch, "XDG_DATA_HOME", ".local/share", profile);
 	status = _db_dir_exists (*database_path, message);
 	if (status) {
@@ -223,8 +223,6 @@ _choose_database_path (notmuch_database_t *notmuch,
     }
 
     if (! *database_path) {
-	notmuch_status_t status;
-
 	*database_path = talloc_asprintf (notmuch, "%s/mail", getenv ("HOME"));
 	status = _db_dir_exists (*database_path, message);
 	if (status) {
@@ -241,6 +239,15 @@ _choose_database_path (notmuch_database_t *notmuch,
 	*message = strdup ("Error: Database path must be absolute.\n");
 	return NOTMUCH_STATUS_PATH_ERROR;
     }
+
+    status = _db_dir_exists (*database_path, message);
+    if (status) {
+	IGNORE_RESULT (asprintf (message,
+				 "Error: database path '%s' does not exist or is not a directory.\n",
+				 *database_path));
+	return NOTMUCH_STATUS_NO_DATABASE;
+    }
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
@@ -636,10 +643,6 @@ notmuch_database_create_with_config (const char *database_path,
 
     if ((status = _choose_database_path (notmuch, profile, key_file,
 					 &database_path, &message)))
-	goto DONE;
-
-    status = _db_dir_exists (database_path, &message);
-    if (status)
 	goto DONE;
 
     _set_database_path (notmuch, database_path);
