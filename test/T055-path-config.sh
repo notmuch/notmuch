@@ -369,7 +369,6 @@ EOF
 	   ;&
        mailroot_only)
 	   test_begin_subtest "create database parent dir ($config)"
-	   test_subtest_known_broken
 	   rm -r ${DATABASE_PATH}
 	   notmuch new
 	   test_expect_equal "$(xapian-metadata get ${XAPIAN_PATH} version)" 3

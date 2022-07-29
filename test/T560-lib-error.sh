@@ -102,16 +102,17 @@ test_C <<'EOF'
 int main (int argc, char** argv)
 {
     notmuch_status_t stat;
-    char *msg;
+    char *msg = NULL;
 
     stat = notmuch_database_create_with_config (NULL, "", NULL, NULL, &msg);
+    printf ("%s\n", notmuch_status_to_string (stat));
     if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
+No mail root found
 == stderr ==
-Error: could not locate database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -123,16 +124,17 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    char *msg;
+    char *msg = NULL;
 
     stat = notmuch_database_create_with_config (argv[1], "", NULL, &db, &msg);
+    printf ("%d\n", stat == NOTMUCH_STATUS_SUCCESS);
     if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
+1
 == stderr ==
-Error: database path 'CWD/nonexistent/foo' does not exist or is not a directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
