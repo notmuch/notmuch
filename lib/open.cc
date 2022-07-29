@@ -262,6 +262,45 @@ _mkdir (const char *path, char **message)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static notmuch_status_t
+_create_database_path (notmuch_database_t *notmuch,
+		       const char *profile,
+		       GKeyFile *key_file,
+		       const char **database_path,
+		       char **message)
+{
+    notmuch_status_t status;
+
+    if (! *database_path) {
+	*database_path = getenv ("NOTMUCH_DATABASE");
+    }
+
+    if (! *database_path && key_file) {
+	char *path = g_key_file_get_string (key_file, "database", "path", NULL);
+	if (path) {
+	    if (path[0] == '/')
+		*database_path = talloc_strdup (notmuch, path);
+	    else
+		*database_path = talloc_asprintf (notmuch, "%s/%s", getenv ("HOME"), path);
+	    g_free (path);
+	}
+    }
+
+    if (! *database_path) {
+	*database_path = _xdg_dir (notmuch, "XDG_DATA_HOME", ".local/share", profile);
+	notmuch->params |= NOTMUCH_PARAM_SPLIT;
+    }
+
+    if (*database_path[0] != '/') {
+	*message = strdup ("Error: Database path must be absolute.\n");
+	return NOTMUCH_STATUS_PATH_ERROR;
+    }
+
+    if ((status = _mkdir (*database_path, message)))
+	return status;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
 
 static notmuch_database_t *
 _alloc_notmuch (const char *database_path, const char *config_path, const char *profile)
@@ -641,9 +680,19 @@ notmuch_database_create_with_config (const char *database_path,
 	goto DONE;
     }
 
-    if ((status = _choose_database_path (notmuch, profile, key_file,
-					 &database_path, &message)))
+    status = _choose_database_path (notmuch, profile, key_file,
+				    &database_path, &message);
+    switch (status) {
+    case NOTMUCH_STATUS_SUCCESS:
+	break;
+    case NOTMUCH_STATUS_NO_DATABASE:
+	if ((status = _create_database_path (notmuch, profile, key_file,
+					     &database_path, &message)))
+	    goto DONE;
+	break;
+    default:
 	goto DONE;
+    }
 
     _set_database_path (notmuch, database_path);
 
