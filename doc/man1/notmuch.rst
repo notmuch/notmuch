@@ -130,14 +130,16 @@ and to restore from that dump.
 The :any:`notmuch-config(1)` command can be used to get or set
 settings in the notmuch configuration file.
 
-CUSTOM COMMANDS
----------------
+EXTERNAL COMMANDS
+-----------------
 
 If the given command is not known to notmuch, notmuch tries to execute
 the external **notmuch-<subcommand>** in :envvar:`PATH` instead. This
 allows users to have their own notmuch related tools to be run via the
 notmuch command. By design, this does not allow notmuch's own commands
-to be overridden using external commands.
+to be overridden using external commands.  The environment variable
+:envvar:`NOTMUCH_CONFIG` will be set according to :option:`--config`,
+if the latter is present.
 
 OPTION SYNTAX
 -------------
@@ -184,14 +186,6 @@ of notmuch.
 
    If set to a non-empty value, the notmuch library will print (to
    stderr) Xapian queries it constructs.
-
-EXTERNAL COMMANDS
-=================
-
-When given a subcommand `foo` not recognized as built-in, notmuch will
-try to run the command (e.g. script) `notmuch-foo` in the user's
-path. The :envvar:`NOTMUCH_CONFIG` will be set according to
-:option:`--config`, if the latter is present.
 
 SEE ALSO
 ========
