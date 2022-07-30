@@ -431,6 +431,31 @@ in :ref:`notmuch-search`.
 ``c ?``
     Show all available copying commands
 
+.. _emacs-show-duplicates:
+
+Dealing with duplicates
+-----------------------
+
+If there are are multiple files with the same :mailheader:`Message-ID`
+(see :any:`duplicate-files`), then :any:`notmuch-show` displays the
+number of duplicates and identifies the current duplicate. In the
+following example duplicate 3 of 5 is displayed.
+
+.. code-block::
+   :emphasize-lines: 1
+
+    M. Mustermann <max@example.com> (Sat, 30 Jul 2022 10:33:10 -0300) (inbox signed)      3/5
+    Subject: Re: Multiple files per message in emacs
+    To: notmuch@notmuchmail.org
+
+To display a different message file with the same
+:mailheader:`Message-ID`, the user can run the command
+:emacscmd:`notmuch-show-choose-duplicate`, by default bound to `%`.
+
+.. emacscmd:: notmuch-show-choose-duplicate
+
+   |docstring::notmuch-show-choose-duplicate|
+
 .. _notmuch-tree:
 
 notmuch-tree

@@ -155,6 +155,23 @@ equivalent:
    notmuch --config:alt-config config get user.name
    notmuch --config alt-config config get user.name
 
+.. _duplicate-files:
+
+DUPLICATE MESSAGE FILES
+=======================
+
+Notmuch considers the :mailheader:`Message-ID` to be the primary
+identifier of message. Per :rfc:`5322` the :mailheader:`Message-ID` is
+supposed to be globally unique, but this fails in two distinct
+ways. When you receive copies of a message via a mechanism like
+:mailheader:`Cc` or via a mailing list, the copies are typically
+interchangeable. In the case of some broken mail sending software, the
+same :mailheader:`Message-ID` is used for completely unrelated
+messages. The options :option:`search --duplicate` and :option:`show
+--duplicate` options provide the user with control over which message
+file is displayed. Front ends will need to provide their own
+interface, see e.g. the Emacs front-end :any:`emacs-show-duplicates`.
+
 ENVIRONMENT
 ===========
 
