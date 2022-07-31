@@ -224,7 +224,3 @@ def setup(app):
                         indextemplate='pair: configuration item; %s',
                         ref_nodeclass=docutils.nodes.generated,
                         objname='config item' )
-    app.add_object_type('emacsvar','emacsvar',
-                        indextemplate='pair: Emacs variable; %s',
-                        ref_nodeclass=docutils.nodes.generated,
-                        objname='Emacs variable')
