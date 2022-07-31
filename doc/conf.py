@@ -228,8 +228,3 @@ def setup(app):
                         indextemplate='pair: Emacs variable; %s',
                         ref_nodeclass=docutils.nodes.generated,
                         objname='Emacs variable')
-    app.add_object_type('emacscmd','emacscmd',
-                        indextemplate='pair: Emacs command; %s',
-                        ref_nodeclass=docutils.nodes.generated,
-                        objname='Emacs command')
-

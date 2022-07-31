@@ -448,11 +448,8 @@ following example duplicate 3 of 5 is displayed.
     Subject: Re: Multiple files per message in emacs
     To: notmuch@notmuchmail.org
 
-To display a different message file with the same
-:mailheader:`Message-ID`, the user can run the command
-:emacscmd:`notmuch-show-choose-duplicate`, by default bound to `%`.
-
-.. emacscmd:: notmuch-show-choose-duplicate
+.. el:define-key:: %
+   M-x notmuch-show-choose-duplicate
 
    |docstring::notmuch-show-choose-duplicate|
 
@@ -568,7 +565,7 @@ following key bindings:
 ``k``
     Tagging operations using :ref:`notmuch-tag-jump`
 
-``C-_`` ``C-/`` ``C-x u``: Undo previous tagging operation using :ref:`notmuch-tag-undo`
+``C-_`` ``C-/`` ``C-x u``: Undo previous tagging operation using :any:`notmuch-tag-undo`
 
 .. _notmuch-jump:
 
@@ -599,7 +596,6 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 
   |docstring::notmuch-tagging-keys|
 
-.. _notmuch-tag-undo:
 
 notmuch-tag-undo
 ----------------
@@ -607,17 +603,20 @@ notmuch-tag-undo
 Each notmuch buffer supporting tagging operations (i.e buffers in
 :any:`notmuch-show`, :any:`notmuch-search`, :any:`notmuch-tree`, and
 :any:`notmuch-unthreaded` mode) keeps a local stack of tagging
-operations. These can be undone via :emacscmd:`notmuch-tag-undo`. By default
+operations. These can be undone via :any:`notmuch-tag-undo`. By default
 this is bound to the usual Emacs keys for undo.
 
-.. emacscmd:: notmuch-tag-undo
+.. el:define-key::  C-_
+   C-/
+   C-x u
+   M-x notmuch-tag-undo
 
    |docstring::notmuch-tag-undo|
 
 Buffer navigation
 =================
 
-.. emacscmd:: notmuch-cycle-notmuch-buffers
+.. el:define-key:: M-x notmuch-cycle-notmuch-buffers
 
    |docstring::notmuch-cycle-notmuch-buffers|
 
@@ -629,7 +628,7 @@ Configuration
 Importing Mail
 --------------
 
-.. emacscmd:: notmuch-poll
+.. el:define-key:: M-x notmuch-poll
 
    |docstring::notmuch-poll|
 
