@@ -110,6 +110,13 @@ class EmacsLispSymbol(ObjectDescription):
         'defface': 'face'
     }
 
+    category_for_objtype = {
+        'defcustom': 'Emacs variable (customizable)',
+        'defconst': 'Emacs constant',
+        'defvar': 'Emacs variable',
+        'defface': 'Emacs face'
+    }
+
     @property
     def cell(self):
         """The cell in which to store symbol metadata."""
@@ -119,6 +126,11 @@ class EmacsLispSymbol(ObjectDescription):
     def label(self):
         """The label for the documented object type."""
         return self.objtype
+
+    @property
+    def category(self):
+        """Index category"""
+        return self.category_for_objtype[self.objtype]
 
     def handle_signature(self, signature, signode):
         """Create nodes in ``signode`` for the ``signature``.
@@ -137,7 +149,7 @@ class EmacsLispSymbol(ObjectDescription):
 
     def _add_index(self, name, target):
         index_text = '{name}; {label}'.format(
-            name=name, label=self.label)
+            name=name, label=self.category)
         self.indexnode['entries'].append(
             ('pair', index_text, target, '', None))
 
