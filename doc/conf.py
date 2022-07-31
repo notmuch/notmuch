@@ -3,8 +3,10 @@
 
 import sys
 import os
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
 
-extensions = [ 'sphinx.ext.autodoc' ]
+extensions = [ 'sphinx.ext.autodoc', 'elisp' ]
 
 # The suffix of source filenames.
 source_suffix = '.rst'
