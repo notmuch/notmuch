@@ -531,7 +531,7 @@ main (int argc, char *argv[])
 		}
 
 		if (status == NOTMUCH_STATUS_NO_CONFIG)
-		    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+		    fputs ("Try running 'notmuch setup' to create a configuration.\n", stderr);
 
 		return EXIT_FAILURE;
 	    }
@@ -563,15 +563,10 @@ main (int argc, char *argv[])
 					       NULL,
 					       &notmuch,
 					       &status_string);
-
-	if (status == NOTMUCH_STATUS_NO_CONFIG && ! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
-	    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
-	    goto DONE;
-	}
 	switch (status) {
 	case NOTMUCH_STATUS_NO_CONFIG:
 	    if (! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
-		fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+		fputs ("Try running 'notmuch setup' to create a configuration.\n", stderr);
 		goto DONE;
 	    }
 	    break;
