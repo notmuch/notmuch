@@ -302,7 +302,7 @@ class EmacsLispDomain(Domain):
     """A domain to document Emacs Lisp code."""
 
     name = 'el'
-    label = 'Emacs Lisp'
+    label = ''
 
     object_types = {
         # TODO: Set search prio for object types
