@@ -101,32 +101,42 @@ customizing the variables
 notmuch-hello key bindings
 --------------------------
 
-``<tab>``
+.. el:define-key:: <tab>
+
     Move to the next widget (button or text entry field)
 
-``<backtab>``
+.. el:define-key:: <backtab>
+
     Move to the previous widget.
 
-``<return>``
+.. el:define-key:: <return>
+
     Activate the current widget.
 
-``g`` ``=``
+.. el:define-key:: g
+                   =
+
     Refresh the buffer; mainly update the counts of messages for various
     saved searches.
 
-``G``
+.. el:define-key:: G
+
     Import mail, See :ref:`importing`
 
-``m``
+.. el:define-key:: m
+
     Compose a message
 
-``s``
+.. el:define-key:: s
+
     Search the notmuch database using :ref:`notmuch-search`
 
-``v``
+.. el:define-key:: v
+
     Print notmuch version
 
-``q``
+.. el:define-key:: q
+
     Quit
 
 .. _saved-searches:
@@ -200,19 +210,30 @@ The main purpose of the ``notmuch-search-mode`` buffer is to act as a
 menu of results that the user can explore further by pressing
 ``<return>`` on the appropriate line.
 
-``n,C-n,<down>``
+.. el:define-key:: n
+   C-n
+   <down>
+
     Move to next line
 
-``p,C-p,<up>``
+.. el:define-key::
+   p
+   C-p
+   <up>
+
     Move to previous line
 
-``<return>``
+.. el:define-key:: <return>
+
     Open thread on current line in :ref:`notmuch-show` mode
 
-``g`` ``=``
+.. el:define-key:: g
+   =
+
     Refresh the buffer
 
-``?``
+.. el:define-key:: ?
+
     Display full set of key bindings
 
 The presentation of results can be controlled by the following
@@ -285,33 +306,43 @@ signatures, already-read messages), are hidden. You can make
 these parts visible by clicking with the mouse button or by
 pressing RET after positioning the cursor on a hidden part.
 
-``<space>``
+.. el:define-key:: <space>
+
     Scroll the current message (if necessary),
     advance to the next message, or advance to the next thread (if
     already on the last message of a thread).
 
-``c``
+.. el:define-key:: c
+
     :ref:`show-copy`
 
-``N``
+.. el:define-key:: N
+
     Move to next message
 
-``P``
+.. el:define-key:: P
+
     Move to previous message (or start of current message)
 
-``n``
+.. el:define-key:: n
+
     Move to next matching message
 
-``p``
+.. el:define-key:: p
+
     Move to previous matching message
 
-``+,-``
+.. el:define-key:: +
+                   -
+
     Add or remove arbitrary tags from the current message.
 
-``!``
+.. el:define-key:: !
+
     |docstring::notmuch-show-toggle-elide-non-matching|
 
-``?``
+.. el:define-key:: ?
+
     Display full set of key bindings
 
 Display of messages can be controlled by the following variables; see also :ref:`show-large`.
@@ -392,44 +423,70 @@ but notmuch also provides some shortcuts. These keys are available in
 :ref:`notmuch-show`, and :ref:`notmuch-tree`. A subset are available
 in :ref:`notmuch-search`.
 
-``c F``	``notmuch-show-stash-filename``
+.. el:define-key:: c F
+   M-x notmuch-show-stash-filename
+
    |docstring::notmuch-show-stash-filename|
 
-``c G`` ``notmuch-show-stash-git-send-email``
+.. el:define-key:: c G
+   M-x notmuch-show-stash-git-send-email
+
    |docstring::notmuch-show-stash-git-send-email|
 
-``c I`` ``notmuch-show-stash-message-id-stripped``
+.. el:define-key:: c I
+   M-x notmuch-show-stash-message-id-stripped
+
    |docstring::notmuch-show-stash-message-id-stripped|
 
-``c L`` ``notmuch-show-stash-mlarchive-link-and-go``
+.. el:define-key:: c L
+   M-x notmuch-show-stash-mlarchive-link-and-go
+
    |docstring::notmuch-show-stash-mlarchive-link-and-go|
 
-``c T`` ``notmuch-show-stash-tags``
+.. el:define-key:: c T
+   M-x notmuch-show-stash-tags
+
    |docstring::notmuch-show-stash-tags|
 
-``c c`` ``notmuch-show-stash-cc``
+.. el:define-key:: c c
+   M-x notmuch-show-stash-cc
+
    |docstring::notmuch-show-stash-cc|
 
-``c d`` ``notmuch-show-stash-date``
+.. el:define-key:: c d
+   M-x notmuch-show-stash-date
+
    |docstring::notmuch-show-stash-date|
 
-``c f`` ``notmuch-show-stash-from``
+.. el:define-key:: c f
+   M-x notmuch-show-stash-from
+
    |docstring::notmuch-show-stash-from|
 
-``c i`` ``notmuch-show-stash-message-id``
+.. el:define-key:: c i
+   M-x notmuch-show-stash-message-id
+
    |docstring::notmuch-show-stash-message-id|
 
-``c l`` ``notmuch-show-stash-mlarchive-link``
+.. el:define-key:: c l
+   M-x notmuch-show-stash-mlarchive-link
+
    |docstring::notmuch-show-stash-mlarchive-link|
 
-``c s`` ``notmuch-show-stash-subject``
+.. el:define-key:: c s
+   M-x notmuch-show-stash-subject
+
    |docstring::notmuch-show-stash-subject|
 
-``c t`` ``notmuch-show-stash-to``
+.. el:define-key:: c t
+   M-x notmuch-show-stash-to
+
    |docstring::notmuch-show-stash-to|
 
-``c ?``
-    Show all available copying commands
+.. el:define-key:: c ?
+   M-x notmuch-subkeymap-help
+
+   Show all available copying commands
 
 .. _emacs-show-duplicates:
 
@@ -463,38 +520,53 @@ email archives. Each line in the buffer represents a single
 message giving the relative date, the author, subject, and any
 tags.
 
-``c``
+.. el:define-key:: c
+
     :ref:`show-copy`
 
-``<return>``
+.. el:define-key:: <return>
+
    Displays that message.
 
-``N``
+.. el:define-key:: N
+
     Move to next message
 
-``P``
+.. el:define-key:: P
+
     Move to previous message
 
-``n``
+.. el:define-key:: n
+
     Move to next matching message
 
-``p``
+.. el:define-key:: p
+
     Move to previous matching message
 
-``o`` ``notmuch-tree-toggle-order``
+.. el:define-key:: o
+   M-x notmuch-tree-toggle-order
+
    |docstring::notmuch-tree-toggle-order|
 
-``l`` ``notmuch-tree-filter``
+.. el:define-key:: l
+   M-x notmuch-tree-filter
+
    Filter or LIMIT the current search results based on an additional query string
 
-``t`` ``notmuch-tree-filter-by-tag``
+.. el:define-key:: t
+   M-x notmuch-tree-filter-by-tag
+
    Filter the current search results based on an additional tag
 
 
-``g`` ``=``
+.. el:define-key:: g
+   =
+
     Refresh the buffer
 
-``?``
+.. el:define-key:: ?
+
     Display full set of key bindings
 
 As is the case with :ref:`notmuch-search`, the presentation of results
@@ -559,13 +631,19 @@ Global key bindings
 Several features are accessible from most places in notmuch through the
 following key bindings:
 
-``j``
+.. el:define-key:: j
+
     Jump to saved searches using :ref:`notmuch-jump`.
 
-``k``
+.. el:define-key:: k
+
     Tagging operations using :ref:`notmuch-tag-jump`
 
-``C-_`` ``C-/`` ``C-x u``: Undo previous tagging operation using :any:`notmuch-tag-undo`
+.. el:define-key:: C-_
+   C-/
+   C-x u
+
+   Undo previous tagging operation using :any:`notmuch-tag-undo`
 
 .. _notmuch-jump:
 
