@@ -1135,6 +1135,16 @@ is t, hide the part initially and show the button."
 (make-variable-buffer-local 'notmuch-show-previous-subject)
 
 (defun notmuch-show-choose-duplicate (duplicate)
+  "Display message file with index DUPLICATE in place of the current one.
+
+Message file indices are based on the order the files are
+discovered by `notmuch new' (and hence are somewhat arbitrary),
+and correspond to those passed to the \"\\-\\-duplicate\" arguments
+to the CLI.
+
+When called interactively, the function will prompt for the index
+of the file to display.  An error will be signaled if the index
+is out of range."
   (interactive "Nduplicate: ")
   (let ((count (length (notmuch-show-get-prop :filename))))
     (when (or (> duplicate count)
