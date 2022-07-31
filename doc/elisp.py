@@ -215,7 +215,7 @@ class EmacsLispFunction(EmacsLispSymbol):
 class EmacsLispKey(ObjectDescription):
     """A directive to document interactive commands via their bindings."""
 
-    label = 'Interactive command'
+    label = 'Emacs command'
 
     def handle_signature(self, signature, signode):
         """Create nodes to ``signode`` for ``signature``.
@@ -266,7 +266,7 @@ class EmacsLispKey(ObjectDescription):
                     line=self.lineno)
             keymap[binding] = self.env.docname
 
-        index_text = '{name}; key binding'.format(name=binding)
+        index_text = '{name}; Emacs key binding'.format(name=binding)
         self.indexnode['entries'].append(
             ('pair', index_text, reftarget, '', None))
 
