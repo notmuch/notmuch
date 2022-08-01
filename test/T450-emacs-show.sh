@@ -339,7 +339,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "tar not inlined by default on refresh"
-test_subtest_known_broken
 test_emacs '(notmuch-show "id:874llc2bkp.fsf@curie.anarc.at")
 	   (notmuch-show-refresh-view)
 	(test-visible-output "OUTPUT")'

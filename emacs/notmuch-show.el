@@ -1528,6 +1528,7 @@ non-nil) then the state of the buffer (open/closed messages) is
 reset based on the original query."
   (interactive "P")
   (let ((inhibit-read-only t)
+	(mm-inline-override-types (notmuch--inline-override-types))
 	(state (unless reset-state
 		 (notmuch-show-capture-state))))
     ;; `erase-buffer' does not seem to remove overlays, which can lead
