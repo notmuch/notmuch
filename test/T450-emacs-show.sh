@@ -338,6 +338,28 @@ when we detect the word "attachment" and there's no attach? :p
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "tar not inlined by default on refresh"
+test_subtest_known_broken
+test_emacs '(notmuch-show "id:874llc2bkp.fsf@curie.anarc.at")
+	   (notmuch-show-refresh-view)
+	(test-visible-output "OUTPUT")'
+cat <<EOF > EXPECTED
+Antoine Beaupré <anarcat@orangeseeds.org> (2018-03-19) (attachment inbox)
+Subject: Re: bug: "no top level messages" crash on Zen email loops
+To: David Bremner <david@tethera.net>, notmuch@notmuchmail.org
+Date: Mon, 19 Mar 2018 13:56:54 -0400
+
+[ multipart/mixed ]
+[ text/plain ]
+And obviously I forget the frigging attachment.
+[ zendesk-email-loop2.tgz: application/x-gtar-compressed ]
+[ text/plain ]
+
+PS: don't we have a "you forgot to actually attach the damn file" plugin
+when we detect the word "attachment" and there's no attach? :p
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 add_email_corpus duplicate
 
 ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
