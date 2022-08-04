@@ -1813,7 +1813,7 @@ current thread."
 
 (defun notmuch-show-get-filename ()
   "Return the filename of the current message."
-  (let ((duplicate (or (notmuch-show-get-prop :duplicate) 1)))
+  (let ((duplicate (notmuch-show-get-duplicate)))
     (nth (1- duplicate) (notmuch-show-get-prop :filename))))
 
 (defun notmuch-show-get-header (header &optional props)
@@ -1825,6 +1825,10 @@ current thread."
 
 (defun notmuch-show-get-date ()
   (notmuch-show-get-header :Date))
+
+(defun notmuch-show-get-duplicate ()
+  ;; if no duplicate property exists, assume first file
+  (or (notmuch-show-get-prop :duplicate) 1))
 
 (defun notmuch-show-get-timestamp ()
   (notmuch-show-get-prop :timestamp))
