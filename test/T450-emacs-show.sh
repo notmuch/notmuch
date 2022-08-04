@@ -383,7 +383,6 @@ test_expect_equal_file_nonempty $EXPECTED/notmuch-show-duplicate-4 OUTPUT
 
 FILE4=$(notmuch search --output=files --duplicate=4 "id:${ID3}")
 test_begin_subtest "duplicate=4, raw"
-test_subtest_known_broken
 test_emacs "(notmuch-show \"id:${ID3}\")
 	   (notmuch-show-choose-duplicate 4)
 	   (notmuch-show-view-raw-message)
