@@ -352,7 +352,6 @@ test_expect_equal "$output" "$subject"
 
 FILE3=$(notmuch search --output=files --duplicate=3 "id:${ID3}")
 test_begin_subtest "duplicate=3, stash"
-test_subtest_known_broken
 test_emacs_expect_t \
 	"(notmuch-show \"id:${ID3}\")
 	 (notmuch-show-choose-duplicate 3)

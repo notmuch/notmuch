@@ -1811,10 +1811,10 @@ current thread."
 
 ;; dme: Would it make sense to use a macro for many of these?
 
-;; XXX TODO figure out what to do about multiple filenames
 (defun notmuch-show-get-filename ()
   "Return the filename of the current message."
-  (car (notmuch-show-get-prop :filename)))
+  (let ((duplicate (or (notmuch-show-get-prop :duplicate) 1)))
+    (nth (1- duplicate) (notmuch-show-get-prop :filename))))
 
 (defun notmuch-show-get-header (header &optional props)
   "Return the named header of the current message, if any."
