@@ -350,6 +350,15 @@ file=$(notmuch search --output=files id:${ID3} | head -n 3 | tail -n 1)
 subject=$(grep '^Subject:' $file)
 test_expect_equal "$output" "$subject"
 
+FILE3=$(notmuch search --output=files --duplicate=3 "id:${ID3}")
+test_begin_subtest "duplicate=3, stash"
+test_subtest_known_broken
+test_emacs_expect_t \
+	"(notmuch-show \"id:${ID3}\")
+	 (notmuch-show-choose-duplicate 3)
+	 (notmuch-show-stash-filename)
+	 (notmuch-test-expect-equal (list (car kill-ring)) (list \"${FILE3}\"))"
+
 test_begin_subtest "duplicate=0"
 test_emacs "(test-log-error
 	      (notmuch-show \"id:${ID3}\")
