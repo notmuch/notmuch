@@ -3,6 +3,7 @@
 
 #include "database-private.h"
 #include "parse-time-vrp.h"
+#include "lastmod-fp.h"
 #include "path-util.h"
 
 #if HAVE_XAPIAN_DB_RETRY_LOCK
@@ -489,8 +490,7 @@ _finish_open (notmuch_database_t *notmuch,
 	notmuch->value_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeRangeProcessor (NOTMUCH_VALUE_TIMESTAMP,
 								     "date:");
-	notmuch->last_mod_range_processor = new Xapian::NumberRangeProcessor (NOTMUCH_VALUE_LAST_MOD,
-									      "lastmod:");
+	notmuch->last_mod_range_processor = new LastModRangeProcessor (notmuch, "lastmod:");
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
 	notmuch->stemmer = new Xapian::Stem ("english");

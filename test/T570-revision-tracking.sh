@@ -103,4 +103,23 @@ if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
     test_expect_equal 1 "$count"
 fi
 
+test_begin_subtest 'exclude one message using negative lastmod'
+total=$(notmuch count '*')
+notmuch tag +${RANDOM} id:4EFC743A.3060609@april.org
+count=$(notmuch count lastmod:-1..)
+test_expect_equal 1 "$count"
+
+test_begin_subtest 'exclude one message using negative lastmod (second param)'
+total=$(notmuch count '*')
+notmuch tag +${RANDOM} id:4EFC743A.3060609@april.org
+count=$(notmuch count lastmod:..-1)
+test_expect_equal 51 "$count"
+
+test_begin_subtest 'negative lastmod (two parameters)'
+notmuch tag +${RANDOM} '*'
+before=$(notmuch count --lastmod '*' | cut -f3)
+notmuch tag +${RANDOM} id:4EFC743A.3060609@april.org
+count=$(notmuch count lastmod:-100..$before)
+test_expect_equal 51 "$count"
+
 test_done

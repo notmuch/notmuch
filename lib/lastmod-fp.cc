@@ -21,6 +21,7 @@
  */
 
 #include "database-private.h"
+#include "lastmod-fp.h"
 
 notmuch_status_t
 _notmuch_lastmod_strings_to_query (notmuch_database_t *notmuch,
@@ -66,3 +67,17 @@ _notmuch_lastmod_strings_to_query (notmuch_database_t *notmuch,
 			    Xapian::sortable_serialise (to_idx));
     return NOTMUCH_STATUS_SUCCESS;
 }
+
+Xapian::Query
+LastModRangeProcessor::operator() (const std::string &begin, const std::string &end)
+{
+
+    Xapian::Query output;
+    std::string msg;
+
+    if (_notmuch_lastmod_strings_to_query (notmuch, begin, end, output, msg))
+	throw Xapian::QueryParserError (msg);
+
+    return output;
+}
+

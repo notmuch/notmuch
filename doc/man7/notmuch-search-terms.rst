@@ -153,10 +153,11 @@ date:<since>..<until> or date:<date>
 lastmod:<initial-revision>..<final-revision>
     The **lastmod:** prefix can be used to restrict the result by the
     database revision number of when messages were last modified (tags
-    were added/removed or filenames changed). This is usually used in
-    conjunction with the ``--uuid`` argument to
-    :any:`notmuch-search(1)` to find messages that have changed since
-    an earlier query.
+    were added/removed or filenames changed). Negative revisions are
+    interpreted relative to the most recent database revision (see
+    :option:`count --lastmod`). This is usually used in conjunction
+    with the ``--uuid`` argument to :any:`notmuch-search(1)` to find
+    messages that have changed since an earlier query.
 
 query:<name>
     The **query:** prefix allows queries to refer to previously saved
