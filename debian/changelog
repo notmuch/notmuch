@@ -1,3 +1,9 @@
+notmuch (0.37~rc0-3) experimental; urgency=medium
+
+  * Another no-change re-upload with binaries.
+
+ -- David Bremner <bremner@debian.org>  Sun, 14 Aug 2022 11:49:21 -0300
+
 notmuch (0.37~rc0-2) experimental; urgency=medium
 
   * Binary upload for NEW (notmuch-git is a new binary package)
