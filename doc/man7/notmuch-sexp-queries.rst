@@ -125,6 +125,9 @@ bounds. Either upper or lower bound may be specified as ``""`` or
 ``*`` to specify the lowest possible lower bound or highest possible
 upper bound.
 
+``lastmod`` ranges support negative arguments, interpreted relative to
+the most recent database revision (see :option:`count --lastmod`).
+
 .. _field-table:
 
 .. table:: Fields with supported modifiers

@@ -575,6 +575,9 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	}
 
+	if (from_idx < 0)
+	    from_idx += notmuch_database_get_revision (notmuch, NULL);
+
 	try {
 	    if (EMPTY_STRING (to))
 		to_idx = LONG_MAX;
@@ -584,6 +587,9 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	}
+
+	if (to_idx < 0)
+	    to_idx += notmuch_database_get_revision (notmuch, NULL);
 
 	output = Xapian::Query (Xapian::Query::OP_VALUE_RANGE, NOTMUCH_VALUE_LAST_MOD,
 				Xapian::sortable_serialise (from_idx),

@@ -934,6 +934,14 @@ notmuch search lastmod:$revision..$revision | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(and (lastmod $revision))" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "lastmod query, one argument (negative)"
+notmuch tag +4EFC743A.3060609@april.org id:4EFC743A.3060609@april.org
+revision=$(notmuch count --lastmod '*' | cut -f3)
+revision1=$((revision - 1))
+notmuch search lastmod:$revision1..$revision1 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod -1)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "lastmod query, two arguments"
 notmuch tag +keithp from:keithp
 revision2=$(notmuch count --lastmod '*' | cut -f3)
@@ -941,14 +949,36 @@ notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTE
 notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "lastmod query, two arguments, first negative"
+revdiff=$((revision2 - revision))
+notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod -$revdiff $revision2)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, two arguments, second negative"
+revdiff=$((revision2 - revision))
+notmuch search lastmod:..$revision | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod 0 -$revdiff)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "lastmod query, lower bound only"
 notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(lastmod $revision \"\")" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
+test_begin_subtest "lastmod query, lower bound only (negative)"
+notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod -$revdiff \"\")" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "lastmod query, upper bound only"
 notmuch search lastmod:..$revision2 | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(lastmod \"\" $revision2)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, upper bound only (negative)"
+notmuch search lastmod:..$revision | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod \"\" -$revdiff)" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "lastmod query, lower bound only, using *"
