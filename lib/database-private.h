@@ -381,5 +381,11 @@ _notmuch_sexp_string_to_xapian_query (notmuch_database_t *notmuch, const char *q
 notmuch_status_t
 _notmuch_date_strings_to_query (Xapian::valueno slot, const std::string &from, const std::string &to,
 				Xapian::Query &output, std::string &msg);
+
+/* lastmod-fp.h */
+notmuch_status_t
+_notmuch_lastmod_strings_to_query (notmuch_database_t *notmuch,
+				   const std::string &from, const std::string &to,
+				   Xapian::Query &output, std::string &msg);
 #endif
 #endif

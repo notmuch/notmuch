@@ -65,7 +65,8 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/open.cc		\
 	$(dir)/init.cc		\
 	$(dir)/parse-sexp.cc	\
-	$(dir)/sexp-fp.cc
+	$(dir)/sexp-fp.cc	\
+	$(dir)/lastmod-fp.cc
 
 libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 

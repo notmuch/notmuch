@@ -563,38 +563,13 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
     }
 
     if (strcmp (prefix->name, "lastmod") == 0) {
-	long from_idx, to_idx;
-
-	try {
-	    if (EMPTY_STRING (from))
-		from_idx = 0L;
-	    else
-		from_idx = std::stol (from);
-	} catch (std::logic_error &e) {
-	    _notmuch_database_log (notmuch, "bad 'from' revision: '%s'\n", from);
-	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+	notmuch_status_t status;
+	status = _notmuch_lastmod_strings_to_query (notmuch, from, to, output, msg);
+	if (status) {
+	    if (! msg.empty ())
+		_notmuch_database_log (notmuch, "%s\n", msg.c_str ());
 	}
-
-	if (from_idx < 0)
-	    from_idx += notmuch_database_get_revision (notmuch, NULL);
-
-	try {
-	    if (EMPTY_STRING (to))
-		to_idx = LONG_MAX;
-	    else
-		to_idx = std::stol (to);
-	} catch (std::logic_error &e) {
-	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
-	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
-	}
-
-	if (to_idx < 0)
-	    to_idx += notmuch_database_get_revision (notmuch, NULL);
-
-	output = Xapian::Query (Xapian::Query::OP_VALUE_RANGE, NOTMUCH_VALUE_LAST_MOD,
-				Xapian::sortable_serialise (from_idx),
-				Xapian::sortable_serialise (to_idx));
-	return NOTMUCH_STATUS_SUCCESS;
+	return status;
     }
 
     _notmuch_database_log (notmuch, "unimplimented range prefix: '%s'\n", prefix->name);
