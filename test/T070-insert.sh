@@ -293,7 +293,7 @@ for code in OUT_OF_MEMORY XAPIAN_EXCEPTION ; do
 done
 
 test_begin_subtest "insert converts mboxes on delivery"
-notmuch insert +unmboxed < "${TEST_DIRECTORY}"/corpora/indexing/mbox-attachment.eml
+notmuch insert +unmboxed < "${TEST_DIRECTORY}"/corpora/insert/mbox-attachment.eml
 output=$(notmuch count tag:unmboxed)
 test_expect_equal "${output}" 1
 
