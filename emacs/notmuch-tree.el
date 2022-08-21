@@ -1084,6 +1084,12 @@ Complete list of currently available key bindings:
   (setq buffer-read-only t)
   (setq truncate-lines t))
 
+(defvar notmuch-tree-process-exit-functions nil
+  "Functions called when the process inserting a tree of results finishes.
+
+Functions in this list are called with one argument, the process
+object, and with the tree results buffer as the current buffer.")
+
 (defun notmuch-tree-process-sentinel (proc _msg)
   "Add a message to let user know when \"notmuch tree\" exits."
   (let ((buffer (process-buffer proc))
@@ -1102,7 +1108,8 @@ Complete list of currently available key bindings:
 		(insert "End of search results.")
 		(unless (= exit-status 0)
 		  (insert (format " (process returned %d)" exit-status)))
-		(insert "\n")))))))))
+		(insert "\n"))))
+	  (run-hook-with-args 'notmuch-tree-process-exit-functions proc))))))
 
 (defun notmuch-tree-process-filter (proc string)
   "Process and filter the output of \"notmuch show\" for tree view."
