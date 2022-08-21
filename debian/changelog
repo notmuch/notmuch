@@ -1,3 +1,9 @@
+notmuch (0.37-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- David Bremner <bremner@debian.org>  Sun, 21 Aug 2022 13:08:35 -0700
+
 notmuch (0.37~rc0-3) experimental; urgency=medium
 
   * Another no-change re-upload with binaries.
