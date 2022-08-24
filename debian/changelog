@@ -1,8 +1,9 @@
 notmuch (0.37-1) unstable; urgency=medium
 
   * New upstream release.
+  * Build-depend on emacs-el to work around #1017698
 
- -- David Bremner <bremner@debian.org>  Sun, 21 Aug 2022 13:08:35 -0700
+ -- David Bremner <bremner@debian.org>  Wed, 24 Aug 2022 09:12:19 -0700
 
 notmuch (0.37~rc0-3) experimental; urgency=medium
 
