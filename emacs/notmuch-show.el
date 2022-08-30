@@ -2192,7 +2192,7 @@ message."
   (interactive (let ((query-string (if current-prefix-arg
 				       "Pipe all open messages to command: "
 				     "Pipe message to command: ")))
-		 (list current-prefix-arg (read-string query-string))))
+		 (list current-prefix-arg (read-shell-command query-string))))
   (let (shell-command)
     (if entire-thread
 	(setq shell-command
