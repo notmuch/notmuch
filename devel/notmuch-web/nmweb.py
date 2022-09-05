@@ -131,7 +131,7 @@ env.globals['mailto_addrs'] = mailto_addrs
 def link_msg(msg):
   lnk = quote_plus(msg.messageid.encode('utf8'))
   try:
-    subj = msg.header('Subject')
+    subj = html.escape(msg.header('Subject'))
   except LookupError:
     subj = ""
   out = '<a href="%s/show/%s">%s</a>' % (prefix, lnk, subj)
