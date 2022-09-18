@@ -45,9 +45,6 @@
 (declare-function notmuch-search-previous-thread "notmuch" ())
 (declare-function notmuch-tree-from-search-thread "notmuch" ())
 
-;; the following variable is defined in notmuch.el
-(defvar notmuch-search-query-string)
-
 ;; this variable distinguishes the unthreaded display from the normal tree display
 (defvar-local notmuch-tree-unthreaded nil
   "A buffer local copy of argument unthreaded to the function notmuch-tree.")
@@ -399,6 +396,7 @@ then NAME behaves like CMD."
     (define-key map "V" 'notmuch-tree-view-raw-message)
     (define-key map "l" 'notmuch-tree-filter)
     (define-key map "t" 'notmuch-tree-filter-by-tag)
+    (define-key map "E" 'notmuch-tree-edit-search)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -1257,6 +1255,21 @@ search results and that are also tagged with the given TAG."
   (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto)))
     (notmuch-tree-close-message-window)
     (notmuch-tree (concat notmuch-tree-basic-query " and tag:" tag)
+		  notmuch-tree-query-context
+		  nil
+		  nil
+		  nil
+		  notmuch-tree-unthreaded
+		  nil
+		  notmuch-search-oldest-first)))
+
+(defun notmuch-tree-edit-search (query)
+  "Edit the current search"
+  (interactive (list (read-from-minibuffer "Edit search: "
+					   notmuch-tree-basic-query)))
+  (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto)))
+    (notmuch-tree-close-message-window)
+    (notmuch-tree query
 		  notmuch-tree-query-context
 		  nil
 		  nil

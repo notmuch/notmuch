@@ -190,6 +190,7 @@ there will be called at other points of notmuch execution."
     (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "l" 'notmuch-search-filter)
+    (define-key map "E" 'notmuch-search-edit-search)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-search-tag-all)
@@ -1155,6 +1156,12 @@ search results and that are also tagged with the given TAG."
   (interactive
    (list (notmuch-select-tag-with-completion "Notmuch search tag: ")))
   (notmuch-search (concat "tag:" tag)))
+
+(defun notmuch-search-edit-search (query)
+  "Edit the current search"
+  (interactive (list (read-from-minibuffer "Edit search: "
+					   notmuch-search-query-string)))
+  (notmuch-search query notmuch-search-oldest-first))
 
 ;;;###autoload
 (defun notmuch ()
