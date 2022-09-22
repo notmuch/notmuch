@@ -6,7 +6,7 @@ Message-ID: <simple-signed-mail@crypto.notmuchmail.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
  protocol="application/pgp-signature";
- micalg=pgp-sha512
+ micalg=pgp-sha256
 
 --=-=-=
 Content-Type: text/plain
@@ -19,10 +19,9 @@ Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iLMEAQEKAB0WIQRa6rEfXjPc6HXdt1ttkmEtlORjgQUCWu718wAKCRBtkmEtlORj
-gUXaA/4/m6CPRgC9JODRKRWo3Szi5D3zg7uf29DIJu9m2vVRw5o0ZeHcxLb26UPe
-qdjPq6GBclkXdeTH9Nv2TW5cToJmMA9UvESeRRzbe6ytvswNEYdSbiYAsv/k9t6K
-KQO2ZSbsbVlkh8xVYC3ORiUS775YrPxVT6QlPkMKAXw3l3Zwcg==
-=jnDO
+iHUEARYIAB0WIQSaOv5sYAZaFI/UtYp+ar6SRkXMYAUCYxiQYgAKCRB+ar6SRkXM
+YJkmAP9TEGDYF4GZcHaxWDZYf6EKHmNqu1RPYuwEN8QdVbUIxAEA7IiFYPQtKXgr
+wyEYNcJ8aD1CYCGhR8pTA9oT/Vp16Qk=
+=a+TS
 -----END PGP SIGNATURE-----
 --=-=-=--

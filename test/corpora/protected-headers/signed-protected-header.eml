@@ -6,7 +6,7 @@ Message-ID: <signed-protected-header@crypto.notmuchmail.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; boundary="=-=-=";
  protocol="application/pgp-signature";
- micalg=pgp-sha512
+ micalg=pgp-sha256
 
 --=-=-=
 Content-Type: text/plain; protected-headers="v1"
@@ -20,10 +20,9 @@ Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iLMEAQEKAB0WIQRa6rEfXjPc6HXdt1ttkmEtlORjgQUCWusAfwAKCRBtkmEtlORj
-geIJA/0WcyxlwDfXRMbiGE/crLBYhLpXK6ZMzjEn6HQDntMIk3Kr61rAwL8edKGx
-gbxr1+XlMYRt+PJDhi8iI0odDI1YjiBjjc0bXUoDn60UcjL2MPGshI3426CA7cqB
-cMaoRHajfdxYjSzzfh8duVgi0vmUnsyoePBhANRbDIVmCQS11g==
-=c4cq
+iHUEARYIAB0WIQSaOv5sYAZaFI/UtYp+ar6SRkXMYAUCYxiQlwAKCRB+ar6SRkXM
+YIm6AP0UlyfUbhd7bG4Azs0rby3qPUXOC1DtbSpQegSuR7nGgAEAub3WeYgEVVOS
+fsnuNE9Q/LnPTS5m85eMa1s1bS8fcAE=
+=O+fm
 -----END PGP SIGNATURE-----
 --=-=-=--

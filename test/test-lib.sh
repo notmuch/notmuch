@@ -71,7 +71,7 @@ add_gnupg_home () {
     _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
     at_exit_function _gnupg_exit
     mkdir -p -m 0700 "$GNUPGHOME"
-    gpg --no-tty --import <$NOTMUCH_SRCDIR/test/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
+    gpg --no-tty --import <$NOTMUCH_SRCDIR/test/openpgp4-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
     if (gpg --quick-random --version >/dev/null 2>&1) ; then
 	echo quick-random >> "$GNUPGHOME"/gpg.conf
@@ -81,8 +81,8 @@ add_gnupg_home () {
     echo no-emit-version >> "$GNUPGHOME"/gpg.conf
 
     # Change this if we ship a new test key
-    FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
-    SELF_USERID="Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"
+    FINGERPRINT="9A3AFE6C60065A148FD4B58A7E6ABE924645CC60"
+    SELF_USERID="Notmuch Test Suite (INSECURE!) <test_suite@notmuchmail.org>"
     SELF_EMAIL="test_suite@notmuchmail.org"
     printf '%s:6:\n' "$FINGERPRINT" | gpg --quiet --batch --no-tty --import-ownertrust
 }

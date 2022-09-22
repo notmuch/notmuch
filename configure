@@ -525,9 +525,9 @@ EOF
 	printf 'No.\nCould not make tempdir for testing session-key support.\n'
 	errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _check_session_keys.c ${gmime_ldflags} -o _check_session_keys \
-	   && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
+	   && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/openpgp4-secret-key.asc \
 	   && SESSION_KEY=$(GNUPGHOME=${TEMP_GPG} ./_check_session_keys) \
-	   && [ $SESSION_KEY = 9:0BACD64099D1468AB07C796F0C0AC4851948A658A15B34E803865E9FC635F2F5 ]
+	   && [ $SESSION_KEY = 9:496A0B6D15A5E7BA762FB8E5FE6DEE421D4D9BBFCEAD1CDD0CCF636D07ADE621 ]
     then
 	printf "OK.\n"
     else
@@ -670,7 +670,7 @@ int main () {
     body = GMIME_MULTIPART_ENCRYPTED(g_mime_message_get_mime_part (g_mime_parser_construct_message (parser, NULL)));
     if (body == NULL) return !!	fprintf (stderr, "did not find a multipart/encrypted message\n");
 
-    output = g_mime_multipart_encrypted_decrypt (body, GMIME_DECRYPT_NONE, "9:13607E4217515A70EC8DF9DBC16C5327B94577561D98AD1246FA8756659C7899", &result, &error);
+    output = g_mime_multipart_encrypted_decrypt (body, GMIME_DECRYPT_NONE, "9:9E1CDF53BBF794EA34F894B5B68E1E56FB015EA69F81D2A5EAB7F96C7B65783E", &result, &error);
     if (error || output == NULL) return !! fprintf (stderr, "decrypt failed\n");
 
     sig_list = g_mime_decrypt_result_get_signatures (result);
@@ -691,7 +691,7 @@ EOF
 	printf 'No.\nCould not make tempdir for testing signature verification when decrypting with session keys.\n'
 	errors=$((errors + 1))
     elif ${CC} ${CFLAGS} ${gmime_cflags} _verify_sig_with_session_key.c ${gmime_ldflags} -o _verify_sig_with_session_key \
-	    && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/gnupg-secret-key.asc \
+	    && GNUPGHOME=${TEMP_GPG} gpg --batch --quiet --import < "$srcdir"/test/openpgp4-secret-key.asc \
 	    && rm -f ${TEMP_GPG}/private-keys-v1.d/*.key
     then
 	if GNUPGHOME=${TEMP_GPG} ./_verify_sig_with_session_key; then
