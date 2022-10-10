@@ -564,7 +564,6 @@ int main () {
     GMimeSignature *sig = NULL;
     GMimeCertificate *cert = NULL;
     GMimeObject *output = NULL;
-    GMimeValidity validity = GMIME_VALIDITY_UNKNOWN;
     int len;
 
     g_mime_init ();
@@ -586,7 +585,7 @@ int main () {
     cert = g_mime_signature_get_certificate (sig);
     if (cert == NULL) return !! fprintf (stderr, "no GMimeCertificate found\n");
 #ifdef CHECK_VALIDITY
-    validity = g_mime_certificate_get_id_validity (cert);
+    GMimeValidity validity = g_mime_certificate_get_id_validity (cert);
     if (validity != GMIME_VALIDITY_FULL) return !! fprintf (stderr, "Got validity %d, expected %d\n", validity, GMIME_VALIDITY_FULL);
 #endif
 #ifdef CHECK_EMAIL
@@ -1567,8 +1566,16 @@ cat > sh.config <<EOF
 
 NOTMUCH_SRCDIR='${NOTMUCH_SRCDIR}'
 
+# Flags needed to compile and link against Xapian
+NOTMUCH_XAPIAN_CXXFLAGS="${xapian_cxxflags}"
+NOTMUCH_XAPIAN_LDFLAGS="${xapian_ldflags}"
+
 # Whether to have Xapian retry lock
 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${WITH_RETRY_LOCK}
+
+# Flags needed to compile and link against GMime
+NOTMUCH_GMIME_CFLAGS="${gmime_cflags}"
+NOTMUCH_GMIME_LDFLAGS="${gmime_ldflags}"
 
 # Whether GMime can verify X.509 certificate validity
 NOTMUCH_GMIME_X509_CERT_VALIDITY=${gmime_x509_cert_validity}
@@ -1578,6 +1585,10 @@ NOTMUCH_GMIME_EMITS_ANGLE_BRACKETS=${gmime_emits_angle_brackets}
 
 # Whether GMime can verify signatures when decrypting with a session key:
 NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY=${gmime_verify_with_session_key}
+
+# Flags needed to compile and link against zlib
+NOTMUCH_ZLIB_CFLAGS="${zlib_cflags}"
+NOTMUCH_ZLIB_LDFLAGS="${zlib_ldflags}"
 
 # Does the C compiler support the address sanitizer
 NOTMUCH_HAVE_ASAN=${have_asan}
@@ -1614,6 +1625,10 @@ NOTMUCH_HAVE_PYTHON3_PYTEST=${have_python3_pytest}
 
 # Is the sfsexp library available?
 NOTMUCH_HAVE_SFSEXP=${have_sfsexp}
+
+# And if so, flags needed at compile/link time for sfsexp
+NOTMUCH_SFSEXP_CFLAGS="${sfsexp_cflags}"
+NOTMUCH_SFSEXP_LDFLAGS="${sfsexp_ldflags}"
 
 # Platform we are run on
 PLATFORM=${platform}

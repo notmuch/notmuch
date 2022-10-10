@@ -522,9 +522,25 @@ notmuch_json_show_sanitize () {
 	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
 	-e 's|"Date": "Fri, 05 Jan 2001 [^"]*0000"|"Date": "GENERATED_DATE"|g' \
 	-e 's|"filename": "signature.asc",||g' \
+	-e 's|"duplicate": 1,||g' \
 	-e 's|"filename": \["/[^"]*"\],|"filename": \["YYYYY"\],|g' \
 	-e 's|"timestamp": 97.......|"timestamp": 42|g' \
 	-e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
+}
+
+notmuch_sexp_show_sanitize () {
+    sed \
+	-e 's|:id "[^"]*"|:id "XXXXX"|g' \
+	-e 's|:Date "Sat, 01 Jan 2000 [^"]*0000"|:Date "GENERATED_DATE"|g' \
+	-e 's|:filename "signature.asc"||g' \
+	-e 's|:duplicate 1 ||g' \
+	-e 's|:filename ("/[^"]*")|:filename ("YYYYY")|g' \
+	-e 's|:timestamp 9........|:timestamp 42|g' \
+	-e 's|:content-length [1-9][0-9]*|:content-length "NONZERO"|g'
+}
+
+notmuch_sexp_search_sanitize () {
+    sed -e 's|:thread "[^"]*"|:thread "XXX"|'
 }
 
 notmuch_emacs_error_sanitize () {
@@ -545,6 +561,10 @@ notmuch_date_sanitize () {
 	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
 
+# remove redundant parts of notmuch-git internal paths
+notmuch_git_sanitize () {
+    sed  -e 's,tags/\([0-9a-f]\{2\}/\)\{2\},,' -e '/FORMAT/d'
+}
 notmuch_uuid_sanitize () {
     sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }
@@ -866,6 +886,19 @@ test_C () {
     test_file="${exec_file}.c"
     cat > ${test_file}
     ${TEST_CC} ${TEST_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${NOTMUCH_BUILDDIR}/lib/ -lnotmuch -ltalloc
+    echo "== stdout ==" > OUTPUT.stdout
+    echo "== stderr ==" > OUTPUT.stderr
+    ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr | notmuch_exception_sanitize | notmuch_debug_sanitize > OUTPUT
+}
+
+test_private_C () {
+    local exec_file test_file
+    exec_file="test${test_count}"
+    test_file="${exec_file}.c"
+    echo '#include <notmuch-private.h>' > ${test_file}
+    cat >> ${test_file}
+    ${TEST_CC} ${TEST_CFLAGS} -I${NOTMUCH_SRCDIR}/test -I${NOTMUCH_SRCDIR}/lib -I${NOTMUCH_SRCDIR}/util -I${NOTMUCH_SRCDIR}/compat ${NOTMUCH_GMIME_CFLAGS} -o ${exec_file} ${test_file} ${NOTMUCH_BUILDDIR}/lib/libnotmuch.a ${NOTMUCH_GMIME_LDFLAGS} ${NOTMUCH_XAPIAN_LDFLAGS} ${NOTMUCH_BUILDDIR}/util/libnotmuch_util.a ${NOTMUCH_SFSEXP_LDFLAGS} ${NOTMUCH_BUILDDIR}/parse-time-string/libparse-time-string.a -ltalloc -lstdc++
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr

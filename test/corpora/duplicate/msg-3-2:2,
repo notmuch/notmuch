@@ -1,0 +1,184 @@
+Return-path: <pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net>
+Envelope-to: david@tethera.net
+Delivery-date: Thu, 20 Dec 2018 13:27:12 -0500
+Received: from mailly.debian.org ([2001:41b8:202:deb:6564:a62:52c3:4b72])
+	by fethera.tethera.net with esmtp (Exim 4.89)
+	(envelope-from <pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net>)
+	id 1ga32O-0005ap-Hn
+	for david@tethera.net; Thu, 20 Dec 2018 13:27:12 -0500
+Received: from alioth-lists-01.debian.net ([2001:ba8:0:2c77:0:4:0:1])
+	by mailly.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net>)
+	id 1ga32O-0004V7-4x
+	for david@tethera.net; Thu, 20 Dec 2018 18:27:12 +0000
+Received: from localhost ([::1] helo=alioth-lists-01.debian.net)
+	by alioth-lists-01.debian.net with esmtp (Exim 4.89)
+	(envelope-from <pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net>)
+	id 1ga32N-0003wA-Sc
+	for bremner@debian.org; Thu, 20 Dec 2018 18:27:11 +0000
+Received: from buxtehude.debian.org ([2607:f8f0:614:1::1274:39])
+ by alioth-lists-01.debian.net with esmtps
+ (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256) (Exim 4.89)
+ (envelope-from <debbugs@buxtehude.debian.org>) id 1ga32M-0003vQ-Q9
+ for pkg-emacsen-addons@lists.alioth.debian.org; Thu, 20 Dec 2018 18:27:10 +0000
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.89)
+ (envelope-from <debbugs@buxtehude.debian.org>)
+ id 1ga32K-0005Sn-7B; Thu, 20 Dec 2018 18:27:08 +0000
+X-Loop: owner@bugs.debian.org
+Resent-From: Sean Whitton <spwhitton@spwhitton.name>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: Debian Emacs addons team
+ <pkg-emacsen-addons@lists.alioth.debian.org>
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 20 Dec 2018 18:27:06 +0000
+Resent-Message-ID: <handler.916808.B916808.154533033319830@bugs.debian.org>
+X-Debian-PR-Message: followup 916808
+X-Debian-PR-Package: src:hydra-el
+X-Debian-PR-Keywords: ftbfs
+References: <87bm5ih3w5.fsf@zephyr.silentflame.com>
+X-Debian-PR-Source: hydra-el
+Received: via spool by 916808-submit@bugs.debian.org id=B916808.154533033319830
+ (code B ref 916808); Thu, 20 Dec 2018 18:27:06 +0000
+Received: (at 916808) by bugs.debian.org; 20 Dec 2018 18:25:33 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.2-bugs.debian.org_2005_01_02
+ (2018-09-13) on buxtehude.debian.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-11.3 required=4.0 tests=BAYES_00,DKIM_SIGNED,
+ DKIM_VALID,DKIM_VALID_AU,DKIM_VALID_EF,PGPSIGNATURE,RCVD_IN_DNSWL_LOW,
+ SORTED_RECIPS,SPF_HELO_PASS,SPF_PASS,SUSPICIOUS_RECIPS,TXREP
+ autolearn=unavailable autolearn_force=no
+ version=3.4.2-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 0; hammy, 115; neutral, 22; spammy, 1.
+ spammytokens:0.902-+--emails
+ hammytokens:0.000-+--HX-ME-Sender:xms, 
+ 0.000-+--H*RU:10.202.2.43,
+ 0.000-+--Hx-spam-relays-external:10.202.2.43, 0.000-+--H*F:U*spwhitton,
+ 0.000-+--H*F:D*spwhitton.name
+Received: from wout2-smtp.messagingengine.com ([64.147.123.25])
+ by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+ (Exim 4.89) (envelope-from <spwhitton@spwhitton.name>)
+ id 1ga30m-00059C-Kv; Thu, 20 Dec 2018 18:25:32 +0000
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+ by mailout.west.internal (Postfix) with ESMTP id C50B712F6;
+ Thu, 20 Dec 2018 13:25:30 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+ by compute3.internal (MEProxy); Thu, 20 Dec 2018 13:25:31 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=spwhitton.name;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=
+ fm1; bh=jAd0CK1DR6lBA7NSLH5FsHIYQv3lqnNZlsr/mb10zqE=; b=X9S4kI14
+ zxdg9IKMIyALL2Eao3GTyyojuATJkgCqJvZWd8RWpty6RBStZfyeOqR1L3Gr5m3/
+ EVeiHQyFNnPor2xjMDmblfPS/u09JxVlc0KMpT0XXRfNWsVQn+U40nNRX15kXzZ/
+ D1rYhxpxzKRzU2tByUULCgbGlXAwJQtOXMDw3mpj1BxcoO13H/0H/KQTQ+AcpiOw
+ BV3JFKL/jA+mH8uAPIgNM2mUYZz5REO89eh3lPhLyc7tw745X+4ywZlo/Piqa0+6
+ BCldY9/nDR3csAUKx1+3hkpJPdqFALBWvG3SelGt44BqcoLsOJLB8QH6trCro39o
+ fEnBaUBTAkTAHA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+ messagingengine.com; h=content-type:date:from:message-id
+ :mime-version:subject:to:x-me-proxy:x-me-proxy:x-me-sender
+ :x-me-sender:x-sasl-enc; s=fm1; bh=jAd0CK1DR6lBA7NSLH5FsHIYQv3lq
+ nNZlsr/mb10zqE=; b=QYqLjUBZtfbO0DUlagvXRP2BPnpTgkvIna9/uCewkdoIH
+ /LuPW6DZUNWQa55qiDquqKXcs0tTODTEzYgeIDgqC+DDBTHnFQvXdWyS1X3o4sLL
+ 8dTKk8lv7M1/zKFxyg/ycNvPJGS9m4ZucGbxjwdgAcozhg7W1Qztxt9eVhPVnenS
+ 5sdeJ9mjIE7lYkKX4QVsXPOi86j6QlfMNyi/OnBfX2+95QiA/xPE/wEq4MYlLNm7
+ Av1P/8OrI4ImDKkOEivarktL+isYL7OXyGB4GfUTsydiy9dhP7RKPxrai1kJRu5S
+ b2470KXNatu2WkyMFrsdcwrSqyKIe096k5xPfVI2A==
+X-ME-Sender: <xms:mt4bXHFFQvAGVxMhHQP5DBif075kRubHE1KJQrR0OsDN2ClFFtlRXw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedtkedrudejfedguddugecutefuodetggdotefrod
+ ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfhuthenuceurghilhhouhhtmecu
+ fedttdenucfuohhrthgvugcurhgvtghiphhsucdlgedtmdenucfjughrpefhvffufffkgg
+ gtsehgtderredttddtnecuhfhrohhmpefuvggrnhcuhghhihhtthhonhcuoehsphifhhhi
+ thhtohhnsehsphifhhhithhtohhnrdhnrghmvgeqnecurfgrrhgrmhepmhgrihhlfhhroh
+ hmpehsphifhhhithhtohhnsehsphifhhhithhtohhnrdhnrghmvgenucevlhhushhtvghr
+ ufhiiigvpedt
+X-ME-Proxy: <xmx:mt4bXGqtKYX8StS4oLrucVpNHp3EoaoH6jbQkd2mTFzupx7FwIJ2dQ>
+ <xmx:mt4bXH457xpOO1PnlqWQoPt1r7kL_P9ta064wZO_JDW1QAycFDjIsg>
+ <xmx:mt4bXPQaOrPjDseNXftuMgX1Y9gyHDbVUCYSYNdX6oXwBQhAGwzqIw>
+ <xmx:mt4bXLbmA2mCpvakWE26qsCvS2IOX4eN0KdeU2tQi-SXYEBMLVpE3A>
+From: Sean Whitton <spwhitton@spwhitton.name>
+To: 916805@bugs.debian.org, 916807@bugs.debian.org, 916808@bugs.debian.org,
+ 916809@bugs.debian.org, 916811@bugs.debian.org, 916867@bugs.debian.org,
+ 916869@bugs.debian.org, 916872@bugs.debian.org, 916875@bugs.debian.org,
+ 916876@bugs.debian.org
+Date: Thu, 20 Dec 2018 18:25:26 +0000
+Message-ID: <87r2ecrr6x.fsf@zephyr.silentflame.com>
+MIME-Version: 1.0
+X-CrossAssassin-Score: 3
+Received-SPF: pass client-ip=2607:f8f0:614:1::1274:39;
+ envelope-from=debbugs@buxtehude.debian.org; helo=buxtehude.debian.org
+x-debian-approved: yes
+Subject: [Pkg-emacsen-addons] Bug#916808: Increase severity to 'serious'
+X-BeenThere: pkg-emacsen-addons@alioth-lists.debian.net
+X-Mailman-Version: 2.1.23
+Precedence: list
+List-Id: Maintainers list for Emacs addon packages
+ <pkg-emacsen-addons.alioth-lists.debian.net>
+List-Unsubscribe: <https://alioth-lists.debian.net/cgi-bin/mailman/options/pkg-emacsen-addons>, 
+ <mailto:pkg-emacsen-addons-request@alioth-lists.debian.net?subject=unsubscribe>
+List-Archive: <http://alioth-lists.debian.net/pipermail/pkg-emacsen-addons/>
+List-Post: <mailto:pkg-emacsen-addons@alioth-lists.debian.net>
+List-Help: <mailto:pkg-emacsen-addons-request@alioth-lists.debian.net?subject=help>
+List-Subscribe: <https://alioth-lists.debian.net/cgi-bin/mailman/listinfo/pkg-emacsen-addons>,
+ <mailto:pkg-emacsen-addons-request@alioth-lists.debian.net?subject=subscribe>
+Reply-To: Sean Whitton <spwhitton@spwhitton.name>, 916808@bugs.debian.org
+Content-Type: multipart/mixed; boundary="===============8231894308137086149=="
+Errors-To: pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net
+Sender: "Pkg-emacsen-addons"
+ <pkg-emacsen-addons-bounces+bremner=debian.org@alioth-lists.debian.net>
+X-Spam_score: 2.8
+X-Spam_score_int: 28
+X-Spam_bar: ++
+
+--===============8231894308137086149==
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha512; protocol="application/pgp-signature"
+
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+control: severity -1 serious
+
+Hello,
+
+Emacs 26.1 has reached Debian unstable (sooner than expected; sorry for
+all the e-mails).
+
+=2D-=20
+Sean Whitton
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEm5FwB64DDjbk/CSLaVt65L8GYkAFAlwb3pYACgkQaVt65L8G
+YkDLrhAAhORxZzZDE5vlXRm89JYA3jd9OyleioZvDDRCrpEd7CQ5AHiMMJizW1lU
+gn6OBIoW4O04TZ5oOuUnDHK/rS0G4zgNCJUyNf06zVECmdvkzspNNpQ3J5aOi4t2
+lhjRIFOKA9ifGsEqYLwP2dork1xFuyHEqHkDH8zpCTvdzkWky1bwAD/Pj5dArd7t
+FeQGsPm7/64H1/rHk8pSP2pQgRsMDX6rIdx3vuQ7r+NssdRq+II4e479l02TiCDi
+FBOX+n3nPXxREPdZ9EKL4SauL/AnRqpeC9GX6fC9OOnQeQ1xVTzNWKa6ixrqkFoH
+TI/vy51p16jFNgdkLkyLtZA8Tq72TIAKWbZC0GFzWJVNASWu7WDIoMn5pgoi454w
+TgsvK9MOnEYeABiDUa1ppaoMiP4+3j5yT0eWttTMSkcKjk1Ap1o+RfUxlIGl0Rog
+ShbG2y6Mv8FERtjzPVQ7VMLDN9zRIbtlSJFm7CboPNSAygzzzaA/RIN/e8MdbZoM
+a8AT9KiAVHEEcw+nWFAatAew5VP9iRZVgrVdWBszuaWOolxnYvpAL45WanqG0eab
+VMe66+rZ8momI0MsM9JcqBwXO+fOf8CrPSO9PL8VFEJXFLZQS7asFStJf2l8msWE
+3IYhvk4B6Nf1R96XzpXLlkOnoGtcnPVAvotrGU/rDfk5i/WF810=
+=mWfF
+-----END PGP SIGNATURE-----
+--=-=-=--
+
+
+--===============8231894308137086149==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KUGtnLWVtYWNz
+ZW4tYWRkb25zIG1haWxpbmcgbGlzdApQa2ctZW1hY3Nlbi1hZGRvbnNAYWxpb3RoLWxpc3RzLmRl
+Ymlhbi5uZXQKaHR0cHM6Ly9hbGlvdGgtbGlzdHMuZGViaWFuLm5ldC9jZ2ktYmluL21haWxtYW4v
+bGlzdGluZm8vcGtnLWVtYWNzZW4tYWRkb25zCg==
+
+--===============8231894308137086149==--
+

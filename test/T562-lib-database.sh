@@ -17,7 +17,9 @@ int main (int argc, char** argv)
    notmuch_status_t stat = NOTMUCH_STATUS_SUCCESS;
    char *msg = NULL;
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
@@ -241,14 +243,14 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
         const char *path = talloc_asprintf(db, "%s/01:2,", argv[1]);
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_index_file (db, path, NULL, &msg);
-        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf ("%d\n", stat == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred finding message: Database has been closed.
+Cannot write to a closed database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -356,14 +358,14 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         EXPECT0(notmuch_database_close (db));
         stat = notmuch_database_set_config (db, "foo", "bar");
-        printf("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n", stat == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-Error: A Xapian exception occurred setting metadata: Database has been closed
+Cannot write to a closed database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

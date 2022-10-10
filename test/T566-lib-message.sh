@@ -27,9 +27,11 @@ int main (int argc, char** argv)
    notmuch_status_t stat;
    char *msg = NULL;
    notmuch_message_t *message = NULL;
-   const char *id = "1258471718-6781-1-git-send-email-dottedmag@dottedmag.net";
+   const char *id = "87pr7gqidx.fsf@yoom.home.cworth.org";
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
@@ -82,7 +84,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+87pr7gqidx.fsf@yoom.home.cworth.org
 1
 == stderr ==
 EOF
@@ -154,7 +156,7 @@ cat c_head0 - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
-MAIL_DIR/01:2,
+MAIL_DIR/cur/40:2,
 SUCCESS
 == stderr ==
 EOF
@@ -229,7 +231,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_add_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -245,7 +247,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_remove_tag (message, "boom");
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -305,12 +307,126 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "_notmuch_message_add_term catches exceptions"
+cat c_head0 - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	/* This relies on Xapian throwing an exception for adding empty terms */
+	status = _notmuch_message_add_term (message, "body", "");
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS );
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "_notmuch_message_remove_term catches exceptions"
+cat c_head0 - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	/* Xapian throws the same exception for empty and non-existent terms;
+	 * error string varies between Xapian versions. */
+	status = _notmuch_message_remove_term (message, "tag", "nonexistent");
+	printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_SUCCESS );
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "_notmuch_message_add_filename on closed db"
+cat c_head - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	status = _notmuch_message_add_filename (message, "some-filename");
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "_notmuch_message_remove_filename on closed db"
+cat c_head - c_tail <<'EOF' | test_private_C ${MAIL_DIR}
+    {
+	notmuch_private_status_t status;
+	status = _notmuch_message_remove_filename (message, "some-filename");
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Handle converting tags to maildir flags with closed db"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+    {
+	notmuch_status_t status;
+	status = notmuch_message_tags_to_maildir_flags (message);
+	printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+POSTLIST_PATH=(${MAIL_DIR}/.notmuch/xapian/postlist.*)
+test_begin_subtest "Handle converting tags to maildir flags with corrupted db"
+backup_database
+cat c_head0 - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
+    {
+        notmuch_status_t status;
+
+        status = notmuch_message_add_tag (message, "draft");
+        if (status) exit(1);
+
+        int fd = open(argv[2],O_WRONLY|O_TRUNC);
+        if (fd < 0) {
+            fprintf (stderr, "error opening %s\n", argv[1]);
+            exit (1);
+        }
+
+        status = notmuch_message_tags_to_maildir_flags (message);
+        printf("%d\n%d\n", message != NULL, status != NOTMUCH_STATUS_SUCCESS);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+1
+== stderr ==
+EOF
+restore_database
+notmuch new
+notmuch tag -draft id:87pr7gqidx.fsf@yoom.home.cworth.org
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Handle removing all tags with closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_remove_all_tags (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -326,7 +442,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_freeze (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_SUCCESS);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
@@ -342,7 +458,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         notmuch_status_t status;
         status = notmuch_message_thaw (message);
-        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW);
+        printf("%d\n%d\n", message != NULL, status == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED

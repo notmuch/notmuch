@@ -26,7 +26,7 @@ class Message(base.NotmuchObject):
     package from Python's standard library.  You could e.g. create
     this as such::
 
-       notmuch_msg = db.get_message(msgid)  # or from a query
+       notmuch_msg = db.find(msgid)  # or from a query
        parser = email.parser.BytesParser(policy=email.policy.default)
        with notmuch_msg.path.open('rb) as fp:
            email_msg = parser.parse(fp)

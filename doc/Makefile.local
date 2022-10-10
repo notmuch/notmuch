@@ -18,7 +18,9 @@ MAN7_RST := $(wildcard $(srcdir)/doc/man7/*.rst)
 MAN_RST_FILES := $(MAN1_RST) $(MAN5_RST) $(MAN7_RST)
 ALL_RST_FILES := $(MAN_RST_FILES) $(srcdir)/doc/notmuch-emacs.rst
 
+COPY_ROFF1 := $(patsubst %,$(DOCBUILDDIR)/man/man1/%.1,nmbug notmuch-setup)
 MAN1_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN1_RST:.rst=.1))
+MAN1_ROFF := $(MAN1_ROFF) $(COPY_ROFF1)
 MAN5_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN5_RST:.rst=.5))
 MAN7_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN7_RST:.rst=.7))
 MAN_ROFF_FILES := $(MAN1_ROFF) $(MAN5_ROFF) $(MAN7_ROFF)
@@ -33,7 +35,8 @@ ifeq ($(WITH_EMACS),1)
 	INFO_TEXI_FILES += $(DOCBUILDDIR)/texinfo/notmuch-emacs.texi
 endif
 
-INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info)
+COPY_INFO1 := $(patsubst $(DOCBUILDDIR)/man/man1/%.1,$(DOCBUILDDIR)/texinfo/%.info,$(COPY_ROFF1))
+INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info) $(COPY_INFO1)
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
@@ -130,7 +133,6 @@ install-man: ${MAN_GZIP_FILES}
 	install -m0644 $(filter %.1.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man1
 	install -m0644 $(filter %.5.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(filter %.7.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man7
-	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 endif
 
 ifneq ($(HAVE_SPHINX)$(HAVE_MAKEINFO),11)

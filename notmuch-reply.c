@@ -663,7 +663,7 @@ do_reply (notmuch_database_t *notmuch,
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
 
-	if (mime_node_open (notmuch, message, &params->crypto, &node))
+	if (mime_node_open (notmuch, message, params->duplicate, &params->crypto, &node))
 	    return 1;
 
 	reply = create_reply_message (notmuch, message,
@@ -683,7 +683,7 @@ do_reply (notmuch_database_t *notmuch,
 
 	    /* Start the original */
 	    sp->map_key (sp, "original");
-	    format_part_sprinter (notmuch, sp, node, true, false);
+	    format_part_sprinter (notmuch, sp, node, params->duplicate, true, false);
 
 	    /* End */
 	    sp->end (sp);
@@ -715,6 +715,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
     int opt_index;
     notmuch_show_params_t params = {
 	.part = -1,
+	.duplicate = 0,
 	.crypto = { .decrypt = NOTMUCH_DECRYPT_AUTO },
     };
     int format = FORMAT_DEFAULT;
@@ -739,6 +740,7 @@ notmuch_reply_command (notmuch_database_t *notmuch, int argc, char *argv[])
 				      { "auto", NOTMUCH_DECRYPT_AUTO },
 				      { "true", NOTMUCH_DECRYPT_NOSTASH },
 				      { 0, 0 } } },
+	{ .opt_int = &params.duplicate, .name = "duplicate" },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };

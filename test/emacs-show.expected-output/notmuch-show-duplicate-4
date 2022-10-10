@@ -1,0 +1,20 @@
+Sean Whitton <spwhitton@spwhitton.name> (2018-12-20) (inbox signed)         4/5
+Subject: [Pkg-emacsen-addons] Bug#916811: Increase severity to 'serious'
+To: 916805@bugs.debian.org, 916807@bugs.debian.org, 916808@bugs.debian.org, 916809@bugs.debian.org, 916811@bugs.debian.org, 916867@bugs.debian.org, 916869@bugs.debian.org, 916872@bugs.debian.org, 916875@bugs.debian.org, 916876@bugs.debian.org
+Date: Thu, 20 Dec 2018 18:25:26 +0000
+
+[ multipart/mixed ]
+[ multipart/signed ]
+[ Unknown key ID 0x695B7AE4BF066240 or unsupported algorithm ]
+[ text/plain ]
+control: severity -1 serious
+
+Hello,
+
+Emacs 26.1 has reached Debian unstable (sooner than expected; sorry for
+all the e-mails).
+
+[ 2-line signature. Click/Enter to show. ]
+[ signature.asc: application/pgp-signature ]
+[ text/plain ]
+[ 4-line signature. Click/Enter to show. ]

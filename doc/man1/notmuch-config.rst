@@ -55,13 +55,14 @@ The available configuration items are described below. Non-absolute
 paths are presumed relative to `$HOME` for items in section
 **database**.
 
-built_with.<name>
+.. nmconfig:: built_with.<name>
+
     Compile time feature <name>. Current possibilities include
     "retry_lock" (configure option, included by default).
     (since notmuch 0.30, "compact" and "field_processor" are
     always included.)
 
-database.autocommit
+.. nmconfig:: database.autocommit
 
     How often to commit transactions to disk. `0` means wait until
     command completes, otherwise an integer `n` specifies to commit to
@@ -69,7 +70,8 @@ database.autocommit
 
     History: this configuration value was introduced in notmuch 0.33.
 
-database.backup_dir
+.. nmconfig:: database.backup_dir
+
     Directory to store tag dumps when upgrading database.
 
     History: this configuration value was introduced in notmuch 0.32.
@@ -77,7 +79,8 @@ database.backup_dir
     Default: A sibling directory of the Xapian database called
     `backups`.
 
-database.hook_dir
+.. nmconfig:: database.hook_dir
+
     Directory containing hooks run by notmuch commands. See
     :any:`notmuch-hooks(5)`.
 
@@ -85,9 +88,8 @@ database.hook_dir
 
     Default: See HOOKS, below.
 
-.. _database.mail_root:
+.. nmconfig:: database.mail_root
 
-database.mail_root
     The top-level directory where your mail currently exists and to
     where mail will be delivered in the future. Files should be
     individual email messages.
@@ -95,18 +97,33 @@ database.mail_root
     History: this configuration value was introduced in notmuch 0.32.
 
     Default: For compatibility with older configurations, the value of
-    database.path is used if **database.mail\_root** is unset.
+    database.path is used if :nmconfig:`database.mail_root` is unset.
 
-database.path
+.. nmconfig:: database.path
+
     Notmuch will store its database here, (in
-    sub-directory named ``.notmuch`` if **database.mail\_root**
+    sub-directory named ``.notmuch`` if :nmconfig:`database.mail_root`
     is unset).
 
     Default: see :ref:`database`
 
-.. _index.decrypt:
+.. nmconfig:: git.path
 
-index.decrypt
+    Default location for git repository for :any:`notmuch-git`.
+
+.. nmconfig:: git.safe_fraction
+
+   Some :any:`notmuch-git` operations check that the fraction of
+   messages changed (in the database or in git, as appropriate) is not
+   too large. This item controls what fraction of total messages is
+   considered "not too large".
+
+.. nmconfig:: git.tag_prefix
+
+    Default tag prefix (filter) for :any:`notmuch-git`.
+
+.. nmconfig:: index.decrypt
+
     Policy for decrypting encrypted messages during indexing.  Must be
     one of: ``false``, ``auto``, ``nostash``, or ``true``.
 
@@ -161,7 +178,8 @@ index.decrypt
 
 .. _index.header:
 
-index.header.<prefix>
+.. nmconfig:: index.header.<prefix>
+
     Define the query prefix <prefix>, based on a mail header. For
     example ``index.header.List=List-Id`` will add a probabilistic
     prefix ``List:`` that searches the ``List-Id`` field.  User
@@ -170,9 +188,8 @@ index.header.<prefix>
     supported. See :any:`notmuch-search-terms(7)` for a list of existing
     prefixes, and an explanation of probabilistic prefixes.
 
-.. _maildir.synchronize_flags:
+.. nmconfig:: maildir.synchronize_flags
 
-maildir.synchronize\_flags
     If true, then the following maildir flags (in message filenames)
     will be synchronized with the corresponding notmuch tags:
 
@@ -205,9 +222,8 @@ maildir.synchronize\_flags
 
     Default: ``true``.
 
-.. _new.ignore:
+.. nmconfig:: new.ignore
 
-new.ignore
     A list to specify files and directories that will not be searched
     for messages by :any:`notmuch-new(1)`. Each entry in the list is either:
 
@@ -225,20 +241,21 @@ new.ignore
 
     Default: empty list.
 
-.. _new.tags:
+.. nmconfig:: new.tags
 
-new.tags
     A list of tags that will be added to all messages incorporated by
     **notmuch new**.
 
     Default: ``unread;inbox``.
 
-query.<name>
+.. nmconfig:: query.<name>
+
     Expansion for named query called <name>. See
     :any:`notmuch-search-terms(7)` for more information about named
     queries.
 
-search.exclude\_tags
+.. nmconfig:: search.exclude_tags
+
     A list of tags that will be excluded from search results by
     default. Using an excluded tag in a query will override that
     exclusion.
@@ -246,9 +263,7 @@ search.exclude\_tags
     Default: empty list. Note that :any:`notmuch-setup(1)` puts
     ``deleted;spam`` here when creating new configuration file.
 
-.. _show.extra_headers:
-
-show.extra\_headers
+.. nmconfig:: show.extra_headers
 
     By default :any:`notmuch-show(1)` includes the following headers
     in structured output if they are present in the message:
@@ -260,26 +275,28 @@ show.extra\_headers
 
     Default: empty list.
 
-squery.<name>
+.. nmconfig:: squery.<name>
+
     Expansion for named query called <name>, using s-expression syntax. See
     :any:`notmuch-sexp-queries(7)` for more information about s-expression
     queries.
 
-user.name
+.. nmconfig:: user.name
+
     Your full name.
 
     Default: ``$NAME`` variable if set, otherwise read from
     ``/etc/passwd``.
 
-user.other\_email
+.. nmconfig:: user.other_email
+
     A list of other email addresses at which you receive email
-    (see also, :ref:`user.primary_email <user.primary_email>`).
+    (see also, :nmconfig:`user.primary_email`)
 
     Default: not set.
 
-.. _user.primary_email:
+.. nmconfig:: user.primary_email
 
-user.primary\_email
     Your primary email address.
 
     Default: ``$EMAIL`` variable if set, otherwise constructed from

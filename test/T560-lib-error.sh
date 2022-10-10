@@ -16,7 +16,11 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_open (NULL, 0, 0);
+    char* msg = NULL;
+    stat = notmuch_database_open_with_config (NULL,
+					      NOTMUCH_DATABASE_MODE_READ_ONLY,
+					      "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -34,7 +38,11 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_open ("./nonexistent/foo", 0, 0);
+    char *msg = NULL;
+    stat = notmuch_database_open_with_config ("./nonexistent/foo",
+					     NOTMUCH_DATABASE_MODE_READ_ONLY,
+					     "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -52,7 +60,10 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create ("./nonexistent/foo", &db);
+    char *msg = NULL;
+
+    stat = notmuch_database_create_with_config ("./nonexistent/foo", "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -70,7 +81,11 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_open (argv[1], 0, 0);
+    char* msg = NULL;
+    stat = notmuch_database_open_with_config (argv[1],
+					      NOTMUCH_DATABASE_MODE_READ_ONLY,
+					      "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -87,7 +102,10 @@ test_C <<'EOF'
 int main (int argc, char** argv)
 {
     notmuch_status_t stat;
-    stat = notmuch_database_create (NULL, NULL);
+    char *msg;
+
+    stat = notmuch_database_create_with_config (NULL, "", NULL, NULL, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -105,7 +123,10 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create (argv[1], &db);
+    char *msg;
+
+    stat = notmuch_database_create_with_config (argv[1], "", NULL, &db, &msg);
+    if (msg) fputs (msg, stderr);
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -123,7 +144,11 @@ int main (int argc, char** argv)
 {
    notmuch_database_t *db;
    notmuch_status_t stat;
-   stat = notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_ONLY, &db);
+   char* msg = NULL;
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_ONLY,
+					     "", NULL, &db, &msg);
+   if (msg) fputs (msg, stderr);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
    }
@@ -148,7 +173,9 @@ int main (int argc, char** argv)
 {
    notmuch_database_t *db;
    notmuch_status_t stat;
-   stat = notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     "", NULL, &db, NULL);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
    }
@@ -206,7 +233,9 @@ int main (int argc, char** argv)
    char *msg = NULL;
    int fd;
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
@@ -241,24 +270,6 @@ cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
 A Xapian exception occurred finding message
-EOF
-test_expect_equal_file EXPECTED OUTPUT.clean
-restore_database
-
-backup_database
-test_begin_subtest "Xapian exception getting tags"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR} ${POSTLIST_PATH}
-   {
-       notmuch_tags_t *tags = NULL;
-       tags = notmuch_database_get_all_tags (db);
-       stat = (tags == NULL);
-   }
-EOF
-sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
-cat <<'EOF' >EXPECTED
-== stdout ==
-== stderr ==
-A Xapian exception occurred getting tags
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database

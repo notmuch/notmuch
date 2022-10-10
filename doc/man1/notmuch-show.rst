@@ -27,6 +27,12 @@ Supported options for **show** include
 
 .. program:: show
 
+.. option:: --duplicate=N
+
+   Output duplicate number N. The numbering starts from 1, and matches
+   the order used by :option:`search --duplicate` and
+   :option:`search --output=files <search --output>`
+
 .. option:: --entire-thread=(true|false)
 
    If true, **notmuch show** outputs all messages in the thread of
@@ -225,7 +231,7 @@ CONFIGURATION
 =============
 
 Structured output (json / sexp) is influenced by the configuration
-option :ref:`show.extra_headers <show.extra_headers>`. See
+option :nmconfig:`show.extra_headers`. See
 :any:`notmuch-config(1)` for details.
 
 EXIT STATUS

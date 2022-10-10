@@ -38,6 +38,12 @@ Supported options for **reply** include
 
 .. program:: reply
 
+.. option:: --duplicate=N
+
+   Reply to duplicate number N. The numbering starts from 1, and
+   matches the order used by :option:`show --duplicate` and
+   :option:`search --output=files <search --output>`.
+
 .. option:: --format=(default|json|sexp|headers-only)
 
    default

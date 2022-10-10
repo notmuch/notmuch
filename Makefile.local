@@ -1,7 +1,7 @@
 # -*- makefile-gmake -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings
+all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings notmuch-git nmbug
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -44,6 +44,15 @@ $(SHA256_FILE): $(TAR_FILE)
 
 $(DETACHED_SIG_FILE): $(TAR_FILE)
 	gpg --armor --detach-sign $^
+
+CLEAN := $(CLEAN) notmuch-git
+notmuch-git: notmuch-git.py
+	cp $< $@
+	chmod ugo+x $@
+
+CLEAN := $(CLEAN) nmbug
+nmbug: notmuch-git
+	ln -s $< $@
 
 .PHONY: dist
 dist: $(TAR_FILE)

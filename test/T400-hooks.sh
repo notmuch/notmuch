@@ -15,6 +15,15 @@ EOF
     echo "${TOKEN}" > ${2}
 }
 
+create_printenv_hook () {
+    mkdir -p ${HOOK_DIR}
+    cat <<EOF >"${HOOK_DIR}/${1}"
+#!/bin/sh
+printenv "${2}" > "${3}"
+EOF
+    chmod +x "${HOOK_DIR}/${1}"
+}
+
 create_write_hook () {
     local TOKEN="${RANDOM}"
     mkdir -p ${HOOK_DIR}
@@ -53,8 +62,11 @@ add_message
 # create maildir structure for notmuch-insert
 mkdir -p "$MAIL_DIR"/{cur,new,tmp}
 
+ORIG_NOTMUCH_CONFIG=${NOTMUCH_CONFIG}
 for config in traditional profile explicit relative XDG split; do
     unset NOTMUCH_PROFILE
+    export NOTMUCH_CONFIG=${ORIG_NOTMUCH_CONFIG}
+    EXPECTED_CONFIG=${NOTMUCH_CONFIG}
     notmuch config set database.hook_dir
     notmuch config set database.path ${MAIL_DIR}
     case $config in
@@ -65,8 +77,10 @@ for config in traditional profile explicit relative XDG split; do
 	    dir=${HOME}/.config/notmuch/other
 	    mkdir -p ${dir}
 	    HOOK_DIR=${dir}/hooks
-	    cp ${NOTMUCH_CONFIG} ${dir}/config
+	    EXPECTED_CONFIG=${dir}/config
+	    cp ${NOTMUCH_CONFIG} ${EXPECTED_CONFIG}
 	    export NOTMUCH_PROFILE=other
+	    unset NOTMUCH_CONFIG
 	    ;;
 	explicit)
 	    HOOK_DIR=${HOME}/.notmuch-hooks
@@ -199,6 +213,23 @@ EOF
     thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; add msg in new (inbox unread)
 EOF
     test_expect_equal_file EXPECTED OUTPUT
+
+    test_begin_subtest "NOTMUCH_CONFIG is set"
+    create_printenv_hook "pre-new" NOTMUCH_CONFIG OUTPUT
+    NOTMUCH_NEW
+    cat <<EOF > EXPECTED
+${EXPECTED_CONFIG}
+EOF
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+    test_begin_subtest "NOTMUCH_CONFIG is set by --config"
+    create_printenv_hook "pre-new" NOTMUCH_CONFIG OUTPUT
+    cp "${EXPECTED_CONFIG}" "${EXPECTED_CONFIG}.alternate"
+    notmuch --config "${EXPECTED_CONFIG}.alternate" new
+    cat <<EOF > EXPECTED
+${EXPECTED_CONFIG}.alternate
+EOF
+    test_expect_equal_file_nonempty EXPECTED OUTPUT
 
     rm -rf ${HOOK_DIR}
 done

@@ -854,6 +854,26 @@ notmuch search date:2009-11-17..2009-11-18 and from:keithp | notmuch_search_sani
 notmuch search --query=sexp  '(and (date 2009-11-17 2009-11-18) (from keithp))' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "date query, lower bound only"
+notmuch search date:2009-11-18.. and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date 2009-11-18 "") (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "date query, upper bound only"
+notmuch search date:..2009-11-17 and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date "" 2009-11-17) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "date query, lower bound only, using *"
+notmuch search date:2009-11-18.. and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date 2009-11-18 *) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "date query, upper bound only, using *"
+notmuch search date:..2009-11-17 and from:keithp | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  '(and (date * 2009-11-17) (from keithp))' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "date query, illegal nesting 1"
 notmuch search --query=sexp '(to (date))' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
@@ -920,6 +940,26 @@ revision2=$(notmuch count --lastmod '*' | cut -f3)
 notmuch search lastmod:$revision..$revision2 | notmuch_search_sanitize > EXPECTED
 notmuch search --query=sexp  "(and (lastmod $revision $revision2))" | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, lower bound only"
+notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod $revision \"\")" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, upper bound only"
+notmuch search lastmod:..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod \"\" $revision2)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, lower bound only, using *"
+notmuch search lastmod:$revision.. | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod $revision *)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "lastmod query, upper bound only, using *"
+notmuch search lastmod:..$revision2 | notmuch_search_sanitize > EXPECTED
+notmuch search --query=sexp  "(lastmod * $revision2)" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "lastmod query, illegal nesting 1"
 notmuch search --query=sexp '(to (lastmod))' > OUTPUT 2>&1
@@ -1115,6 +1155,32 @@ too many arguments to macro
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Saved Search: bad parameter syntax 5"
+notmuch config set squery.Bad5 '(macro (thing) (tag (rx ,thing)))'
+notmuch search --query=sexp '(Bad5 (1 2))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'rx' expects single atom as argument
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 6"
+notmuch config set squery.Bad6 '(macro (thing) (tag (starts-with ,thing)))'
+notmuch search --query=sexp '(Bad6 (1 2))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+'starts-with' expects single atom as argument
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Saved Search: bad parameter syntax 7"
+notmuch search --query=sexp '(subject (rx ,unknown))' >OUTPUT 2>&1
+cat <<EOF > EXPECTED
+notmuch search: Syntax error in query
+undefined parameter 'unknown'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Saved Search: macro without body"
 notmuch config set squery.Bad3  '(macro (a b))'
 notmuch search --query=sexp '(Bad3)' >OUTPUT 2>&1
@@ -1144,7 +1210,7 @@ notmuch config set squery.Bad6  '(macro (a) (and ,b (subject maildir)))'
 notmuch search --query=sexp '(Bad6 foo)' >OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
-undefined parameter b
+undefined parameter 'b'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -1166,6 +1232,18 @@ notmuch config set squery.TagSubject2  '(macro (tagname subj) (and (tag ,tagname
 notmuch search --query=sexp '(TagSubject2 inbox maildir)' | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "macro in regex"
+notmuch search tag:inbox and date:2009-11-17 | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.D  '(macro (tagname)  (and (date 2009-11-17) (tag (rx ,tagname))))'
+notmuch search --query=sexp '(D inbo)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "macro in wildcard"
+notmuch search tag:inbox and date:2009-11-17 | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.W  '(macro (tagname)  (and (date 2009-11-17) (tag (starts-with ,tagname))))'
+notmuch search --query=sexp '(W inbo)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_begin_subtest "nested macros (shadowing)"
 notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
 notmuch config set squery.Inner '(macro (x) (subject ,x))'
@@ -1179,9 +1257,23 @@ notmuch config set squery.Outer2  '(macro (x y) (and (tag ,x) (Inner2 ,y)))'
 notmuch search --query=sexp '(Outer2 inbox maildir)' > OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: Syntax error in query
-undefined parameter y
+undefined parameter 'y'
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "nested macros (shadowing, regex)"
+notmuch search tag:/inbo/ and subject:/Maildi/ | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.Inner3 '(macro (x) (subject (rx ,x)))'
+notmuch config set squery.Outer3  '(macro (x y) (and (tag (rx ,x)) (Inner3 ,y)))'
+notmuch search --query=sexp '(Outer3 inbo Maildi)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
+test_begin_subtest "nested macros (shadowing, wildcard)"
+notmuch search tag:inbox and subject:maildir | notmuch_search_sanitize > EXPECTED
+notmuch config set squery.Inner4 '(macro (x) (subject (starts-with ,x)))'
+notmuch config set squery.Outer4  '(macro (x y) (and (tag (starts-with ,x)) (Inner4 ,y)))'
+notmuch search --query=sexp '(Outer4 inbo maildi)' | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
 
 test_begin_subtest "combine macro and user defined header"
 notmuch config set squery.About '(macro (name) (or (subject ,name) (List ,name)))'

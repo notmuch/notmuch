@@ -10,7 +10,9 @@
 /bindings/python-cffi/build/
 /lib/libnotmuch*.dylib
 /lib/libnotmuch.so*
+/nmbug
 /notmuch
+/notmuch-git
 /notmuch-shared
 /releases
 /sh.config

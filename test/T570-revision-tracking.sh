@@ -19,7 +19,12 @@ int main (int argc, char** argv)
 
    unsigned long rev;
 
-   stat = notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_ONLY, &db);
+   char* msg = NULL;
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_ONLY,
+					     "", NULL, &db, &msg);
+   if (msg) fputs (msg, stderr);
+
    if (stat)
        fputs ("open failed\n", stderr);
    revision = notmuch_database_get_revision (db, &uuid);

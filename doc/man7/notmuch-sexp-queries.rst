@@ -119,6 +119,12 @@ a message has one such attribute, and ``and`` otherwise.
 Term or phrase fields can contain arbitrarily complex queries made up
 from terms, operators, and modifiers, but not other fields.
 
+Range fields take one or two arguments specifying lower and upper
+bounds.  One argument is interpreted as identical upper and lower
+bounds. Either upper or lower bound may be specified as ``""`` or
+``*`` to specify the lowest possible lower bound or highest possible
+upper bound.
+
 .. _field-table:
 
 .. table:: Fields with supported modifiers
@@ -221,7 +227,7 @@ EXAMPLES
 
 ``(not Bob Marley)``
 
-    Match messages containing neither "Bob" nor "Marley", nor their stems,
+    Match messages containing neither "Bob" nor "Marley", nor their stems.
 
 ``"quick fox"`` ``quick-fox`` ``quick@fox``
 
@@ -230,15 +236,27 @@ EXAMPLES
 
 ``(folder (of (id 1234@invalid)))``
 
-    Match any message in the same folder as the one with Message-Id "1234@invalid"
+    Match any message in the same folder as the one with Message-Id "1234\@invalid".
 
 ``(id 1234@invalid blah@test)``
 
-    Matches Message-Id "1234@invalid" *or* Message-Id "blah@test"
+    Matches Message-Id "1234\@invalid" *or* Message-Id "blah\@test".
 
 ``(and (infix "date:2009-11-18..2009-11-18") (tag unread))``
 
     Match messages in the given date range with tag unread.
+
+``(and (date 2009-11-18 2009-11-18) (tag unread))``
+
+    Match messages in the given date range with tag unread.
+
+``(and (date 2009-11-18 *) (tag unread))``
+
+    Match messages from 2009-11-18 or later with tag unread.
+
+``(and (date * 2009-11-18) (tag unread))``
+
+    Match messages from 2009-11-18 or earlier with tag unread.
 
 ``(starts-with prelim)``
 
@@ -260,18 +278,18 @@ EXAMPLES
 
 ``(thread (of (id 1234@invalid)))``
 
-    Match any message in the same thread as the one with Message-Id "1234@invalid"
+    Match any message in the same thread as the one with Message-Id "1234\@invalid".
 
 ``(thread (matching (from bob@example.com) (to bob@example.com)))``
 
     Match any (messages in) a thread containing a message from
-    "bob@example.com" and a (possibly distinct) message to "bob at
-    example.com")
+    "bob\@example.com" and a (possibly distinct) message to
+    "bob\@example.com".
 
 ``(to (or bob@example.com mallory@example.org))`` ``(or (to bob@example.com) (to mallory@example.org))``
 
-    Match in the "To" or "Cc" headers, "bob@example.com",
-    "mallory@example.org", and also "bob@example.com.au" since it
+    Match in the "To" or "Cc" headers, "bob\@example.com",
+    "mallory\@example.org", and also "bob\@example.com.au" since it
     contains the adjacent triple "bob", "example", "com".
 
 ``(not (to *))``
@@ -281,7 +299,7 @@ EXAMPLES
 ``(List *)``
 
     Match messages with a non-empty List-Id header, assuming
-    configuration ``index.header.List=List-Id``
+    configuration ``index.header.List=List-Id``.
 
 .. _macro_examples:
 

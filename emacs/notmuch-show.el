@@ -32,7 +32,6 @@
 
 (require 'notmuch-lib)
 (require 'notmuch-tag)
-(require 'notmuch-query)
 (require 'notmuch-wash)
 (require 'notmuch-mua)
 (require 'notmuch-crypto)
@@ -85,8 +84,56 @@ visible for any given message."
   :group 'notmuch-show)
 
 (defcustom notmuch-show-header-line t
-  "Show a header line with the current message's subject."
-  :type 'boolean
+  "Show a header line in notmuch show buffers.
+
+If t (the default), the header line will contain the current
+message's subject.
+
+If a string, this value is interpreted as a format string to be
+passed to `format-spec` with `%s` as the substitution variable
+for the message's subject.  E.g., to display the subject trimmed
+to a maximum of 80 columns, you could use \"%>-80s\" as format.
+
+If you assign to this variable a function, it will be called with
+the subject as argument, and the return value will be used as the
+header line format.  Since the function is called with the
+message buffer as the current buffer, it is also possible to
+access any other properties of the message, using for instance
+notmuch-show functions such as
+`notmuch-show-get-message-properties'.
+
+Finally, if this variable is set to nil, no header is
+displayed."
+  :type '(choice (const :tag "No header" ni)
+                 (const :tag "Subject" t)
+                 (string :tag "Format")
+		 (function :tag "Function"))
+  :group 'notmuch-show)
+
+(defcustom notmuch-show-depth-limit nil
+  "Depth beyond which message bodies are displayed lazily.
+
+If bound to an integer, any message with tree depth greater than
+this will have its body display lazily, initially
+inserting only a button.
+
+If this variable is set to nil (the default) no such lazy
+insertion is done."
+  :type '(choice (const :tag "No limit" nil)
+                 (number :tag "Limit" 10))
+  :group 'notmuch-show)
+
+(defcustom notmuch-show-height-limit nil
+  "Height (from leaves) beyond which message bodies are displayed lazily.
+
+If bound to an integer, any message with height in the message
+tree greater than this will have its body displayed lazily,
+initially only a button.
+
+If this variable is set to nil (the default) no such lazy
+display is done."
+  :type '(choice (const :tag "No limit" nil)
+                 (number :tag "Limit" 10))
   :group 'notmuch-show)
 
 (defcustom notmuch-show-relative-dates t
@@ -471,7 +518,19 @@ Return unchanged ADDRESS if parsing fails."
       ;; Otherwise format the name and address together.
       (concat p-name " <" p-address ">"))))
 
-(defun notmuch-show-insert-headerline (headers date tags depth)
+(defun notmuch-show--mark-height (tree)
+  "Calculate and cache height (distance from deepest descendent)"
+  (let* ((msg (car tree))
+	 (children (cadr tree))
+	 (cached-height (plist-get msg :height)))
+    (or cached-height
+	(let ((height
+	       (if (null children) 0
+		 (1+ (apply #'max (mapcar #'notmuch-show--mark-height children))))))
+	  (plist-put msg :height height)
+	  height))))
+
+(defun notmuch-show-insert-headerline (headers date tags depth duplicate file-count)
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
   (let ((start (point))
@@ -491,7 +550,14 @@ message at DEPTH in the current thread."
 	    date
 	    ") ("
 	    (notmuch-tag-format-tags tags tags)
-	    ")\n")
+	    ")")
+    (insert
+     (if (> file-count 1)
+	 (let ((txt (format "%d/%d\n" duplicate file-count)))
+	   (concat
+	    (notmuch-show-spaces-n (max 0 (- (window-width) (+ (current-column) (length txt)))))
+	    txt))
+       "\n"))
     (overlay-put (make-overlay start (point))
 		 'face 'notmuch-message-summary-face)))
 
@@ -1005,21 +1071,29 @@ is t, hide the part initially and show the button."
   (let* ((content-type (plist-get part :content-type))
 	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
+	 (height (plist-get msg :height))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content))
 		       notmuch-show-max-text-part-size)))
+	 (deep (and notmuch-show-depth-limit
+		    (> depth notmuch-show-depth-limit)))
+	 (high (and notmuch-show-height-limit
+		    (> height notmuch-show-height-limit)))
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (and (funcall notmuch-show-insert-header-p-function part hide)
+	 (button (and (or deep long high
+			  (funcall notmuch-show-insert-header-p-function part hide))
 		      (notmuch-show-insert-part-header
 		       nth mime-type
 		       (and content-type (downcase content-type))
 		       (plist-get part :filename))))
-	 ;; Hide the part initially if HIDE is t, or if it is too long
+	 ;; Hide the part initially if HIDE is t, or if it is too long/deep
 	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
+			     (and deep button)
+			     (and high button)
 			     (and long button))))
 	 (content-beg (point)))
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
@@ -1060,9 +1134,45 @@ is t, hide the part initially and show the button."
 (defvar notmuch-show-previous-subject "")
 (make-variable-buffer-local 'notmuch-show-previous-subject)
 
+(defun notmuch-show-choose-duplicate (duplicate)
+  "Display message file with index DUPLICATE in place of the current one.
+
+Message file indices are based on the order the files are
+discovered by `notmuch new' (and hence are somewhat arbitrary),
+and correspond to those passed to the \"\\-\\-duplicate\" arguments
+to the CLI.
+
+When called interactively, the function will prompt for the index
+of the file to display.  An error will be signaled if the index
+is out of range."
+  (interactive "Nduplicate: ")
+  (let ((count (length (notmuch-show-get-prop :filename))))
+    (when (or (> duplicate count)
+	      (< duplicate 1))
+      (error "Duplicate %d out of range [1,%d]" duplicate count)))
+  (notmuch-show-move-to-message-top)
+  (save-excursion
+    (let* ((extent (notmuch-show-message-extent))
+	   (id (notmuch-show-get-message-id))
+	   (depth (notmuch-show-get-depth))
+	   (inhibit-read-only t)
+	   (new-msg (notmuch--run-show (list id) duplicate)))
+      ;; clean up existing overlays to avoid extending them.
+      (dolist (o (overlays-in (car extent) (cdr extent)))
+	(delete-overlay o))
+      ;; pretend insertion is happening at end of buffer
+      (narrow-to-region (point-min) (car extent))
+      ;; Insert first, then delete, to avoid marker for start of next
+      ;; message being in same place as the start of this one.
+      (notmuch-show-insert-msg new-msg depth)
+      (widen)
+      (delete-region (point) (cdr extent)))))
+
 (defun notmuch-show-insert-msg (msg depth)
   "Insert the message MSG at depth DEPTH in the current thread."
   (let* ((headers (plist-get msg :headers))
+	 (duplicate (or (plist-get msg :duplicate) 0))
+	 (files (length (plist-get msg :filename)))
 	 ;; Indentation causes the buffer offset of the start/end
 	 ;; points to move, so we must use markers.
 	 message-start message-end
@@ -1074,7 +1184,7 @@ is t, hide the part initially and show the button."
 				    (or (and notmuch-show-relative-dates
 					     (plist-get msg :date_relative))
 					(plist-get headers :Date))
-				    (plist-get msg :tags) depth)
+				    (plist-get msg :tags) depth duplicate files)
     (setq content-start (point-marker))
     ;; Set `headers-start' to point after the 'Subject:' header to be
     ;; compatible with the existing implementation. This just sets it
@@ -1163,6 +1273,7 @@ is t, hide the part initially and show the button."
 	(replies (cadr tree)))
     ;; We test whether there is a message or just some replies.
     (when msg
+      (notmuch-show--mark-height tree)
       (notmuch-show-insert-msg msg depth))
     (notmuch-show-insert-thread replies (1+ depth))))
 
@@ -1264,14 +1375,8 @@ matched."
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
 			  (concat "*notmuch-" thread-id "*"))))
-	;; We override mm-inline-override-types to stop application/*
-	;; parts from being displayed unless the user has customized
-	;; it themselves.
-	(mm-inline-override-types
-	 (if (equal mm-inline-override-types
-		    (eval (car (get 'mm-inline-override-types 'standard-value))))
-	     (cons "application/*" mm-inline-override-types)
-	   mm-inline-override-types)))
+	(mm-inline-override-types (notmuch--inline-override-types)))
+
     (pop-to-buffer-same-window (get-buffer-create buffer-name))
     ;; No need to track undo information for this buffer.
     (setq buffer-undo-list t)
@@ -1319,6 +1424,18 @@ fallback if the prior matches no messages."
       (push (list thread "and (" context ")") queries))
     queries))
 
+(defun notmuch-show--header-line-format ()
+  "Compute the header line format of a notmuch-show buffer."
+  (when notmuch-show-header-line
+    (let* ((s (notmuch-sanitize
+	       (notmuch-show-strip-re (notmuch-show-get-subject))))
+	   (subject (replace-regexp-in-string "%" "%%" s)))
+      (cond ((stringp notmuch-show-header-line)
+             (format-spec notmuch-show-header-line `((?s . ,subject))))
+	    ((functionp notmuch-show-header-line)
+	     (funcall notmuch-show-header-line subject))
+	    (notmuch-show-header-line subject)))))
+
 (defun notmuch-show--build-buffer (&optional state)
   "Display messages matching the current buffer context.
 
@@ -1338,7 +1455,7 @@ If no messages match the query return NIL."
 	 (notmuch-show-previous-subject ""))
     ;; Use results from the first query that returns some.
     (while (and (not forest) queries)
-      (setq forest (notmuch-query-get-threads
+      (setq forest (notmuch--run-show
 		    (append cli-args (list "'") (car queries) (list "'"))))
       (when (and forest notmuch-show-single-message)
 	(setq forest (list (list (list forest)))))
@@ -1349,13 +1466,7 @@ If no messages match the query return NIL."
       ;; display changes.
       (notmuch-show-mapc
        (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
-      ;; Set the header line to the subject of the first message.
-      (when notmuch-show-header-line
-	(setq header-line-format
-	      (replace-regexp-in-string "%" "%%"
-					(notmuch-sanitize
-					 (notmuch-show-strip-re
-					  (notmuch-show-get-subject))))))
+      (setq header-line-format (notmuch-show--header-line-format))
       (run-hooks 'notmuch-show-hook)
       (if state
 	  (notmuch-show-apply-state state)
@@ -1427,6 +1538,7 @@ non-nil) then the state of the buffer (open/closed messages) is
 reset based on the original query."
   (interactive "P")
   (let ((inhibit-read-only t)
+	(mm-inline-override-types (notmuch--inline-override-types))
 	(state (unless reset-state
 		 (notmuch-show-capture-state))))
     ;; `erase-buffer' does not seem to remove overlays, which can lead
@@ -1515,6 +1627,7 @@ reset based on the original query."
     (define-key map "#" 'notmuch-show-print-message)
     (define-key map "!" 'notmuch-show-toggle-elide-non-matching)
     (define-key map "$" 'notmuch-show-toggle-process-crypto)
+    (define-key map "%" 'notmuch-show-choose-duplicate)
     (define-key map "<" 'notmuch-show-toggle-thread-indentation)
     (define-key map "t" 'toggle-truncate-lines)
     (define-key map "." 'notmuch-show-part-map)
@@ -1709,10 +1822,10 @@ current thread."
 
 ;; dme: Would it make sense to use a macro for many of these?
 
-;; XXX TODO figure out what to do about multiple filenames
 (defun notmuch-show-get-filename ()
   "Return the filename of the current message."
-  (car (notmuch-show-get-prop :filename)))
+  (let ((duplicate (notmuch-show-get-duplicate)))
+    (nth (1- duplicate) (notmuch-show-get-prop :filename))))
 
 (defun notmuch-show-get-header (header &optional props)
   "Return the named header of the current message, if any."
@@ -1723,6 +1836,10 @@ current thread."
 
 (defun notmuch-show-get-date ()
   (notmuch-show-get-header :Date))
+
+(defun notmuch-show-get-duplicate ()
+  ;; if no duplicate property exists, assume first file
+  (or (notmuch-show-get-prop :duplicate) 1))
 
 (defun notmuch-show-get-timestamp ()
   (notmuch-show-get-prop :timestamp))
@@ -1918,13 +2035,15 @@ any effects from previous calls to
 (defun notmuch-show-reply (&optional prompt-for-sender)
   "Reply to the sender and all recipients of the current message."
   (interactive "P")
-  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t))
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t
+			 (notmuch-show-get-prop :duplicate)))
 
 (put 'notmuch-show-reply-sender 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply-sender (&optional prompt-for-sender)
   "Reply to the sender of the current message."
   (interactive "P")
-  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil))
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil
+			 (notmuch-show-get-prop :duplicate)))
 
 (put 'notmuch-show-forward-message 'notmuch-prefix-doc
      "... and prompt for sender")
@@ -2035,12 +2154,16 @@ to show, nil otherwise."
   "View the original source of the current message."
   (interactive)
   (let* ((id (notmuch-show-get-message-id))
-	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*")))
+	 (duplicate (notmuch-show-get-duplicate))
+	 (args (if (> duplicate 1)
+		   (list (format "--duplicate=%d" duplicate) id)
+		 (list id)))
+	 (buf (get-buffer-create (format "*notmuch-raw-%s-%d*" id duplicate)))
 	 (inhibit-read-only t))
     (pop-to-buffer-same-window buf)
     (erase-buffer)
     (let ((coding-system-for-read 'no-conversion))
-      (notmuch--call-process notmuch-command nil t nil "show" "--format=raw" id))
+      (apply #'notmuch--call-process notmuch-command nil t nil "show" "--format=raw" args))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
@@ -2205,7 +2328,9 @@ argument, hide all of the messages."
 If SHOW is non-nil, open the next item in a show
 buffer. Otherwise just highlight the next item in the search
 buffer. If PREVIOUS is non-nil, move to the previous item in the
-search results instead."
+search results instead.
+
+Return non-nil on success."
   (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
     (notmuch-bury-or-kill-this-buffer)

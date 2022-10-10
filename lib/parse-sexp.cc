@@ -188,6 +188,55 @@ _sexp_parse_phrase (std::string term_prefix, const char *phrase, Xapian::Query &
 }
 
 static notmuch_status_t
+resolve_binding (notmuch_database_t *notmuch, const _sexp_binding_t *env, const char *name,
+		 const _sexp_binding_t **out)
+{
+    for (; env; env = env->next) {
+	if (strcmp (name, env->name) == 0) {
+	    *out = env;
+	    return NOTMUCH_STATUS_SUCCESS;
+	}
+    }
+
+    _notmuch_database_log (notmuch, "undefined parameter '%s'\n", name);
+    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+}
+
+static notmuch_status_t
+_sexp_expand_term (notmuch_database_t *notmuch,
+		   const _sexp_prefix_t *prefix,
+		   const _sexp_binding_t *env,
+		   const sexp_t *sx,
+		   const char **out)
+{
+    notmuch_status_t status;
+
+    if (! out)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    while (sx->ty == SEXP_VALUE && sx->aty == SEXP_BASIC && sx->val[0] == ',') {
+	const char *name = sx->val + 1;
+	const _sexp_binding_t *binding;
+
+	status = resolve_binding (notmuch, env, name, &binding);
+	if (status)
+	    return status;
+
+	sx = binding->sx;
+	env = binding->context;
+    }
+
+    if (sx->ty != SEXP_VALUE) {
+	_notmuch_database_log (notmuch, "'%s' expects single atom as argument\n",
+			       prefix->name);
+	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    }
+
+    *out = sx->val;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
 _sexp_parse_wildcard (notmuch_database_t *notmuch,
 		      const _sexp_prefix_t *parent,
 		      unused(const _sexp_binding_t *env),
@@ -227,8 +276,8 @@ _sexp_parse_one_term (notmuch_database_t *notmuch, std::string term_prefix, cons
 notmuch_status_t
 _sexp_parse_regex (notmuch_database_t *notmuch,
 		   const _sexp_prefix_t *prefix, const _sexp_prefix_t *parent,
-		   unused(const _sexp_binding_t *env),
-		   std::string val, Xapian::Query &output)
+		   const _sexp_binding_t *env,
+		   const sexp_t *term, Xapian::Query &output)
 {
     if (! parent) {
 	_notmuch_database_log (notmuch, "illegal '%s' outside field\n",
@@ -243,9 +292,15 @@ _sexp_parse_regex (notmuch_database_t *notmuch,
     }
 
     std::string msg; /* ignored */
+    const char *str;
+    notmuch_status_t status;
+
+    status = _sexp_expand_term (notmuch, prefix, env, term, &str);
+    if (status)
+	return status;
 
     return _notmuch_regexp_to_query (notmuch, Xapian::BAD_VALUENO, parent->name,
-				     val, output, msg);
+				     str, output, msg);
 }
 
 
@@ -444,14 +499,16 @@ _sexp_expand_param (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 		    const _sexp_binding_t *env, const char *name,
 		    Xapian::Query &output)
 {
-    for (; env; env = env->next) {
-	if (strcmp (name, env->name) == 0) {
-	    return _sexp_to_xapian_query (notmuch, parent, env->context, env->sx,
-					  output);
-	}
-    }
-    _notmuch_database_log (notmuch, "undefined parameter %s\n", name);
-    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
+    notmuch_status_t status;
+
+    const _sexp_binding_t *binding;
+
+    status = resolve_binding (notmuch, env, name, &binding);
+    if (status)
+	return status;
+
+    return _sexp_to_xapian_query (notmuch, parent, binding->context, binding->sx,
+				  output);
 }
 
 static notmuch_status_t
@@ -473,6 +530,9 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
     }
 
     from = sx->val;
+    if (strcmp (from, "*") == 0)
+	from = "";
+
     to = from;
 
     if (sx->next) {
@@ -488,6 +548,8 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	}
 
 	to = sx->next->val;
+	if (strcmp (to, "*") == 0)
+	    to = "";
     }
 
     if (strcmp (prefix->name, "date") == 0) {
@@ -504,14 +566,20 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 	long from_idx, to_idx;
 
 	try {
-	    from_idx = std::stol (from);
+	    if (EMPTY_STRING (from))
+		from_idx = 0L;
+	    else
+		from_idx = std::stol (from);
 	} catch (std::logic_error &e) {
 	    _notmuch_database_log (notmuch, "bad 'from' revision: '%s'\n", from);
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
 	}
 
 	try {
-	    to_idx = std::stol (to);
+	    if (EMPTY_STRING (to))
+		to_idx = LONG_MAX;
+	    else
+		to_idx = std::stol (to);
 	} catch (std::logic_error &e) {
 	    _notmuch_database_log (notmuch, "bad 'to' revision: '%s'\n", to);
 	    return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
@@ -638,11 +706,17 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		return _notmuch_query_name_to_query (notmuch, sx->list->next->val, output);
 	    }
 
-	    if (prefix->xapian_op == Xapian::Query::OP_WILDCARD)
-		return _sexp_parse_wildcard (notmuch, parent, env, sx->list->next->val, output);
+	    if (prefix->xapian_op == Xapian::Query::OP_WILDCARD) {
+		const char *str;
+		status = _sexp_expand_term (notmuch, prefix, env, sx->list->next, &str);
+		if (status)
+		    return status;
+
+		return _sexp_parse_wildcard (notmuch, parent, env, str, output);
+	    }
 
 	    if (prefix->flags & SEXP_FLAG_DO_REGEX) {
-		return _sexp_parse_regex (notmuch, prefix, parent, env, sx->list->next->val, output);
+		return _sexp_parse_regex (notmuch, prefix, parent, env, sx->list->next, output);
 	    }
 
 	    if (prefix->flags & SEXP_FLAG_DO_EXPAND) {

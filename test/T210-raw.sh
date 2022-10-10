@@ -64,4 +64,15 @@ for pow in {10..20}; do
     test_expect_success "notmuch show --format=raw subject:$size > /dev/null"
 done
 
+add_email_corpus duplicate
+ID=87r2ecrr6x.fsf@zephyr.silentflame.com
+test_begin_subtest "raw content, duplicate files"
+rm -f OUTPUT.raw
+for dup in {1..5}; do
+    notmuch show --format=raw --duplicate=${dup} --format=raw id:${ID} | md5sum | cut -f1 -d' '  >> OUTPUT.raw
+done
+sort OUTPUT.raw > OUTPUT
+notmuch search --output=files id:${ID} | xargs md5sum | cut -f1 -d ' ' | sort > EXPECTED
+test_expect_equal_file_nonempty EXPECTED OUTPUT
+
 test_done

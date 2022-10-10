@@ -18,13 +18,6 @@
 
 """
 Manage notmuch tags with Git
-
-Environment variables:
-
-* NMBGIT specifies the location of the git repository used by nmbug.
-  If not specified $HOME/.nmbug is used.
-* NMBPREFIX specifies the prefix in the notmuch database for tags of
-  interest to nmbug. If not specified 'notmuch::' is used.
 """
 
 from __future__ import print_function
@@ -43,58 +36,25 @@ import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import textwrap as _textwrap
-try:  # Python 3
-    from urllib.parse import quote as _quote
-    from urllib.parse import unquote as _unquote
-except ImportError:  # Python 2
-    from urllib import quote as _quote
-    from urllib import unquote as _unquote
+from urllib.parse import quote as _quote
+from urllib.parse import unquote as _unquote
+import json as _json
 
-
-__version__ = '0.3'
-
-_LOG = _logging.getLogger('nmbug')
+_LOG = _logging.getLogger('notmuch-git')
 _LOG.setLevel(_logging.WARNING)
 _LOG.addHandler(_logging.StreamHandler())
 
-NMBGIT = _os.path.expanduser(
-    _os.getenv('NMBGIT', _os.path.join('~', '.nmbug')))
-_NMBGIT = _os.path.join(NMBGIT, '.git')
-if _os.path.isdir(_NMBGIT):
-    NMBGIT = _NMBGIT
+NOTMUCH_GIT_DIR = None
+TAG_PREFIX = None
+FORMAT_VERSION = 1
 
-TAG_PREFIX = _os.getenv('NMBPREFIX', 'notmuch::')
 _HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
 _TAG_DIRECTORY = 'tags/'
-_TAG_FILE_REGEX = _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)')
+_TAG_FILE_REGEX = ( _re.compile(_TAG_DIRECTORY + '(?P<id>[^/]*)/(?P<tag>[^/]*)'),
+                    _re.compile(_TAG_DIRECTORY + '([0-9a-f]{2}/){2}(?P<id>[^/]*)/(?P<tag>[^/]*)'))
 
 # magic hash for Git (git hash-object -t blob /dev/null)
 _EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
-
-
-try:
-    getattr(_tempfile, 'TemporaryDirectory')
-except AttributeError:  # Python < 3.2
-    class _TemporaryDirectory(object):
-        """
-        Fallback context manager for Python < 3.2
-
-        See PEP 343 for details on context managers [1].
-
-        [1]: https://www.python.org/dev/peps/pep-0343/
-        """
-        def __init__(self, **kwargs):
-            self.name = _tempfile.mkdtemp(**kwargs)
-
-        def __enter__(self):
-            return self.name
-
-        def __exit__(self, type, value, traceback):
-            _shutil.rmtree(self.name)
-
-
-    _tempfile.TemporaryDirectory = _TemporaryDirectory
-
 
 def _hex_quote(string, safe='+@=:,'):
     """
@@ -108,10 +68,6 @@ def _hex_quote(string, safe='+@=:,'):
     return _HEX_ESCAPE_REGEX.sub(
         lambda match: match.group(0).lower(),
         uppercase_escapes)
-
-
-_ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
-
 
 def _xapian_quote(string):
     """
@@ -134,6 +90,20 @@ def _xapian_unquote(string):
     if string.startswith('"') and string.endswith('"'):
         return string[1:-1].replace('""', '"')
     return string
+
+
+def timed(fn):
+    """Timer decorator"""
+    from time import perf_counter
+
+    def inner(*args, **kwargs):
+        start_time = perf_counter()
+        rval = fn(*args, **kwargs)
+        end_time = perf_counter()
+        _LOG.info('{0}: {1:.8f}s elapsed'.format(fn.__name__, end_time - start_time))
+        return rval
+
+    return inner
 
 
 class SubprocessError(RuntimeError):
@@ -238,7 +208,7 @@ def _spawn(args, input=None, additional_env=None, wait=False, stdin=None,
 
 
 def _git(args, **kwargs):
-    args = ['git', '--git-dir', NMBGIT] + list(args)
+    args = ['git', '--git-dir', NOTMUCH_GIT_DIR] + list(args)
     return _spawn(args=args, **kwargs)
 
 
@@ -266,27 +236,38 @@ def _get_remote():
         stdout=_subprocess.PIPE, wait=True)
     return remote.strip()
 
+def _tag_query(prefix=None):
+    if prefix is None:
+        prefix = TAG_PREFIX
+    return '(tag (starts-with "{:s}"))'.format(prefix.replace('"','\\\"'))
+
+def count_messages(prefix=None):
+    "count messages with a given prefix."
+    (status, stdout, stderr) = _spawn(
+        args=['notmuch', 'count', '--query=sexp', _tag_query(prefix)],
+        stdout=_subprocess.PIPE, wait=True)
+    if status != 0:
+        _LOG.error("failed to run notmuch config")
+        sys.exit(1)
+    return int(stdout.rstrip())
 
 def get_tags(prefix=None):
     "Get a list of tags with a given prefix."
-    if prefix is None:
-        prefix = TAG_PREFIX
     (status, stdout, stderr) = _spawn(
-        args=['notmuch', 'search', '--output=tags', '*'],
+        args=['notmuch', 'search', '--query=sexp', '--output=tags', _tag_query(prefix)],
         stdout=_subprocess.PIPE, wait=True)
-    return [tag for tag in stdout.splitlines() if tag.startswith(prefix)]
-
+    return [tag for tag in stdout.splitlines()]
 
 def archive(treeish='HEAD', args=()):
     """
-    Dump a tar archive of the current nmbug tag set.
+    Dump a tar archive of the current notmuch-git tag set.
 
     Using 'git archive'.
 
     Each tag $tag for message with Message-Id $id is written to
     an empty file
 
-      tags/encode($id)/encode($tag)
+      tags/hash1(id)/hash2(id)/encode($id)/encode($tag)
 
     The encoding preserves alphanumerics, and the characters
     "+-_@=.:," (not the quotes).  All other octets are replaced with
@@ -297,21 +278,27 @@ def archive(treeish='HEAD', args=()):
 
 def clone(repository):
     """
-    Create a local nmbug repository from a remote source.
+    Create a local notmuch-git repository from a remote source.
 
     This wraps 'git clone', adding some options to avoid creating a
     working tree while preserving remote-tracking branches and
     upstreams.
     """
-    with _tempfile.TemporaryDirectory(prefix='nmbug-clone.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-clone.') as workdir:
         _spawn(
             args=[
-                'git', 'clone', '--no-checkout', '--separate-git-dir', NMBGIT,
+                'git', 'clone', '--no-checkout', '--separate-git-dir', NOTMUCH_GIT_DIR,
                 repository, workdir],
             wait=True)
     _git(args=['config', '--unset', 'core.worktree'], wait=True, expect=(0, 5))
     _git(args=['config', 'core.bare', 'true'], wait=True)
-    _git(args=['branch', 'config', 'origin/config'], wait=True)
+    (status, stdout, stderr) = _git(args=['show-ref', '--verify',
+                                          '--quiet',
+                                          'refs/remotes/origin/config'],
+                                    expect=(0,1),
+                                    wait=True)
+    if status == 0:
+        _git(args=['branch', 'config', 'origin/config'], wait=True)
     existing_tags = get_tags()
     if existing_tags:
         _LOG.warning(
@@ -325,42 +312,122 @@ def _is_committed(status):
     return len(status['added']) + len(status['deleted']) == 0
 
 
-def commit(treeish='HEAD', message=None):
+class CachedIndex:
+    def __init__(self, repo, treeish):
+        self.cache_path = _os.path.join(repo, 'notmuch', 'index_cache.json')
+        self.index_path = _os.path.join(repo, 'index')
+        self.current_treeish = treeish
+        # cached values
+        self.treeish = None
+        self.hash = None
+        self.index_checksum = None
+
+        self._load_cache_file()
+
+    def _load_cache_file(self):
+        try:
+            with open(self.cache_path) as f:
+                data = _json.load(f)
+                self.treeish = data['treeish']
+                self.hash = data['hash']
+                self.index_checksum = data['index_checksum']
+        except FileNotFoundError:
+            pass
+        except _json.JSONDecodeError:
+            _LOG.error("Error decoding cache")
+            _sys.exit(1)
+
+    def __enter__(self):
+        self.read_tree()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        checksum = _read_index_checksum(self.index_path)
+        (_, hash, _) = _git(
+            args=['rev-parse', self.current_treeish],
+            stdout=_subprocess.PIPE,
+            wait=True)
+
+        with open(self.cache_path, "w") as f:
+            _json.dump({'treeish': self.current_treeish,
+                        'hash': hash.rstrip(),  'index_checksum': checksum }, f)
+
+    @timed
+    def read_tree(self):
+        current_checksum = _read_index_checksum(self.index_path)
+        (_, hash, _) = _git(
+            args=['rev-parse', self.current_treeish],
+            stdout=_subprocess.PIPE,
+            wait=True)
+        current_hash = hash.rstrip()
+
+        if self.current_treeish == self.treeish and \
+           self.index_checksum and self.index_checksum == current_checksum and \
+           self.hash and self.hash == current_hash:
+            return
+
+        _git(args=['read-tree', self.current_treeish], wait=True)
+
+
+def check_safe_fraction(status):
+    safe = 0.1
+    conf = _notmuch_config_get ('git.safe_fraction')
+    if conf and conf != '':
+        safe=float(conf)
+
+    total = count_messages (TAG_PREFIX)
+    if total == 0:
+        _LOG.error('No existing tags with given prefix, stopping.'.format(safe))
+        _LOG.error('Use --force to override.')
+        exit(1)
+    change = len(status['added'])+len(status['deleted'])
+    fraction = change/total
+    _LOG.debug('total messages {:d}, change: {:d}, fraction: {:f}'.format(total,change,fraction))
+    if fraction > safe:
+        _LOG.error('safe fraction {:f} exceeded, stopping.'.format(safe))
+        _LOG.error('Use --force to override or reconfigure git.safe_fraction.')
+        exit(1)
+
+def commit(treeish='HEAD', message=None, force=False):
     """
     Commit prefix-matching tags from the notmuch database to Git.
     """
+
     status = get_status()
 
     if _is_committed(status=status):
         _LOG.warning('Nothing to commit')
         return
 
-    _git(args=['read-tree', '--empty'], wait=True)
-    _git(args=['read-tree', treeish], wait=True)
-    try:
-        _update_index(status=status)
-        (_, tree, _) = _git(
-            args=['write-tree'],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        (_, parent, _) = _git(
-            args=['rev-parse', treeish],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        (_, commit, _) = _git(
-            args=['commit-tree', tree.strip(), '-p', parent.strip()],
-            input=message,
-            stdout=_subprocess.PIPE,
-            wait=True)
-        _git(
-            args=['update-ref', treeish, commit.strip()],
-            stdout=_subprocess.PIPE,
-            wait=True)
-    except Exception as e:
-        _git(args=['read-tree', '--empty'], wait=True)
-        _git(args=['read-tree', treeish], wait=True)
-        raise
+    if not force:
+        check_safe_fraction (status)
 
+    with CachedIndex(NOTMUCH_GIT_DIR, treeish) as index:
+        try:
+            _update_index(status=status)
+            (_, tree, _) = _git(
+                args=['write-tree'],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            (_, parent, _) = _git(
+                args=['rev-parse', treeish],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            (_, commit, _) = _git(
+                args=['commit-tree', tree.strip(), '-p', parent.strip()],
+                input=message,
+                stdout=_subprocess.PIPE,
+                wait=True)
+            _git(
+                args=['update-ref', treeish, commit.strip()],
+                stdout=_subprocess.PIPE,
+                wait=True)
+        except Exception as e:
+            _git(args=['read-tree', '--empty'], wait=True)
+            _git(args=['read-tree', treeish], wait=True)
+            raise
+
+@timed
 def _update_index(status):
     with _git(
             args=['update-index', '--index-info'],
@@ -385,7 +452,54 @@ def fetch(remote=None):
     _git(args=args, wait=True)
 
 
-def checkout():
+def init(remote=None,format_version=None):
+    """
+    Create an empty notmuch-git repository.
+
+    This wraps 'git init' with a few extra steps to support subsequent
+    status and commit commands.
+    """
+    from pathlib import Path
+    parent = Path(NOTMUCH_GIT_DIR).parent
+    try:
+        _os.makedirs(parent)
+    except FileExistsError:
+        pass
+
+    if not format_version:
+        format_version = 1
+
+    format_version=int(format_version)
+
+    if format_version > 1 or format_version < 0:
+        _LOG.error("Illegal format version {:d}".format(format_version))
+        _sys.exit(1)
+
+    _spawn(args=['git', '--git-dir', NOTMUCH_GIT_DIR, 'init',
+                 '--initial-branch=master', '--quiet', '--bare'], wait=True)
+    _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
+    # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
+    _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
+    allow_empty=('--allow-empty',)
+    if format_version >= 1:
+        allow_empty=()
+        # create a blob for the FORMAT file
+        (status, stdout, _) = _git(args=['hash-object', '-w', '--stdin'], stdout=_subprocess.PIPE,
+                                   input='{:d}\n'.format(format_version), wait=True)
+        verhash=stdout.rstrip()
+        _LOG.debug('hash of FORMAT blob = {:s}'.format(verhash))
+        # Add FORMAT to the index
+        _git(args=['update-index', '--add', '--cacheinfo', '100644,{:s},FORMAT'.format(verhash)], wait=True)
+
+    _git(
+        args=[
+            'commit', *allow_empty, '-m', 'Start a new notmuch-git repository'
+        ],
+        additional_env={'GIT_WORK_TREE': NOTMUCH_GIT_DIR},
+        wait=True)
+
+
+def checkout(force=None):
     """
     Update the notmuch database from Git.
 
@@ -393,6 +507,10 @@ def checkout():
     to Git.
     """
     status = get_status()
+
+    if not force:
+        check_safe_fraction(status)
+
     with _spawn(
             args=['notmuch', 'tag', '--batch'], stdin=_subprocess.PIPE) as p:
         for id, tags in status['added'].items():
@@ -424,9 +542,9 @@ def _insist_committed():
         _LOG.error('\n'.join([
             'Uncommitted changes to {prefix}* tags in notmuch',
             '',
-            "For a summary of changes, run 'nmbug status'",
-            "To save your changes,     run 'nmbug commit' before merging/pull",
-            "To discard your changes,  run 'nmbug checkout'",
+            "For a summary of changes, run 'notmuch-git status'",
+            "To save your changes,     run 'notmuch-git commit' before merging/pull",
+            "To discard your changes,  run 'notmuch-git checkout'",
             ]).format(prefix=TAG_PREFIX))
         _sys.exit(1)
 
@@ -448,7 +566,7 @@ def pull(repository=None, refspecs=None):
         args.append(repository)
     if refspecs:
         args.extend(refspecs)
-    with _tempfile.TemporaryDirectory(prefix='nmbug-pull.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-pull.') as workdir:
         for command in [
                 ['reset', '--hard'],
                 args]:
@@ -466,7 +584,7 @@ def merge(reference='@{upstream}'):
     The default reference is '@{upstream}'.
     """
     _insist_committed()
-    with _tempfile.TemporaryDirectory(prefix='nmbug-merge.') as workdir:
+    with _tempfile.TemporaryDirectory(prefix='notmuch-git-merge.') as workdir:
         for command in [
                 ['reset', '--hard'],
                 ['merge', reference]]:
@@ -481,8 +599,8 @@ def log(args=()):
     """
     A simple wrapper for 'git log'.
 
-    After running 'nmbug fetch', you can inspect the changes with
-    'nmbug log HEAD..@{upstream}'.
+    After running 'notmuch-git fetch', you can inspect the changes with
+    'notmuch-git log HEAD..@{upstream}'.
     """
     # we don't want output trapping here, because we want the pager.
     args = ['log', '--name-status', '--no-renames'] + list(args)
@@ -491,7 +609,7 @@ def log(args=()):
 
 
 def push(repository=None, refspecs=None):
-    "Push the local nmbug Git state to a remote repository."
+    "Push the local notmuch-git Git state to a remote repository."
     if refspecs and not repository:
         repository = _get_remote()
     args = ['push']
@@ -514,13 +632,13 @@ def status():
 
     * A
 
-      Tag is present in notmuch database, but not committed to nmbug
-      (equivalently, tag has been deleted in nmbug repo, e.g. by a
+      Tag is present in notmuch database, but not committed to notmuch-git
+      (equivalently, tag has been deleted in notmuch-git repo, e.g. by a
       pull, but not restored to notmuch database).
 
     * D
 
-      Tag is present in nmbug repo, but not restored to notmuch
+      Tag is present in notmuch-git repo, but not restored to notmuch
       database (equivalently, tag has been deleted in notmuch).
 
     * U
@@ -528,7 +646,7 @@ def status():
       Message is unknown (missing from local notmuch database).
 
     The second character (if present) represents a difference between
-    local and upstream branches. Typically 'nmbug fetch' needs to be
+    local and upstream branches. Typically 'notmuch-git fetch' needs to be
     run to update this.
 
     * a
@@ -580,57 +698,225 @@ def _is_unmerged(ref='@{upstream}'):
         stdout=_subprocess.PIPE, wait=True)
     return base != fetch_head
 
+class DatabaseCache:
+    def __init__(self):
+        try:
+            from notmuch2 import Database
+            self._notmuch = Database()
+        except ImportError:
+            self._notmuch = None
+        self._known = {}
 
+    def known(self,id):
+        if id in self._known:
+            return self._known[id];
+
+        if self._notmuch:
+            try:
+                _ = self._notmuch.find(id)
+                self._known[id] = True
+            except LookupError:
+                self._known[id] = False
+        else:
+            (_, stdout, stderr) = _spawn(
+                args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
+                stdout=_subprocess.PIPE,
+                wait=True)
+            self._known[id] = stdout != None
+        return self._known[id]
+
+@timed
 def get_status():
     status = {
         'deleted': {},
         'missing': {},
         }
-    index = _index_tags()
-    maybe_deleted = _diff_index(index=index, filter='D')
-    for id, tags in maybe_deleted.items():
-        (_, stdout, stderr) = _spawn(
-            args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
-            stdout=_subprocess.PIPE,
-            wait=True)
-        if stdout:
-            status['deleted'][id] = tags
-        else:
-            status['missing'][id] = tags
-    status['added'] = _diff_index(index=index, filter='A')
-    _os.remove(index)
+    db = DatabaseCache()
+    with PrivateIndex(repo=NOTMUCH_GIT_DIR, prefix=TAG_PREFIX) as index:
+        maybe_deleted = index.diff(filter='D')
+        for id, tags in maybe_deleted.items():
+            if db.known(id):
+                status['deleted'][id] = tags
+            else:
+                status['missing'][id] = tags
+        status['added'] = index.diff(filter='A')
+
     return status
 
+class PrivateIndex:
+    def __init__(self, repo, prefix):
+        try:
+            _os.makedirs(_os.path.join(repo, 'notmuch'))
+        except FileExistsError:
+            pass
 
-def _index_tags():
-    "Write notmuch tags to the nmbug.index."
-    path = _os.path.join(NMBGIT, 'nmbug.index')
-    query = ' '.join('tag:"{tag}"'.format(tag=tag) for tag in get_tags())
-    prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
-    _git(
-        args=['read-tree', '--empty'],
-        additional_env={'GIT_INDEX_FILE': path}, wait=True)
-    with _spawn(
-            args=['notmuch', 'dump', '--format=batch-tag', '--', query],
-            stdout=_subprocess.PIPE) as notmuch:
+        file_name = 'notmuch/index'
+        self.index_path = _os.path.join(repo, file_name)
+        self.cache_path = _os.path.join(repo, 'notmuch', '{:s}.json'.format(_hex_quote(file_name)))
+
+        self.current_prefix = prefix
+
+        self.prefix = None
+        self.uuid = None
+        self.lastmod = None
+        self.checksum = None
+        self._load_cache_file()
+        self.file_tree = None
+        self._index_tags()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        checksum = _read_index_checksum(self.index_path)
+        (count, uuid, lastmod) = _read_database_lastmod()
+        with open(self.cache_path, "w") as f:
+            _json.dump({'prefix': self.current_prefix, 'uuid': uuid, 'lastmod': lastmod,  'checksum': checksum }, f)
+
+    def _load_cache_file(self):
+        try:
+            with open(self.cache_path) as f:
+                data = _json.load(f)
+                self.prefix = data['prefix']
+                self.uuid = data['uuid']
+                self.lastmod = data['lastmod']
+                self.checksum = data['checksum']
+        except FileNotFoundError:
+            return None
+        except _json.JSONDecodeError:
+            _LOG.error("Error decoding cache")
+            _sys.exit(1)
+
+    @timed
+    def _read_file_tree(self):
+        self.file_tree = {}
+
         with _git(
-                args=['update-index', '--index-info'],
-                stdin=_subprocess.PIPE,
-                additional_env={'GIT_INDEX_FILE': path}) as git:
-            for line in notmuch.stdout:
-                if line.strip().startswith('#'):
-                    continue
-                (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
-                tags = [
-                    _unquote(tag[len(prefix):])
-                    for tag in tags_string.split()
-                    if tag.startswith(prefix)]
-                id = _xapian_unquote(string=id)
-                for line in _index_tags_for_message(
-                        id=id, status='A', tags=tags):
-                    git.stdin.write(line)
-    return path
+                args=['ls-files', 'tags'],
+                additional_env={'GIT_INDEX_FILE': self.index_path},
+                stdout=_subprocess.PIPE) as git:
+            for file in git.stdout:
+                dir=_os.path.dirname(file)
+                tag=_os.path.basename(file).rstrip()
+                if dir not in self.file_tree:
+                    self.file_tree[dir]=[tag]
+                else:
+                    self.file_tree[dir].append(tag)
 
+
+    def _clear_tags_for_message(self, id):
+        """
+        Clear any existing index entries for message 'id'
+
+        Neither 'id' nor the tags in 'tags' should be encoded/escaped.
+        """
+
+        if self.file_tree == None:
+            self._read_file_tree()
+
+        dir = _id_path(id)
+
+        if dir not in self.file_tree:
+            return
+
+        for file in self.file_tree[dir]:
+            line = '0 0000000000000000000000000000000000000000\t{:s}/{:s}\n'.format(dir,file)
+            yield line
+
+
+    @timed
+    def _index_tags(self):
+        "Write notmuch tags to private git index."
+        prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
+        current_checksum = _read_index_checksum(self.index_path)
+        if (self.prefix == None or self.prefix != self.current_prefix
+            or self.checksum == None or self.checksum != current_checksum):
+            _git(
+                args=['read-tree', '--empty'],
+                additional_env={'GIT_INDEX_FILE': self.index_path}, wait=True)
+
+        query = _tag_query()
+        clear_tags = False
+        (count,uuid,lastmod) = _read_database_lastmod()
+        if self.prefix == self.current_prefix and self.uuid \
+           and self.uuid == uuid and self.checksum == current_checksum:
+            query = '(and (infix "lastmod:{:d}..")) {:s})'.format(self.lastmod+1, query)
+            clear_tags = True
+        with _spawn(
+                args=['notmuch', 'dump', '--format=batch-tag', '--query=sexp', '--', query],
+                stdout=_subprocess.PIPE) as notmuch:
+            with _git(
+                    args=['update-index', '--index-info'],
+                    stdin=_subprocess.PIPE,
+                    additional_env={'GIT_INDEX_FILE': self.index_path}) as git:
+                for line in notmuch.stdout:
+                    if line.strip().startswith('#'):
+                        continue
+                    (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
+                    tags = [
+                        _unquote(tag[len(prefix):])
+                        for tag in tags_string.split()
+                        if tag.startswith(prefix)]
+                    id = _xapian_unquote(string=id)
+                    if clear_tags:
+                        for line in self._clear_tags_for_message(id=id):
+                            git.stdin.write(line)
+                    for line in _index_tags_for_message(
+                            id=id, status='A', tags=tags):
+                        git.stdin.write(line)
+
+    @timed
+    def diff(self, filter):
+        """
+        Get an {id: {tag, ...}} dict for a given filter.
+
+        For example, use 'A' to find added tags, and 'D' to find deleted tags.
+        """
+        s = _collections.defaultdict(set)
+        with _git(
+                args=[
+                    'diff-index', '--cached', '--diff-filter', filter,
+                    '--name-only', 'HEAD'],
+                additional_env={'GIT_INDEX_FILE': self.index_path},
+                stdout=_subprocess.PIPE) as p:
+            # Once we drop Python < 3.3, we can use 'yield from' here
+            for id, tag in _unpack_diff_lines(stream=p.stdout):
+                s[id].add(tag)
+        return s
+
+def _read_index_checksum (index_path):
+    """Read the index checksum, as defined by index-format.txt in the git source
+    WARNING: assumes SHA1 repo"""
+    import binascii
+    try:
+        with open(index_path, 'rb') as f:
+            size=_os.path.getsize(index_path)
+            f.seek(size-20);
+            return binascii.hexlify(f.read(20)).decode('ascii')
+    except FileNotFoundError:
+        return None
+
+def _read_database_lastmod():
+    with _spawn(
+            args=['notmuch', 'count', '--lastmod', '*'],
+            stdout=_subprocess.PIPE) as notmuch:
+        (count,uuid,lastmod_str) = notmuch.stdout.readline().split()
+        return (count,uuid,int(lastmod_str))
+
+def _id_path(id):
+    hid=_hex_quote(string=id)
+    from hashlib import blake2b
+
+    if FORMAT_VERSION==0:
+        return 'tags/{hid}'.format(hid=hid)
+    elif FORMAT_VERSION==1:
+        idhash = blake2b(hid.encode('utf8'), digest_size=2).hexdigest()
+        return 'tags/{dir1}/{dir2}/{hid}'.format(
+            hid=hid,
+            dir1=idhash[0:2],dir2=idhash[2:])
+    else:
+        _LOG.error("Unknown format version",FORMAT_VERSION)
+        _sys.exit(1)
 
 def _index_tags_for_message(id, status, tags):
     """
@@ -646,28 +932,8 @@ def _index_tags_for_message(id, status, tags):
         hash = '0000000000000000000000000000000000000000'
 
     for tag in tags:
-        path = 'tags/{id}/{tag}'.format(
-            id=_hex_quote(string=id), tag=_hex_quote(string=tag))
+        path = '{ipath}/{tag}'.format(ipath=_id_path(id),tag=_hex_quote(string=tag))
         yield '{mode} {hash}\t{path}\n'.format(mode=mode, hash=hash, path=path)
-
-
-def _diff_index(index, filter):
-    """
-    Get an {id: {tag, ...}} dict for a given filter.
-
-    For example, use 'A' to find added tags, and 'D' to find deleted tags.
-    """
-    s = _collections.defaultdict(set)
-    with _git(
-            args=[
-                'diff-index', '--cached', '--diff-filter', filter,
-                '--name-only', 'HEAD'],
-            additional_env={'GIT_INDEX_FILE': index},
-            stdout=_subprocess.PIPE) as p:
-        # Once we drop Python < 3.3, we can use 'yield from' here
-        for id, tag in _unpack_diff_lines(stream=p.stdout):
-            s[id].add(tag)
-    return s
 
 
 def _diff_refs(filter, a='HEAD', b='@{upstream}'):
@@ -682,7 +948,7 @@ def _diff_refs(filter, a='HEAD', b='@{upstream}'):
 def _unpack_diff_lines(stream):
     "Iterate through (id, tag) tuples in a diff stream."
     for line in stream:
-        match = _TAG_FILE_REGEX.match(line.strip())
+        match = _TAG_FILE_REGEX[FORMAT_VERSION].match(line.strip())
         if not match:
             message = 'non-tag line in diff: {!r}'.format(line.strip())
             if line.startswith(_TAG_DIRECTORY):
@@ -696,21 +962,50 @@ def _unpack_diff_lines(stream):
 
 def _help(parser, command=None):
     """
-    Show help for an nmbug command.
+    Show help for an notmuch-git command.
 
     Because some folks prefer:
 
-      $ nmbug help COMMAND
+      $ notmuch-git help COMMAND
 
     to
 
-      $ nmbug COMMAND --help
+      $ notmuch-git COMMAND --help
     """
     if command:
         parser.parse_args([command, '--help'])
     else:
         parser.parse_args(['--help'])
 
+def _notmuch_config_get(key):
+    (status, stdout, stderr) = _spawn(
+        args=['notmuch', 'config', 'get', key],
+        stdout=_subprocess.PIPE, wait=True)
+    if status != 0:
+        _LOG.error("failed to run notmuch config")
+        _sys.exit(1)
+    return stdout.rstrip()
+
+def read_format_version():
+    try:
+        (status, stdout, stderr) = _git(
+            args=['cat-file', 'blob', 'master:FORMAT'],
+            stdout=_subprocess.PIPE, stderr=_subprocess.PIPE, wait=True)
+    except SubprocessError as e:
+        _LOG.debug("failed to read FORMAT file from git, assuming format version 0")
+        return 0
+
+    return int(stdout)
+
+# based on BaseDirectory.save_data_path from pyxdg (LGPL2+)
+def xdg_data_path(profile):
+    resource = _os.path.join('notmuch',profile,'git')
+    assert not resource.startswith('/')
+    _home = _os.path.expanduser('~')
+    xdg_data_home = _os.environ.get('XDG_DATA_HOME') or \
+        _os.path.join(_home, '.local', 'share')
+    path = _os.path.join(xdg_data_home, resource)
+    return path
 
 if __name__ == '__main__':
     import argparse
@@ -719,8 +1014,15 @@ if __name__ == '__main__':
         description=__doc__.strip(),
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
-        '-v', '--version', action='version',
-        version='%(prog)s {}'.format(__version__))
+        '-C', '--git-dir', metavar='REPO',
+        help='Git repository to operate on.')
+    parser.add_argument(
+        '-p', '--tag-prefix', metavar='PREFIX',
+        default = None,
+        help='Prefix of tags to operate on.')
+    parser.add_argument(
+        '-N', '--nmbug', action='store_true',
+        help='Set defaults for --tag-prefix and --git-dir for the notmuch bug tracker')
     parser.add_argument(
         '-l', '--log-level',
         choices=['critical', 'error', 'warning', 'info', 'debug'],
@@ -741,6 +1043,7 @@ if __name__ == '__main__':
             'commit',
             'fetch',
             'help',
+            'init',
             'log',
             'merge',
             'pull',
@@ -766,6 +1069,10 @@ if __name__ == '__main__':
                 help=(
                     "Argument passed through to 'git archive'.  Set anything "
                     'before <tree-ish>, see git-archive(1) for details.'))
+        elif command == 'checkout':
+            subparser.add_argument(
+                '-f', '--force', action='store_true',
+                help='checkout a large fraction of tags.')
         elif command == 'clone':
             subparser.add_argument(
                 'repository',
@@ -774,6 +1081,9 @@ if __name__ == '__main__':
                     'URLS section of git-clone(1) for more information on '
                     'specifying repositories.'))
         elif command == 'commit':
+            subparser.add_argument(
+                '-f', '--force', action='store_true',
+                help='commit a large fraction of tags.')
             subparser.add_argument(
                 'message', metavar='MESSAGE', default='', nargs='?',
                 help='Text for the commit message.')
@@ -788,6 +1098,11 @@ if __name__ == '__main__':
             subparser.add_argument(
                 'command', metavar='COMMAND', nargs='?',
                 help='The command to show help for.')
+        elif command == 'init':
+            subparser.add_argument(
+                '--format-version', metavar='VERSION',
+                default = None,
+                help='create format VERSION repository.')
         elif command == 'log':
             subparser.add_argument(
                 'args', metavar='ARG', nargs='*',
@@ -830,13 +1145,64 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    nmbug_mode = False
+    notmuch_profile = _os.getenv('NOTMUCH_PROFILE','default')
+
+    if args.nmbug or _os.path.basename(__file__) == 'nmbug':
+        nmbug_mode = True
+
+    if args.git_dir:
+        NOTMUCH_GIT_DIR = args.git_dir
+    else:
+        if nmbug_mode:
+            default = _os.path.join('~', '.nmbug')
+        else:
+            default = _notmuch_config_get ('git.path')
+            if default == '':
+                default = xdg_data_path(notmuch_profile)
+
+        NOTMUCH_GIT_DIR = _os.path.expanduser(_os.getenv('NOTMUCH_GIT_DIR', default))
+
+    _NOTMUCH_GIT_DIR = _os.path.join(NOTMUCH_GIT_DIR, '.git')
+    if _os.path.isdir(_NOTMUCH_GIT_DIR):
+        NOTMUCH_GIT_DIR = _NOTMUCH_GIT_DIR
+
+    if args.tag_prefix:
+        TAG_PREFIX = args.tag_prefix
+    else:
+        if nmbug_mode:
+            prefix = 'notmuch::'
+        else:
+            prefix = _notmuch_config_get ('git.tag_prefix')
+
+        TAG_PREFIX =  _os.getenv('NOTMUCH_GIT_PREFIX', prefix)
+
+    _ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
+
     if args.log_level:
         level = getattr(_logging, args.log_level.upper())
         _LOG.setLevel(level)
 
+    # for test suite
+    for var in ['NOTMUCH_GIT_DIR', 'NOTMUCH_GIT_PREFIX', 'NOTMUCH_PROFILE', 'NOTMUCH_CONFIG' ]:
+        _LOG.debug('env {:s} = {:s}'.format(var, _os.getenv(var,'%None%')))
+
+    if _notmuch_config_get('built_with.sexp_queries') != 'true':
+        _LOG.error("notmuch git needs sexp query support")
+        _sys.exit(1)
+
     if not getattr(args, 'func', None):
         parser.print_usage()
         _sys.exit(1)
+
+    # The following two lines are used by the test suite.
+    _LOG.debug('prefix = {:s}'.format(TAG_PREFIX))
+    _LOG.debug('repository = {:s}'.format(NOTMUCH_GIT_DIR))
+
+    if args.func != init:
+        FORMAT_VERSION = read_format_version()
+
+    _LOG.debug('FORMAT_VERSION={:d}'.format(FORMAT_VERSION))
 
     if args.func == help:
         arg_names = ['command']

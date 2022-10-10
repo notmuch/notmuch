@@ -75,6 +75,7 @@ typedef struct notmuch_show_params {
     bool entire_thread;
     bool omit_excluded;
     bool output_body;
+    int duplicate;
     int part;
     _notmuch_crypto_t crypto;
     bool include_html;
@@ -229,6 +230,7 @@ show_one_part (const char *filename, int part);
 
 void
 format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
+		      int duplicate,
 		      bool output_body,
 		      bool include_html);
 
@@ -388,7 +390,8 @@ struct mime_node {
 };
 
 /* Construct a new MIME node pointing to the root message part of
- * message. If crypto->verify is true, signed child parts will be
+ * message. Use the duplicate-th filename if that parameter is
+ * positive. If crypto->verify is true, signed child parts will be
  * verified. If crypto->decrypt is NOTMUCH_DECRYPT_TRUE, encrypted
  * child parts will be decrypted using either stored session keys or
  * asymmetric crypto.  If crypto->decrypt is NOTMUCH_DECRYPT_AUTO,
@@ -406,6 +409,7 @@ struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
+		int duplicate,
 		_notmuch_crypto_t *crypto, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.

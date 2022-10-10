@@ -36,7 +36,9 @@ int main (int argc, char** argv)
    notmuch_query_t *query = NULL;
    const char *id = "${THREAD}";
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);

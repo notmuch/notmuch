@@ -338,6 +338,17 @@ to=m.header('To')
 print(to)
 EOF
 	   test_expect_equal_file EXPECTED OUTPUT
+
+	   test_begin_subtest ".notmuch not ignored in split config ($config)"
+	   test_subtest_known_broken
+	   generate_message '[dir]=.notmuch/cur' '[subject]="Do not ignore, very important"'
+	   NOTMUCH_NEW > OUTPUT
+	   notmuch search subject:Do-not-ignore | notmuch_search_sanitize >> OUTPUT
+	   cat <<EOF > EXPECTED
+Added 1 new message to the database.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Do not ignore, very important (inbox unread)
+EOF
+	   test_expect_equal_file EXPECTED OUTPUT
 	   ;;
        *)
 	   backup_database
@@ -348,9 +359,6 @@ EOF
 	   ;;
    esac
 
-   case $config in
-       split|XDG*)
-   esac
    restore_config
    rm -rf home/.local
    rm -rf home/.config

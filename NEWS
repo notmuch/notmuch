@@ -1,3 +1,51 @@
+Notmuch 0.37 (2022-08-21)
+=========================
+
+Library
+-------
+
+Fix uninitialized field in message objects.
+
+Improve exception handling and error propagation for message objects.
+
+Sexp Queries
+------------
+
+Add one sided lastmod ranges for sexp queries.
+
+Expand macro parameters inside regex and wildcard modifiers.
+
+Command Line Interface
+----------------------
+
+`notmuch help` now works for external commands.
+
+`NOTMUCH_CONFIG` is now passed to external commands and hooks.
+
+Promote the development tool `nmbug` to a user facing tool
+`notmuch-git`. See notmuch-git(1) for details.
+
+Emacs
+-----
+
+The function `notmuch-mua-mail` now moves point depending on the
+provided arguments.
+
+Restrict what mime types are inlined in replies and on refresh.
+
+The functions in notmuch-query.el are now obsolete and may be removed
+in a future version of Notmuch.
+
+Add some controls for lazy display of message bodies (See "Dealing
+with large messages and threads" in the notmuch-emacs documentation).
+
+Allow the user to select (with '%') a different duplicate message file
+to display.
+
+Use `message-dont-reply-to-names` in `notmuch-message-mode`.
+
+Support custom header-line format for notmuch-show mode.
+
 Notmuch 0.36 (2022-04-25)
 =========================
 

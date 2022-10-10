@@ -43,7 +43,7 @@ def notmuch(maildir):
         env = os.environ.copy()
         env['NOTMUCH_CONFIG'] = str(cfg_fname)
         proc = subprocess.run(cmd,
-                              timeout=5,
+                              timeout=120,
                               env=env)
         proc.check_returncode()
     return run

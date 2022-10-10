@@ -211,12 +211,14 @@ typedef struct help_topic {
 } help_topic_t;
 
 static const help_topic_t help_topics[] = {
-    { "search-terms",
-      "Common search term syntax." },
     { "hooks",
       "Hooks that will be run before or after certain commands." },
     { "properties",
       "Message property conventions and documentation." },
+    { "search-terms",
+      "Common infix search term syntax." },
+    { "sexp-queries",
+      "Common s-expression search term syntax." },
 };
 
 static const command_t *
@@ -329,9 +331,7 @@ exec_man (const char *page)
 static int
 _help_for (const char *topic_name)
 {
-    const command_t *command;
-    const help_topic_t *topic;
-    unsigned int i;
+    char *page;
 
     if (! topic_name) {
 	printf ("The notmuch mail system.\n\n");
@@ -348,23 +348,9 @@ _help_for (const char *topic_name)
 	return EXIT_SUCCESS;
     }
 
-    command = find_command (topic_name);
-    if (command) {
-	char *page = talloc_asprintf (NULL, "notmuch-%s", command->name);
-	exec_man (page);
-    }
+    page = talloc_asprintf (NULL, "notmuch-%s", topic_name);
+    exec_man (page);
 
-    for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
-	topic = &help_topics[i];
-	if (strcmp (topic_name, topic->name) == 0) {
-	    char *page = talloc_asprintf (NULL, "notmuch-%s", topic->name);
-	    exec_man (page);
-	}
-    }
-
-    fprintf (stderr,
-	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
-	     topic_name);
     return EXIT_FAILURE;
 }
 
@@ -443,10 +429,17 @@ notmuch_command (notmuch_database_t *notmuch,
  * false on errors.
  */
 static bool
-try_external_command (char *argv[])
+try_external_command (const char *config_file_name, char *argv[])
 {
     char *old_argv0 = argv[0];
     bool ret = true;
+
+    if (config_file_name) {
+	if (setenv ("NOTMUCH_CONFIG", config_file_name, 1)) {
+	    perror ("setenv");
+	    exit (1);
+	}
+    }
 
     argv[0] = talloc_asprintf (NULL, "notmuch-%s", old_argv0);
 
@@ -507,7 +500,7 @@ main (int argc, char *argv[])
     /* if command->function is NULL, try external command */
     if (! command || ! command->function) {
 	/* This won't return if the external command is found. */
-	if (try_external_command (argv + opt_index))
+	if (try_external_command (config_file_name, argv + opt_index))
 	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 		     command_name);
 	ret = EXIT_FAILURE;
@@ -538,7 +531,7 @@ main (int argc, char *argv[])
 		}
 
 		if (status == NOTMUCH_STATUS_NO_CONFIG)
-		    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+		    fputs ("Try running 'notmuch setup' to create a configuration.\n", stderr);
 
 		return EXIT_FAILURE;
 	    }
@@ -570,15 +563,10 @@ main (int argc, char *argv[])
 					       NULL,
 					       &notmuch,
 					       &status_string);
-
-	if (status == NOTMUCH_STATUS_NO_CONFIG && ! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
-	    fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
-	    goto DONE;
-	}
 	switch (status) {
 	case NOTMUCH_STATUS_NO_CONFIG:
 	    if (! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {
-		fputs ("Try running 'notmuch setup' to create a configuration.", stderr);
+		fputs ("Try running 'notmuch setup' to create a configuration.\n", stderr);
 		goto DONE;
 	    }
 	    break;

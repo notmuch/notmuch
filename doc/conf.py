@@ -3,8 +3,10 @@
 
 import sys
 import os
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
 
-extensions = [ 'sphinx.ext.autodoc' ]
+extensions = [ 'sphinx.ext.autodoc', 'elisp' ]
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -45,7 +47,7 @@ if tags.has('WITH_EMACS'):
     # Hacky reimplementation of include to workaround limitations of
     # sphinx-doc
     lines = ['.. include:: /../emacs/rstdoc.rsti\n\n'] # in the source tree
-    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti', 'notmuch-tree.rsti'):
+    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-hello.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti', 'notmuch-tree.rsti'):
         lines.extend(open(rsti_dir+'/'+file))
     rst_epilog = ''.join(lines)
     del lines
@@ -67,6 +69,8 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 html_theme = 'default'
 
+# prevent generation of python module index
+html_domain_indices=[]
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -123,6 +127,14 @@ man_pages = [
      u'send mail with notmuch and emacs',
      [notmuch_authors], 1),
 
+    ('man1/notmuch-git', 'notmuch-git',
+     u'manage notmuch tags with git',
+     [notmuch_authors], 1),
+
+    ('man1/notmuch-git', 'nmbug',
+     u'manage notmuch bugs with git',
+     [notmuch_authors], 1),
+
     ('man5/notmuch-hooks', 'notmuch-hooks',
      u'hooks for notmuch',
      [notmuch_authors], 5),
@@ -158,6 +170,10 @@ man_pages = [
     ('man7/notmuch-search-terms', 'notmuch-search-terms',
      u'syntax for notmuch queries',
      [notmuch_authors], 7),
+
+    ('man1/notmuch', 'notmuch-setup',
+     u'getting started with notmuch',
+     [notmuch_authors], 1),
 
     ('man7/notmuch-sexp-queries', 'notmuch-sexp-queries',
      u's-expression syntax for notmuch queries',
@@ -200,3 +216,11 @@ texinfo_documents += [
         x[2],				# description
         'Miscellaneous'			# category
     ) for x in man_pages]
+
+def setup(app):
+    import docutils.nodes
+    # define nmconfig role and directive for config items.
+    app.add_object_type('nmconfig','nmconfig',
+                        indextemplate='pair: configuration item; %s',
+                        ref_nodeclass=docutils.nodes.generated,
+                        objname='config item' )

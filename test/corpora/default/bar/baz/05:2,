@@ -63,7 +63,7 @@ and <a href=3D"http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg01680=
 
 --0016e687869333b14e0478963d33--
 --0016e687869333b1570478963d35
-Content-Type: application/octet-stream; 
+Content-Type: text/x-diff;
 	name="0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch"
 Content-Disposition: attachment; 
 	filename="0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch"

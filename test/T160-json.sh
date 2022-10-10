@@ -5,17 +5,17 @@ test_description="--format=json output"
 
 test_begin_subtest "Show message: json"
 add_message "[subject]=\"json-show-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[bcc]=\"test_suite+bcc@notmuchmail.org\"" "[reply-to]=\"test_suite+replyto@notmuchmail.org\"" "[body]=\"json-show-message\""
-output=$(notmuch show --format=json "json-show-message")
-test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\", \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"${gen_msg_filename}\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"json-show-message\n\"}]}, []]]]"
+output=$(notmuch show --format=json "json-show-message" | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" "[[[{\"id\": \"XXXXX\", \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"YYYYY\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"json-show-message\n\"}]}, []]]]"
 
 # This should be the same output as above.
 test_begin_subtest "Show message: json --body=true"
-output=$(notmuch show --format=json --body=true "json-show-message")
-test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"${gen_msg_filename}\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"json-show-message\n\"}]}, []]]]"
+output=$(notmuch show --format=json --body=true "json-show-message" | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" "[[[{\"id\": \"XXXXX\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"YYYYY\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"json-show-message\n\"}]}, []]]]"
 
 test_begin_subtest "Show message: json --body=false"
-output=$(notmuch show --format=json --body=false "json-show-message")
-test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"${gen_msg_filename}\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}}, []]]]"
+output=$(notmuch show --format=json --body=false "json-show-message" | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" "[[[{\"id\": \"XXXXX\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"YYYYY\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Bcc\": \"test_suite+bcc@notmuchmail.org\", \"Reply-To\": \"test_suite+replyto@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}}, []]]]"
 
 test_begin_subtest "Search message: json"
 add_message "[subject]=\"json-search-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"json-search-message\""
@@ -33,8 +33,8 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
 
 test_begin_subtest "Show message: json, utf-8"
 add_message "[subject]=\"json-show-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-show-méssage\""
-output=$(notmuch show --format=json "jsön-show-méssage")
-test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"${gen_msg_filename}\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-utf8-body-sübjéct\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"jsön-show-méssage\n\"}]}, []]]]"
+output=$(notmuch show --format=json "jsön-show-méssage" | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" "[[[{\"id\": \"XXXXX\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"YYYYY\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\",\"unread\"], \"headers\": {\"Subject\": \"json-show-utf8-body-sübjéct\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"text/plain\", \"content\": \"jsön-show-méssage\n\"}]}, []]]]"
 
 test_begin_subtest "Show message: json, inline attachment filename"
 subject='json-show-inline-attachment-filename'
@@ -49,7 +49,7 @@ output=$(notmuch show --format=json "id:$id")
 filename=$(notmuch search --output=files "id:$id")
 # Get length of README after base64-encoding, minus additional newline.
 attachment_length=$(( $(base64 $NOTMUCH_SRCDIR/test/README | wc -c) - 1 ))
-test_expect_equal_json "$output" "[[[{\"id\": \"$id\",  \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"$filename\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\"], \"headers\": {\"Subject\": \"$subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"test_suite@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"multipart/mixed\", \"content\": [{\"id\": 2, \"content-type\": \"text/plain\", \"content\": \"This is a test message with inline attachment with a filename\"}, {\"id\": 3, \"content-type\": \"application/octet-stream\", \"content-length\": $attachment_length, \"content-transfer-encoding\": \"base64\", \"content-disposition\": \"inline\", \"filename\": \"README\"}]}]}, []]]]"
+test_expect_equal_json "$output" "[[[{\"id\": \"$id\", \"duplicate\": 1, \"crypto\": {}, \"match\": true, \"excluded\": false, \"filename\": [\"$filename\"], \"timestamp\": 946728000, \"date_relative\": \"2000-01-01\", \"tags\": [\"inbox\"], \"headers\": {\"Subject\": \"$subject\", \"From\": \"Notmuch Test Suite <test_suite@notmuchmail.org>\", \"To\": \"test_suite@notmuchmail.org\", \"Date\": \"Sat, 01 Jan 2000 12:00:00 +0000\"}, \"body\": [{\"id\": 1, \"content-type\": \"multipart/mixed\", \"content\": [{\"id\": 2, \"content-type\": \"text/plain\", \"content\": \"This is a test message with inline attachment with a filename\"}, {\"id\": 3, \"content-type\": \"application/octet-stream\", \"content-length\": $attachment_length, \"content-transfer-encoding\": \"base64\", \"content-disposition\": \"inline\", \"filename\": \"README\"}]}]}, []]]]"
 
 test_begin_subtest "Search message: json, utf-8"
 add_message "[subject]=\"json-search-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-search-méssage\""
@@ -97,6 +97,7 @@ cat <<EOF > EXPECTED
         [
             {
                 "date_relative": "2001-01-05",
+		"duplicate": 1,
                 "excluded": false,
                 "filename": [
                     "${MAIL_DIR}/copy1",
@@ -132,6 +133,7 @@ cat <<EOF > EXPECTED
         [
             {
                 "date_relative": "2001-01-05",
+		"duplicate": 1,
                 "excluded": false,
                 "filename": "${MAIL_DIR}/copy1",
                 "headers": {

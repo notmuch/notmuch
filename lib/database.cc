@@ -476,6 +476,11 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
 	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
     }
 
+    if (! notmuch->open) {
+	_notmuch_database_log (notmuch, "Cannot write to a closed database.\n");
+	return NOTMUCH_STATUS_CLOSED_DATABASE;
+    }
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
@@ -852,9 +857,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     notmuch_query_t *query = NULL;
     unsigned int count = 0, total = 0;
 
-    status = _notmuch_database_ensure_writable (notmuch);
-    if (status)
-	return status;
+    if (_notmuch_database_mode (notmuch) != NOTMUCH_DATABASE_MODE_READ_WRITE)
+	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
 
     db = notmuch->writable_xapian_db;
 

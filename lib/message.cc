@@ -169,6 +169,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
 
     message->doc = doc;
     message->termpos = 0;
+    message->modified = false;
 
     return message;
 }
@@ -339,23 +340,6 @@ _notmuch_message_get_term (notmuch_message_t *message,
 
     return value;
 }
-
-/*
- * For special applications where we only want the thread id, reading
- * in all metadata is a heavy I/O penalty.
- */
-const char *
-_notmuch_message_get_thread_id_only (notmuch_message_t *message)
-{
-
-    Xapian::TermIterator i = message->doc.termlist_begin ();
-    Xapian::TermIterator end = message->doc.termlist_end ();
-
-    message->thread_id = _notmuch_message_get_term (message, i, end,
-						    _find_prefix ("thread"));
-    return message->thread_id;
-}
-
 
 static void
 _notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
@@ -808,7 +792,7 @@ is_maildir (const char *p)
 }
 
 /* Add "folder:" term for directory. */
-static notmuch_status_t
+NODISCARD static notmuch_status_t
 _notmuch_message_add_folder_terms (notmuch_message_t *message,
 				   const char *directory)
 {
@@ -844,7 +828,10 @@ _notmuch_message_add_folder_terms (notmuch_message_t *message,
 	*folder = '\0';
     }
 
-    _notmuch_message_add_term (message, "folder", folder);
+    if (notmuch_status_t status = COERCE_STATUS (_notmuch_message_add_term (message, "folder",
+									    folder),
+						 "adding folder term"))
+	return status;
 
     talloc_free (folder);
 
@@ -855,12 +842,17 @@ _notmuch_message_add_folder_terms (notmuch_message_t *message,
 #define RECURSIVE_SUFFIX "/**"
 
 /* Add "path:" terms for directory. */
-static notmuch_status_t
+NODISCARD static notmuch_status_t
 _notmuch_message_add_path_terms (notmuch_message_t *message,
 				 const char *directory)
 {
+    notmuch_status_t status;
+
     /* Add exact "path:" term. */
-    _notmuch_message_add_term (message, "path", directory);
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "path", directory),
+			    "adding path term");
+    if (status)
+	return status;
 
     if (strlen (directory)) {
 	char *path, *p;
@@ -873,7 +865,10 @@ _notmuch_message_add_path_terms (notmuch_message_t *message,
 	for (p = path + strlen (path) - 1; p > path; p--) {
 	    if (*p == '/') {
 		strcpy (p, RECURSIVE_SUFFIX);
-		_notmuch_message_add_term (message, "path", path);
+		status = COERCE_STATUS (_notmuch_message_add_term (message, "path", path),
+					"adding path term");
+		if (status)
+		    return status;
 	    }
 	}
 
@@ -881,7 +876,10 @@ _notmuch_message_add_path_terms (notmuch_message_t *message,
     }
 
     /* Recursive all-matching path:** for consistency. */
-    _notmuch_message_add_term (message, "path", "**");
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "path", "**"),
+			    "adding path term");
+    if (status)
+	return status;
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -900,6 +898,7 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 	const char *direntry, *directory;
 	char *colon;
 	const std::string &term = *i;
+	notmuch_status_t term_status;
 
 	/* Terminate loop at first term without desired prefix. */
 	if (strncmp (term.c_str (), direntry_prefix, direntry_prefix_len))
@@ -920,8 +919,13 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 							  message->notmuch,
 							  directory_id);
 
-	_notmuch_message_add_folder_terms (message, directory);
-	_notmuch_message_add_path_terms (message, directory);
+	term_status = _notmuch_message_add_folder_terms (message, directory);
+	if (term_status)
+	    return term_status;
+
+	term_status = _notmuch_message_add_path_terms (message, directory);
+	if (term_status)
+	    return term_status;
     }
 
     return status;
@@ -960,10 +964,18 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     /* New file-direntry allows navigating to this message with
      * notmuch_directory_get_child_files() . */
-    _notmuch_message_add_term (message, "file-direntry", direntry);
+    status = COERCE_STATUS (_notmuch_message_add_term (message, "file-direntry", direntry),
+			    "adding file-direntry term");
+    if (status)
+	return status;
 
-    _notmuch_message_add_folder_terms (message, directory);
-    _notmuch_message_add_path_terms (message, directory);
+    status = _notmuch_message_add_folder_terms (message, directory);
+    if (status)
+	return status;
+
+    status = _notmuch_message_add_path_terms (message, directory);
+    if (status)
+	return status;
 
     talloc_free (local);
 
@@ -1482,31 +1494,37 @@ _notmuch_message_close (notmuch_message_t *message)
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync. */
-notmuch_private_status_t
+NODISCARD notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
 			   const char *prefix_name,
 			   const char *value)
 {
 
     char *term;
+    notmuch_private_status_t status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     if (value == NULL)
 	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
 
     term = talloc_asprintf (message, "%s%s",
 			    _find_prefix (prefix_name), value);
+    if (strlen (term) > NOTMUCH_TERM_MAX) {
+	status = NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+	goto DONE;
+    }
 
-    if (strlen (term) > NOTMUCH_TERM_MAX)
-	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+    try {
+	message->doc.add_term (term, 0);
+	message->modified = true;
+	_notmuch_message_invalidate_metadata (message, prefix_name);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+    }
 
-    message->doc.add_term (term, 0);
-    message->modified = true;
-
+  DONE:
     talloc_free (term);
-
-    _notmuch_message_invalidate_metadata (message, prefix_name);
-
-    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+    return status;
 }
 
 /* Parse 'text' and add a term to 'message' for each parsed word. Each
@@ -1551,7 +1569,7 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync. */
-notmuch_private_status_t
+NODISCARD notmuch_private_status_t
 _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *prefix_name,
 			      const char *value)
@@ -1570,11 +1588,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     try {
 	message->doc.remove_term (term);
 	message->modified = true;
-    } catch (const Xapian::InvalidArgumentError) {
+    } catch (const Xapian::InvalidArgumentError &error) {
 	/* We'll let the philosophers try to wrestle with the
 	 * question of whether failing to remove that which was not
 	 * there in the first place is failure. For us, we'll silently
 	 * consider it all good. */
+	LOG_XAPIAN_EXCEPTION (message, error);
     }
 
     talloc_free (term);
@@ -2020,6 +2039,10 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     char *to_set, *to_clear;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     _get_maildir_flag_actions (message, &to_set, &to_clear);
 
     for (filenames = notmuch_message_get_filenames (message);
@@ -2283,7 +2306,11 @@ notmuch_message_reindex (notmuch_message_t *message,
 	if (thread_id == NULL)
 	    thread_id = orig_thread_id;
 
-	_notmuch_message_add_term (message, "thread", thread_id);
+	ret = COERCE_STATUS (_notmuch_message_add_term (message, "thread", thread_id),
+			     "adding thread term");
+	if (ret)
+	    goto DONE;
+
 	/* Take header values only from first filename */
 	if (found == 0)
 	    _notmuch_message_set_header_values (message, date, from, subject);
@@ -2301,7 +2328,11 @@ notmuch_message_reindex (notmuch_message_t *message,
     }
     if (found == 0) {
 	/* put back thread id to help cleanup */
-	_notmuch_message_add_term (message, "thread", orig_thread_id);
+	ret = COERCE_STATUS (_notmuch_message_add_term (message, "thread", orig_thread_id),
+			     "adding thread term");
+	if (ret)
+	    goto DONE;
+
 	ret = _notmuch_message_delete (message);
     } else {
 	_notmuch_message_sync (message);

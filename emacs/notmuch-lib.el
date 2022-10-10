@@ -567,12 +567,20 @@ Take wildcards into account."
 	   (string= (downcase t1)
 		    (downcase t2))))))
 
-(defvar notmuch-multipart/alternative-discouraged
+(defcustom notmuch-multipart/alternative-discouraged
   '(;; Avoid HTML parts.
     "text/html"
     ;; multipart/related usually contain a text/html part and some
     ;; associated graphics.
-    "multipart/related"))
+    "multipart/related")
+  "Which mime types to hide by default for multipart messages.
+
+Can either be a list of mime types (as strings) or a function
+mapping a plist representing the current message to such a list.
+See Info node `(notmuch-emacs) notmuch-show' for a sample function."
+  :group 'notmuch-show
+  :type '(radio (repeat :tag "MIME Types" string)
+		(function :tag "Function")))
 
 (defun notmuch-multipart/alternative-determine-discouraged (msg)
   "Return the discouraged alternatives for the specified message."
@@ -1021,6 +1029,20 @@ status."
 
 (defvar-local notmuch-show-process-crypto nil)
 
+(defun notmuch--run-show (search-terms &optional duplicate)
+  "Return a list of threads of messages matching SEARCH-TERMS.
+
+A thread is a forest or list of trees. A tree is a two element
+list where the first element is a message, and the second element
+is a possibly empty forest of replies."
+  (let ((args '("show" "--format=sexp" "--format-version=5")))
+    (when notmuch-show-process-crypto
+      (setq args (append args '("--decrypt=true"))))
+    (when duplicate
+      (setq args (append args (list (format "--duplicate=%d" duplicate)))))
+    (setq args (append args search-terms))
+    (apply #'notmuch-call-notmuch-sexp args)))
+
 ;;; Generic Utilities
 
 (defun notmuch-interactive-region ()
@@ -1037,6 +1059,14 @@ region if the region is active, or both `point' otherwise."
   'notmuch-interactive-region
   "notmuch 0.29")
 
+(defun notmuch--inline-override-types ()
+  "Override mm-inline-override-types to stop application/*
+parts from being displayed unless the user has customized
+it themselves."
+  (if (equal mm-inline-override-types
+	     (eval (car (get 'mm-inline-override-types 'standard-value))))
+      (cons "application/.*" mm-inline-override-types)
+    mm-inline-override-types))
 ;;; _
 
 (provide 'notmuch-lib)

@@ -21,7 +21,10 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'subr-x))
+
 (require 'message)
+(require 'gmm-utils)
 (require 'mm-view)
 (require 'format-spec)
 
@@ -234,11 +237,12 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 ;;; Mua reply
 
-(defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=sexp" "--format-version=5"))
-	(process-crypto notmuch-show-process-crypto)
-	reply
-	original)
+(defun notmuch-mua-reply (query-string &optional sender reply-all duplicate)
+  (let* ((duparg (and duplicate (list (format "--duplicate=%d" duplicate))))
+	 (args `("reply" "--format=sexp" "--format-version=5" ,@duparg))
+	 (process-crypto notmuch-show-process-crypto)
+	 reply
+	 original)
     (when process-crypto
       (setq args (append args '("--decrypt=true"))))
     (if reply-all
@@ -316,7 +320,9 @@ Typically this is added to `notmuch-mua-send-hook'."
 		;; text.
 		(notmuch-show-process-crypto process-crypto)
 		;; Don't indent multipart sub-parts.
-		(notmuch-show-indent-multipart nil))
+		(notmuch-show-indent-multipart nil)
+		;; Stop certain mime types from being inlined
+		(mm-inline-override-types (notmuch--inline-override-types)))
 	     ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
 	     (cl-letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
 		       ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
@@ -380,10 +386,31 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
     (erase-buffer)
     (notmuch-message-mode)))
 
+(defun notmuch-mua--remove-dont-reply-to-names ()
+  (when-let* ((nr (if (functionp message-dont-reply-to-names)
+		      message-dont-reply-to-names
+		    (gmm-regexp-concat message-dont-reply-to-names)))
+	      (nr-filter
+	       (if (functionp nr)
+		   (lambda (mail) (and (not (funcall nr mail)) mail))
+		 (lambda (mail) (and (not (string-match-p nr mail)) mail)))))
+    (dolist (header '("To" "Cc"))
+      (when-let ((v (message-fetch-field header)))
+	(let* ((tokens (mapcar #'string-trim (message-tokenize-header v)))
+	       (good-tokens (delq nil (mapcar nr-filter tokens)))
+	       (addr (and good-tokens (mapconcat #'identity good-tokens ", "))))
+	  (message-replace-header header addr))))))
+
 (defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest ignored)
-  "Invoke the notmuch mail composition window."
+  "Invoke the notmuch mail composition window.
+
+The position of point when the function returns differs depending
+on the values of TO and SUBJECT.  If both are non-nil, point is
+moved to the message's body.  If SUBJECT is nil but TO isn't,
+point is moved to the \"Subject:\" header.  Otherwise, point is
+moved to the \"To:\" header."
   (interactive)
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
@@ -414,11 +441,15 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 	(message-this-is-mail t))
     (message-setup-1 headers yank-action send-actions return-action))
   (notmuch-fcc-header-setup)
+  (notmuch-mua--remove-dont-reply-to-names)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
   (notmuch-mua-maybe-set-window-dedicated)
-  (message-goto-to))
+  (cond
+   ((and to subject) (message-goto-body))
+   (to (message-goto-subject))
+   (t (message-goto-to))))
 
 (defvar notmuch-mua-sender-history nil)
 
@@ -510,12 +541,13 @@ the From: address."
       (message-hide-headers)
       (set-buffer-modified-p nil))))
 
-(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
+(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all duplicate)
   "Compose a reply to the message identified by QUERY-STRING.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
-will be addressed to all recipients of the source message."
+will be addressed to all recipients of the source message.  If
+DUPLICATE is non-nil, based the reply on that duplicate file"
   ;; `select-active-regions' is t by default. The reply insertion code
   ;; sets the region to the quoted message to make it easy to delete
   ;; (kill-region or C-w). These two things combine to put the quoted
@@ -530,7 +562,7 @@ will be addressed to all recipients of the source message."
   (let ((sender (and prompt-for-sender
 		     (notmuch-mua-prompt-for-sender)))
 	(select-active-regions nil))
-    (notmuch-mua-reply query-string sender reply-all)
+    (notmuch-mua-reply query-string sender reply-all duplicate)
     (deactivate-mark)))
 
 ;;; Checks

@@ -25,17 +25,10 @@
 
 ;;; Basic query function
 
-(defun notmuch-query-get-threads (search-terms)
-  "Return a list of threads of messages matching SEARCH-TERMS.
-
-A thread is a forest or list of trees. A tree is a two element
-list where the first element is a message, and the second element
-is a possibly empty forest of replies."
-  (let ((args '("show" "--format=sexp" "--format-version=5")))
-    (when notmuch-show-process-crypto
-      (setq args (append args '("--decrypt=true"))))
-    (setq args (append args search-terms))
-    (apply #'notmuch-call-notmuch-sexp args)))
+(define-obsolete-function-alias
+  'notmuch-query-get-threads
+  #'notmuch--run-show
+  "notmuch 0.37")
 
 ;;; Mapping functions across collections of messages
 
@@ -60,7 +53,7 @@ Flatten results to a list.  See the function
 (defun notmuch-query-map-tree (fn tree)
   "Apply function FN to every message in TREE.
 Flatten results to a list.  See the function
-`notmuch-query-get-threads' for more information."
+`notmuch--run-show' for more information."
   (cons (funcall fn (car tree))
 	(notmuch-query-map-forest fn (cadr tree))))
 
@@ -70,7 +63,11 @@ Flatten results to a list.  See the function
   "Return a list of message-ids of messages that match SEARCH-TERMS."
   (notmuch-query-map-threads
    (lambda (msg) (plist-get msg :id))
-   (notmuch-query-get-threads search-terms)))
+   (notmuch--run-show search-terms)))
+
+;;; Everything in this library is obsolete
+(dolist (fun '(map-aux map-threads map-forest map-tree get-message-ids))
+  (make-obsolete (intern (format "notmuch-query-%s" fun)) nil "notmuch 0.37"))
 
 (provide 'notmuch-query)
 

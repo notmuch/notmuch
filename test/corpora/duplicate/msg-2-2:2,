@@ -1,0 +1,140 @@
+Return-path: <bounces+20181025-bremner=debian.org@tracker.debian.org>
+Envelope-to: david@tethera.net
+Delivery-date: Thu, 25 Oct 2018 09:45:10 -0400
+Received: from muffat.debian.org ([2607:f8f0:614:1::1274:33])
+	by fethera.tethera.net with esmtp (Exim 4.89)
+	(envelope-from <bounces+20181025-bremner=debian.org@tracker.debian.org>)
+	id 1gFfwj-0004Y9-69
+	for david@tethera.net; Thu, 25 Oct 2018 09:45:10 -0400
+Received: from ticharich.debian.org ([2001:41c8:1000:21::21:23])
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=ticharich.debian.org,EMAIL=hostmaster@ticharich.debian.org (verified)
+	by muffat.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <bounces+20181025-bremner=debian.org@tracker.debian.org>)
+	id 1gFfwi-0004A1-J6
+	for david@tethera.net; Thu, 25 Oct 2018 13:45:08 +0000
+Received: from localhost ([::1] helo=ticharich.debian.org)
+	by ticharich.debian.org with esmtp (Exim 4.89)
+	(envelope-from <bounces+20181025-bremner=debian.org@tracker.debian.org>)
+	id 1gFfwh-0002Ex-6w
+	for david@tethera.net; Thu, 25 Oct 2018 13:45:07 +0000
+Received: from mailly.debian.org ([2001:41b8:202:deb:6564:a62:52c3:4b72])
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=mailly.debian.org,EMAIL=hostmaster@mailly.debian.org (verified)
+	by ticharich.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1gFfwg-0002Em-NI
+	for dispatch+emacs-goodies-el@tracker.debian.org; Thu, 25 Oct 2018 13:45:06 +0000
+Received: from quantz.debian.org ([2001:41c8:1000:21::21:28])
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=quantz.debian.org,EMAIL=hostmaster@quantz.debian.org (verified)
+	by mailly.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1gFfwg-0004h1-AC
+	for dispatch+emacs-goodies-el@tracker.debian.org; Thu, 25 Oct 2018 13:45:06 +0000
+Received: from qa by quantz.debian.org with local (Exim 4.89)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1gFfwf-0007Lg-TQ
+	for dispatch+emacs-goodies-el@tracker.debian.org; Thu, 25 Oct 2018 13:45:05 +0000
+Received: from buxtehude.debian.org ([2607:f8f0:614:1::1274:39])
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=buxtehude.debian.org,EMAIL=hostmaster@buxtehude.debian.org (verified)
+	by quantz.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1gFfwf-0007J0-3r; Thu, 25 Oct 2018 13:45:05 +0000
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.89)
+	(envelope-from <debbugs@buxtehude.debian.org>)
+	id 1gFfwc-0003jj-VU; Thu, 25 Oct 2018 13:45:02 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#695159: debian-el: Shouldn't put downloaded bugs loose in ~/
+Reply-To: David Bremner <bremner@debian.org>, 695159@bugs.debian.org
+Resent-From: David Bremner <bremner@debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-CC: Debian Emacsen team <debian-emacsen@lists.debian.org>
+X-Loop: owner@bugs.debian.org
+Resent-Date: Thu, 25 Oct 2018 13:45:01 +0000
+Resent-Message-ID: <handler.695159.B.154047490313415@bugs.debian.org>
+X-Debian-PR-Message: followup 695159
+X-Debian-PR-Package: debian-el
+X-Debian-PR-Keywords: 
+References: <87vcch7hxy.fsf@naesten.dyndns.org> <87vcch7hxy.fsf@naesten.dyndns.org>
+X-Debian-PR-Source: debian-el, emacs-goodies-el
+Received: via spool by submit@bugs.debian.org id=B.154047490313415
+          (code B); Thu, 25 Oct 2018 13:45:01 +0000
+Received: (at submit) by bugs.debian.org; 25 Oct 2018 13:41:43 +0000
+X-Spam-Checker-Version: SpamAssassin 3.4.1-bugs.debian.org_2005_01_02
+	(2015-04-28) on buxtehude.debian.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-19.5 required=4.0 tests=BAYES_00,FROMDEVELOPER,GMAIL,
+	HAS_BUG_NUMBER,TXREP autolearn=ham autolearn_force=no
+	version=3.4.1-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 16; hammy, 110; neutral, 41; spammy,
+	2. spammytokens:0.971-+--privacy, 0.857-+--customized
+	hammytokens:0.000-+--UD:el, 0.000-+--H*F:U*bremner, 0.000-+--Maintainer,
+	0.000-+--sitelisp, 0.000-+--site-lisp
+Received: from fethera.tethera.net ([2607:5300:60:c5::1])
+	by buxtehude.debian.org with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.89)
+	(envelope-from <bremner@debian.org>)
+	id 1gFftO-0003U6-RV; Thu, 25 Oct 2018 13:41:42 +0000
+Received: from remotemail by fethera.tethera.net with local (Exim 4.89)
+	(envelope-from <bremner@debian.org>)
+	id 1gFftL-0004VK-V8; Thu, 25 Oct 2018 09:41:39 -0400
+Received: (nullmailer pid 477 invoked by uid 1000);
+	Thu, 25 Oct 2018 13:41:38 -0000
+From: David Bremner <bremner@debian.org>
+To: Samuel Bronson <naesten@gmail.com>, 695159@bugs.debian.org, Debian Bug Tracking System <submit@bugs.debian.org>
+In-Reply-To: <87vcch7hxy.fsf@naesten.dyndns.org>
+Date: Thu, 25 Oct 2018 10:41:38 -0300
+Message-ID: <87r2geywh9.fsf@tethera.net>
+MIME-Version: 1.0
+Content-Type: text/plain
+Delivered-To: submit@bugs.debian.org
+Delivered-To: emacs-goodies-el@packages.qa.debian.org
+Delivered-To: dispatch+emacs-goodies-el@tracker.debian.org
+X-Loop: dispatch@tracker.debian.org
+X-Distro-Tracker-Keyword: bts
+X-Distro-Tracker-Package: emacs-goodies-el
+List-Id: <emacs-goodies-el.tracker.debian.org>
+X-Debian: tracker.debian.org
+X-Debian-Package: emacs-goodies-el
+X-PTS-Package: emacs-goodies-el
+X-PTS-Keyword: bts
+X-Distro-Tracker-Team: emacsen
+X-Spam_score: -2.3
+X-Spam_score_int: -22
+X-Spam_bar: --
+
+
+Control: severity -1 minor
+Control: tag -1 moreinfo
+
+Samuel Bronson <naesten@gmail.com> writes:
+
+> Package: debian-el
+> Version: 35.2+nmu1
+> Severity: normal
+> File: /usr/share/emacs/site-lisp/debian-el/debian-bug.el
+>
+> Dear Maintainer,
+>
+> After being mildly annoyed with this for ages, it finally occurred to me
+> to file a bug about it:
+>
+> It's rather rude of `getdebian-bug-get-bug-as-email' to default to
+> sticking downloaded mbox files loose in ~/, isn't it?
+>
+> (And might it not make sense to try and use the same files as the bts(1)
+> command from the devscripts package?)
+>
+
+Hi Samuel
+
+There is already a variable "debian-bug-download-directory" which can be
+customized. Is there an obviously better default? I guess we could put
+things in /tmp by default, with a minor privacy leak on multiuser
+systems.
+
+d
+
+# body 2

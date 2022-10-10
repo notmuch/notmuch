@@ -376,18 +376,18 @@ test_begin_subtest "--format=text --part=8, no part, expect error"
 test_expect_success "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=json --part=0, full message"
-notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT
 cat <<EOF >EXPECTED
-{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "crypto": {}, "match": true, "excluded": false, "filename": ["${MAIL_DIR}/multipart"], "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
+{"id": "XXXXX", "crypto": {}, "match": true, "excluded": false, "filename": ["YYYYY"], "timestamp": 42, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "GENERATED_DATE"}, "body": [
 {"id": 1, "content-type": "multipart/signed", "content": [
 {"id": 2, "content-type": "multipart/mixed", "content": [
-{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "GENERATED_DATE"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html", "content-length": 71},
+{"id": 5, "content-type": "text/html", "content-length": "NONZERO"},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
 {"id": 7, "content-type": "text/plain", "content-disposition": "attachment", "filename": "attachment", "content": "This is a text attachment.\n"},
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
-{"id": 9, "content-type": "application/pgp-signature", "content-length": 197}]}]}
+{"id": 9, "content-type": "application/pgp-signature", "content-length": "NONZERO"}]}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -485,7 +485,7 @@ notmuch show --format=raw 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 test_expect_equal_file "${MAIL_DIR}"/multipart  OUTPUT
 
 test_begin_subtest "--format=raw --part=0, full message"
-notmuch show --format=raw --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+notmuch show --format=raw --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT
 test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
 
 test_begin_subtest "--format=raw --part=1, message body"
@@ -727,10 +727,10 @@ notmuch new > /dev/null
 
 cat_expected_head () {
         cat <<EOF
-[[[{"id": "htmlmessage", "match":true, "excluded": false, "date_relative":"2000-01-01",
+[[[{"id": "XXXXX", "match":true, "excluded": false, "date_relative":"2000-01-01",
    "crypto": {},
    "timestamp": 946684800,
-   "filename": ["${MAIL_DIR}/include-html"],
+   "filename": ["YYYYY"],
    "tags": ["inbox", "unread"],
    "headers": { "Date": "Sat, 01 Jan 2000 00:00:00 +0000", "From": "A <a@example.com>",
                 "Subject": "html message", "To": "B <b@example.com>"},
@@ -742,8 +742,8 @@ EOF
 cat_expected_head > EXPECTED.nohtml
 cat <<EOF >> EXPECTED.nohtml
 "content": [
-  { "id": 2, "content-charset": "UTF-8", "content-length": 21, "content-type": "text/html"},
-  { "id": 3, "content-charset": "ISO-8859-1", "content-length": 20, "content-type": "text/html"},
+  { "id": 2, "content-charset": "UTF-8", "content-length": "NONZERO", "content-type": "text/html"},
+  { "id": 3, "content-charset": "ISO-8859-1", "content-length": "NONZERO", "content-type": "text/html"},
   { "id": 4, "content-type": "text/plain", "content": "0.5 equals \\u00bd\\n"}
 ]}]},[]]]]
 EOF
@@ -759,11 +759,11 @@ cat <<EOF >> EXPECTED.withhtml
 EOF
 
 test_begin_subtest "html parts excluded by default"
-notmuch show --format=json id:htmlmessage > OUTPUT
+notmuch show --format=json id:htmlmessage | notmuch_json_show_sanitize > OUTPUT
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.nohtml)"
 
 test_begin_subtest "html parts included"
-notmuch show --format=json --include-html id:htmlmessage > OUTPUT
+notmuch show --format=json --include-html id:htmlmessage | notmuch_json_show_sanitize > OUTPUT
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.withhtml)"
 
 test_begin_subtest "indexes mime-type #1"

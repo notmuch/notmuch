@@ -18,7 +18,9 @@ int main (int argc, char** argv)
    notmuch_status_t stat = NOTMUCH_STATUS_SUCCESS;
    char *msg = NULL;
 
-   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
+   stat = notmuch_database_open_with_config (argv[1],
+					     NOTMUCH_DATABASE_MODE_READ_WRITE,
+					     NULL, NULL, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
      exit (1);
@@ -77,14 +79,14 @@ test_begin_subtest "delete directory document for a closed db"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         stat = notmuch_directory_delete (dir);
-        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf ("%d\n", stat == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred deleting directory entry: Database has been closed.
+Cannot write to a closed database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database
@@ -95,32 +97,14 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
     {
         time_t stamp = notmuch_directory_get_mtime (dir);
         stat = notmuch_directory_set_mtime (dir, stamp);
-        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+        printf ("%d\n", stat == NOTMUCH_STATUS_CLOSED_DATABASE);
     }
 EOF
 cat <<EOF > EXPECTED
 == stdout ==
 1
 == stderr ==
-A Xapian exception occurred setting directory mtime: Database has been closed.
-EOF
-test_expect_equal_file EXPECTED OUTPUT
-restore_database
-
-backup_database
-test_begin_subtest "get/set mtime of directory for a closed db"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
-    {
-        time_t stamp = notmuch_directory_get_mtime (dir);
-        stat = notmuch_directory_set_mtime (dir, stamp);
-        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
-    }
-EOF
-cat <<EOF > EXPECTED
-== stdout ==
-1
-== stderr ==
-A Xapian exception occurred setting directory mtime: Database has been closed.
+Cannot write to a closed database.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 restore_database

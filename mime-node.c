@@ -78,13 +78,14 @@ mime_node_get_message_crypto_status (mime_node_t *node)
 
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
+		int duplicate,
 		_notmuch_crypto_t *crypto, mime_node_t **root_out)
 {
     const char *filename = notmuch_message_get_filename (message);
     mime_node_context_t *mctx;
     mime_node_t *root;
     notmuch_status_t status;
-    int fd;
+    int fd = -1;
 
     root = talloc_zero (ctx, mime_node_t);
     if (root == NULL) {
@@ -103,20 +104,33 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     talloc_set_destructor (mctx, _mime_node_context_free);
 
     /* Fast path */
-    fd = open (filename, O_RDONLY);
+    if (duplicate <= 0)
+	fd = open (filename, O_RDONLY);
     if (fd == -1) {
-	/* Slow path - for some reason the first file in the list is
-	 * not available anymore. This is clearly a problem in the
+	/* Slow path - Either we are trying to open a specific file, or
+	 * for some reason the first file in the list is
+	 * not available anymore. The latter is clearly a problem in the
 	 * database, but we are not going to let this problem be a
 	 * show stopper */
 	notmuch_filenames_t *filenames;
+	int i = 1;
+
 	for (filenames = notmuch_message_get_filenames (message);
 	     notmuch_filenames_valid (filenames);
-	     notmuch_filenames_move_to_next (filenames)) {
-	    filename = notmuch_filenames_get (filenames);
-	    fd = open (filename, O_RDONLY);
-	    if (fd != -1)
-		break;
+	     notmuch_filenames_move_to_next (filenames), i++) {
+	    if (i >= duplicate) {
+		filename = notmuch_filenames_get (filenames);
+		fd = open (filename, O_RDONLY);
+		if (fd != -1) {
+		    break;
+		} else {
+		    if (duplicate > 0) {
+			fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
+			status = NOTMUCH_STATUS_FILE_ERROR;
+			goto DONE;
+		    }
+		}
+	    }
 	}
 
 	talloc_free (filenames);

@@ -83,6 +83,7 @@ message = {
 
     headers:        headers,
     crypto:         crypto,
+    duplicate:      integer,
     body?:          [part]    # omitted if --body=false
 }
 

@@ -1,0 +1,62 @@
+Alex Botero-Lowry <alex.boterolowry@gmail.com> (2009-11-17) (attachment inbox)
+Subject: [notmuch] preliminary FreeBSD support
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 11:36:14 -0800
+
+[ multipart/mixed ]
+[ multipart/alternative ]
+[ text/plain ]
+I saw the announcement this morning, and was very excited, as I had been
+hoping sup would be turned into a library,
+since I like the concept more than the UI (I'd rather an emacs interface).
+
+I did a preliminary compile which worked out fine, but
+sysconf(_SC_SC_GETPW_R_SIZE_MAX) returns -1 on
+FreeBSD, so notmuch_config_open segfaulted.
+
+Attached is a patch that supplies a default buffer size of 64 in cases where
+-1 is returned.
+
+http://www.opengroup.org/austin/docs/austin_328.txt - seems to indicate this
+is acceptable behavior,
+and
+http://mail-index.netbsd.org/pkgsrc-bugs/2006/06/07/msg016808.htmlspecifically
+uses 64 as the
+buffer size.
+[ text/html (hidden) ]
+[ 0001-Deal-with-situation-where-sysconf-_SC_GETPW_R_SIZE_M.patch: text/x-diff ]
+From e3bc4bbd7b9d0d086816ab5f8f2d6ffea1dd3ea4 Mon Sep 17 00:00:00 2001
+From: Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Date: Tue, 17 Nov 2009 11:30:39 -0800
+Subject: [PATCH] Deal with situation where sysconf(_SC_GETPW_R_SIZE_MAX) returns -1
+
+---
+ notmuch-config.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/notmuch-config.c b/notmuch-config.c
+index 248149c..e7220d8 100644
+--- a/notmuch-config.c
++++ b/notmuch-config.c
+@@ -77,6 +77,7 @@ static char *
+ get_name_from_passwd_file (void *ctx)
+ {
+     long pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
++    if (pw_buf_size == -1) pw_buf_size = 64;
+     char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
+     struct passwd passwd, *ignored;
+     char *name;
+@@ -101,6 +102,7 @@ static char *
+ get_username_from_passwd_file (void *ctx)
+ {
+     long pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
++    if (pw_buf_size == -1) pw_buf_size = 64;
+     char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
+     struct passwd passwd, *ignored;
+     char *name;
+-- 
+1.6.5.2
+
+[ text/plain ]
+[ 4-line signature. Click/Enter to show. ]
+ Carl Worth <cworth@cworth.org> (2009-11-17) (inbox unread)

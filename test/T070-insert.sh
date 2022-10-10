@@ -43,13 +43,13 @@ test_begin_subtest "Permissions on inserted message should be 0600"
 test_expect_equal "600" "$(stat -c %a "$cur_msg_filename")"
 
 test_begin_subtest "Insert message adds default tags"
-output=$(notmuch show --format=json "subject:insert-subject")
+output=$(notmuch show --format=json "subject:insert-subject" | notmuch_json_show_sanitize)
 expected='[[[{
- "id": "'"${gen_msg_id}"'",
+ "id": "XXXXX",
  "crypto": {},
  "match": true,
  "excluded": false,
- "filename": ["'"${cur_msg_filename}"'"],
+ "filename": ["YYYYY"],
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","unread"],

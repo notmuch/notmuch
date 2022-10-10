@@ -24,6 +24,21 @@
 #include "zlib-extra.h"
 
 static const char *
+_get_filename (notmuch_message_t *message, int index)
+{
+    notmuch_filenames_t *filenames = notmuch_message_get_filenames (message);
+    int i = 1;
+
+    for (;
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames), i++) {
+	if (i >= index)
+	    return notmuch_filenames_get (filenames);
+    }
+    return NULL;
+}
+
+static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
@@ -658,6 +673,7 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
+		      int duplicate,
 		      bool output_body,
 		      bool include_html)
 {
@@ -669,10 +685,13 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 	format_message_sprinter (sp, node->envelope_file);
 
+	sp->map_key (sp, "duplicate");
+	sp->integer (sp, duplicate > 0 ? duplicate : 1);
+
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), true, include_html);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), -1, true, include_html);
 	    sp->end (sp);
 	}
 
@@ -836,7 +855,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), true, include_html);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), -1, true, include_html);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -850,7 +869,8 @@ format_part_sprinter_entry (const void *ctx, sprinter_t *sp,
 			    mime_node_t *node, unused (int indent),
 			    const notmuch_show_params_t *params)
 {
-    format_part_sprinter (ctx, sp, node, params->output_body, params->include_html);
+    format_part_sprinter (ctx, sp, node, params->duplicate, params->output_body,
+			  params->include_html);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -925,7 +945,7 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 	char buf[4096];
 	notmuch_status_t ret = NOTMUCH_STATUS_FILE_ERROR;
 
-	filename = notmuch_message_get_filename (node->envelope_file);
+	filename = _get_filename (node->envelope_file, params->duplicate);
 	if (filename == NULL) {
 	    fprintf (stderr, "Error: Cannot get message filename.\n");
 	    goto DONE;
@@ -1004,7 +1024,7 @@ show_message (void *ctx,
 	session_key_count_error = notmuch_message_count_properties (message, "session-key",
 								    &session_keys);
 
-    status = mime_node_open (local, message, &(params->crypto), &root);
+    status = mime_node_open (local, message, params->duplicate, &(params->crypto), &root);
     if (status)
 	goto DONE;
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
@@ -1266,6 +1286,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     sprinter_t *sprinter;
     notmuch_show_params_t params = {
 	.part = -1,
+	.duplicate = 0,
 	.omit_excluded = true,
 	.output_body = true,
 	.crypto = { .decrypt = NOTMUCH_DECRYPT_AUTO },
@@ -1306,6 +1327,7 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	{ .opt_bool = &params.crypto.verify, .name = "verify" },
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
+	{ .opt_int = &params.duplicate, .name = "duplicate" },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };
@@ -1323,6 +1345,9 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 
     /* specifying a part implies single message display */
     single_message = params.part >= 0;
+
+    /* specifying a duplicate also implies single message display */
+    single_message = single_message || (params.duplicate > 0);
 
     if (format == NOTMUCH_FORMAT_NOT_SPECIFIED) {
 	/* if part was requested and format was not specified, use format=raw */

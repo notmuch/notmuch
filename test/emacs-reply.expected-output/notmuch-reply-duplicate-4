@@ -1,0 +1,21 @@
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Sean Whitton <spwhitton@spwhitton.name>, 916811@bugs.debian.org, 916805@bugs.debian.org, 916807@bugs.debian.org, 916808@bugs.debian.org, 916809@bugs.debian.org, 916811@bugs.debian.org, 916867@bugs.debian.org, 916869@bugs.debian.org, 916872@bugs.debian.org, 916875@bugs.debian.org, 916876@bugs.debian.org
+Subject: Re: [Pkg-emacsen-addons] Bug#916811: Increase severity to 'serious'
+In-Reply-To: <87r2ecrr6x.fsf@zephyr.silentflame.com>
+Fcc: MAIL_DIR/sent
+--text follows this line--
+Sean Whitton <spwhitton@spwhitton.name> writes:
+
+> control: severity -1 serious
+>
+> Hello,
+>
+> Emacs 26.1 has reached Debian unstable (sooner than expected; sorry for
+> all the e-mails).
+>
+> -- 
+> Sean Whitton
+> _______________________________________________
+> Pkg-emacsen-addons mailing list
+> Pkg-emacsen-addons@alioth-lists.debian.net
+> https://alioth-lists.debian.net/cgi-bin/mailman/listinfo/pkg-emacsen-addons

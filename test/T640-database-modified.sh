@@ -23,14 +23,22 @@ main (int argc, char **argv)
     notmuch_query_t *query;
     notmuch_tags_t *tags;
     int i;
+    char* msg = NULL;
 
-    EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_ONLY, &ro_db));
+    EXPECT0(notmuch_database_open_with_config (argv[1],
+					       NOTMUCH_DATABASE_MODE_READ_ONLY,
+					       "", NULL, &ro_db, &msg));
+    if (msg) fputs (msg, stderr);
     assert(ro_db);
 
     EXPECT0 (notmuch_database_find_message (ro_db, "${first_id}", &ro_message));
     assert(ro_message);
 
-    EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_WRITE, &rw_db));
+    EXPECT0(notmuch_database_open_with_config (argv[1],
+					       NOTMUCH_DATABASE_MODE_READ_WRITE,
+					       "", NULL, &rw_db, &msg));
+    if (msg) fputs (msg, stderr);
+
     query = notmuch_query_create(rw_db, "");
     EXPECT0 (notmuch_query_search_messages (query, &messages));
 

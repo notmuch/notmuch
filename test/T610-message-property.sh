@@ -23,8 +23,12 @@ int main (int argc, char** argv)
    notmuch_message_t *message = NULL;
    const char *val;
    notmuch_status_t stat;
+   char* msg = NULL;
 
-   EXPECT0(notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db));
+   EXPECT0(notmuch_database_open_with_config (argv[1],
+					      NOTMUCH_DATABASE_MODE_READ_WRITE,
+					      "", NULL, &db, &msg));
+   if (msg) fputs (msg, stderr);
    EXPECT0(notmuch_database_find_message(db, "4EFC743A.3060609@april.org", &message));
    if (message == NULL) {
 	fprintf (stderr, "unable to find message");

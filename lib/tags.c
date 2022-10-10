@@ -48,7 +48,7 @@ _notmuch_tags_create (const void *ctx, notmuch_string_list_t *list)
 notmuch_bool_t
 notmuch_tags_valid (notmuch_tags_t *tags)
 {
-    return tags->iterator != NULL;
+    return tags && (tags->iterator != NULL);
 }
 
 const char *

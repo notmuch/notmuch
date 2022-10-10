@@ -229,6 +229,10 @@ typedef enum {
      */
     NOTMUCH_STATUS_NO_MAIL_ROOT,
     /**
+     * Database is not fully opened, or has been closed
+     */
+    NOTMUCH_STATUS_CLOSED_DATABASE,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -2262,6 +2266,9 @@ notmuch_message_properties_destroy (notmuch_message_properties_t *properties);
  * valid string. Whereas when this function returns FALSE,
  * notmuch_tags_get will return NULL.
  *
+ * It is acceptable to pass NULL for 'tags', in which case this
+ * function will always return FALSE.
+
  * See the documentation of notmuch_message_get_tags for example code
  * showing how to iterate over a notmuch_tags_t object.
  */
