@@ -125,7 +125,7 @@ def mailto_addrs(msg,header_name):
     return ''
 
   frm = email.utils.getaddresses([hdr])
-  return ','.join(['<a href="mailto:%s">%s</a> ' % ((l, p) if p else (l, l)) for (p, l) in frm])
+  return ', '.join(['<a href="mailto:%s">%s</a>' % ((l, p) if p else (l, l)) for (p, l) in frm])
 env.globals['mailto_addrs'] = mailto_addrs
 
 def link_msg(msg):
