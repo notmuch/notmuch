@@ -254,7 +254,7 @@ def count_messages(prefix=None):
 def get_tags(prefix=None):
     "Get a list of tags with a given prefix."
     (status, stdout, stderr) = _spawn(
-        args=['notmuch', 'search', '--query=sexp', '--output=tags', _tag_query(prefix)],
+        args=['notmuch', 'search', '--exclude=false', '--query=sexp', '--output=tags', _tag_query(prefix)],
         stdout=_subprocess.PIPE, wait=True)
     return [tag for tag in stdout.splitlines()]
 
@@ -719,7 +719,7 @@ class DatabaseCache:
                 self._known[id] = False
         else:
             (_, stdout, stderr) = _spawn(
-                args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
+                args=['notmuch', 'search', '--exclude=false', '--output=files', 'id:{0}'.format(id)],
                 stdout=_subprocess.PIPE,
                 wait=True)
             self._known[id] = stdout != None
