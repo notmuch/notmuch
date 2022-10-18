@@ -245,6 +245,8 @@ _notmuch_show() {
     '--exclude=[respect excluded tags setting]:exclude tags:(true false)' \
     '--body=[output body]:output body content:(true false)' \
     '--include-html[include text/html parts in the output]' \
+    '--limit=[limit the number of displayed results]:limit: ' \
+    '--offset=[skip displaying the first N results]:offset: ' \
     '*::search term:_notmuch_search_term'
 }
 

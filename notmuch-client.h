@@ -77,6 +77,8 @@ typedef struct notmuch_show_params {
     bool output_body;
     int duplicate;
     int part;
+    int offset;
+    int limit;
     _notmuch_crypto_t crypto;
     bool include_html;
     GMimeStream *out_stream;
