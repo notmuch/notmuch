@@ -541,8 +541,8 @@ version of GPGME.
 Please try to rebuild your version of GMime against a more recent
 version of GPGME (at least GPGME 1.8.0).
 EOF
-	if command -v gpgme-config >/dev/null; then
-	    printf 'Your current GPGME development version is: %s\n' "$(gpgme-config --version)"
+	if GPGME_VERS="$(pkg-config --modversion gpgme || gpgme-config --version)"; then
+	    printf 'Your current GPGME development version is: %s\n' "$GPGME_VERS"
 	else
 	    printf 'You do not have the GPGME development libraries installed.\n'
 	fi
