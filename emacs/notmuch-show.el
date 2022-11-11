@@ -530,7 +530,7 @@ Return unchanged ADDRESS if parsing fails."
 	  (plist-put msg :height height)
 	  height))))
 
-(defun notmuch-show-insert-headerline (msg-plist depth tags)
+(defun notmuch-show-insert-headerline (msg-plist depth tags &optional orig-tags)
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
   (let* ((start (point))
@@ -555,7 +555,7 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (notmuch-tag-format-tags tags tags)
+	    (notmuch-tag-format-tags tags (or orig-tags tags))
 	    ")")
     (insert
      (if (> file-count 1)
