@@ -452,14 +452,19 @@ operation on the contents of the current buffer."
 (defun notmuch-show-update-tags (tags)
   "Update the displayed tags of the current message."
   (save-excursion
-    (goto-char (notmuch-show-message-top))
-    (when (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
-      (let ((inhibit-read-only t))
-	(replace-match (concat "("
-			       (notmuch-tag-format-tags
-				tags
-				(notmuch-show-get-prop :orig-tags))
-			       ")"))))))
+    (let ((inhibit-read-only t)
+	  (start (notmuch-show-message-top))
+	  (depth (notmuch-show-get-prop :depth))
+	  (orig-tags (notmuch-show-get-prop :orig-tags))
+	  (props (notmuch-show-get-message-properties))
+	  (extent (notmuch-show-message-extent)))
+      (goto-char start)
+      (notmuch-show-insert-headerline props depth tags orig-tags)
+      (put-text-property start (1+ start)
+			 :notmuch-message-properties props)
+      (put-text-property (car extent) (cdr extent) :notmuch-message-extent extent)
+      ;; delete original headerline, but do not save to kill ring
+      (delete-region (point) (1+ (line-end-position))))))
 
 (defun notmuch-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return a cons
