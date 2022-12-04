@@ -1383,20 +1383,20 @@ _notmuch_message_delete (notmuch_message_t *message)
     if (status)
 	return status;
 
-    message->notmuch->writable_xapian_db->delete_document (message->doc_id);
-
-    /* if this was a ghost to begin with, we are done */
-    private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
-    if (private_status)
-	return COERCE_STATUS (private_status,
-			      "Error trying to determine whether message was a ghost");
-    if (is_ghost)
-	return NOTMUCH_STATUS_SUCCESS;
-
-    /* look for a non-ghost message in the same thread */
     try {
 	Xapian::PostingIterator thread_doc, thread_doc_end;
 	Xapian::PostingIterator mail_doc, mail_doc_end;
+
+	message->notmuch->writable_xapian_db->delete_document (message->doc_id);
+
+	/* look for a non-ghost message in the same thread */
+	/* if this was a ghost to begin with, we are done */
+	private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
+	if (private_status)
+	    return COERCE_STATUS (private_status,
+				  "Error trying to determine whether message was a ghost");
+	if (is_ghost)
+	    return NOTMUCH_STATUS_SUCCESS;
 
 	_notmuch_database_find_doc_ids (message->notmuch, "thread", tid, &thread_doc,
 					&thread_doc_end);

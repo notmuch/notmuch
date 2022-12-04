@@ -518,7 +518,6 @@ test_expect_equal_file EXPECTED OUTPUT
 
 TERMLIST_PATH=(${MAIL_DIR}/.notmuch/xapian/termlist.*)
 test_begin_subtest "remove message with corrupted db"
-test_subtest_known_broken
 backup_database
 cat c_head0 - c_tail <<'EOF' | test_private_C ${MAIL_DIR} ${TERMLIST_PATH}
     {
