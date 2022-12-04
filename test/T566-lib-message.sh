@@ -516,4 +516,32 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+TERMLIST_PATH=(${MAIL_DIR}/.notmuch/xapian/termlist.*)
+test_begin_subtest "remove message with corrupted db"
+test_subtest_known_broken
+backup_database
+cat c_head0 - c_tail <<'EOF' | test_private_C ${MAIL_DIR} ${TERMLIST_PATH}
+    {
+        notmuch_status_t status;
+
+        int fd = open(argv[2],O_WRONLY|O_TRUNC);
+        if (fd < 0) {
+            fprintf (stderr, "error opening %s\n", argv[1]);
+            exit (1);
+        }
+
+        stat = _notmuch_message_delete (message);
+        printf ("%d\n", stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION);
+    }
+EOF
+cat <<EOF > EXPECTED
+== stdout ==
+1
+== stderr ==
+A Xapian exception occurred at message.cc:XXX: EOF reading block YYY
+EOF
+sed 's/EOF reading block [0-9]*/EOF reading block YYY/' < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED OUTPUT.clean
+restore_database
+
 test_done
