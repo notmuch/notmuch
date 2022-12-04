@@ -1456,7 +1456,7 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
     if (status == NOTMUCH_STATUS_SUCCESS && message) {
 	status = _notmuch_message_remove_filename (message, filename);
 	if (status == NOTMUCH_STATUS_SUCCESS)
-	    _notmuch_message_delete (message);
+	    status = _notmuch_message_delete (message);
 	else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 	    _notmuch_message_sync (message);
 
