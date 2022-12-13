@@ -1014,7 +1014,10 @@ unchanged ADDRESS if parsing fails."
 A message tree is another name for a single sub-thread: i.e., a
 message together with all its descendents."
   (let ((msg (car tree))
-	(replies (cadr tree)))
+	(replies (cadr tree))
+	;; outline level, computed from the message's depth and
+	;; whether or not it's the first message in the tree.
+	(level (1+ (if (and (eq 0 depth) (not first)) 1 depth))))
     (cond
      ((and (< 0 depth) (not last))
       (push (alist-get 'vertical-tee  notmuch-tree-thread-symbols) tree-status))
@@ -1034,6 +1037,7 @@ message together with all its descendents."
     (setq msg (plist-put msg :first (and first (eq 0 depth))))
     (setq msg (plist-put msg :tree-status tree-status))
     (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
+    (setq msg (plist-put msg :level level))
     (notmuch-tree-goto-and-insert-msg msg)
     (pop tree-status)
     (pop tree-status)
@@ -1080,7 +1084,8 @@ Complete list of currently available key bindings:
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
   (hl-line-mode 1)
   (setq buffer-read-only t)
-  (setq truncate-lines t))
+  (setq truncate-lines t)
+  (when notmuch-tree-outline-enabled (notmuch-tree-outline-mode 1)))
 
 (defvar notmuch-tree-process-exit-functions nil
   "Functions called when the process inserting a tree of results finishes.
@@ -1277,6 +1282,180 @@ search results and that are also tagged with the given TAG."
 		  notmuch-tree-unthreaded
 		  nil
 		  notmuch-search-oldest-first)))
+
+;;; Tree outline mode
+;;;; Custom variables
+(defcustom notmuch-tree-outline-enabled nil
+  "Whether to automatically activate `notmuch-tree-outline-mode' in tree views."
+  :type 'boolean)
+
+(defcustom notmuch-tree-outline-visibility 'hide-others
+  "Default state of the forest outline for `notmuch-tree-outline-mode'.
+
+This variable controls the state of a forest initially and after
+a movement command.  If set to nil, all trees are displayed while
+the symbol hide-all indicates that all trees in the forest should
+be folded and hide-other that only the first one should be
+unfolded."
+  :type '(choice (const :tag "Show all" nil)
+		 (const :tag "Hide others" hide-others)
+		 (const :tag "Hide all" hide-all)))
+
+(defcustom notmuch-tree-outline-auto-close nil
+  "Close message and tree windows when moving past the last message."
+  :type 'boolean)
+
+(defcustom notmuch-tree-outline-open-on-next nil
+  "Open new messages under point if they are closed when moving to next one.
+
+When this flag is set, using the command
+`notmuch-tree-outline-next' with point on a header for a new
+message that is not shown will open its `notmuch-show' buffer
+instead of moving point to next matching message."
+  :type 'boolean)
+
+;;;; Helper functions
+(defsubst notmuch-tree-outline--pop-at-end (pop-at-end)
+  (if notmuch-tree-outline-auto-close (not pop-at-end) pop-at-end))
+
+(defun notmuch-tree-outline--set-visibility ()
+  (when (and notmuch-tree-outline-mode (> (point-max) (point-min)))
+    (cl-case notmuch-tree-outline-visibility
+      (hide-others (notmuch-tree-outline-hide-others))
+      (hide-all (outline-hide-body)))))
+
+(defun notmuch-tree-outline--on-exit (proc)
+  (when (eq (process-status proc) 'exit)
+    (notmuch-tree-outline--set-visibility)))
+
+(add-hook 'notmuch-tree-process-exit-functions #'notmuch-tree-outline--on-exit)
+
+(defsubst notmuch-tree-outline--level (&optional props)
+  (or (plist-get (or props (notmuch-tree-get-message-properties)) :level) 0))
+
+(defsubst notmuch-tree-outline--message-open-p ()
+  (and (buffer-live-p notmuch-tree-message-buffer)
+       (get-buffer-window notmuch-tree-message-buffer)
+       (let ((id (notmuch-tree-get-message-id)))
+	 (and id
+	      (with-current-buffer notmuch-tree-message-buffer
+		(string= (notmuch-show-get-message-id) id))))))
+
+(defsubst notmuch-tree-outline--at-original-match-p ()
+  (and (notmuch-tree-get-prop :match)
+       (equal (notmuch-tree-get-prop :orig-tags)
+              (notmuch-tree-get-prop :tags))))
+
+(defun notmuch-tree-outline--next (prev thread pop-at-end &optional open-new)
+  (cond (thread
+	 (notmuch-tree-thread-top)
+	 (if prev
+	     (outline-backward-same-level 1)
+	   (outline-forward-same-level 1))
+	 (when (> (notmuch-tree-outline--level) 0) (outline-show-branches))
+	 (notmuch-tree-outline--next nil nil pop-at-end t))
+	((and (or open-new notmuch-tree-outline-open-on-next)
+	      (notmuch-tree-outline--at-original-match-p)
+	      (not (notmuch-tree-outline--message-open-p)))
+	 (notmuch-tree-outline-hide-others t))
+	(t (outline-next-visible-heading (if prev -1 1))
+	   (unless (notmuch-tree-get-prop :match)
+	     (notmuch-tree-matching-message prev pop-at-end))
+	   (notmuch-tree-outline-hide-others t))))
+
+;;;; User commands
+(defun notmuch-tree-outline-hide-others (&optional and-show)
+  "Fold all threads except the one around point.
+If AND-SHOW is t, make the current message visible if it's not."
+  (interactive)
+  (save-excursion
+    (while (and (not (bobp)) (> (notmuch-tree-outline--level) 1))
+      (outline-previous-heading))
+    (outline-hide-sublevels 1))
+  (when (> (notmuch-tree-outline--level) 0)
+    (outline-show-subtree)
+    (when and-show (notmuch-tree-show-message nil))))
+
+(defun notmuch-tree-outline-next (&optional pop-at-end)
+  "Next matching message in a forest, taking care of thread visibility.
+A prefix argument reverses the meaning of `notmuch-tree-outline-auto-close'."
+  (interactive "P")
+  (let ((pop (notmuch-tree-outline--pop-at-end pop-at-end)))
+    (if (null notmuch-tree-outline-visibility)
+	(notmuch-tree-matching-message nil pop)
+      (notmuch-tree-outline--next nil nil pop))))
+
+(defun notmuch-tree-outline-previous (&optional pop-at-end)
+  "Previous matching message in forest, taking care of thread visibility.
+With prefix, quit the tree view if there is no previous message."
+  (interactive "P")
+  (if (null notmuch-tree-outline-visibility)
+      (notmuch-tree-prev-matching-message pop-at-end)
+    (notmuch-tree-outline--next t nil pop-at-end)))
+
+(defun notmuch-tree-outline-next-thread ()
+  "Next matching thread in forest, taking care of thread visibility."
+  (interactive)
+  (if (null notmuch-tree-outline-visibility)
+      (notmuch-tree-next-thread)
+    (notmuch-tree-outline--next nil t nil)))
+
+(defun notmuch-tree-outline-previous-thread ()
+  "Previous matching thread in forest, taking care of thread visibility."
+  (interactive)
+  (if (null notmuch-tree-outline-visibility)
+      (notmuch-tree-prev-thread)
+    (notmuch-tree-outline--next t t nil)))
+
+;;;; Mode definition
+(defvar notmuch-tree-outline-mode-lighter nil
+  "The lighter mark for notmuch-tree-outline mode.
+Usually empty since outline-minor-mode's lighter will be active.")
+
+(define-minor-mode notmuch-tree-outline-mode
+  "Minor mode allowing message trees to be folded as outlines.
+
+When this mode is set, each thread and subthread in the results
+list is treated as a foldable section, with its first message as
+its header.
+
+The mode just makes available in the tree buffer all the
+keybindings in `outline-minor-mode', and binds the following
+additional keys:
+
+\\{notmuch-tree-outline-mode-map}
+
+The customizable variable `notmuch-tree-outline-visibility'
+controls how navigation in the buffer is affected by this mode:
+
+  - If it is set to nil, `notmuch-tree-outline-previous',
+    `notmuch-tree-outline-next', and their thread counterparts
+    behave just as the corresponding notmuch-tree navigation keys
+    when this mode is not enabled.
+
+  - If, on the other hand, `notmuch-tree-outline-visibility' is
+    set to a non-nil value, these commands hiding the outlines of
+    the trees you are not reading as you move to new messages.
+
+To enable notmuch-tree-outline-mode by default in all
+notmuch-tree buffers, just set
+`notmuch-tree-outline-mode-enabled' to t."
+  :lighter notmuch-tree-outline-mode-lighter
+  :keymap `((,(kbd "TAB") . outline-cycle)
+	    (,(kbd "M-TAB") . outline-cycle-buffer)
+	    ("n" . notmuch-tree-outline-next)
+	    ("p" . notmuch-tree-outline-previous)
+	    (,(kbd "M-n") . notmuch-tree-outline-next-thread)
+	    (,(kbd "M-p") . notmuch-tree-outline-previous-thread))
+  (outline-minor-mode notmuch-tree-outline-mode)
+  (unless (derived-mode-p 'notmuch-tree-mode)
+    (user-error "notmuch-tree-outline-mode is only meaningful for notmuch trees!"))
+  (if notmuch-tree-outline-mode
+      (progn (setq-local outline-regexp "^[^\n]+"
+			 outline-level #'notmuch-tree-outline--level)
+	     (notmuch-tree-outline--set-visibility))
+    (setq-local outline-regexp (default-value 'outline-regexp)
+		outline-level (default-value 'outline-level))))
 
 ;;; _
 

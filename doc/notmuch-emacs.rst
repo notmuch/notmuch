@@ -606,6 +606,45 @@ can be controlled by the variable ``notmuch-search-oldest-first``.
    See also :el:defcustom:`notmuch-search-result-format` and
    :el:defcustom:`notmuch-unthreaded-result-format`.
 
+.. _notmuch-tree-outline:
+
+notmuch-tree-outline
+--------------------
+
+When this mode is set, each thread and subthread in the results
+list is treated as a foldable section, with its first message as
+its header.
+
+The mode just makes available in the tree buffer all the
+keybindings in info:emacs#Outline_Mode, and binds the following
+additional keys:
+
+.. el:define-key:: <tab>
+
+   Cycle visibility state of the current message's tree.
+
+.. el:define-key:: <M-tab>
+
+   Cycle visibility state of all trees in the buffer.
+
+The behaviour of this minor mode is affected by the following
+customizable variables:
+
+.. el:defcustom:: notmuch-tree-outline-enabled
+
+   |docstring::notmuch-tree-outline-enabled|
+
+.. el:defcustom:: notmuch-tree-outline-visibility
+
+   |docstring::notmuch-tree-outline-visibility|
+
+.. el:defcustom:: notmuch-tree-outline-auto-close
+
+   |docstring::notmuch-tree-outline-auto-close|
+
+.. el:defcustom:: notmuch-tree-outline-open-on-next
+
+   |docstring::notmuch-tree-outline-open-on-next|
 
 .. _notmuch-unthreaded:
 

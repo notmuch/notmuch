@@ -200,6 +200,30 @@ test_emacs '(test-log-error
 	        (notmuch-tree "*")))'
 test_expect_equal "$(cat MESSAGES)" "COMPLETE"
 
+# reinitialize database for outline tests
+add_email_corpus
+
+test_begin_subtest "start in outline mode"
+test_emacs '(let ((notmuch-tree-outline-enabled t))
+	(notmuch-tree "tag:inbox")
+	(notmuch-test-wait)
+	(test-visible-output))'
+# folding all messages by height or depth should look the same
+test_expect_equal_file $EXPECTED/inbox-outline OUTPUT
+
+test_begin_subtest "outline-cycle-buffer"
+test_emacs '(let ((notmuch-tree-outline-enabled t))
+	(notmuch-tree "tag:inbox")
+	(notmuch-test-wait)
+	(outline-cycle-buffer)
+	(outline-cycle-buffer)
+	(notmuch-test-wait)
+	(test-visible-output))'
+# folding all messages by height or depth should look the same
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
+
+test_done
+
 add_email_corpus duplicate
 
 ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
