@@ -383,6 +383,21 @@ No new mail. Removed 1 message.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "Long file names have reasonable diagnostics"
+test_subtest_known_broken
+printf -v name 'f%.0s' {1..234}
+generate_message "[filename]=$name"
+notmuch new 2>&1 | notmuch_dir_sanitize >OUTPUT
+rm ${MAIL_DIR}/${name}
+cat <<EOF > EXPECTED
+Note: Ignoring non-indexable path: MAIL_DIR/$name
+add_file: Path supplied is illegal for this function
+filename too long for file-direntry term: MAIL_DIR/$name
+Processed 1 file in almost no time.
+No new mail.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Xapian exception: read only files"
 test_subtest_broken_for_root
 chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
