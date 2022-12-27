@@ -413,6 +413,10 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	fprintf (stderr, "Note: Ignoring non-mail file: %s\n", filename);
 	break;
+    case NOTMUCH_STATUS_PATH_ERROR:
+	fprintf (stderr, "Note: Ignoring non-indexable path: %s\n", filename);
+	(void) print_status_database ("add_file", notmuch, status);
+	break;
     case NOTMUCH_STATUS_FILE_ERROR:
 	/* Someone renamed/removed the file between scandir and now. */
 	state->vanished_files++;

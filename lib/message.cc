@@ -941,6 +941,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 {
     const char *relative, *directory;
     notmuch_status_t status;
+    notmuch_private_status_t private_status;
     void *local = talloc_new (message);
     char *direntry;
 
@@ -964,10 +965,17 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     /* New file-direntry allows navigating to this message with
      * notmuch_directory_get_child_files() . */
-    status = COERCE_STATUS (_notmuch_message_add_term (message, "file-direntry", direntry),
-			    "adding file-direntry term");
-    if (status)
-	return status;
+    private_status = _notmuch_message_add_term (message, "file-direntry", direntry);
+    switch (private_status) {
+    case NOTMUCH_PRIVATE_STATUS_SUCCESS:
+	break;
+    case NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG:
+	_notmuch_database_log (message->notmuch, "filename too long for file-direntry term: %s\n",
+			       filename);
+	return NOTMUCH_STATUS_PATH_ERROR;
+    default:
+	return COERCE_STATUS (private_status, "adding file-direntry term");
+    }
 
     status = _notmuch_message_add_folder_terms (message, directory);
     if (status)

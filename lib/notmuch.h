@@ -293,6 +293,8 @@ typedef struct _notmuch_indexopts notmuch_indexopts_t;
  *
  * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
+ * NOTMUCH_STATUS_PATH_ERROR: filename is too long
+ *
  * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to create the
  *	database file (such as permission denied, or file not found,
  *	etc.), or the database already exists.

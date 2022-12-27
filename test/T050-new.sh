@@ -384,7 +384,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Long file names have reasonable diagnostics"
-test_subtest_known_broken
 printf -v name 'f%.0s' {1..234}
 generate_message "[filename]=$name"
 notmuch new 2>&1 | notmuch_dir_sanitize >OUTPUT
