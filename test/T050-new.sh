@@ -384,6 +384,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Xapian exception: read only files"
+test_subtest_broken_for_root
 chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
 chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*

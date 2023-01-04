@@ -320,6 +320,7 @@ test_begin_subtest "Tag name beginning with -"
 test_expect_code 1 'notmuch tag +- One'
 
 test_begin_subtest "Xapian exception: read only files"
+test_subtest_broken_for_root
 chmod u-w ${MAIL_DIR}/.notmuch/xapian/*.*
 output=$(notmuch tag +something '*' 2>&1 | sed 's/: .*$//' )
 chmod u+w ${MAIL_DIR}/.notmuch/xapian/*.*

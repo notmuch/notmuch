@@ -740,6 +740,12 @@ test_subtest_known_broken () {
 	test_subtest_known_broken_=t
 }
 
+test_subtest_broken_for_root () {
+   if [ "$EUID" = "0" ]; then
+	test_subtest_known_broken_=t
+    fi
+}
+
 test_expect_success () {
 	exec 1>&6 2>&7		# Restore stdout and stderr
 	if [ -z "$inside_subtest" ]; then
