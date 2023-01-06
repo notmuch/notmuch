@@ -320,6 +320,8 @@ _alloc_notmuch (const char *database_path, const char *config_path, const char *
     notmuch->transaction_count = 0;
     notmuch->transaction_threshold = 0;
     notmuch->view = 1;
+    notmuch->index_as_text = NULL;
+    notmuch->index_as_text_length = 0;
 
     notmuch->params = NOTMUCH_PARAM_NONE;
     if (database_path)
@@ -427,6 +429,53 @@ _load_database_state (notmuch_database_t *notmuch)
 	notmuch, notmuch->xapian_db->get_uuid ().c_str ());
 }
 
+/* XXX This should really be done lazily, but the error reporting path in the indexing code
+ * would need to be redone to report any errors.
+ */
+notmuch_status_t
+_ensure_index_as_text (notmuch_database_t *notmuch, char **message)
+{
+    int nregex = 0;
+    regex_t *regexv = NULL;
+
+    if (notmuch->index_as_text)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    for (notmuch_config_values_t *list = notmuch_config_get_values (notmuch,
+								    NOTMUCH_CONFIG_INDEX_AS_TEXT);
+	 notmuch_config_values_valid (list);
+	 notmuch_config_values_move_to_next (list)) {
+	regex_t *new_regex;
+	int rerr;
+	const char *str = notmuch_config_values_get (list);
+	size_t len = strlen (str);
+
+	/* str must be non-empty, because n_c_get_values skips empty
+	 * strings */
+	assert (len > 0);
+
+	regexv = talloc_realloc (notmuch, regexv, regex_t, nregex + 1);
+	new_regex = &regexv[nregex];
+
+	rerr = regcomp (new_regex, str, REG_EXTENDED | REG_NOSUB);
+	if (rerr) {
+	    size_t error_size = regerror (rerr, new_regex, NULL, 0);
+	    char *error = (char *) talloc_size (str, error_size);
+
+	    regerror (rerr, new_regex, error, error_size);
+	    IGNORE_RESULT (asprintf (message, "Error in index.as_text: %s: %s\n", error, str));
+
+	    return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
+	}
+	nregex++;
+    }
+
+    notmuch->index_as_text = regexv;
+    notmuch->index_as_text_length = nregex;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 static notmuch_status_t
 _finish_open (notmuch_database_t *notmuch,
 	      const char *profile,
@@ -528,6 +577,10 @@ _finish_open (notmuch_database_t *notmuch,
 	if (status)
 	    goto DONE;
 	status = _notmuch_config_load_defaults (notmuch);
+	if (status)
+	    goto DONE;
+
+	status = _ensure_index_as_text (notmuch, &message);
 	if (status)
 	    goto DONE;
 

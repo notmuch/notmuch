@@ -291,6 +291,10 @@ struct _notmuch_database {
 
     /* Track what parameters were specified when opening */
     notmuch_open_param_t params;
+
+    /* list of regular expressions to check for text indexing */
+    regex_t *index_as_text;
+    size_t index_as_text_length;
 };
 
 /* Prior to database version 3, features were implied by the database
