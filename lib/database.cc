@@ -1573,3 +1573,15 @@ notmuch_database_status_string (const notmuch_database_t *notmuch)
 {
     return notmuch->status_string;
 }
+
+bool
+_notmuch_database_indexable_as_text (notmuch_database_t *notmuch, const char *mime_string)
+{
+    for (size_t i = 0; i < notmuch->index_as_text_length; i++) {
+	if (regexec (&notmuch->index_as_text[i], mime_string, 0, NULL, 0) == 0) {
+	    return true;
+	}
+    }
+
+    return false;
+}

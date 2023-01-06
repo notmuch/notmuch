@@ -380,6 +380,23 @@ _index_pkcs7_part (notmuch_message_t *message,
 		   GMimeObject *part,
 		   _notmuch_message_crypto_t *msg_crypto);
 
+static bool
+_indexable_as_text (notmuch_message_t *message, GMimeObject *part)
+{
+    GMimeContentType *content_type = g_mime_object_get_content_type (part);
+    notmuch_database_t *notmuch = notmuch_message_get_database (message);
+
+    if (content_type) {
+	char *mime_string = g_mime_content_type_get_mime_type (content_type);
+	if (mime_string) {
+	    bool ret = _notmuch_database_indexable_as_text (notmuch, mime_string);
+	    g_free (mime_string);
+	    return ret;
+	}
+    }
+    return false;
+}
+
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -497,9 +514,11 @@ _index_mime_part (notmuch_message_t *message,
 	_notmuch_message_add_term (message, "tag", "attachment");
 	_notmuch_message_gen_terms (message, "attachment", filename);
 
-	/* XXX: Would be nice to call out to something here to parse
-	 * the attachment into text and then index that. */
-	goto DONE;
+	if (! _indexable_as_text (message, part)) {
+	    /* XXX: Would be nice to call out to something here to parse
+	     * the attachment into text and then index that. */
+	    goto DONE;
+	}
     }
 
     byte_array = g_byte_array_new ();

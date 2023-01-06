@@ -1,0 +1,11 @@
+From: David Bremner <david@tethera.net>
+To: example@example.com
+Subject: attachment content type
+Date: Thu, 05 Jan 2023 08:02:36 -0400
+Message-ID: <871qo9p4tf.fsf@tethera.net>
+MIME-Version: 1.0
+Content-Type: application/pdf
+Content-Disposition: attachment; filename=fake.pdf
+Content-Transfer-Encoding: base64
+
+dGhpcyBpcyBub3QgcmVhbGx5IFBERgo=

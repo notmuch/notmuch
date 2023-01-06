@@ -470,12 +470,4 @@ Date: Fri, 17 Jun 2016 22:14:41 -0400
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-add_email_corpus indexing
-
-test_begin_subtest "index text/* attachments"
-test_subtest_known_broken
-notmuch search id:20200930101213.2m2pt3jrspvcrxfx@localhost.localdomain > EXPECTED
-notmuch search id:20200930101213.2m2pt3jrspvcrxfx@localhost.localdomain and ersatz > OUTPUT
-test_expect_equal_file_nonempty EXPECTED OUTPUT
-
 test_done
