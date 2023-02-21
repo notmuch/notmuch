@@ -1451,11 +1451,11 @@ notmuch-tree buffers, just set
   (unless (derived-mode-p 'notmuch-tree-mode)
     (user-error "notmuch-tree-outline-mode is only meaningful for notmuch trees!"))
   (if notmuch-tree-outline-mode
-      (progn (setq-local outline-regexp "^[^\n]+"
-			 outline-level #'notmuch-tree-outline--level)
+      (progn (setq-local outline-regexp "^[^\n]+")
+	     (setq-local outline-level #'notmuch-tree-outline--level)
 	     (notmuch-tree-outline--set-visibility))
-    (setq-local outline-regexp (default-value 'outline-regexp)
-		outline-level (default-value 'outline-level))))
+    (setq-local outline-regexp (default-value 'outline-regexp))
+    (setq-local	outline-level (default-value 'outline-level))))
 
 ;;; _
 
