@@ -1172,7 +1172,10 @@ notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out
  *
  *     query = notmuch_query_create (database, query_string);
  *
- *     for (messages = notmuch_query_search_messages (query);
+ *     if (notmuch_query_search_messages (query, &messages) != NOTMUCH_STATUS_SUCCESS)
+ *         return EXIT_FAILURE;
+ *
+ *     for (;
  *          notmuch_messages_valid (messages);
  *          notmuch_messages_move_to_next (messages))
  *     {
