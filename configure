@@ -422,6 +422,18 @@ else
 fi
 unset test_cmdline
 
+printf "C compiler supports thread sanitizer... "
+test_cmdline="${CC} ${CFLAGS} ${CPPFLAGS} -fsanitize=thread minimal.c ${LDFLAGS} -o minimal"
+if ${test_cmdline} >/dev/null 2>&1 && ./minimal
+then
+    printf "Yes.\n"
+    have_tsan=1
+else
+    printf "Nope, skipping those tests.\n"
+    have_tsan=0
+fi
+unset test_cmdline
+
 printf "Reading libnotmuch version from source... "
 cat > _libversion.c <<EOF
 #include <stdio.h>
@@ -1590,8 +1602,9 @@ NOTMUCH_GMIME_VERIFY_WITH_SESSION_KEY=${gmime_verify_with_session_key}
 NOTMUCH_ZLIB_CFLAGS="${zlib_cflags}"
 NOTMUCH_ZLIB_LDFLAGS="${zlib_ldflags}"
 
-# Does the C compiler support the address sanitizer
+# Does the C compiler support the sanitizers
 NOTMUCH_HAVE_ASAN=${have_asan}
+NOTMUCH_HAVE_TSAN=${have_tsan}
 
 # do we have man pages?
 NOTMUCH_HAVE_MAN=$((have_sphinx))

@@ -25,6 +25,7 @@
 #include "regexp-fields.h"
 #include "notmuch-private.h"
 #include "database-private.h"
+#include "xapian-extra.h"
 
 notmuch_status_t
 compile_regex (regex_t &regexp, const char *str, std::string &msg)
@@ -200,7 +201,7 @@ RegexpFieldProcessor::operator() (const std::string & str)
     if (str.empty ()) {
 	if (options & NOTMUCH_FIELD_PROBABILISTIC) {
 	    return Xapian::Query (Xapian::Query::OP_AND_NOT,
-				  Xapian::Query::MatchAll,
+				  xapian_query_match_all (),
 				  Xapian::Query (Xapian::Query::OP_WILDCARD, term_prefix));
 	} else {
 	    return Xapian::Query (term_prefix);

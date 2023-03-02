@@ -20,6 +20,7 @@
 
 #include "notmuch-private.h"
 #include "database-private.h"
+#include "xapian-extra.h"
 
 #include <glib.h> /* GHashTable, GPtrArray */
 
@@ -186,7 +187,7 @@ _notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
 {
     try {
 	if (query_string == "" || query_string == "*") {
-	    output = Xapian::Query::MatchAll;
+	    output = xapian_query_match_all ();
 	} else {
 	    output =
 		notmuch->query_parser->

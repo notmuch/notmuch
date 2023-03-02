@@ -9,7 +9,7 @@ fi
 
 add_email_corpus
 
-TEST_CFLAGS="-fsanitize=address"
+TEST_CFLAGS="${TEST_CFLAGS:-} -fsanitize=address"
 
 test_begin_subtest "open and destroy"
 test_C ${MAIL_DIR} ${NOTMUCH_CONFIG} <<EOF
