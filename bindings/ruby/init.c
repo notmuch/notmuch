@@ -28,7 +28,6 @@ VALUE notmuch_rb_cThreads;
 VALUE notmuch_rb_cThread;
 VALUE notmuch_rb_cMessages;
 VALUE notmuch_rb_cMessage;
-VALUE notmuch_rb_cTags;
 
 VALUE notmuch_rb_eBaseError;
 VALUE notmuch_rb_eDatabaseError;
@@ -71,7 +70,6 @@ define_type (threads);
 define_type (thread);
 define_type (messages);
 define_type (message);
-define_type (tags);
 
 /*
  * Document-module: Notmuch
@@ -92,7 +90,6 @@ define_type (tags);
  * - Notmuch::Messages
  * - Notmuch::Thread
  * - Notmuch::Message
- * - Notmuch::Tags
  */
 
 void
@@ -395,15 +392,4 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cMessage, "tags_to_maildir_flags", notmuch_rb_message_tags_to_maildir_flags, 0); /* in message.c */
     rb_define_method (notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0); /* in message.c */
     rb_define_method (notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0); /* in message.c */
-
-    /*
-     * Document-class: Notmuch::Tags
-     *
-     * Notmuch tags
-     */
-    notmuch_rb_cTags = rb_define_class_under (mod, "Tags", rb_cObject);
-    rb_undef_method (notmuch_rb_cTags, "initialize");
-    rb_define_method (notmuch_rb_cTags, "destroy!", notmuch_rb_tags_destroy, 0); /* in tags.c */
-    rb_define_method (notmuch_rb_cTags, "each", notmuch_rb_tags_each, 0); /* in tags.c */
-    rb_include_module (notmuch_rb_cTags, rb_mEnumerable);
 }

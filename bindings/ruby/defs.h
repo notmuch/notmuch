@@ -33,7 +33,6 @@ extern VALUE notmuch_rb_cThreads;
 extern VALUE notmuch_rb_cThread;
 extern VALUE notmuch_rb_cMessages;
 extern VALUE notmuch_rb_cMessage;
-extern VALUE notmuch_rb_cTags;
 
 extern VALUE notmuch_rb_eBaseError;
 extern VALUE notmuch_rb_eDatabaseError;
@@ -371,12 +370,6 @@ notmuch_rb_message_thaw (VALUE self);
 /* tags.c */
 VALUE
 notmuch_rb_tags_get (notmuch_tags_t *tags);
-
-VALUE
-notmuch_rb_tags_destroy (VALUE self);
-
-VALUE
-notmuch_rb_tags_each (VALUE self);
 
 /* init.c */
 void
