@@ -20,6 +20,12 @@
 
 #include "defs.h"
 
+VALUE
+notmuch_rb_tags_get (notmuch_tags_t *tags)
+{
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, &notmuch_rb_tags_type, tags);
+}
+
 /*
  * call-seq: TAGS.destroy! => nil
  *

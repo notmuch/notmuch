@@ -412,7 +412,7 @@ notmuch_rb_database_get_all_tags (VALUE self)
 
 	rb_raise (notmuch_rb_eBaseError, "%s", msg);
     }
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, &notmuch_rb_tags_type, tags);
+    return notmuch_rb_tags_get (tags);
 }
 
 /*

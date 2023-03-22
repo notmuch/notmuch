@@ -370,6 +370,9 @@ notmuch_rb_message_thaw (VALUE self);
 
 /* tags.c */
 VALUE
+notmuch_rb_tags_get (notmuch_tags_t *tags);
+
+VALUE
 notmuch_rb_tags_destroy (VALUE self);
 
 VALUE
