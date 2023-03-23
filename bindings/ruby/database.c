@@ -91,7 +91,7 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     if (create)
 	ret = notmuch_database_create (path, &database);
     else
-	ret = notmuch_database_open (path, mode, &database);
+	ret = notmuch_database_open_with_config (path, mode, NULL, NULL, &database, NULL);
     notmuch_rb_status_raise (ret);
 
     DATA_PTR (self) = notmuch_rb_object_create (database, "notmuch_rb_database");
