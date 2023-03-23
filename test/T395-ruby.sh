@@ -12,7 +12,7 @@ test_ruby() {
     (
 	cat <<-EOF
 	require 'notmuch'
-	db = Notmuch::Database.new('$MAIL_DIR')
+	db = Notmuch::Database.new()
 	EOF
 	cat
     ) | $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT

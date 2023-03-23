@@ -59,10 +59,14 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     notmuch_status_t ret;
 
     /* Check arguments */
-    rb_scan_args (argc, argv, "11", &pathv, &hashv);
+    rb_scan_args (argc, argv, "02", &pathv, &hashv);
 
-    SafeStringValue (pathv);
-    path = RSTRING_PTR (pathv);
+    if (!NIL_P (pathv)) {
+	SafeStringValue (pathv);
+	path = RSTRING_PTR (pathv);
+    } else {
+	path = NULL;
+    }
 
     if (!NIL_P (hashv)) {
 	Check_Type (hashv, T_HASH);
