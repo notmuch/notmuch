@@ -22,7 +22,6 @@
 
 VALUE notmuch_rb_cDatabase;
 VALUE notmuch_rb_cDirectory;
-VALUE notmuch_rb_cFileNames;
 VALUE notmuch_rb_cQuery;
 VALUE notmuch_rb_cThreads;
 VALUE notmuch_rb_cThread;
@@ -64,7 +63,6 @@ const rb_data_type_t notmuch_rb_object_type = {
 
 define_type (database);
 define_type (directory);
-define_type (filenames);
 define_type (query);
 define_type (threads);
 define_type (thread);
@@ -84,7 +82,6 @@ define_type (message);
  * the user:
  *
  * - Notmuch::Database
- * - Notmuch::FileNames
  * - Notmuch::Query
  * - Notmuch::Threads
  * - Notmuch::Messages
@@ -293,17 +290,6 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cDirectory, "mtime=", notmuch_rb_directory_set_mtime, 1); /* in directory.c */
     rb_define_method (notmuch_rb_cDirectory, "child_files", notmuch_rb_directory_get_child_files, 0); /* in directory.c */
     rb_define_method (notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0); /* in directory.c */
-
-    /*
-     * Document-class: Notmuch::FileNames
-     *
-     * Notmuch file names
-     */
-    notmuch_rb_cFileNames = rb_define_class_under (mod, "FileNames", rb_cObject);
-    rb_undef_method (notmuch_rb_cFileNames, "initialize");
-    rb_define_method (notmuch_rb_cFileNames, "destroy!", notmuch_rb_filenames_destroy, 0); /* in filenames.c */
-    rb_define_method (notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0); /* in filenames.c */
-    rb_include_module (notmuch_rb_cFileNames, rb_mEnumerable);
 
     /*
      * Document-class: Notmuch::Query
