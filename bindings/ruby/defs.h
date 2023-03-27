@@ -225,6 +225,9 @@ notmuch_rb_directory_get_child_directories (VALUE self);
 
 /* filenames.c */
 VALUE
+notmuch_rb_filenames_get (notmuch_filenames_t *fnames);
+
+VALUE
 notmuch_rb_filenames_destroy (VALUE self);
 
 VALUE

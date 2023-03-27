@@ -120,7 +120,7 @@ notmuch_rb_message_get_filenames (VALUE self)
 
     fnames = notmuch_message_get_filenames (message);
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, &notmuch_rb_filenames_type, fnames);
+    return notmuch_rb_filenames_get (fnames);
 }
 
 /*

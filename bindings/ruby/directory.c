@@ -87,7 +87,7 @@ notmuch_rb_directory_get_child_files (VALUE self)
 
     fnames = notmuch_directory_get_child_files (dir);
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, &notmuch_rb_filenames_type, fnames);
+    return notmuch_rb_filenames_get (fnames);
 }
 
 /*
@@ -106,5 +106,5 @@ notmuch_rb_directory_get_child_directories (VALUE self)
 
     fnames = notmuch_directory_get_child_directories (dir);
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, &notmuch_rb_filenames_type, fnames);
+    return notmuch_rb_filenames_get (fnames);
 }

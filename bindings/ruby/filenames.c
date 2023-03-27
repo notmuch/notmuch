@@ -20,6 +20,12 @@
 
 #include "defs.h"
 
+VALUE
+notmuch_rb_filenames_get (notmuch_filenames_t *fnames)
+{
+    return Data_Wrap_Notmuch_Object (notmuch_rb_cFileNames, &notmuch_rb_filenames_type, fnames);
+}
+
 /*
  * call-seq: FILENAMES.destroy! => nil
  *
