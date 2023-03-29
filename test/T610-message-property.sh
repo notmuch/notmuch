@@ -186,18 +186,6 @@ EXPECT0(notmuch_message_add_property (message, "testkey3", "testvalue3"));
 EXPECT0(notmuch_message_add_property (message, "testkey3", "alice3"));
 print_properties (message, "testkey", FALSE);
 EOF
-# expected: 4 values for testkey1, 3 values for testkey3
-# they are not guaranteed to be sorted, so sort them, leaving the first
-# line '== stdout ==' and the end ('== stderr ==' and whatever error
-# may have been printed) alone
-mv OUTPUT unsorted_OUTPUT
-awk ' NR == 1 { print; next } \
-      NR < 6  { print | "sort"; next } \
-      NR == 6 { close("sort") } \
-      NR < 9  { print | "sort"; next } \
-      NR == 9 { close("sort") } \
-      { print }' unsorted_OUTPUT > OUTPUT
-rm unsorted_OUTPUT
 cat <<'EOF' >EXPECTED
 == stdout ==
 testkey1 = alice
