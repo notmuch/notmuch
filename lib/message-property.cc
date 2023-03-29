@@ -142,7 +142,6 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
     if (status)
 	return status;
 
-    _notmuch_message_invalidate_metadata (message, "property");
     if (key)
 	term_prefix = talloc_asprintf (message, "%s%s%s", _find_prefix ("property"), key,
 				       prefix ? "" : "=");
@@ -156,6 +155,9 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
 	LOG_XAPIAN_EXCEPTION (message, error);
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
+
+    if (! _notmuch_message_frozen (message))
+	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }

@@ -719,6 +719,8 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 	    /* Ignore failure to remove non-existent term. */
 	}
     }
+
+    _notmuch_message_invalidate_metadata (message, "property");
 }
 
 
