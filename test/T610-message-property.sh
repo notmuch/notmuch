@@ -356,6 +356,21 @@ for (key,val) in msg.get_properties("testkey",True):
 EOF
 test_expect_equal_file /dev/null OUTPUT
 
+test_begin_subtest "notmuch_message_remove_all_properties_with_prefix"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_remove_all_properties_with_prefix (message, "testkey3"));
+print_properties (message, "", FALSE);
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+fancy key with áccènts = import value with =
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue2
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "edit property on removed message without uncaught exception"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EXPECT0(notmuch_database_remove_message (db, notmuch_message_get_filename (message)));
