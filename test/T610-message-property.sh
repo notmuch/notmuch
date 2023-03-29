@@ -363,7 +363,6 @@ EOF
 test_expect_equal_file /dev/null OUTPUT
 
 test_begin_subtest "edit property on removed message without uncaught exception"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EXPECT0(notmuch_database_remove_message (db, notmuch_message_get_filename (message)));
 stat = notmuch_message_remove_property (message, "example", "example");
@@ -380,7 +379,6 @@ test_expect_equal_file EXPECTED OUTPUT
 add_email_corpus
 
 test_begin_subtest "remove all properties on removed message without uncaught exception"
-test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EXPECT0(notmuch_database_remove_message (db, notmuch_message_get_filename (message)));
 stat = notmuch_message_remove_all_properties_with_prefix (message, "");

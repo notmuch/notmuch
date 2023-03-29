@@ -25,6 +25,20 @@
 #include "database-private.h"
 #include "message-private.h"
 
+#define LOG_XAPIAN_EXCEPTION(message, error) _log_xapian_exception (__location__, message, error)
+
+static void
+_log_xapian_exception (const char *where, notmuch_message_t *message,  const Xapian::Error error)
+{
+    notmuch_database_t *notmuch = notmuch_message_get_database (message);
+
+    _notmuch_database_log (notmuch,
+			   "A Xapian exception occurred at %s: %s\n",
+			   where,
+			   error.get_msg ().c_str ());
+    notmuch->exception_reported = true;
+}
+
 notmuch_status_t
 notmuch_message_get_property (notmuch_message_t *message, const char *key, const char **value)
 {
@@ -83,10 +97,15 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
 
     term = talloc_asprintf (message, "%s=%s", key, value);
 
-    if (delete_it)
-	private_status = _notmuch_message_remove_term (message, "property", term);
-    else
-	private_status = _notmuch_message_add_term (message, "property", term);
+    try {
+	if (delete_it)
+	    private_status = _notmuch_message_remove_term (message, "property", term);
+	else
+	    private_status = _notmuch_message_add_term (message, "property", term);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
 
     if (private_status)
 	return COERCE_STATUS (private_status,
@@ -130,8 +149,13 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
     else
 	term_prefix = _find_prefix ("property");
 
-    /* XXX better error reporting ? */
-    _notmuch_message_remove_terms (message, term_prefix);
+    try {
+	/* XXX better error reporting ? */
+	_notmuch_message_remove_terms (message, term_prefix);
+    } catch (Xapian::Error &error) {
+	LOG_XAPIAN_EXCEPTION (message, error);
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
 
     return NOTMUCH_STATUS_SUCCESS;
 }
