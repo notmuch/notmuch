@@ -12,7 +12,7 @@ void print_properties (notmuch_message_t *message, const char *prefix, notmuch_b
     notmuch_message_properties_t *list;
     for (list = notmuch_message_get_properties (message, prefix, exact);
          notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
-       printf("%s\n", notmuch_message_properties_value(list));
+       printf("%s = %s\n", notmuch_message_properties_key(list), notmuch_message_properties_value(list));
     }
     notmuch_message_properties_destroy (list);
 }
@@ -157,7 +157,7 @@ print_properties (message, "testkey1", TRUE);
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-testvalue1
+testkey1 = testvalue1
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -171,10 +171,10 @@ print_properties (message, "testkey1", TRUE);
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-alice
-bob
-testvalue1
-testvalue2
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue1
+testkey1 = testvalue2
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -200,13 +200,13 @@ awk ' NR == 1 { print; next } \
 rm unsorted_OUTPUT
 cat <<'EOF' >EXPECTED
 == stdout ==
-alice
-bob
-testvalue1
-testvalue2
-alice3
-bob3
-testvalue3
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue1
+testkey1 = testvalue2
+testkey3 = alice3
+testkey3 = bob3
+testkey3 = testvalue3
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
