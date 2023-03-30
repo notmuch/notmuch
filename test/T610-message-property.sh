@@ -152,8 +152,19 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "notmuch_message_remove_all_properties"
+test_subtest_known_broken
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EXPECT0(notmuch_message_remove_all_properties (message, NULL));
+EXPECT0(notmuch_database_destroy(db));
+EXPECT0(notmuch_database_open_with_config (argv[1],
+                                           NOTMUCH_DATABASE_MODE_READ_WRITE,
+                                           "", NULL, &db, &msg));
+if (msg) fputs (msg, stderr);
+EXPECT0(notmuch_database_find_message(db, "4EFC743A.3060609@april.org", &message));
+if (message == NULL) {
+  fprintf (stderr, "unable to find message");
+  exit (1);
+}
 print_properties (message, "", FALSE);
 EOF
 cat <<'EOF' >EXPECTED
