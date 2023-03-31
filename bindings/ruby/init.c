@@ -41,8 +41,6 @@ VALUE notmuch_rb_eUnbalancedFreezeThawError;
 VALUE notmuch_rb_eUnbalancedAtomicError;
 
 ID ID_call;
-ID ID_db_create;
-ID ID_db_mode;
 
 const rb_data_type_t notmuch_rb_object_type = {
     .wrap_struct_name = "notmuch_object",
@@ -95,8 +93,6 @@ Init_notmuch (void)
     VALUE mod;
 
     ID_call = rb_intern ("call");
-    ID_db_create = rb_intern ("create");
-    ID_db_mode = rb_intern ("mode");
 
     mod = rb_define_module ("Notmuch");
 

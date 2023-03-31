@@ -47,8 +47,6 @@ extern VALUE notmuch_rb_eUnbalancedFreezeThawError;
 extern VALUE notmuch_rb_eUnbalancedAtomicError;
 
 extern ID ID_call;
-extern ID ID_db_create;
-extern ID ID_db_mode;
 
 /* RSTRING_PTR() is new in ruby-1.9 */
 #if !defined(RSTRING_PTR)
