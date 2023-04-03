@@ -45,7 +45,7 @@ notmuch_rb_query_get_sort (VALUE self)
 
     Data_Get_Notmuch_Query (self, query);
 
-    return FIX2INT (notmuch_query_get_sort (query));
+    return INT2FIX (notmuch_query_get_sort (query));
 }
 
 /*
