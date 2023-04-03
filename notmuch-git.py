@@ -368,7 +368,7 @@ class CachedIndex:
         _git(args=['read-tree', self.current_treeish], wait=True)
 
 
-def check_safe_fraction(status):
+def _check_fraction(change):
     safe = 0.1
     conf = _notmuch_config_get ('git.safe_fraction')
     if conf and conf != '':
@@ -379,13 +379,32 @@ def check_safe_fraction(status):
         _LOG.error('No existing tags with given prefix, stopping.')
         _LOG.error('Use --force to override.')
         exit(1)
-    change = len(status['added'])+len(status['deleted'])
+
     fraction = change/total
     _LOG.debug('total messages {:d}, change: {:d}, fraction: {:f}'.format(total,change,fraction))
     if fraction > safe:
         _LOG.error('safe fraction {:f} exceeded, stopping.'.format(safe))
         _LOG.error('Use --force to override or reconfigure git.safe_fraction.')
         exit(1)
+
+def check_safe_fraction(status):
+
+    change = len(status['added'])+len(status['deleted'])
+    _check_fraction(change)
+
+def check_diff_fraction():
+
+    # check number of directories (i.e. messages) changed.
+    change_set = set()
+
+    with _git(args=['diff', '--name-only', 'HEAD', '@{upstream}'],
+              stdout=_subprocess.PIPE) as git:
+        for path in git.stdout:
+            change_set.add(_os.path.dirname(path))
+
+    change=len(change_set)
+    _check_fraction(change)
+
 
 def commit(treeish='HEAD', message=None, force=False):
     """
@@ -618,6 +637,15 @@ def push(repository=None, refspecs=None):
         args.extend(refspecs)
     _git(args=args, wait=True)
 
+
+def reset(force=False):
+    """
+    reset the local git branch to match the remote one
+    """
+    if not force:
+        check_diff_fraction()
+
+    _git(args=["reset","--soft","origin/master"],wait=True)
 
 def status():
     """
@@ -1047,6 +1075,7 @@ if __name__ == '__main__':
             'merge',
             'pull',
             'push',
+            'reset',
             'status',
             ]:
         func = locals()[command]
@@ -1141,6 +1170,10 @@ if __name__ == '__main__':
                     'Refspec (usually a branch name) to push.  See '
                     'the <refspec> entry in the OPTIONS section of '
                     'git-push(1) for other possibilities.'))
+        elif command == 'reset':
+            subparser.add_argument(
+                '-f', '--force', action='store_true',
+                help='reset a large fraction of tags.')
 
     args = parser.parse_args()
 

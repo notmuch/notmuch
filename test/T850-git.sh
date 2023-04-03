@@ -213,6 +213,51 @@ cat <<EOF > EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "reset"
+notmuch git -C reset.git -p '' clone remote.git
+notmuch git -C reset.git checkout --force
+notmuch tag +test4 id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C remote.git commit --force
+notmuch tag -test4 id:20091117190054.GU3165@dottiness.seas.harvard.edu
+notmuch git -C reset.git fetch
+notmuch git -C reset.git reset
+notmuch git -C reset.git checkout --force
+notmuch dump id:20091117190054.GU3165@dottiness.seas.harvard.edu | grep -v '^#' > OUTPUT
+cat <<EOF > EXPECTED
++inbox +signed +test2 +test3 +test4 +unread -- id:20091117190054.GU3165@dottiness.seas.harvard.edu
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "reset (require force for large change)"
+notmuch git -C reset2.git -p '' clone remote.git
+notmuch git -C reset2.git checkout --force
+notmuch tag +test5 '*'
+notmuch git -C remote.git commit --force
+notmuch tag -test5 '*'
+notmuch git -C reset2.git fetch
+test_expect_code 1 "notmuch git -C reset2.git -l debug reset"
+
+test_begin_subtest "reset (don't require force for large change to one message)"
+notmuch git -C reset3.git -p '' clone remote.git
+notmuch git -C reset3.git checkout --force
+notmuch dump id:20091117190054.GU3165@dottiness.seas.harvard.edu > BEFORE
+for tag in $(seq 1 100); do
+    notmuch tag +$tag id:20091117190054.GU3165@dottiness.seas.harvard.edu
+done
+notmuch git -C remote.git commit --force
+notmuch restore < BEFORE
+notmuch git -C reset3.git fetch
+test_expect_code 0 "notmuch git -C reset3.git -l debug reset"
+
+test_begin_subtest "reset --force"
+notmuch git -C reset4.git -p '' clone remote.git
+notmuch git -C reset4.git checkout --force
+notmuch tag +test6 '*'
+notmuch git -C remote.git commit --force
+notmuch tag -test6 '*'
+notmuch git -C reset4.git fetch
+test_expect_code 0 "notmuch git -C reset4.git -l debug reset --force"
+
 test_begin_subtest "environment passed through when run as 'notmuch git'"
 env NOTMUCH_GIT_DIR=foo NOTMUCH_GIT_PREFIX=bar NOTMUCH_PROFILE=default notmuch git -C tags.git -p '' -ldebug status |& \
     grep '^env ' | notmuch_dir_sanitize > OUTPUT
@@ -310,7 +355,6 @@ cat <<EOF > EXPECTED
 prefix = env::
 EOF
 test_expect_equal_file EXPECTED OUTPUT
-
 
 test_begin_subtest "init, xdg default location"
 repo=home/.local/share/notmuch/default/git
