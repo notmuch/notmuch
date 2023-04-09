@@ -2,7 +2,7 @@
 test_description='run code with ASAN enabled against the library'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ $NOTMUCH_HAVE_ASAN -ne 1 ]; then
+if [ "${NOTMUCH_HAVE_ASAN-0}" != "1" ]; then
     printf "Skipping due to missing ASAN support\n"
     test_done
 fi

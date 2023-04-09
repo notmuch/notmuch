@@ -184,7 +184,7 @@ output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.ex
 test_valid_json "$output"
 
 test_begin_subtest "Verify signature on PKCS#7 SignedData message"
-if [ $NOTMUCH_HAVE_64BIT_TIME_T -ne 1 ]; then
+if [ "${NOTMUCH_HAVE_64BIT_TIME_T-0}" != "1" ]; then
     test_subtest_known_broken
 fi
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)

@@ -12,7 +12,7 @@ test_expect_success 'notmuch help'
 test_begin_subtest 'notmuch --version'
 test_expect_success 'notmuch --version'
 
-if [ $NOTMUCH_HAVE_MAN -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_MAN-0}" = "1" ]; then
     test_begin_subtest 'notmuch --help tag'
     test_expect_success 'notmuch --help tag'
 

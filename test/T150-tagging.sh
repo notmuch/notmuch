@@ -328,7 +328,7 @@ test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 add_email_corpus
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
     test_query_syntax '(and "wonderful" "wizard")' 'wonderful and wizard'
     test_query_syntax '(or "php" "wizard")' 'php or wizard'

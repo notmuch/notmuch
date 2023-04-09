@@ -5,7 +5,7 @@ test_description='reindexing messages'
 add_email_corpus
 
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
     count=$(notmuch count --lastmod '*' | cut -f 3)
     for query in '()' '(not)' '(and)' '(or ())' '(or (not))' '(or (and))' \
