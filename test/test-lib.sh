@@ -388,6 +388,14 @@ test_expect_equal_message_body () {
     test "$#" = 2 ||
 	error "bug in the test script: not 2 parameters to test_expect_equal_file"
 
+    for file in "$1" "$2"; do
+	if [ ! -s "$file" ]; then
+	    test_failure_ "Missing or zero length file: $file"
+	    inside_subtest=
+	    return 1
+	fi
+    done
+
     expected=$(sed '1,/^$/d' "$1")
     output=$(sed '1,/^$/d' "$2")
     test_expect_equal "$expected" "$output"
