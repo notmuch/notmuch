@@ -17,7 +17,6 @@ use Getopt::Long qw(:config no_getopt_compat);
 use Mail::Header;
 use Mail::Box::Maildir;
 use Pod::Usage;
-use String::ShellQuote;
 use Term::ReadLine;
 use Digest::SHA;
 
@@ -126,13 +125,9 @@ sub thread_action($$@) {
     }
 
     $mid =~ s/ //g; # notmuch strips spaces before storing Message-Id
-    $mid =~ s/"/""/g; # escape all double quote characters
+    $mid =~ s/"/""""/g; # escape all double quote characters twice
 
-    my $search_cmd = 'notmuch search --output=threads ' . shell_quote(qq{id:"$mid"});
-    my $tid = `$search_cmd`;	# get thread id
-    chomp($tid);
-
-    search($results_dir, $remove_dups, $tid);
+    search($results_dir, $remove_dups, qq{thread:"{id:""$mid""}"});
 }
 
 sub tag_action(@) {
