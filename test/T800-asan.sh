@@ -7,6 +7,11 @@ if [ "${NOTMUCH_HAVE_ASAN-0}" != "1" ]; then
     test_done
 fi
 
+if [ -n "${LD_PRELOAD-}" ]; then
+    printf "Skipping due to ASAN LD_PRELOAD restrictions\n"
+    test_done
+fi
+
 add_email_corpus
 
 TEST_CFLAGS="${TEST_CFLAGS:-} -fsanitize=address"

@@ -66,6 +66,7 @@ test_begin_subtest 'NOTMUCH_CONFIG is set and points to an existing file'
 test_expect_success 'test -f "${NOTMUCH_CONFIG}"'
 
 test_begin_subtest 'PATH is set to build directory'
+test_subtest_broken_for_installed
 test_expect_equal \
     "$(dirname ${TEST_DIRECTORY})" \
     "$(echo $PATH|cut -f1 -d: | sed -e 's,/test/valgrind/bin$,,')"

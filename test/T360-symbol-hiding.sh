@@ -11,6 +11,10 @@ test_description='exception symbol hiding'
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 test_begin_subtest 'running test' run_test
 mkdir -p ${PWD}/fakedb/.notmuch
 $TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent 2>&1 \

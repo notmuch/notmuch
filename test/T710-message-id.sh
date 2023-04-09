@@ -3,6 +3,10 @@ test_description="message id parsing"
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 test_begin_subtest "good message ids"
 ${TEST_DIRECTORY}/message-id-parse <<EOF >OUTPUT
 <018b1a8f2d1df62e804ce88b65401304832dfbbf.1346614915.git.jani@nikula.org>

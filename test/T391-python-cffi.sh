@@ -2,6 +2,10 @@
 test_description="python bindings (pytest)"
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 if [ "${NOTMUCH_HAVE_PYTHON3_CFFI-0}" = "0" -o "${NOTMUCH_HAVE_PYTHON3_PYTEST-0}" = "0" ]; then
     test_done
 fi

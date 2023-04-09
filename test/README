@@ -137,6 +137,23 @@ detection of missing prerequisites. In the future we may treat tests
 unable to run because of missing prerequisites, but not explicitly
 skipped by the user, as failures.
 
+Testing installed notmuch
+-------------------------
+
+Systems integrators (e.g. Linux distros) may wish to test an installed
+version of notmuch.  This can be done be running
+
+     $ NOTMUCH_TEST_INSTALLED=1 ./test/notmuch-test
+
+In this scenario the test suite does not assume a built tree, and in
+particular cannot rely on the output of 'configure'. You may want to
+set certain feature environment variables ('NOTMUCH_HAVE_*') directly
+if you know those apply to your installed notmuch). Consider also
+setting TERM=dumb if the value of TERM cannot be used (e.g. in a
+chroot with missing terminfo). Note that having a built tree may cause
+surprising/broken results for NOTMUCH_TEST_INSTALLED, so consider
+cleaning first.
+
 Writing Tests
 -------------
 The test script is written as a shell script. It is to be named as

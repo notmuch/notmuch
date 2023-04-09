@@ -139,6 +139,7 @@ notmuch dump --output=dump-outfile-dash-inbox.actual -- from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
 
 test_begin_subtest "Check for a safe set of message-ids"
+test_subtest_broken_for_installed
 notmuch search --output=messages from:cworth | sed s/^id:// > EXPECTED
 notmuch search --output=messages from:cworth | sed s/^id:// |\
 	$TEST_DIRECTORY/hex-xcode --direction=encode > OUTPUT
@@ -246,6 +247,7 @@ notmuch dump --format=batch-tag > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 test_begin_subtest 'format=batch-tag, checking encoded output'
+test_subtest_broken_for_installed
 NOTMUCH_DUMP_TAGS --format=batch-tag -- from:cworth |\
 	 awk "{ print \"+$enc1 +$enc2 +$enc3 -- \" \$5 }" > EXPECTED.$test_count
 NOTMUCH_DUMP_TAGS --format=batch-tag -- from:cworth > OUTPUT.$test_count

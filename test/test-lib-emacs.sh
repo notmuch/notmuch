@@ -30,6 +30,7 @@ test_require_emacs () {
 # to the message and encrypting/signing.
 emacs_deliver_message () {
     local subject body smtp_dummy_pid smtp_dummy_port
+    test_subtest_broken_for_installed
     subject="$1"
     body="$2"
     shift 2
@@ -144,6 +145,13 @@ emacs_generate_script () {
 	# Construct a little test script here for the benefit of the user,
 	# (who can easily run "run_emacs" to get the same emacs environment
 	# for investigating any failures).
+    if [ -z "${NOTMUCH_TEST_INSTALLED-}" ]; then
+	find_notmuch_el='--directory "$NOTMUCH_BUILDDIR/emacs"'
+    else
+	### XXX FIXME: this should really use the installed emacs lisp files
+	find_notmuch_el='--directory "$NOTMUCH_SRCDIR/emacs"'
+    fi
+
 	cat <<EOF >"$TMP_DIRECTORY/run_emacs"
 #!/bin/sh
 export PATH=$PATH
@@ -158,8 +166,8 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-exec ${TEST_EMACS} --quick \
-	--directory "$NOTMUCH_BUILDDIR/emacs" --load notmuch.el \
+exec ${TEST_EMACS} ${find_notmuch_el} --quick \
+	${EXTRA_DIR} --load notmuch.el \
 	--directory "$NOTMUCH_SRCDIR/test" --load test-lib.el \
 	"\$@"
 EOF

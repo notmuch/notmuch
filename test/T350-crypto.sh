@@ -30,6 +30,7 @@ msg_file=$(notmuch search --output=files subject:signed-message-sent-via-SMTP)
 test_expect_equal_message_body sent_message "$msg_file"
 
 test_begin_subtest "signed part content-type indexing"
+test_subtest_broken_for_installed
 notmuch search mimetype:multipart/signed and mimetype:application/pgp-signature | notmuch_search_sanitize > OUTPUT
 cat <<EOF >EXPECTED
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test signed message 001 (inbox signed)

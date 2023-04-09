@@ -65,6 +65,7 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" ]; then
 test_begin_subtest "Search message: json, 64-bit timestamp"
 if [ "${NOTMUCH_HAVE_64BIT_TIME_T-0}" != "1" ]; then
     test_subtest_known_broken
@@ -81,6 +82,7 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"query\": [\"id:$gen_msg_id\", null],
  \"tags\": [\"inbox\",
  \"unread\"]}]"
+fi # NOTMUCH_TEST_INSTALLED undefined / empty
 
 test_begin_subtest "Format version: too low"
 test_expect_code 20 "notmuch search --format-version=0 \\*"

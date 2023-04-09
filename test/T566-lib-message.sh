@@ -3,6 +3,10 @@ test_description="API tests for notmuch_message_*"
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED}" ]; then
+    test_done
+fi
+
 add_email_corpus
 
 test_begin_subtest "building database"

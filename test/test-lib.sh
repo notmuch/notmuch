@@ -29,8 +29,8 @@ shopt -u xpg_echo
 # Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
 . $(dirname "$0")/export-dirs.sh || exit 1
 
-# It appears that people try to run tests without building...
-if [[ ! -x "$NOTMUCH_BUILDDIR/notmuch" ]]; then
+# We need either a built tree, or a promise of an installed notmuch
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" -a ! -x "$NOTMUCH_BUILDDIR/notmuch" ]; then
 	echo >&2 'You do not seem to have built notmuch yet.'
 	exit 1
 fi
@@ -748,6 +748,12 @@ test_subtest_known_broken () {
 	test_subtest_known_broken_=t
 }
 
+test_subtest_broken_for_installed () {
+    if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+	test_subtest_known_broken_=t
+    fi
+}
+
 test_subtest_broken_for_root () {
    if [ "$EUID" = "0" ]; then
 	test_subtest_known_broken_=t
@@ -929,11 +935,16 @@ make_shim () {
 }
 
 notmuch_with_shim () {
-    local base_name shim_file
-    base_name="$1"
+    local base_name shim_file notmuch_cmd
+    if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+	notmuch_cmd="notmuch"
+    else
+	notmuch_cmd="notmuch-shared"
+    fi
+    base_name=$1
     shift
     shim_file="${base_name}.so"
-    LD_PRELOAD=${LD_PRELOAD:+:$LD_PRELOAD}:./${shim_file} notmuch-shared "$@"
+    LD_PRELOAD=${LD_PRELOAD:+:$LD_PRELOAD}:./${shim_file} $notmuch_cmd "$@"
 }
 
 # Creates a script that counts how much time it is executed and calls
@@ -985,7 +996,11 @@ test_init_ () {
 
 
 # Where to run the tests
-TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+if [[ -n "${NOTMUCH_BUILDDIR}" ]]; then
+    TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+else
+    TEST_DIRECTORY=$NOTMUCH_SRCDIR/test
+fi
 
 . "$NOTMUCH_SRCDIR/test/test-lib-common.sh" || exit 1
 

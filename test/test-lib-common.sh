@@ -24,7 +24,7 @@
 #
 type die >/dev/null 2>&1 || die () { echo "$@" >&2; exit 1; }
 
-if [[ -z "$NOTMUCH_SRCDIR" ]] || [[ -z "$NOTMUCH_BUILDDIR" ]]; then
+if [[ -z "$NOTMUCH_SRCDIR" ]] || [ -z "${NOTMUCH_TEST_INSTALLED-}" -a -z "$NOTMUCH_BUILDDIR" ]; then
 	echo "internal: srcdir or builddir not set" >&2
 	exit 1
 fi
@@ -61,7 +61,9 @@ LD_LIBRARY_PATH=${TEST_DIRECTORY%/*}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 export LD_LIBRARY_PATH
 
 # configure output
-. "$NOTMUCH_BUILDDIR/sh.config" || exit 1
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" ]; then
+   . "$NOTMUCH_BUILDDIR/sh.config" || exit 1
+fi
 
 # load OS specifics
 if [[ -e "$NOTMUCH_SRCDIR/test/test-lib-$PLATFORM.sh" ]]; then
@@ -315,7 +317,12 @@ export PATH MANPATH
 
 # Test repository
 test="tmp.$(basename "$0" .sh)"
-TMP_DIRECTORY="$TEST_DIRECTORY/$test"
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    TMP_DIRECTORY="$TEST_DIRECTORY/$test"
+else
+    TMP_DIRECTORY=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-$test.XXXXXX")
+fi
+
 test ! -z "$debug" || remove_tmp=$TMP_DIRECTORY
 rm -rf "$TMP_DIRECTORY" || {
 	GIT_EXIT_OK=t
