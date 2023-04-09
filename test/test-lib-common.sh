@@ -323,6 +323,10 @@ rm -rf "$TMP_DIRECTORY" || {
 	exit 1
 }
 
+# Provide a guess at a usable Python, to support running tests without
+# running configure first.
+NOTMUCH_PYTHON=${NOTMUCH_PYTHON-python3}
+
 # A temporary home directory is needed by at least:
 # - emacs/"Sending a message via (fake) SMTP"
 # - emacs/"Reply within emacs"
