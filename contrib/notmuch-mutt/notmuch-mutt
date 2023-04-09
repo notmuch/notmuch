@@ -124,7 +124,11 @@ sub thread_action($$@) {
 	empty_maildir($results_dir);
 	die "notmuch-mutt: cannot find Message-Id, abort.\n";
     }
-    my $search_cmd = 'notmuch search --output=threads ' . shell_quote("id:$mid");
+
+    $mid =~ s/ //g; # notmuch strips spaces before storing Message-Id
+    $mid =~ s/"/""/g; # escape all double quote characters
+
+    my $search_cmd = 'notmuch search --output=threads ' . shell_quote(qq{id:"$mid"});
     my $tid = `$search_cmd`;	# get thread id
     chomp($tid);
 
@@ -135,7 +139,10 @@ sub tag_action(@) {
     my $mid = get_message_id();
     defined $mid or die "notmuch-mutt: cannot find Message-Id, abort.\n";
 
-    system("notmuch", "tag", @_, "--", "id:$mid");
+    $mid =~ s/ //g; # notmuch strips spaces before storing Message-Id
+    $mid =~ s/"/""/g; # escape all double quote characters
+
+    system("notmuch", "tag", @_, "--", qq{id:"$mid"});
 }
 
 sub die_usage() {
