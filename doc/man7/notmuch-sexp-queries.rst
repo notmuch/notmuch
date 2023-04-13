@@ -274,7 +274,7 @@ EXAMPLES
 
     Matches any word starting with "prelim", inside a message subject.
 
-``(subject (starts-wih quick) "brown fox")``
+``(subject (starts-with quick) "brown fox")``
 
     Match messages whose subject contains "quick brown fox", but also
     "brown fox quicksand".
@@ -336,7 +336,7 @@ user defined fields is permitted within a macro.
 NOTES
 =====
 
-.. [#macro-details] Technically macros impliment lazy evaluation and
+.. [#macro-details] Technically macros implement lazy evaluation and
                     lexical scope. There is one top level scope
                     containing all macro definitions, but all
                     parameter definitions are local to a given macro.
@@ -347,10 +347,10 @@ NOTES
 
 .. [#aka-bool] a.k.a. boolean prefixes
 
-.. [#not-phrase] Due to the implemention of phrase fields in Xapian,
+.. [#not-phrase] Due to the implementation of phrase fields in Xapian,
                  regex queries could only match individual words.
 
-.. [#not-body] Due the the way ``body`` is implemented in notmuch,
+.. [#not-body] Due to the way ``body`` is implemented in notmuch,
                this modifier is not supported in the ``body`` field.
 
 .. [#not-path] Due to the way recursive ``path`` queries are implemented
