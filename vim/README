@@ -53,10 +53,10 @@ Enjoy ;)
 As an example to configure a key mapping to add the tag 'to-do' and archive,
 this is what I use:
 
-let g:notmuch_rb_custom_search_maps = {
+let g:notmuch_custom_search_maps = {
 	\ 't':		'search_tag("+to-do -inbox")',
 	\ }
 
-let g:notmuch_rb_custom_show_maps = {
+let g:notmuch_custom_show_maps = {
 	\ 't':		'show_tag("+to-do -inbox")',
 	\ }
