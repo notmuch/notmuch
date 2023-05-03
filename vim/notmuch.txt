@@ -144,7 +144,7 @@ If you want to count the threads instead of the messages in the folder view:
 						*g:notmuch_reader*
 						*g:notmuch_sendmail*
 
-You can also configure your externail mail reader and sendemail program:
+You can also configure your external mail reader and sendmail program:
 >
 	let g:notmuch_reader = 'mutt -f %s'
 	let g:notmuch_sendmail = 'sendmail'
