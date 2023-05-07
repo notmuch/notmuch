@@ -76,6 +76,7 @@ message = {
     # (format_message_sprinter)
     id:             messageid,
     match:          bool,
+    excluded:       bool,
     filename:	    [string*],
     timestamp:      unix_time, # date header as unix time
     date_relative:  string,   # user-friendly timestamp
