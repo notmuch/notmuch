@@ -34,6 +34,12 @@ add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"
 output=$(notmuch search id:${gen_msg_id} | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
 
+test_begin_subtest "Message-Id with spaces"
+test_subtest_known_broken
+add_message '[id]="message id@example.com"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search --output=messages id:"message id@example.com")
+test_expect_equal "$output" "messageid@example.com"
+
 test_begin_subtest "Search by mid:"
 add_message '[subject]="search by mid"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$(notmuch search mid:${gen_msg_id} | notmuch_search_sanitize)
@@ -132,6 +138,7 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; Message-Id with spaces (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by mid (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)
