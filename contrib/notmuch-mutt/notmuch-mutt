@@ -13,6 +13,7 @@ use warnings;
 
 use File::Path;
 use File::Basename;
+use File::Find;
 use Getopt::Long qw(:config no_getopt_compat);
 use Mail::Header;
 use Mail::Box::Maildir;
@@ -25,6 +26,50 @@ my $xdg_cache_dir = "$ENV{HOME}/.cache";
 $xdg_cache_dir = $ENV{XDG_CACHE_HOME} if $ENV{XDG_CACHE_HOME};
 my $cache_dir = "$xdg_cache_dir/notmuch/mutt";
 
+sub die_dir($$) {
+    my ($maildir, $error) = @_;
+    die "notmuch-mutt: search cache maildir $maildir $error\n".
+        "Please ensure that the notmuch-mutt search cache Maildir\n".
+        "contains no subfolders or real mail data, only symlinks to mail\n";
+}
+
+sub die_subdir($$$) {
+    my ($maildir, $subdir, $error) = @_;
+    die_dir($maildir, "subdir $subdir $error");
+}
+
+# check that the search cache maildir is that and not a real maildir
+# otherwise there could be data loss when the search cache is emptied
+sub check_search_cache_maildir($) {
+    my ($maildir) = (@_);
+
+    return unless -e $maildir;
+
+    -d $maildir or die_dir($maildir, 'is not a directory');
+
+    opendir(my $mdh, $maildir) or die_dir($maildir, "cannot be opened: $!");
+    my @contents = grep { !/^\.\.?$/ } readdir $mdh;
+    closedir $mdh;
+
+    my @required = ('cur', 'new', 'tmp');
+    foreach my $d (@required) {
+        -l "$maildir/$d" and die_dir($maildir, "contains symlink $d");
+        -e "$maildir/$d" or die_subdir($maildir, $d, 'is missing');
+        -d "$maildir/$d" or die_subdir($maildir, $d, 'is not a directory');
+        find(sub {
+            $_ eq '.' and return;
+            $_ eq '..' and return;
+            -l $_ or die_subdir($maildir, $d, "contains non-symlink $_");
+        }, "$maildir/$d");
+    }
+
+    my %required = map { $_ => 1 } @required;
+    foreach my $d (@contents) {
+        -l "$maildir/$d" and die_dir( $maildir, "contains symlink $d");
+        -d "$maildir/$d" or die_dir( $maildir, "contains non-directory $d");
+        exists($required[$d]) or die_dir( $maildir, "contains directory $d");
+    }
+}
 
 # create an empty search cache maildir (if missing) or empty existing one
 sub empty_search_cache_maildir($) {
@@ -45,6 +90,7 @@ sub search($$$) {
     push @args, "--duplicate=1" if $remove_dups;
     push @args, $query;
 
+    check_search_cache_maildir($maildir);
     empty_search_cache_maildir($maildir);
     open my $pipe, '-|', @args or die "Running @args failed: $!\n";
     while (<$pipe>) {
