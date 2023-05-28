@@ -26,8 +26,8 @@ $xdg_cache_dir = $ENV{XDG_CACHE_HOME} if $ENV{XDG_CACHE_HOME};
 my $cache_dir = "$xdg_cache_dir/notmuch/mutt";
 
 
-# create an empty maildir (if missing) or empty an existing maildir"
-sub empty_maildir($) {
+# create an empty search cache maildir (if missing) or empty existing one
+sub empty_search_cache_maildir($) {
     my ($maildir) = (@_);
     rmtree($maildir) if (-d $maildir);
     my $folder = new Mail::Box::Maildir(folder => $maildir,
@@ -45,7 +45,7 @@ sub search($$$) {
     push @args, "--duplicate=1" if $remove_dups;
     push @args, $query;
 
-    empty_maildir($maildir);
+    empty_search_cache_maildir($maildir);
     open my $pipe, '-|', @args or die "Running @args failed: $!\n";
     while (<$pipe>) {
 	chomp;
@@ -120,7 +120,7 @@ sub thread_action($$@) {
 
     my $mid = get_message_id();
     if (! defined $mid) {
-	empty_maildir($results_dir);
+	empty_search_cache_maildir($results_dir);
 	die "notmuch-mutt: cannot find Message-Id, abort.\n";
     }
 
