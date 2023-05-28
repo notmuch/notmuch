@@ -120,7 +120,6 @@ sub thread_action($$@) {
 
     my $mid = get_message_id();
     if (! defined $mid) {
-	empty_search_cache_maildir($results_dir);
 	die "notmuch-mutt: cannot find Message-Id, abort.\n";
     }
 
