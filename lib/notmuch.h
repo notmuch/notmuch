@@ -722,7 +722,8 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  *
  * The UUID is a NUL-terminated opaque string that uniquely identifies
  * this database.  Two revision numbers are only comparable if they
- * have the same database UUID.
+ * have the same database UUID. The string 'uuid' is owned by notmuch
+ * and should not be freed or modified by the user.
  */
 unsigned long
 notmuch_database_get_revision (notmuch_database_t *notmuch,
