@@ -710,11 +710,7 @@ with `notmuch-hello-query-counts'."
 	    ;; configuration change, and this is not a new window)
 	    (setq do-refresh t)))))
     (when (and do-refresh notmuch-hello-auto-refresh)
-      ;; Refresh hello as soon as we get back to redisplay.  On Emacs
-      ;; 24, we can't do it right here because something in this
-      ;; hook's call stack overrides hello's point placement.
-      ;; FIXME And on Emacs releases that we still support?
-      (run-at-time nil nil #'notmuch-hello t))
+      (notmuch-hello t))
     (unless hello-buf
       ;; Clean up hook
       (remove-hook 'window-configuration-change-hook
