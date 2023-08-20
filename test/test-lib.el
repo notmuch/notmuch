@@ -205,3 +205,8 @@ running, quit if it terminated."
 ;; environments
 
 (setq mm-text-html-renderer 'html2text)
+
+;; Set our own default for message-hidden-headers, to avoid tests
+;; breaking when the Emacs default changes.
+(setq message-hidden-headers
+      '("^References:" "^Face:" "^X-Face:" "^X-Draft-From:"))
