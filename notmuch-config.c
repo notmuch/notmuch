@@ -278,18 +278,24 @@ notmuch_conffile_open (notmuch_database_t *notmuch,
 	return NULL;
     }
 
-    if (config->is_new)
-	g_key_file_set_comment (config->key_file, NULL, NULL,
-				toplevel_config_comment, NULL);
-
     for (size_t i = 0; i < ARRAY_SIZE (group_comment_table); i++) {
 	const char *name = group_comment_table[i].group_name;
 	if (! g_key_file_has_group (config->key_file,  name)) {
 	    /* Force group to exist before adding comment */
 	    g_key_file_set_value (config->key_file, name, "dummy_key", "dummy_val");
 	    g_key_file_remove_key (config->key_file, name, "dummy_key", NULL);
-	    g_key_file_set_comment (config->key_file, name, NULL,
-				    group_comment_table[i].comment, NULL);
+	    if (config->is_new && (i == 0) ) {
+		const char *comment;
+
+		comment = talloc_asprintf (config, "%s\n%s",
+					   toplevel_config_comment,
+					   group_comment_table[i].comment);
+		g_key_file_set_comment (config->key_file, name, NULL, comment,
+					NULL);
+	    } else {
+		g_key_file_set_comment (config->key_file, name, NULL,
+					group_comment_table[i].comment, NULL);
+	    }
 	}
     }
     return config;
