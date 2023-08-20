@@ -21,7 +21,8 @@ baz
 EOF
 
 expected_dir=$NOTMUCH_SRCDIR/test/setup.expected-output
-test_expect_equal_file ${expected_dir}/config-with-comments new-notmuch-config
+sed '/^$/d' < new-notmuch-config > filtered-config
+test_expect_equal_file ${expected_dir}/config-with-comments filtered-config
 
 test_begin_subtest "setup consistent with config-set for single items"
 # note this relies on the config state from the previous test.

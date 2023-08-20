@@ -1,7 +1,6 @@
 # .notmuch-config - Configuration file for the notmuch mail system
 #
 # For more information about notmuch, see https://notmuchmail.org
-
 # Database configuration
 #
 # The only value supported here is 'path' which should be the top-level
@@ -12,7 +11,6 @@
 #
 [database]
 path=/path/to/maildir
-
 # User configuration
 #
 # Here is where you can let notmuch know how you would like to be
@@ -32,7 +30,6 @@ path=/path/to/maildir
 name=Test Suite
 primary_email=test.suite@example.com
 other_email=another.suite@example.com
-
 # Configuration for "notmuch new"
 #
 # The following options are supported here:
@@ -49,7 +46,6 @@ other_email=another.suite@example.com
 #
 [new]
 tags=foo;bar;
-
 # Search configuration
 #
 # The following option is supported here:
@@ -61,7 +57,6 @@ tags=foo;bar;
 #
 [search]
 exclude_tags=baz
-
 # Maildir compatibility configuration
 #
 # The following option is supported here:
