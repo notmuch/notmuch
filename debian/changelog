@@ -1,3 +1,9 @@
+notmuch (0.38~rc0-1) unstable; urgency=medium
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Thu, 24 Aug 2023 07:59:59 -0300
+
 notmuch (0.37-1) unstable; urgency=medium
 
   * New upstream release.
