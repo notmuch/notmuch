@@ -1,6 +1,10 @@
 #!/usr/bin/make -f
 include /usr/share/dpkg/architecture.mk
 
+ifeq ($(DEB_HOST_ARCH),ppc64el)
+	export NOTMUCH_SKIP_TESTS = T810-tsan
+endif
+
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
