@@ -22,6 +22,15 @@
 
 ;;; Code:
 
+;; minimize impact of native compilation on the test suite.
+;; These are the Emacs 29.1 version of the variables.
+;; Leave trampolines enabled per Emacs upstream recommendations.
+;; It is important to set these variables before loading any
+;; .elc files.
+(setq native-comp-jit-compilation nil)
+(setq native-comp-speed -1)
+(setq native-comp-async-jobs-number 1)
+
 (require 'cl-lib)
 
 ;; Ensure that the dynamic variables that are defined by this library
