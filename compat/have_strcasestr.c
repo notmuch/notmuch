@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
-#include <strings.h>
+#include <strings.h> /* strcasecmp() in POSIX */
+#include <string.h> /* strcasecmp() in *BSD */
 
 int
 main ()
