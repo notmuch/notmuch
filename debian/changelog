@@ -1,3 +1,12 @@
+notmuch (0.38~rc1-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Hopefully reduce/eliminate intermittent failures of T460 by
+    controlling Emacs native compilation.
+  * Disable T810-tsan on ppc64el
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 Aug 2023 08:31:21 -0300
+
 notmuch (0.38~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate
