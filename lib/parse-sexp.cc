@@ -3,6 +3,7 @@
 #if HAVE_SFSEXP
 #include "sexp.h"
 #include "unicode-util.h"
+#include "xapian-extra.h"
 
 /* _sexp is used for file scope symbols to avoid clashing with
  * definitions from sexp.h */
@@ -39,82 +40,99 @@ typedef enum {
 /*
  * define bitwise operators to hide casts */
 
-inline _sexp_flag_t
+static inline _sexp_flag_t
 operator| (_sexp_flag_t a, _sexp_flag_t b)
 {
     return static_cast<_sexp_flag_t>(
 	static_cast<unsigned>(a) | static_cast<unsigned>(b));
 }
 
-inline _sexp_flag_t
+static inline _sexp_flag_t
 operator& (_sexp_flag_t a, _sexp_flag_t b)
 {
     return static_cast<_sexp_flag_t>(
 	static_cast<unsigned>(a) & static_cast<unsigned>(b));
 }
 
+typedef enum {
+    SEXP_INITIAL_MATCH_ALL,
+    SEXP_INITIAL_MATCH_NOTHING,
+} _sexp_initial_t;
+
+static inline Xapian::Query
+_sexp_initial_query (_sexp_initial_t initial)
+{
+    switch (initial) {
+    case SEXP_INITIAL_MATCH_ALL:
+	return xapian_query_match_all ();
+    case SEXP_INITIAL_MATCH_NOTHING:
+	return Xapian::Query::MatchNothing;
+    }
+    INTERNAL_ERROR ("invalid initial sexp value %d", initial);
+}
+
 typedef struct  {
     const char *name;
     Xapian::Query::op xapian_op;
-    Xapian::Query initial;
+    _sexp_initial_t initial;
     _sexp_flag_t flags;
 } _sexp_prefix_t;
 
 static _sexp_prefix_t prefixes[] =
 {
-    { "and",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "and",            Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_NONE },
-    { "attachment",     Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "attachment",     Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
-    { "body",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "body",           Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD },
-    { "date",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+    { "date",           Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_RANGE },
-    { "from",           Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "from",           Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "folder",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "folder",         Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND |
       SEXP_FLAG_PATHNAME },
-    { "id",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "id",             Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
-    { "infix",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+    { "infix",          Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_SINGLE | SEXP_FLAG_ORPHAN },
-    { "is",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "is",             Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "lastmod",           Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+    { "lastmod",           Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_RANGE },
-    { "matching",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "matching",       Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_DO_EXPAND },
-    { "mid",            Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "mid",            Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX },
-    { "mimetype",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "mimetype",       Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
-    { "not",            Xapian::Query::OP_AND_NOT,      Xapian::Query::MatchAll,
+    { "not",            Xapian::Query::OP_AND_NOT,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_NONE },
-    { "of",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "of",             Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_DO_EXPAND },
-    { "or",             Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "or",             Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_NONE },
-    { "path",           Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "path",           Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX |
       SEXP_FLAG_PATHNAME },
-    { "property",       Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "property",       Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "query",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchNothing,
+    { "query",          Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_SINGLE | SEXP_FLAG_ORPHAN },
-    { "regex",          Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+    { "regex",          Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_SINGLE | SEXP_FLAG_DO_REGEX },
-    { "rx",             Xapian::Query::OP_INVALID,      Xapian::Query::MatchAll,
+    { "rx",             Xapian::Query::OP_INVALID,      SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_SINGLE | SEXP_FLAG_DO_REGEX },
-    { "starts-with",    Xapian::Query::OP_WILDCARD,     Xapian::Query::MatchAll,
+    { "starts-with",    Xapian::Query::OP_WILDCARD,     SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_SINGLE },
-    { "subject",        Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "subject",        Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "tag",            Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "tag",            Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "thread",         Xapian::Query::OP_OR,           Xapian::Query::MatchNothing,
+    { "thread",         Xapian::Query::OP_OR,           SEXP_INITIAL_MATCH_NOTHING,
       SEXP_FLAG_FIELD | SEXP_FLAG_BOOLEAN | SEXP_FLAG_WILDCARD | SEXP_FLAG_REGEX | SEXP_FLAG_EXPAND },
-    { "to",             Xapian::Query::OP_AND,          Xapian::Query::MatchAll,
+    { "to",             Xapian::Query::OP_AND,          SEXP_INITIAL_MATCH_ALL,
       SEXP_FLAG_FIELD | SEXP_FLAG_WILDCARD | SEXP_FLAG_EXPAND },
     { }
 };
@@ -318,7 +336,8 @@ _sexp_expand_query (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_BAD_QUERY_SYNTAX;
     }
 
-    status = _sexp_combine_query (notmuch, NULL, NULL, prefix->xapian_op, prefix->initial, sx,
+    status = _sexp_combine_query (notmuch, NULL, NULL, prefix->xapian_op,
+				  _sexp_initial_query (prefix->initial), sx,
 				  subquery);
     if (status)
 	return status;
@@ -370,7 +389,8 @@ _sexp_parse_header (notmuch_database_t *notmuch, const _sexp_prefix_t *parent,
 
     parent = &user_prefix;
 
-    return _sexp_combine_query (notmuch, parent, env, Xapian::Query::OP_AND, Xapian::Query::MatchAll,
+    return _sexp_combine_query (notmuch, parent, env, Xapian::Query::OP_AND,
+				xapian_query_match_all (),
 				sx->list->next, output);
 }
 
@@ -520,7 +540,7 @@ _sexp_parse_range (notmuch_database_t *notmuch,  const _sexp_prefix_t *prefix,
 
     /* empty range matches everything */
     if (! sx) {
-	output = Xapian::Query::MatchAll;
+	output = xapian_query_match_all ();
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
@@ -628,7 +648,7 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 
     /* Empty list */
     if (! sx->list) {
-	output = Xapian::Query::MatchAll;
+	output = xapian_query_match_all ();
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
@@ -704,7 +724,8 @@ _sexp_to_xapian_query (notmuch_database_t *notmuch, const _sexp_prefix_t *parent
 		return _sexp_expand_query (notmuch, prefix, parent, env, sx->list->next, output);
 	    }
 
-	    return _sexp_combine_query (notmuch, parent, env, prefix->xapian_op, prefix->initial,
+	    return _sexp_combine_query (notmuch, parent, env, prefix->xapian_op,
+					_sexp_initial_query (prefix->initial),
 					sx->list->next, output);
 	}
     }

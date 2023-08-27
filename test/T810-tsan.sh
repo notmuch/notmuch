@@ -4,7 +4,8 @@ test_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null && pwd)
 
 test_description='run code with TSan enabled against the library'
 # Note it is hard to ensure race conditions are deterministic so this
-# only provides best effort detection.
+# only provides best effort detection. Compile Notmuch with
+#  make CFLAGS=-fsanitize=thread LDFLAGS=-fsanitize=thread
 
 . "$test_directory"/test-lib.sh || exit 1
 
@@ -88,5 +89,44 @@ cat <<EOF > EXPECTED
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+
+if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+    test_begin_subtest "sexp query"
+    test_C ${MAIL_DIR} ${MAIL_DIR}-2 <<EOF
+#include <notmuch-test.h>
+#include <pthread.h>
+
+void *thread (void *arg) {
+  char *mail_dir = arg;
+  notmuch_database_t *db;
+  /*
+   * Query generation from s-expression used the tread-unsafe
+   * Xapian::Query::MatchAll.
+   */
+  EXPECT0(notmuch_database_open_with_config (mail_dir,
+                                             NOTMUCH_DATABASE_MODE_READ_ONLY,
+                                             NULL, NULL, &db, NULL));
+  notmuch_query_t *query;
+  EXPECT0(notmuch_query_create_with_syntax (db, "(from *)", NOTMUCH_QUERY_SYNTAX_SEXP, &query));
+  notmuch_messages_t *messages;
+  EXPECT0(notmuch_query_search_messages (query, &messages));
+  return NULL;
+}
+
+int main (int argc, char **argv) {
+  pthread_t t1, t2;
+  EXPECT0(pthread_create (&t1, NULL, thread, argv[1]));
+  EXPECT0(pthread_create (&t2, NULL, thread, argv[2]));
+  EXPECT0(pthread_join (t1, NULL));
+  EXPECT0(pthread_join (t2, NULL));
+  return 0;
+}
+EOF
+    cat <<EOF > EXPECTED
+== stdout ==
+== stderr ==
+EOF
+    test_expect_equal_file EXPECTED OUTPUT
+fi
 
 test_done
