@@ -1,5 +1,3 @@
 # It's unclear how TSan-friendly GLib is:
 # https://gitlab.gnome.org/GNOME/glib/-/issues/1672
-race:g_rw_lock_reader_lock
-# https://gitlab.gnome.org/GNOME/glib/-/issues/1952
-race:g_slice_alloc0
+called_from_lib:libglib*.so
