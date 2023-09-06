@@ -21,3 +21,4 @@
 /bindings/python-cffi/_notmuch_config.py
 TAGS
 tags
+__pycache__
