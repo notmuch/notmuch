@@ -51,7 +51,7 @@ Be more careful when clearing the results directory.
 Ruby
 ----
 
-Use database_open_with_config, and provide compatible path search
+Use `database_open_with_config`, and provide compatible path search
 semantics.
 
 Bugfix for query.get_sort
