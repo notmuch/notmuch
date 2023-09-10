@@ -159,3 +159,5 @@ $(dir)/config.dox: version.stamp
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.texi.stamp
 CLEAN := $(CLEAN) $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.info.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
+
+CLEAN := $(CLEAN) $(dir)/__pycache__
