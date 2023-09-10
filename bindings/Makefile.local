@@ -36,5 +36,5 @@ CLEAN += bindings/ruby/.vendorarchdir.time $(dir)/ruby.stamp
 CLEAN += bindings/python-cffi/build $(dir)/python-cffi.stamp
 CLEAN += bindings/python-cffi/__pycache__
 
-DISTCLEAN += bindings/python-cffi/_notmuch_config.py
-
+DISTCLEAN += bindings/python-cffi/_notmuch_config.py \
+	bindings/python-cffi/notmuch2.egg-info
