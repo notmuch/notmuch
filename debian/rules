@@ -29,7 +29,6 @@ override_dh_auto_build:
 override_dh_auto_clean:
 	dh_auto_clean
 	PYBUILD_NAME=notmuch dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
-	PYBUILD_NAME=notmuch2 dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 
