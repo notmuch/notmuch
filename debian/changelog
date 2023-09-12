@@ -3,8 +3,9 @@ notmuch (0.38-1) unstable; urgency=medium
   * New upstream release
   * Bug fix: "FTBFS: 6 tests failed.", thanks to Aurelien Jarno (Closes:
     #1051111).
+  * Run most of upstream test suite as autopkgtests
 
- -- David Bremner <bremner@debian.org>  Mon, 11 Sep 2023 20:02:39 -0300
+ -- David Bremner <bremner@debian.org>  Tue, 12 Sep 2023 08:33:24 -0300
 
 notmuch (0.38~rc2-1) experimental; urgency=medium
 
