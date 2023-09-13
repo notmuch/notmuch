@@ -1,3 +1,12 @@
+notmuch (0.38-2) unstable; urgency=medium
+
+  * Restrict autopkgtests to amd64 and aarch64. There are failures in
+    remaining architectures, but the same tests pass at build time, so any
+    bugs are probably related to either the autopkgtest environment, or
+    the (new) upstream test runner for installed notmuch.
+
+ -- David Bremner <bremner@debian.org>  Wed, 13 Sep 2023 19:55:00 -0300
+
 notmuch (0.38-1) unstable; urgency=medium
 
   * New upstream release

@@ -4,6 +4,7 @@ Test-command: env NOTMUCH_TEST_INSTALLED=1 TERM=dumb
     NOTMUCH_HAVE_ASAN=1 NOTMUCH_HAVE_TSAN=1
     ./test/notmuch-test
 Restrictions: allow-stderr
+Architecture: amd64, arm64
 Depends: @,
  build-essential,
  dtach,
