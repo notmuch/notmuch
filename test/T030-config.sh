@@ -196,7 +196,6 @@ output=$(notmuch config get built_with.nonexistent)
 test_expect_equal "$output" "false"
 
 test_begin_subtest "Bad utf8 reported as error"
-test_subtest_known_broken
 cp initial-config bad-config
 printf '[query]\nq3=from:\xff\n' >>bad-config
 test_expect_code 1 "notmuch --config=./bad-config config list"

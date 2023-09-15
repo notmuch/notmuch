@@ -584,6 +584,8 @@ main (int argc, char *argv[])
 	case NOTMUCH_STATUS_SUCCESS:
 	    break;
 	default:
+	    fputs ("Error: unable to load config file.\n", stderr);
+	    ret = 1;
 	    goto DONE;
 	}
 
