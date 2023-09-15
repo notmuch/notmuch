@@ -563,6 +563,12 @@ main (int argc, char *argv[])
 					       NULL,
 					       &notmuch,
 					       &status_string);
+	if (status_string) {
+	    fputs (status_string, stderr);
+	    free (status_string);
+	    status_string = NULL;
+	}
+
 	switch (status) {
 	case NOTMUCH_STATUS_NO_CONFIG:
 	    if (! (command->mode & NOTMUCH_COMMAND_CONFIG_CREATE)) {

@@ -555,7 +555,7 @@ _finish_open (notmuch_database_t *notmuch,
 	    goto DONE;
 
 	if (key_file)
-	    status = _notmuch_config_load_from_file (notmuch, key_file);
+	    status = _notmuch_config_load_from_file (notmuch, key_file, &message);
 	if (status)
 	    goto DONE;
 
@@ -961,7 +961,7 @@ notmuch_database_load_config (const char *database_path,
     }
 
     if (key_file) {
-	status = _notmuch_config_load_from_file (notmuch, key_file);
+	status = _notmuch_config_load_from_file (notmuch, key_file, &message);
 	if (status)
 	    goto DONE;
     }

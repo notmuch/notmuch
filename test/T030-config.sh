@@ -201,7 +201,6 @@ printf '[query]\nq3=from:\xff\n' >>bad-config
 test_expect_code 1 "notmuch --config=./bad-config config list"
 
 test_begin_subtest "Specific error message about bad utf8"
-test_subtest_known_broken
 notmuch --config=./bad-config config list 2>ERRORS
 cat <<EOF > EXPECTED
 GLib: Key file contains key “q3” with value “from:�” which is not UTF-8
