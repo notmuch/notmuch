@@ -207,7 +207,7 @@ env.globals['thread_nav'] = thread_nav
 
 def format_message(nm_msg, mid):
   fn = list(nm_msg.filenames())[0]
-  msg = MaildirMessage(open(fn))
+  msg = MaildirMessage(open(fn, 'rb'))
   return format_message_walk(msg, mid)
 
 def decodeAnyway(txt, charset='ascii'):
