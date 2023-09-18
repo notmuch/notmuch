@@ -71,5 +71,5 @@ notmuch_rb_messages_collect_tags (VALUE self)
     if (!tags)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, &notmuch_rb_tags_type, tags);
+    return notmuch_rb_tags_get (tags);
 }

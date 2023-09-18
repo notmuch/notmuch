@@ -2,7 +2,7 @@
 test_description='"notmuch git" to save and restore tags'
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ $NOTMUCH_HAVE_SFSEXP -ne 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" != "1" ]; then
     printf "Skipping due to missing sfsexp library\n"
     test_done
 fi
@@ -233,6 +233,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "invoke as nmbug sets defaults"
+test_subtest_broken_for_installed
 "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^\(prefix\|repository\)' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 prefix = notmuch::
@@ -241,6 +242,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "env variable NOTMUCH_GIT_DIR works when invoked as nmbug"
+test_subtest_broken_for_installed
 NOTMUCH_GIT_DIR=`pwd`/foo "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^repository' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 repository = CWD/foo
@@ -256,6 +258,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 
 test_begin_subtest "env variable NOTMUCH_GIT_DIR overrides config when invoked as 'nmbug'"
+test_subtest_broken_for_installed
 notmuch config set git.path `pwd`/bar
 NOTMUCH_GIT_DIR=`pwd`/remote.git  "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^repository' | notmuch_dir_sanitize > OUTPUT
 notmuch config set git.path
@@ -274,6 +277,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "env variable NOTMUCH_GIT_PREFIX works when invoked as 'nmbug'"
+test_subtest_broken_for_installed
 NOTMUCH_GIT_PREFIX=env:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 prefix = env::
@@ -281,6 +285,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "env variable NOTMUCH_GIT_PREFIX works when invoked as nmbug"
+test_subtest_broken_for_installed
 NOTMUCH_GIT_PREFIX=foo:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 prefix = foo::
@@ -288,6 +293,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "env variable NOTMUCH_GIT_PREFIX overrides config when invoked as 'nmbug'"
+test_subtest_broken_for_installed
 notmuch config set git.tag_prefix config::
 NOTMUCH_GIT_PREFIX=env:: "$NOTMUCH_BUILDDIR"/nmbug -ldebug status |& grep '^prefix' | notmuch_dir_sanitize > OUTPUT
 notmuch config set git.path

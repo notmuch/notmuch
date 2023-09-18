@@ -440,6 +440,7 @@ cat <<'EOF' >EXPECTED
 10: 'USER_FULL_NAME'
 11: '8000'
 12: 'NULL'
+13: ''
 == stderr ==
 EOF
 unset MAILDIR
@@ -725,6 +726,7 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "list by keys (ndlc)"
 notmuch config set search.exclude_tags "foo;bar;fub"
 notmuch config set new.ignore "sekrit_junk"
+notmuch config set index.as_text "text/"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 {
     notmuch_config_key_t key;
@@ -751,6 +753,7 @@ cat <<'EOF' >EXPECTED
 10: 'Notmuch Test Suite'
 11: '8000'
 12: 'NULL'
+13: 'text/'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -785,6 +788,7 @@ cat <<'EOF' >EXPECTED
 10: 'USER_FULL_NAME'
 11: '8000'
 12: 'NULL'
+13: ''
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -856,6 +860,7 @@ database.backup_dir MAIL_DIR/.notmuch/backups
 database.hook_dir MAIL_DIR/.notmuch/hooks
 database.mail_root MAIL_DIR
 database.path MAIL_DIR
+index.as_text text/
 key with spaces value, with, spaces!
 maildir.synchronize_flags true
 new.ignore sekrit_junk

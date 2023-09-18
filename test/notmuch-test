@@ -20,6 +20,14 @@ fi
 
 set -eu
 
+# Where to run the tests
+# XXX FIXME this code is duplicated with test-lib.sh
+if [[ -n "${NOTMUCH_BUILDDIR}" ]]; then
+    TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+else
+    TEST_DIRECTORY=$NOTMUCH_SRCDIR/test
+fi
+
 TESTS=
 for test in ${NOTMUCH_TESTS-}; do
     TESTS="$TESTS $NOTMUCH_SRCDIR/test/$test"
@@ -80,7 +88,7 @@ for file in $TESTS
 do
     file=${file##*/} # drop leading path components
     file=${file%.sh} # drop trailing '.sh'
-    RESULT_FILES="$RESULT_FILES $NOTMUCH_BUILDDIR/test/test-results/$file"
+    RESULT_FILES="$RESULT_FILES $TEST_DIRECTORY/test-results/$file"
 done
 
 echo
@@ -94,6 +102,6 @@ if [ -n "$META_FAILURE" ]; then
 fi
 
 # Clean up
-rm -rf $NOTMUCH_BUILDDIR/test/test-results
+rm -rf $TEST_DIRECTORY/test-results
 
 exit $ev

@@ -14,7 +14,7 @@ manual to refer to the Emacs interface to Notmuch. When this distinction
 is important, we’ll refer to the Emacs interface as
 *notmuch-emacs*.
 
-Notmuch-emacs is highly customizable via the the Emacs customization
+Notmuch-emacs is highly customizable via the Emacs customization
 framework (or just by setting the appropriate variables). We try to
 point out relevant variables in this manual, but in order to avoid
 duplication of information, you can usually find the most detailed
@@ -493,7 +493,7 @@ in :ref:`notmuch-search`.
 Dealing with duplicates
 -----------------------
 
-If there are are multiple files with the same :mailheader:`Message-ID`
+If there are multiple files with the same :mailheader:`Message-ID`
 (see :any:`duplicate-files`), then :any:`notmuch-show` displays the
 number of duplicates and identifies the current duplicate. In the
 following example duplicate 3 of 5 is displayed.
@@ -606,6 +606,45 @@ can be controlled by the variable ``notmuch-search-oldest-first``.
    See also :el:defcustom:`notmuch-search-result-format` and
    :el:defcustom:`notmuch-unthreaded-result-format`.
 
+.. _notmuch-tree-outline:
+
+notmuch-tree-outline
+--------------------
+
+When this mode is set, each thread and subthread in the results
+list is treated as a foldable section, with its first message as
+its header.
+
+The mode just makes available in the tree buffer all the
+keybindings in info:emacs#Outline_Mode, and binds the following
+additional keys:
+
+.. el:define-key:: <tab>
+
+   Cycle visibility state of the current message's tree.
+
+.. el:define-key:: <M-tab>
+
+   Cycle visibility state of all trees in the buffer.
+
+The behaviour of this minor mode is affected by the following
+customizable variables:
+
+.. el:defcustom:: notmuch-tree-outline-enabled
+
+   |docstring::notmuch-tree-outline-enabled|
+
+.. el:defcustom:: notmuch-tree-outline-visibility
+
+   |docstring::notmuch-tree-outline-visibility|
+
+.. el:defcustom:: notmuch-tree-outline-auto-close
+
+   |docstring::notmuch-tree-outline-auto-close|
+
+.. el:defcustom:: notmuch-tree-outline-open-on-next
+
+   |docstring::notmuch-tree-outline-open-on-next|
 
 .. _notmuch-unthreaded:
 
@@ -678,7 +717,7 @@ operations specified in ``notmuch-tagging-keys``; i.e. each
 notmuch-tag-undo
 ----------------
 
-Each notmuch buffer supporting tagging operations (i.e buffers in
+Each notmuch buffer supporting tagging operations (i.e. buffers in
 :any:`notmuch-show`, :any:`notmuch-search`, :any:`notmuch-tree`, and
 :any:`notmuch-unthreaded` mode) keeps a local stack of tagging
 operations. These can be undone via :any:`notmuch-tag-undo`. By default

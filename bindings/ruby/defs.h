@@ -33,7 +33,6 @@ extern VALUE notmuch_rb_cThreads;
 extern VALUE notmuch_rb_cThread;
 extern VALUE notmuch_rb_cMessages;
 extern VALUE notmuch_rb_cMessage;
-extern VALUE notmuch_rb_cTags;
 
 extern VALUE notmuch_rb_eBaseError;
 extern VALUE notmuch_rb_eDatabaseError;
@@ -48,8 +47,6 @@ extern VALUE notmuch_rb_eUnbalancedFreezeThawError;
 extern VALUE notmuch_rb_eUnbalancedAtomicError;
 
 extern ID ID_call;
-extern ID ID_db_create;
-extern ID ID_db_mode;
 
 /* RSTRING_PTR() is new in ruby-1.9 */
 #if !defined(RSTRING_PTR)
@@ -59,7 +56,6 @@ extern ID ID_db_mode;
 extern const rb_data_type_t notmuch_rb_object_type;
 extern const rb_data_type_t notmuch_rb_database_type;
 extern const rb_data_type_t notmuch_rb_directory_type;
-extern const rb_data_type_t notmuch_rb_filenames_type;
 extern const rb_data_type_t notmuch_rb_query_type;
 extern const rb_data_type_t notmuch_rb_threads_type;
 extern const rb_data_type_t notmuch_rb_thread_type;
@@ -91,9 +87,6 @@ extern const rb_data_type_t notmuch_rb_tags_type;
 
 #define Data_Get_Notmuch_Directory(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_directory_type, (ptr))
-
-#define Data_Get_Notmuch_FileNames(obj, ptr) \
-    Data_Get_Notmuch_Object ((obj), &notmuch_rb_filenames_type, (ptr))
 
 #define Data_Get_Notmuch_Query(obj, ptr) \
     Data_Get_Notmuch_Object ((obj), &notmuch_rb_query_type, (ptr))
@@ -226,10 +219,7 @@ notmuch_rb_directory_get_child_directories (VALUE self);
 
 /* filenames.c */
 VALUE
-notmuch_rb_filenames_destroy (VALUE self);
-
-VALUE
-notmuch_rb_filenames_each (VALUE self);
+notmuch_rb_filenames_get (notmuch_filenames_t *fnames);
 
 /* query.c */
 VALUE
@@ -370,10 +360,7 @@ notmuch_rb_message_thaw (VALUE self);
 
 /* tags.c */
 VALUE
-notmuch_rb_tags_destroy (VALUE self);
-
-VALUE
-notmuch_rb_tags_each (VALUE self);
+notmuch_rb_tags_get (notmuch_tags_t *tags);
 
 /* init.c */
 void

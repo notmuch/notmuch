@@ -57,6 +57,7 @@ database.mail_root=MAIL_DIR
 database.path=MAIL_DIR
 foo.list=this;is another;list value;
 foo.string=this is another string value
+index.as_text=
 maildir.synchronize_flags=true
 new.ignore=
 new.tags=unread;inbox

@@ -1454,9 +1454,11 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 							&message);
 
     if (status == NOTMUCH_STATUS_SUCCESS && message) {
-	status = _notmuch_message_remove_filename (message, filename);
+	if (notmuch_message_count_files (message) > 1) {
+	    status = _notmuch_message_remove_filename (message, filename);
+	}
 	if (status == NOTMUCH_STATUS_SUCCESS)
-	    _notmuch_message_delete (message);
+	    status = _notmuch_message_delete (message);
 	else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 	    _notmuch_message_sync (message);
 
@@ -1572,4 +1574,16 @@ const char *
 notmuch_database_status_string (const notmuch_database_t *notmuch)
 {
     return notmuch->status_string;
+}
+
+bool
+_notmuch_database_indexable_as_text (notmuch_database_t *notmuch, const char *mime_string)
+{
+    for (size_t i = 0; i < notmuch->index_as_text_length; i++) {
+	if (regexec (&notmuch->index_as_text[i], mime_string, 0, NULL, 0) == 0) {
+	    return true;
+	}
+    }
+
+    return false;
 }

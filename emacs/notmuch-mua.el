@@ -416,11 +416,6 @@ moved to the \"To:\" header."
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
       (unless (string-empty-p user-agent)
 	(push (cons 'User-Agent user-agent) other-headers))))
-  (unless (assq 'From other-headers)
-    (push (cons 'From (message-make-from
-		       (notmuch-user-name)
-		       (notmuch-user-primary-email)))
-	  other-headers))
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
 			     (or switch-function
 				 (notmuch-mua-get-switch-function)))
@@ -439,6 +434,11 @@ moved to the \"To:\" header."
 	;; Cause `message-setup-1' to do things relevant for mail,
 	;; such as observe `message-default-mail-headers'.
 	(message-this-is-mail t))
+    (unless (assq 'From headers)
+      (push (cons 'From (message-make-from
+			 (notmuch-user-name)
+			 (notmuch-user-primary-email)))
+	    headers))
     (message-setup-1 headers yank-action send-actions return-action))
   (notmuch-fcc-header-setup)
   (notmuch-mua--remove-dont-reply-to-names)

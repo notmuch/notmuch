@@ -43,7 +43,7 @@ Supported options for **search** include
 
 .. option:: --output=(summary|threads|messages|files|tags)
 
-   summary
+   summary (default)
      Output a summary of each thread with any message matching the
      search terms. The summary includes the thread ID, date, the
      number of messages in the thread (both the number matched and

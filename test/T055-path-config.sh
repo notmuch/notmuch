@@ -299,6 +299,7 @@ database.backup_dir
 database.hook_dir
 database.mail_root=MAIL_DIR
 database.path
+index.as_text=
 maildir.synchronize_flags=true
 new.ignore=
 new.tags=unread;inbox

@@ -1159,6 +1159,18 @@ do_show_threaded (void *ctx,
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
+    int i;
+
+    if (params->offset < 0) {
+	unsigned count;
+	notmuch_status_t s = notmuch_query_count_threads (query, &count);
+	if (print_status_query ("notmuch show", query, s))
+	    return 1;
+
+	params->offset += count;
+	if (params->offset < 0)
+	    params->offset = 0;
+    }
 
     status = notmuch_query_search_threads (query, &threads);
     if (print_status_query ("notmuch show", query, status))
@@ -1166,10 +1178,15 @@ do_show_threaded (void *ctx,
 
     sp->begin_list (sp);
 
-    for (;
-	 notmuch_threads_valid (threads);
-	 notmuch_threads_move_to_next (threads)) {
+    for (i = 0;
+	 notmuch_threads_valid (threads) && (params->limit < 0 || i < params->offset + params->limit);
+	 notmuch_threads_move_to_next (threads), i++) {
 	thread = notmuch_threads_get (threads);
+
+	if (i < params->offset) {
+	    notmuch_thread_destroy (thread);
+	    continue;
+	}
 
 	messages = notmuch_thread_get_toplevel_messages (thread);
 
@@ -1201,6 +1218,18 @@ do_show_unthreaded (void *ctx,
     notmuch_message_t *message;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
     notmuch_bool_t excluded;
+    int i;
+
+    if (params->offset < 0) {
+	unsigned count;
+	notmuch_status_t s = notmuch_query_count_messages (query, &count);
+	if (print_status_query ("notmuch show", query, s))
+	    return 1;
+
+	params->offset += count;
+	if (params->offset < 0)
+	    params->offset = 0;
+    }
 
     status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch show", query, status))
@@ -1208,9 +1237,13 @@ do_show_unthreaded (void *ctx,
 
     sp->begin_list (sp);
 
-    for (;
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages)) {
+    for (i = 0;
+	 notmuch_messages_valid (messages) && (params->limit < 0 || i < params->offset + params->limit);
+	 notmuch_messages_move_to_next (messages), i++) {
+	if (i < params->offset) {
+	    continue;
+	}
+
 	sp->begin_list (sp);
 	sp->begin_list (sp);
 
@@ -1287,6 +1320,8 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
     notmuch_show_params_t params = {
 	.part = -1,
 	.duplicate = 0,
+	.offset = 0,
+	.limit = -1, /* unlimited */
 	.omit_excluded = true,
 	.output_body = true,
 	.crypto = { .decrypt = NOTMUCH_DECRYPT_AUTO },
@@ -1328,6 +1363,8 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	{ .opt_bool = &params.output_body, .name = "body" },
 	{ .opt_bool = &params.include_html, .name = "include-html" },
 	{ .opt_int = &params.duplicate, .name = "duplicate" },
+	{ .opt_int = &params.limit, .name = "limit" },
+	{ .opt_int = &params.offset, .name = "offset" },
 	{ .opt_inherit = notmuch_shared_options },
 	{ }
     };

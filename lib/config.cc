@@ -599,6 +599,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 	return "database.autocommit";
     case NOTMUCH_CONFIG_EXTRA_HEADERS:
 	return "show.extra_headers";
+    case NOTMUCH_CONFIG_INDEX_AS_TEXT:
+	return "index.as_text";
     default:
 	return NULL;
     }
@@ -642,6 +644,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	else
 	    email = _get_email_from_passwd_file (notmuch);
 	return email;
+    case NOTMUCH_CONFIG_INDEX_AS_TEXT:
     case NOTMUCH_CONFIG_NEW_IGNORE:
 	return "";
     case NOTMUCH_CONFIG_AUTOCOMMIT:

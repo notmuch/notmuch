@@ -157,7 +157,7 @@ print("4: {} messages".format(query.count_messages()))
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
     test_begin_subtest "and of exact terms (query=sexp)"
     output=$(notmuch count --query=sexp '(and "wonderful" "wizard")')

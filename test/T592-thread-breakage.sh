@@ -21,6 +21,10 @@ test_description='thread breakage during reindexing'
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 message_a () {
     mkdir -p ${MAIL_DIR}/cur
     cat > ${MAIL_DIR}/cur/a <<EOF

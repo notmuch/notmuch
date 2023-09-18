@@ -95,7 +95,7 @@ subtotal=$(notmuch count lastmod:..$lastmod)
 result=$(($subtotal == $total-1))
 test_expect_equal 1 "$result"
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
     test_begin_subtest 'exclude one message using negative lastmod (sexp)'
     total=$(notmuch count '*')
     notmuch tag +${RANDOM} id:4EFC743A.3060609@april.org

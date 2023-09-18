@@ -12,7 +12,7 @@ void print_properties (notmuch_message_t *message, const char *prefix, notmuch_b
     notmuch_message_properties_t *list;
     for (list = notmuch_message_get_properties (message, prefix, exact);
          notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
-       printf("%s\n", notmuch_message_properties_value(list));
+       printf("%s = %s\n", notmuch_message_properties_key(list), notmuch_message_properties_value(list));
     }
     notmuch_message_properties_destroy (list);
 }
@@ -89,17 +89,6 @@ testkey2 = NULL
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "notmuch_message_remove_all_properties"
-cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
-EXPECT0(notmuch_message_remove_all_properties (message, NULL));
-print_properties (message, "", FALSE);
-EOF
-cat <<'EOF' >EXPECTED
-== stdout ==
-== stderr ==
-EOF
-test_expect_equal_file EXPECTED OUTPUT
-
 test_begin_subtest "testing string map binary search (via message properties)"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 {
@@ -157,7 +146,28 @@ print_properties (message, "testkey1", TRUE);
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-testvalue1
+testkey1 = testvalue1
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "notmuch_message_remove_all_properties"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_remove_all_properties (message, NULL));
+EXPECT0(notmuch_database_destroy(db));
+EXPECT0(notmuch_database_open_with_config (argv[1],
+                                           NOTMUCH_DATABASE_MODE_READ_WRITE,
+                                           "", NULL, &db, &msg));
+if (msg) fputs (msg, stderr);
+EXPECT0(notmuch_database_find_message(db, "4EFC743A.3060609@april.org", &message));
+if (message == NULL) {
+  fprintf (stderr, "unable to find message");
+  exit (1);
+}
+print_properties (message, "", FALSE);
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -171,10 +181,9 @@ print_properties (message, "testkey1", TRUE);
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-alice
-bob
-testvalue1
-testvalue2
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue2
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -186,27 +195,14 @@ EXPECT0(notmuch_message_add_property (message, "testkey3", "testvalue3"));
 EXPECT0(notmuch_message_add_property (message, "testkey3", "alice3"));
 print_properties (message, "testkey", FALSE);
 EOF
-# expected: 4 values for testkey1, 3 values for testkey3
-# they are not guaranteed to be sorted, so sort them, leaving the first
-# line '== stdout ==' and the end ('== stderr ==' and whatever error
-# may have been printed) alone
-mv OUTPUT unsorted_OUTPUT
-awk ' NR == 1 { print; next } \
-      NR < 6  { print | "sort"; next } \
-      NR == 6 { close("sort") } \
-      NR < 9  { print | "sort"; next } \
-      NR == 9 { close("sort") } \
-      { print }' unsorted_OUTPUT > OUTPUT
-rm unsorted_OUTPUT
 cat <<'EOF' >EXPECTED
 == stdout ==
-alice
-bob
-testvalue1
-testvalue2
-alice3
-bob3
-testvalue3
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue2
+testkey3 = alice3
+testkey3 = bob3
+testkey3 = testvalue3
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -248,7 +244,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "dump message properties"
 cat <<EOF > PROPERTIES
-#= 4EFC743A.3060609@april.org fancy%20key%20with%20%c3%a1cc%c3%a8nts=import%20value%20with%20= testkey1=alice testkey1=bob testkey1=testvalue1 testkey1=testvalue2 testkey3=alice3 testkey3=bob3 testkey3=testvalue3
+#= 4EFC743A.3060609@april.org fancy%20key%20with%20%c3%a1cc%c3%a8nts=import%20value%20with%20= testkey1=alice testkey1=bob testkey1=testvalue2 testkey3=alice3 testkey3=bob3 testkey3=testvalue3
 EOF
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EXPECT0(notmuch_message_add_property (message, "fancy key with áccènts", "import value with ="));
@@ -259,7 +255,7 @@ test_expect_equal_file PROPERTIES OUTPUT
 test_begin_subtest "dump _only_ message properties"
 cat <<EOF > EXPECTED
 #notmuch-dump batch-tag:3 properties
-#= 4EFC743A.3060609@april.org fancy%20key%20with%20%c3%a1cc%c3%a8nts=import%20value%20with%20= testkey1=alice testkey1=bob testkey1=testvalue1 testkey1=testvalue2 testkey3=alice3 testkey3=bob3 testkey3=testvalue3
+#= 4EFC743A.3060609@april.org fancy%20key%20with%20%c3%a1cc%c3%a8nts=import%20value%20with%20= testkey1=alice testkey1=bob testkey1=testvalue2 testkey3=alice3 testkey3=bob3 testkey3=testvalue3
 EOF
 notmuch dump --include=properties > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
@@ -328,7 +324,6 @@ EOF
 cat <<'EOF' > EXPECTED
 testkey1 = alice
 testkey1 = bob
-testkey1 = testvalue1
 testkey1 = testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -344,7 +339,6 @@ EOF
 cat <<'EOF' > EXPECTED
 testkey1 = alice
 testkey1 = bob
-testkey1 = testvalue1
 testkey1 = testvalue2
 testkey3 = alice3
 testkey3 = bob3
@@ -361,5 +355,50 @@ for (key,val) in msg.get_properties("testkey",True):
         print("{0} = {1}".format(key,val))
 EOF
 test_expect_equal_file /dev/null OUTPUT
+
+test_begin_subtest "notmuch_message_remove_all_properties_with_prefix"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_remove_all_properties_with_prefix (message, "testkey3"));
+print_properties (message, "", FALSE);
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+fancy key with áccènts = import value with =
+testkey1 = alice
+testkey1 = bob
+testkey1 = testvalue2
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "edit property on removed message without uncaught exception"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_database_remove_message (db, notmuch_message_get_filename (message)));
+stat = notmuch_message_remove_property (message, "example", "example");
+if (stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION)
+    fprintf (stderr, "unable to remove properties on message");
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+unable to remove properties on message
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+add_email_corpus
+
+test_begin_subtest "remove all properties on removed message without uncaught exception"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_database_remove_message (db, notmuch_message_get_filename (message)));
+stat = notmuch_message_remove_all_properties_with_prefix (message, "");
+if (stat == NOTMUCH_STATUS_XAPIAN_EXCEPTION)
+    fprintf (stderr, "unable to remove properties on message");
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+unable to remove properties on message
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

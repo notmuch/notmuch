@@ -89,7 +89,7 @@ s	Send
 CONFIGURATION					*notmuch-config*
 
 You can add the following configurations to your `.vimrc`, or
-`~/.vim/plugin/notmuch.vim`.
+`~/.vim/after/plugin/notmuch.vim`.
 
 						*g:notmuch_folders*
 
@@ -138,13 +138,13 @@ You can do the same for the thread view:
 
 If you want to count the threads instead of the messages in the folder view:
 >
-	let g:notmuch_folders_count_threads = 0
+	let g:notmuch_folders_count_threads = 1
 <
 
 						*g:notmuch_reader*
 						*g:notmuch_sendmail*
 
-You can also configure your externail mail reader and sendemail program:
+You can also configure your external mail reader and sendmail program:
 >
 	let g:notmuch_reader = 'mutt -f %s'
 	let g:notmuch_sendmail = 'sendmail'

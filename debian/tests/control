@@ -1,0 +1,18 @@
+Test-command: env NOTMUCH_TEST_INSTALLED=1 TERM=dumb
+    NOTMUCH_HAVE_MAN=1 NOTMUCH_HAVE_SFSEXP=1 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=1
+    NOTMUCH_HAVE_PYTHON3_CFFI=1 NOTMUCH_HAVE_PYTHON3_PYTEST=1
+    NOTMUCH_HAVE_ASAN=1 NOTMUCH_HAVE_TSAN=1
+    ./test/notmuch-test
+Restrictions: allow-stderr
+Architecture: amd64, arm64
+Depends: @,
+ build-essential,
+ dtach,
+ emacs-nox,
+ gdb,
+ git,
+ gnupg,
+ gpgsm,
+ libtalloc-dev,
+ man,
+ xapian-tools

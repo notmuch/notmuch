@@ -24,11 +24,11 @@ Getting set up to run tests:
 First, you need to get the corpus.  If you don't already have the gpg
 key for David Bremner, run
 
-   % gpg --search 'david@tethera.net'
+   % gpg --locate-external-key 'david@tethera.net'
 
 This should get you a key with fingerprint
 
-    815B 6398 2A79 F8E7 C727  86C4 762B 57BB 7842 06AD
+    7A18 807F 100A 4570 C596  8420 7E4E 65C8 720B 706B
 
 (the last 8 digits are printed as the "key id").
 

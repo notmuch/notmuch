@@ -258,6 +258,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Verify that sent messages are saved/searchable (via FCC)"
+test_subtest_broken_for_installed
 notmuch new > /dev/null
 output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
@@ -350,6 +351,7 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Reply within emacs"
+test_subtest_broken_for_installed
 test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-search "subject:\"testing message sent via SMTP\"")
 	    (notmuch-test-wait)

@@ -3,6 +3,10 @@ test_description="database version and feature compatibility"
 
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 test_begin_subtest "future database versions abort open"
 ${TEST_DIRECTORY}/make-db-version ${MAIL_DIR} 9999 ""
 output=$(notmuch search x 2>&1 | sed 's/\(database at\) .*/\1 FILENAME/')

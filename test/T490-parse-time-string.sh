@@ -2,6 +2,10 @@
 test_description="date/time parser module"
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 # Sanity/smoke tests for the date/time parser independent of notmuch
 
 _date () {

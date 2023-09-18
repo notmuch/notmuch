@@ -122,6 +122,16 @@ paths are presumed relative to `$HOME` for items in section
 
     Default tag prefix (filter) for :any:`notmuch-git`.
 
+.. nmconfig:: index.as_text
+
+   List of regular expressions (without delimiters) for MIME types to
+   be indexed as text. Currently this applies only to attachments.  By
+   default the regex matches anywhere in the content type; if the
+   user wants an anchored match, they should include anchors in their
+   regexes.
+
+   History: This configuration value was introduced in notmuch 0.38.
+
 .. nmconfig:: index.decrypt
 
     Policy for decrypting encrypted messages during indexing.  Must be

@@ -4,6 +4,10 @@ test_description="python bindings"
 
 test_require_external_prereq ${NOTMUCH_PYTHON}
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 add_email_corpus
 add_gnupg_home
 

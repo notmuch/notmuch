@@ -35,7 +35,7 @@ notmuch show --entire-thread=true --sort=oldest-first $QUERY > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
     test_query_syntax '(and "wonderful" "wizard")' 'wonderful and wizard'
     test_query_syntax '(or "php" "wizard")' 'php or wizard'

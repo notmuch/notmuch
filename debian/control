@@ -227,7 +227,6 @@ Architecture: all
 Depends:
  libmail-box-perl,
  libmailtools-perl,
- libstring-shellquote-perl,
  libterm-readline-gnu-perl,
  notmuch (>= 0.4),
  ${misc:Depends},

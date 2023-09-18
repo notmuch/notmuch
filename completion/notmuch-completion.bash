@@ -530,7 +530,7 @@ _notmuch_show()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt= --include-html ${_notmuch_shared_options}"
+	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt= --include-html --limit= --offset= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;

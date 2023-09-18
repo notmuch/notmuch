@@ -130,6 +130,15 @@ Supported options for **show** include
    By default, results will be displayed in reverse chronological
    order, (that is, the newest results will be displayed first).
 
+.. option:: --offset=[-]N
+
+   Skip displaying the first N results. With the leading '-', start
+   at the Nth result from the end.
+
+.. option:: --limit=N
+
+   Limit the number of displayed results to N.
+
 .. option:: --verify
 
    Compute and report the validity of any MIME cryptographic

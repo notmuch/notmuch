@@ -47,7 +47,10 @@ if sys.version_info[0] == 2:
 
         return value
 else:
-    from configparser import SafeConfigParser
+    from configparser import ConfigParser as SafeConfigParser
+
+    if not hasattr(SafeConfigParser, 'readfp'):   # py >= 3.12
+        SafeConfigParser.readfp = SafeConfigParser.read_file
 
     class Python3StringMixIn(object):
         def __str__(self):

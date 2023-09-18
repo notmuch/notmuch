@@ -22,13 +22,11 @@
 
 VALUE notmuch_rb_cDatabase;
 VALUE notmuch_rb_cDirectory;
-VALUE notmuch_rb_cFileNames;
 VALUE notmuch_rb_cQuery;
 VALUE notmuch_rb_cThreads;
 VALUE notmuch_rb_cThread;
 VALUE notmuch_rb_cMessages;
 VALUE notmuch_rb_cMessage;
-VALUE notmuch_rb_cTags;
 
 VALUE notmuch_rb_eBaseError;
 VALUE notmuch_rb_eDatabaseError;
@@ -43,8 +41,6 @@ VALUE notmuch_rb_eUnbalancedFreezeThawError;
 VALUE notmuch_rb_eUnbalancedAtomicError;
 
 ID ID_call;
-ID ID_db_create;
-ID ID_db_mode;
 
 const rb_data_type_t notmuch_rb_object_type = {
     .wrap_struct_name = "notmuch_object",
@@ -65,13 +61,11 @@ const rb_data_type_t notmuch_rb_object_type = {
 
 define_type (database);
 define_type (directory);
-define_type (filenames);
 define_type (query);
 define_type (threads);
 define_type (thread);
 define_type (messages);
 define_type (message);
-define_type (tags);
 
 /*
  * Document-module: Notmuch
@@ -86,13 +80,11 @@ define_type (tags);
  * the user:
  *
  * - Notmuch::Database
- * - Notmuch::FileNames
  * - Notmuch::Query
  * - Notmuch::Threads
  * - Notmuch::Messages
  * - Notmuch::Thread
  * - Notmuch::Message
- * - Notmuch::Tags
  */
 
 void
@@ -101,8 +93,6 @@ Init_notmuch (void)
     VALUE mod;
 
     ID_call = rb_intern ("call");
-    ID_db_create = rb_intern ("create");
-    ID_db_mode = rb_intern ("mode");
 
     mod = rb_define_module ("Notmuch");
 
@@ -298,17 +288,6 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0); /* in directory.c */
 
     /*
-     * Document-class: Notmuch::FileNames
-     *
-     * Notmuch file names
-     */
-    notmuch_rb_cFileNames = rb_define_class_under (mod, "FileNames", rb_cObject);
-    rb_undef_method (notmuch_rb_cFileNames, "initialize");
-    rb_define_method (notmuch_rb_cFileNames, "destroy!", notmuch_rb_filenames_destroy, 0); /* in filenames.c */
-    rb_define_method (notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0); /* in filenames.c */
-    rb_include_module (notmuch_rb_cFileNames, rb_mEnumerable);
-
-    /*
      * Document-class: Notmuch::Query
      *
      * Notmuch query
@@ -395,15 +374,4 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cMessage, "tags_to_maildir_flags", notmuch_rb_message_tags_to_maildir_flags, 0); /* in message.c */
     rb_define_method (notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0); /* in message.c */
     rb_define_method (notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0); /* in message.c */
-
-    /*
-     * Document-class: Notmuch::Tags
-     *
-     * Notmuch tags
-     */
-    notmuch_rb_cTags = rb_define_class_under (mod, "Tags", rb_cObject);
-    rb_undef_method (notmuch_rb_cTags, "initialize");
-    rb_define_method (notmuch_rb_cTags, "destroy!", notmuch_rb_tags_destroy, 0); /* in tags.c */
-    rb_define_method (notmuch_rb_cTags, "each", notmuch_rb_tags_each, 0); /* in tags.c */
-    rb_include_module (notmuch_rb_cTags, rb_mEnumerable);
 }

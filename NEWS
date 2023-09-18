@@ -1,3 +1,75 @@
+Notmuch 0.38 (2023-09-12)
+=========================
+
+General
+-------
+
+Support relative lastmod queries (see notmuch-sexp-queries(7) and
+notmuch-search-terms(7) for details).
+
+Support indexing of designated attachments as text (see
+notmuch-config(1) for details).
+
+CLI
+---
+
+Add options --offset and --limit to notmuch-show(1).
+
+Emacs
+-----
+
+New commands notmuch-search-edit-search and notmuch-tree-edit-search.
+
+Introduce notmuch-tree-outline-mode.
+
+Some compatibility fixes for Emacs 29. At least one issue (hiding
+images) remains in 0.38.
+
+Support completion when piping to external command.
+
+Fix regression in updating tag display introduced by 0.37.
+
+Library
+-------
+
+Fix bug creating database when database.path is not set.
+
+Incremental performance improvements for message deletion.
+
+Catch Xapian exceptions when deleting messages.
+
+Sync removed message properties to the database.
+
+Replace use of thread-unsafe Query::MatchAll in the infix query
+parser.
+
+Notmuch-Mutt
+------------
+
+Be more careful when clearing the results directory.
+
+Ruby
+----
+
+Use `database_open_with_config`, and provide compatible path search
+semantics.
+
+Bugfix for query.get_sort
+
+Test Suite
+----------
+
+Support testing installed version of notmuch.
+
+Adapt to some breaking changes in glib handling of init files.
+
+Replace OpenPGP key used in test suite.
+
+Performance Tests
+-----------------
+
+Update signatures for performance test corpus.
+
 Notmuch 0.37 (2022-08-21)
 =========================
 

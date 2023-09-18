@@ -1,4 +1,9 @@
 #!/usr/bin/make -f
+include /usr/share/dpkg/architecture.mk
+
+ifeq ($(DEB_HOST_ARCH),ppc64el)
+	export NOTMUCH_SKIP_TESTS = T810-tsan
+endif
 
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -7,7 +12,7 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 override_dh_auto_configure:
 	BASHCMD=/bin/bash ./configure --prefix=/usr \
-		--libdir=/usr/lib/$$(dpkg-architecture -q DEB_TARGET_MULTIARCH) \
+		--libdir=/usr/lib/${DEB_TARGET_MULTIARCH} \
 		--includedir=/usr/include \
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info \
@@ -24,7 +29,6 @@ override_dh_auto_build:
 override_dh_auto_clean:
 	dh_auto_clean
 	PYBUILD_NAME=notmuch dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
-	PYBUILD_NAME=notmuch2 dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 

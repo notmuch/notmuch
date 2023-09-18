@@ -841,6 +841,7 @@ non-authors is found, assume that all of the authors match."
 	      overlay)
 	  (insert invisible-string)
 	  (setq overlay (make-overlay start (point)))
+	  (overlay-put overlay 'evaporate t)
 	  (overlay-put overlay 'invisible 'ellipsis)
 	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))

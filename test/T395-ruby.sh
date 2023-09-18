@@ -2,7 +2,7 @@
 test_description="ruby bindings"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ "${NOTMUCH_HAVE_RUBY_DEV}" = "0" ]; then
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" -a "${NOTMUCH_HAVE_RUBY_DEV-0}" = "0" ]; then
     test_subtest_missing_external_prereq_["ruby development files"]=t
 fi
 
@@ -12,10 +12,14 @@ test_ruby() {
     (
 	cat <<-EOF
 	require 'notmuch'
-	db = Notmuch::Database.new('$MAIL_DIR')
+	db = Notmuch::Database.new()
 	EOF
 	cat
-    ) | $NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"> OUTPUT
+    ) | if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+	ruby
+    else
+	$NOTMUCH_RUBY -I "$NOTMUCH_BUILDDIR/bindings/ruby"
+    fi> OUTPUT
     test_expect_equal_file EXPECTED OUTPUT
 }
 

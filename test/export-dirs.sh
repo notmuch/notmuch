@@ -24,7 +24,7 @@ find_builddir () {
 if [[ -z "${NOTMUCH_BUILDDIR}" ]]; then
 	export NOTMUCH_BUILDDIR="$(find_builddir "$(pwd)")"
 
-	if [[ -z "${NOTMUCH_BUILDDIR}" ]]; then
+	if [ -z "${NOTMUCH_BUILDDIR}" -a "${NOTMUCH_TEST_INSTALLED-0}" = "0" ]; then
 		echo "Run tests in a subdir of built notmuch tree." >&2
 		exit 1
 	fi

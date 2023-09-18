@@ -1,0 +1,3 @@
+# It's unclear how TSan-friendly GLib is:
+# https://gitlab.gnome.org/GNOME/glib/-/issues/1672
+called_from_lib:libglib*.so

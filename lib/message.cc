@@ -719,6 +719,8 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 	    /* Ignore failure to remove non-existent term. */
 	}
     }
+
+    _notmuch_message_invalidate_metadata (message, "property");
 }
 
 
@@ -941,6 +943,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 {
     const char *relative, *directory;
     notmuch_status_t status;
+    notmuch_private_status_t private_status;
     void *local = talloc_new (message);
     char *direntry;
 
@@ -964,10 +967,17 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     /* New file-direntry allows navigating to this message with
      * notmuch_directory_get_child_files() . */
-    status = COERCE_STATUS (_notmuch_message_add_term (message, "file-direntry", direntry),
-			    "adding file-direntry term");
-    if (status)
-	return status;
+    private_status = _notmuch_message_add_term (message, "file-direntry", direntry);
+    switch (private_status) {
+    case NOTMUCH_PRIVATE_STATUS_SUCCESS:
+	break;
+    case NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG:
+	_notmuch_database_log (message->notmuch, "filename too long for file-direntry term: %s\n",
+			       filename);
+	return NOTMUCH_STATUS_PATH_ERROR;
+    default:
+	return COERCE_STATUS (private_status, "adding file-direntry term");
+    }
 
     status = _notmuch_message_add_folder_terms (message, directory);
     if (status)
@@ -1383,20 +1393,21 @@ _notmuch_message_delete (notmuch_message_t *message)
     if (status)
 	return status;
 
-    message->notmuch->writable_xapian_db->delete_document (message->doc_id);
-
-    /* if this was a ghost to begin with, we are done */
-    private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
-    if (private_status)
-	return COERCE_STATUS (private_status,
-			      "Error trying to determine whether message was a ghost");
-    if (is_ghost)
-	return NOTMUCH_STATUS_SUCCESS;
-
-    /* look for a non-ghost message in the same thread */
     try {
 	Xapian::PostingIterator thread_doc, thread_doc_end;
 	Xapian::PostingIterator mail_doc, mail_doc_end;
+
+	/* look for a non-ghost message in the same thread */
+	/* if this was a ghost to begin with, we are done */
+	private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
+	if (private_status)
+	    return COERCE_STATUS (private_status,
+				  "Error trying to determine whether message was a ghost");
+
+	message->notmuch->writable_xapian_db->delete_document (message->doc_id);
+
+	if (is_ghost)
+	    return NOTMUCH_STATUS_SUCCESS;
 
 	_notmuch_database_find_doc_ids (message->notmuch, "thread", tid, &thread_doc,
 					&thread_doc_end);

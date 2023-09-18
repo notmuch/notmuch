@@ -325,11 +325,11 @@ If it is unset, 'default' is assumed.
 
 .. envvar:: NOTMUCH_GIT_DIR
 
-   Default location of git repository. Overriden by :option:`--git-dir`.
+   Default location of git repository. Overridden by :option:`--git-dir`.
 
 .. envvar:: NOTMUCH_GIT_PREFIX
 
-   Default tag prefix (filter). Overriden by :option:`--tag-prefix`.
+   Default tag prefix (filter). Overridden by :option:`--tag-prefix`.
 
 SEE ALSO
 ========

@@ -24,7 +24,7 @@ test_begin_subtest "Basic reply"
 notmuch reply id:${gen_msg_id} >OUTPUT 2>&1 && echo OK >> OUTPUT
 test_expect_equal_file basic.expected OUTPUT
 
-if [ $NOTMUCH_HAVE_SFSEXP -eq 1 ]; then
+if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
     test_begin_subtest "Basic reply (query=sexp)"
     notmuch reply --query=sexp "(id ${gen_msg_id})" >OUTPUT 2>&1 && echo OK >> OUTPUT

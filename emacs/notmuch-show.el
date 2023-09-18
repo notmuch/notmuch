@@ -452,14 +452,19 @@ operation on the contents of the current buffer."
 (defun notmuch-show-update-tags (tags)
   "Update the displayed tags of the current message."
   (save-excursion
-    (goto-char (notmuch-show-message-top))
-    (when (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
-      (let ((inhibit-read-only t))
-	(replace-match (concat "("
-			       (notmuch-tag-format-tags
-				tags
-				(notmuch-show-get-prop :orig-tags))
-			       ")"))))))
+    (let ((inhibit-read-only t)
+	  (start (notmuch-show-message-top))
+	  (depth (notmuch-show-get-prop :depth))
+	  (orig-tags (notmuch-show-get-prop :orig-tags))
+	  (props (notmuch-show-get-message-properties))
+	  (extent (notmuch-show-message-extent)))
+      (goto-char start)
+      (notmuch-show-insert-headerline props depth tags orig-tags)
+      (put-text-property start (1+ start)
+			 :notmuch-message-properties props)
+      (put-text-property (car extent) (cdr extent) :notmuch-message-extent extent)
+      ;; delete original headerline, but do not save to kill ring
+      (delete-region (point) (1+ (line-end-position))))))
 
 (defun notmuch-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return a cons
@@ -530,11 +535,17 @@ Return unchanged ADDRESS if parsing fails."
 	  (plist-put msg :height height)
 	  height))))
 
-(defun notmuch-show-insert-headerline (headers date tags depth duplicate file-count)
+(defun notmuch-show-insert-headerline (msg-plist depth tags &optional orig-tags)
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
-  (let ((start (point))
-	(from (notmuch-sanitize
+  (let* ((start (point))
+	 (headers (plist-get msg-plist :headers))
+	 (duplicate (or (plist-get msg-plist :duplicate) 0))
+	 (file-count (length (plist-get msg-plist :filename)))
+	 (date (or (and notmuch-show-relative-dates
+			(plist-get msg-plist :date_relative))
+		   (plist-get headers :Date)))
+	 (from (notmuch-sanitize
 	       (notmuch-show-clean-address (plist-get headers :From)))))
     (when (string-match "\\cR" from)
       ;; If the From header has a right-to-left character add
@@ -549,7 +560,7 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (notmuch-tag-format-tags tags tags)
+	    (notmuch-tag-format-tags tags (or orig-tags tags))
 	    ")")
     (insert
      (if (> file-count 1)
@@ -1171,8 +1182,6 @@ is out of range."
 (defun notmuch-show-insert-msg (msg depth)
   "Insert the message MSG at depth DEPTH in the current thread."
   (let* ((headers (plist-get msg :headers))
-	 (duplicate (or (plist-get msg :duplicate) 0))
-	 (files (length (plist-get msg :filename)))
 	 ;; Indentation causes the buffer offset of the start/end
 	 ;; points to move, so we must use markers.
 	 message-start message-end
@@ -1180,11 +1189,7 @@ is out of range."
 	 headers-start headers-end
 	 (bare-subject (notmuch-show-strip-re (plist-get headers :Subject))))
     (setq message-start (point-marker))
-    (notmuch-show-insert-headerline headers
-				    (or (and notmuch-show-relative-dates
-					     (plist-get msg :date_relative))
-					(plist-get headers :Date))
-				    (plist-get msg :tags) depth duplicate files)
+    (notmuch-show-insert-headerline msg depth (plist-get msg :tags))
     (setq content-start (point-marker))
     ;; Set `headers-start' to point after the 'Subject:' header to be
     ;; compatible with the existing implementation. This just sets it

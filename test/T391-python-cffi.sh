@@ -2,10 +2,13 @@
 test_description="python bindings (pytest)"
 . $(dirname "$0")/test-lib.sh || exit 1
 
-if [ $NOTMUCH_HAVE_PYTHON3_CFFI -eq 0 -o $NOTMUCH_HAVE_PYTHON3_PYTEST -eq 0 ]; then
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
     test_done
 fi
 
+if [ "${NOTMUCH_HAVE_PYTHON3_CFFI-0}" = "0" -o "${NOTMUCH_HAVE_PYTHON3_PYTEST-0}" = "0" ]; then
+    test_done
+fi
 
 test_begin_subtest "python cffi tests (NOTMUCH_CONFIG set)"
 pytest_dir=$NOTMUCH_BUILDDIR/bindings/python-cffi/build/stage

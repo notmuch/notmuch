@@ -183,8 +183,9 @@ test_begin_subtest "show PKCS#7 SignedData outputs valid JSON"
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
 test_valid_json "$output"
 
+if [ -z "${NOTMUCH_TEST_INSTALLED-}" ]; then
 test_begin_subtest "Verify signature on PKCS#7 SignedData message"
-if [ $NOTMUCH_HAVE_64BIT_TIME_T -ne 1 ]; then
+if [ "${NOTMUCH_HAVE_64BIT_TIME_T-0}" != "1" ]; then
     test_subtest_known_broken
 fi
 output=$(notmuch show --format=json id:smime-onepart-signed@protected-headers.example)
@@ -194,6 +195,7 @@ test_json_nodes <<<"$output" \
                 'expires:[0][0][0]["crypto"]["signed"]["status"][0]["expires"]=2611032858' \
                 'fingerprint:[0][0][0]["crypto"]["signed"]["status"][0]["fingerprint"]="702BA4B157F1E2B7D16B0C6A5FFC8A7DE2057DEB"' \
                 'status:[0][0][0]["crypto"]["signed"]["status"][0]["status"]="good"'
+fi # NOTMUCH_TEST_INSTALLED undefined / empty
 
 test_begin_subtest "Verify signature on PKCS#7 SignedData message signer User ID"
 if [ $NOTMUCH_GMIME_X509_CERT_VALIDITY -ne 1 ]; then

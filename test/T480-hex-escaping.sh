@@ -2,6 +2,10 @@
 test_description="hex encoding and decoding"
 . $(dirname "$0")/test-lib.sh || exit 1
 
+if [ -n "${NOTMUCH_TEST_INSTALLED-}" ]; then
+    test_done
+fi
+
 test_begin_subtest "round trip"
 find $NOTMUCH_SRCDIR/test/corpora/default -type f -print | sort | xargs cat > EXPECTED
 $TEST_DIRECTORY/hex-xcode --direction=encode < EXPECTED | $TEST_DIRECTORY/hex-xcode --direction=decode > OUTPUT

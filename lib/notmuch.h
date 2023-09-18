@@ -293,6 +293,8 @@ typedef struct _notmuch_indexopts notmuch_indexopts_t;
  *
  * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
  *
+ * NOTMUCH_STATUS_PATH_ERROR: filename is too long
+ *
  * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to create the
  *	database file (such as permission denied, or file not found,
  *	etc.), or the database already exists.
@@ -720,7 +722,8 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  *
  * The UUID is a NUL-terminated opaque string that uniquely identifies
  * this database.  Two revision numbers are only comparable if they
- * have the same database UUID.
+ * have the same database UUID. The string 'uuid' is owned by notmuch
+ * and should not be freed or modified by the user.
  */
 unsigned long
 notmuch_database_get_revision (notmuch_database_t *notmuch,
@@ -1170,7 +1173,10 @@ notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out
  *
  *     query = notmuch_query_create (database, query_string);
  *
- *     for (messages = notmuch_query_search_messages (query);
+ *     if (notmuch_query_search_messages (query, &messages) != NOTMUCH_STATUS_SUCCESS)
+ *         return EXIT_FAILURE;
+ *
+ *     for (;
  *          notmuch_messages_valid (messages);
  *          notmuch_messages_move_to_next (messages))
  *     {
@@ -2558,6 +2564,7 @@ typedef enum {
     NOTMUCH_CONFIG_USER_NAME,
     NOTMUCH_CONFIG_AUTOCOMMIT,
     NOTMUCH_CONFIG_EXTRA_HEADERS,
+    NOTMUCH_CONFIG_INDEX_AS_TEXT,
     NOTMUCH_CONFIG_LAST
 } notmuch_config_key_t;
 

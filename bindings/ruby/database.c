@@ -58,40 +58,56 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     notmuch_database_t *database;
     notmuch_status_t ret;
 
-    /* Check arguments */
-    rb_scan_args (argc, argv, "11", &pathv, &hashv);
+    path = NULL;
+    create = 0;
+    mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 
-    SafeStringValue (pathv);
-    path = RSTRING_PTR (pathv);
+    /* Check arguments */
+    rb_scan_args (argc, argv, "02", &pathv, &hashv);
+
+    if (!NIL_P (pathv)) {
+	SafeStringValue (pathv);
+	path = RSTRING_PTR (pathv);
+    }
 
     if (!NIL_P (hashv)) {
-	Check_Type (hashv, T_HASH);
-	create = RTEST (rb_hash_aref (hashv, ID2SYM (ID_db_create)));
-	modev = rb_hash_aref (hashv, ID2SYM (ID_db_mode));
-	if (NIL_P (modev))
-	    mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-	else if (!FIXNUM_P (modev))
-	    rb_raise (rb_eTypeError, ":mode isn't a Fixnum");
-	else {
-	    mode = FIX2INT (modev);
-	    switch (mode) {
-	    case NOTMUCH_DATABASE_MODE_READ_ONLY:
-	    case NOTMUCH_DATABASE_MODE_READ_WRITE:
-		break;
-	    default:
-		rb_raise ( rb_eTypeError, "Invalid mode");
+	VALUE rmode, rcreate;
+	VALUE kwargs[2];
+	static ID keyword_ids[2];
+
+	if (!keyword_ids[0]) {
+	    keyword_ids[0] = rb_intern_const ("mode");
+	    keyword_ids[1] = rb_intern_const ("create");
+	}
+
+	rb_get_kwargs (hashv, keyword_ids, 0, 2, kwargs);
+
+	rmode = kwargs[0];
+	rcreate = kwargs[1];
+
+	if (rmode != Qundef) {
+	    if (!FIXNUM_P (rmode))
+		rb_raise (rb_eTypeError, ":mode isn't a Fixnum");
+	    else {
+		mode = FIX2INT (rmode);
+		switch (mode) {
+		case NOTMUCH_DATABASE_MODE_READ_ONLY:
+		case NOTMUCH_DATABASE_MODE_READ_WRITE:
+		    break;
+		default:
+		    rb_raise ( rb_eTypeError, "Invalid mode");
+		}
 	    }
 	}
-    } else {
-	create = 0;
-	mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+	if (rcreate != Qundef)
+	    create = RTEST (rcreate);
     }
 
     rb_check_typeddata (self, &notmuch_rb_database_type);
     if (create)
 	ret = notmuch_database_create (path, &database);
     else
-	ret = notmuch_database_open (path, mode, &database);
+	ret = notmuch_database_open_with_config (path, mode, NULL, NULL, &database, NULL);
     notmuch_rb_status_raise (ret);
 
     DATA_PTR (self) = notmuch_rb_object_create (database, "notmuch_rb_database");
@@ -408,7 +424,7 @@ notmuch_rb_database_get_all_tags (VALUE self)
 
 	rb_raise (notmuch_rb_eBaseError, "%s", msg);
     }
-    return Data_Wrap_Notmuch_Object (notmuch_rb_cTags, &notmuch_rb_tags_type, tags);
+    return notmuch_rb_tags_get (tags);
 }
 
 /*
