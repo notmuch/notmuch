@@ -1,3 +1,9 @@
+notmuch (0.38-2~bpo12+1) bookworm-backports; urgency=medium
+
+  * Rebuild for bookworm-backports.
+
+ -- David Bremner <bremner@debian.org>  Tue, 19 Sep 2023 07:39:53 -0300
+
 notmuch (0.38-2) unstable; urgency=medium
 
   * Restrict autopkgtests to amd64 and aarch64. There are failures in
