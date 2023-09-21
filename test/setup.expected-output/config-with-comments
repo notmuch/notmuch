@@ -3,11 +3,13 @@
 # For more information about notmuch, see https://notmuchmail.org
 # Database configuration
 #
-# The only value supported here is 'path' which should be the top-level
-# directory where your mail currently exists and to where mail will be
-# delivered in the future. Files should be individual email messages.
-# Notmuch will store its database within a sub-directory of the path
-# configured here named ".notmuch".
+# Supported values are 'mail_root' and 'path'. The recommended option
+# is to set 'mail_root' to the directory where your mail currently exists
+# and to where mail will be delivered in the future. Files should be
+# individual email messages. By default notmuch will store its database
+# in $XDG_DATA_HOME/notmuch; you can override this by setting 'path'.
+# If only 'path' is set, this directory is for 'mail_root' and for
+# the database location (in a subdirectory called ".notmuch").
 #
 [database]
 path=/path/to/maildir

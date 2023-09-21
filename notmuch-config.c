@@ -40,11 +40,13 @@ static const struct config_group {
 	"database",
 	" Database configuration\n"
 	"\n"
-	" The only value supported here is 'path' which should be the top-level\n"
-	" directory where your mail currently exists and to where mail will be\n"
-	" delivered in the future. Files should be individual email messages.\n"
-	" Notmuch will store its database within a sub-directory of the path\n"
-	" configured here named \".notmuch\".\n"
+	" Supported values are 'mail_root' and 'path'. The recommended option\n"
+	" is to set 'mail_root' to the directory where your mail currently exists\n"
+	" and to where mail will be delivered in the future. Files should be\n"
+	" individual email messages. By default notmuch will store its database\n"
+	" in $XDG_DATA_HOME/notmuch; you can override this by setting 'path'.\n"
+	" If only 'path' is set, this directory is for 'mail_root' and for\n"
+	" the database location (in a subdirectory called \".notmuch\").\n"
     },
     {
 	"user",
