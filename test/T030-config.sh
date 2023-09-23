@@ -3,6 +3,8 @@
 test_description='"notmuch config"'
 . $(dirname "$0")/test-lib.sh || exit 1
 
+cp notmuch-config initial-config
+
 test_begin_subtest "Get string value"
 test_expect_equal "$(notmuch config get user.name)" "Notmuch Test Suite"
 
@@ -192,5 +194,18 @@ test_expect_equal_file EXPECTED OUTPUT
 test_begin_subtest "get built_with.nonexistent prints false"
 output=$(notmuch config get built_with.nonexistent)
 test_expect_equal "$output" "false"
+
+test_begin_subtest "Bad utf8 reported as error"
+cp initial-config bad-config
+printf '[query]\nq3=from:\xff\n' >>bad-config
+test_expect_code 1 "notmuch --config=./bad-config config list"
+
+test_begin_subtest "Specific error message about bad utf8"
+notmuch --config=./bad-config config list 2>ERRORS
+cat <<EOF > EXPECTED
+GLib: Key file contains key “q3” with value “from:�” which is not UTF-8
+Error: unable to load config file.
+EOF
+test_expect_equal_file EXPECTED ERRORS
 
 test_done

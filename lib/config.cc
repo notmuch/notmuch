@@ -416,7 +416,8 @@ _expand_path (void *ctx, const char *key, const char *val)
 
 notmuch_status_t
 _notmuch_config_load_from_file (notmuch_database_t *notmuch,
-				GKeyFile *file)
+				GKeyFile *file,
+				char **status_string)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     gchar **groups = NULL, **keys, *val;
@@ -435,6 +436,7 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 	for (gchar **keys_p = keys; *keys_p; keys_p++) {
 	    char *absolute_key = talloc_asprintf (notmuch, "%s.%s", *grp,  *keys_p);
 	    char *normalized_val;
+	    GError *gerr = NULL;
 
 	    /* If we opened from a given path, do not overwrite it */
 	    if (strcmp (absolute_key, "database.path") == 0 &&
@@ -442,7 +444,14 @@ _notmuch_config_load_from_file (notmuch_database_t *notmuch,
 		notmuch->xapian_db)
 		continue;
 
-	    val = g_key_file_get_string (file, *grp, *keys_p, NULL);
+	    val = g_key_file_get_string (file, *grp, *keys_p, &gerr);
+	    if (gerr) {
+		if (status_string)
+		    IGNORE_RESULT (asprintf (status_string,
+					     "GLib: %s\n",
+					     gerr->message));
+		g_error_free (gerr);
+	    }
 	    if (! val) {
 		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
