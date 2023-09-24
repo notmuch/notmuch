@@ -1109,14 +1109,18 @@ is t, hide the part initially and show the button."
 			     (and deep button)
 			     (and high button)
 			     (and long button))))
-	 (content-beg (point)))
+	 (content-beg (point))
+	 (part-data (list msg part mime-type nth depth button)))
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
     (plist-put part :computed-type mime-type)
-    (if show-part
-	(notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
+    (cond
+     (show-part
+      (apply #'notmuch-show-insert-bodypart-internal part-data)
+      (when (and button (string-match "^image/" mime-type))
+	(button-put button :notmuch-redisplay-data part-data)))
+     (t
       (when button
-	(button-put button :notmuch-lazy-part
-		    (list msg part mime-type nth depth button))))
+	(button-put button :notmuch-lazy-part part-data))))
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
     (goto-char (point-max))
