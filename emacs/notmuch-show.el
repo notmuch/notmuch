@@ -1019,10 +1019,13 @@ will return nil if the CID is unknown or cannot be retrieved."
 	   (part-end (copy-marker (point) t))
 	   ;; We have to save the depth as we can't find the depth
 	   ;; when narrowed.
-	   (depth (notmuch-show-get-depth)))
+	   (depth (notmuch-show-get-depth))
+	   (mime-type (plist-get (cadr part-args) :computed-type)))
       (save-restriction
 	(narrow-to-region part-beg part-end)
 	(delete-region part-beg part-end)
+	(when (and mime-type (string-match "^image/" mime-type))
+	  (button-put button :notmuch-redisplay-data part-args))
 	(apply #'notmuch-show-insert-bodypart-internal part-args)
 	(indent-rigidly part-beg
 			part-end
