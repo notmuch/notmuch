@@ -644,8 +644,24 @@ message at DEPTH in the current thread."
 		(when show
 		  (button-put button :notmuch-lazy-part nil)
 		  (notmuch-show-lazy-part lazy-part button))
-	      ;; else there must be an overlay.
-	      (overlay-put overlay 'invisible (not show))
+	      (let* ((part (plist-get properties :notmuch-part))
+		     (undisplayer (plist-get part :undisplayer))
+		     (mime-type (plist-get part :computed-type))
+		     (redisplay-data (button-get button
+						 :notmuch-redisplay-data))
+		     (imagep (string-match "^image/" mime-type)))
+		(cond
+		 ((and imagep (not show) undisplayer)
+		  ;; call undisplayer thunk created by gnus.
+		  (funcall undisplayer)
+		  ;; there is an extra newline left
+		  (delete-region
+		   (+ 1 (button-end button))
+		   (+ 2 (button-end button))))
+		 ((and imagep show redisplay-data)
+		  (notmuch-show-lazy-part redisplay-data button))
+		 (t
+		  (overlay-put overlay 'invisible (not show)))))
 	      t)))))))
 
 ;;; Part content ID handling
