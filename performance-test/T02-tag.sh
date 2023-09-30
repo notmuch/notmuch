@@ -11,4 +11,13 @@ time_run 'tag * +existing_tag' "notmuch tag +new_tag '*'"
 time_run 'tag * -existing_tag' "notmuch tag -new_tag '*'"
 time_run 'tag * -missing_tag' "notmuch tag -new_tag '*'"
 
+time_run 'tag * +maildir_flag F' "notmuch tag +flagged '*'"
+time_run 'tag * -maildir_flag F' "notmuch tag -flagged '*'"
+time_run 'tag * +maildir_flag P' "notmuch tag +passed '*'"
+time_run 'tag * -maildir_flag P' "notmuch tag -passed '*'"
+time_run 'tag * +maildir_flag D' "notmuch tag +draft '*'"
+time_run 'tag * -maildir_flag D' "notmuch tag -draft '*'"
+time_run 'tag * +maildir_flag S' "notmuch tag -unread '*'"
+time_run 'tag * -maildir_flag S' "notmuch tag +unread '*'"
+
 time_done
