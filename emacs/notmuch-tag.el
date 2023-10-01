@@ -159,7 +159,7 @@ place of the tag.
 For example, to replace a tag with another string, simply use
 that string as a formatting expression.  To change the foreground
 of a tag to red, use the expression
-  (propertize tag 'face '(:foreground \"red\"))
+  (propertize tag \\='face \\='(:foreground \"red\"))
 
 See also `notmuch-tag-format-image', which can help replace tags
 with images."
@@ -191,7 +191,7 @@ By default this shows deleted tags with strike-through in red,
 unless strike-through is not available (e.g., emacs is running in
 a terminal) in which case it uses inverse video. To hide deleted
 tags completely set this to
-  '((\".*\" nil))
+  \\='((\".*\" nil))
 
 See `notmuch-tag-formats' for full documentation."
   :group 'notmuch-show
@@ -366,9 +366,9 @@ changed (the normal case) are shown using formats from
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
 
-'tag-changes' will contain the tags that are about to be added or removed as
+`tag-changes' will contain the tags that are about to be added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
-'query' will be a string containing the search query that determines
+`query' will be a string containing the search query that determines
 the messages that are about to be tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)
@@ -377,9 +377,9 @@ the messages that are about to be tagged."
 (defcustom notmuch-after-tag-hook nil
   "Hooks that are run after tags of a message are modified.
 
-'tag-changes' will contain the tags that were added or removed as
+`tag-changes' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
-'query' will be a string containing the search query that determines
+`query' will be a string containing the search query that determines
 the messages that were tagged."
   :type 'hook
   :options '(notmuch-hl-line-mode)

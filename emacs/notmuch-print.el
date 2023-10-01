@@ -41,11 +41,11 @@
 ;;; Utility functions
 
 (defun notmuch-print-run-evince (file)
-  "View FILE using 'evince'."
+  "View FILE using `evince'."
   (start-process "evince" nil "evince" file))
 
 (defun notmuch-print-run-muttprint (&optional output)
-  "Pass the contents of the current buffer to 'muttprint'.
+  "Pass the contents of the current buffer to `muttprint'.
 
 Optional OUTPUT allows passing a list of flags to muttprint."
   (apply #'notmuch--call-process-region (point-min) (point-max)

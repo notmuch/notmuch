@@ -35,7 +35,7 @@ complete S-expression from the input.  However, it extends this
 with an additional function that requires the next value in the
 input to be a list and descends into it, allowing its elements to
 be read one at a time or further descended into.  Both functions
-can return 'retry to indicate that not enough input is available.
+can return \\='retry to indicate that not enough input is available.
 
 The parser always consumes input from point in the current
 buffer.  Hence, the caller is allowed to delete any data before
@@ -52,10 +52,10 @@ point and may resynchronize after an error by moving point."
 (defun notmuch-sexp-read (sp)
   "Consume and return the value at point in the current buffer.
 
-Returns 'retry if there is insufficient input to parse a complete
+Returns \\='retry if there is insufficient input to parse a complete
 value (though it may still move point over whitespace).  If the
 parser is currently inside a list and the next token ends the
-list, this moves point just past the terminator and returns 'end.
+list, this moves point just past the terminator and returns \\='end.
 Otherwise, this moves point to just past the end of the value and
 returns the value."
   (skip-chars-forward " \n\r\t")
@@ -125,7 +125,7 @@ returns the value."
 (defun notmuch-sexp-begin-list (sp)
   "Parse the beginning of a list value and enter the list.
 
-Returns 'retry if there is insufficient input to parse the
+Returns \\='retry if there is insufficient input to parse the
 beginning of the list.  If this is able to parse the beginning of
 a list, it moves point past the token that opens the list and
 returns t.  Later calls to `notmuch-sexp-read' will return the

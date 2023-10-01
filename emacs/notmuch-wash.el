@@ -381,7 +381,7 @@ original filename the sender had."
 	  (notmuch-wash-subject-to-filename subject 52)))
 
 (defun notmuch-wash-convert-inline-patch-to-part (msg depth)
-  "Convert an inline patch into a fake 'text/x-diff' attachment.
+  "Convert an inline patch into a fake `text/x-diff' attachment.
 
 Given that this function guesses whether a buffer includes a
 patch and then guesses the extent of the patch, there is scope
