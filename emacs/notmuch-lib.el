@@ -703,6 +703,7 @@ current buffer, if possible."
 	  (when (mm-inlinable-p handle)
 	    (set-buffer display-buffer)
 	    (mm-display-part handle)
+	    (plist-put part :undisplayer (mm-handle-undisplayer handle))
 	    t))))))
 
 ;;; Generic Utilities
