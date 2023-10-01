@@ -1,8 +1,8 @@
-notmuch (0.38.1~pre0-1) UNRELEASED; urgency=medium
+notmuch (0.38.1~pre0-1) experimental; urgency=medium
 
-  * New upstream release release candidate
+  * New upstream release candidate
 
- -- David Bremner <bremner@debian.org>  Sat, 23 Sep 2023 08:15:19 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 01 Oct 2023 08:14:17 -0300
 
 notmuch (0.38-2) unstable; urgency=medium
 
