@@ -717,7 +717,8 @@ with `notmuch-hello-query-counts'."
   "Keymap for \"notmuch hello\" buffers.")
 
 (define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
-  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+  "Major mode for convenient notmuch navigation. This is your entry
+portal into notmuch.
 
 Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
 or click on a saved search to view matching threads. Edit saved
@@ -853,7 +854,8 @@ Complete list of currently available key bindings:
 	(widget-create 'notmuch-search-item :value search :size width)))))
 
 (defun notmuch-hello-insert-searches (title query-list &rest options)
-  "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
+  "Insert a section with TITLE showing a list of buttons made from
+QUERY-LIST.
 
 QUERY-LIST should ideally be a plist but for backwards
 compatibility other forms are also accepted (see
@@ -867,13 +869,16 @@ Supports the following entries in OPTIONS as a plist:
 :show-empty-searches - show buttons with no matching messages
 :hide-if-empty - hide if no buttons would be shown
    (only makes sense without :show-empty-searches)
-:filter - This can be a function that takes the search query as its argument and
-   returns a filter to be used in conjunction with the query for that search or nil
-   to hide the element. This can also be a string that is used as a combined with
-   each query using \"and\".
-:filter-count - Separate filter to generate the count displayed each search. Accepts
-   the same values as :filter. If :filter and :filter-count are specified, this
-   will be used instead of :filter, not in conjunction with it."
+:filter - This can be a function that takes the search query as
+   its argument and returns a filter to be used in conjunction
+   with the query for that search or nil to hide the
+   element. This can also be a string that is used as a combined
+   with each query using \"and\".
+:filter-count - Separate filter to generate the count displayed
+   each search. Accepts the same values as :filter. If :filter
+   and :filter-count are specified, this will be used instead of
+   :filter, not in conjunction with it."
+
   (widget-insert title ": ")
   (when (and notmuch-hello-first-run (plist-get options :initially-hidden))
     (add-to-list 'notmuch-hello-hidden-sections title))

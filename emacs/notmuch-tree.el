@@ -200,7 +200,8 @@ Note that the author string should not contain whitespace
 
 (defface notmuch-tree-match-tree-face
   nil
-  "Face used in tree mode for the thread tree block graphics in messages matching the query."
+  "Face used in tree mode for the thread tree block graphics in
+messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -239,7 +240,8 @@ Note that the author string should not contain whitespace
 
 (defface notmuch-tree-no-match-tree-face
   nil
-  "Face used in tree mode for the thread tree block graphics in messages matching the query."
+  "Face used in tree mode for the thread tree block graphics in
+messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -1047,7 +1049,8 @@ message together with all its descendents."
     (notmuch-tree-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-tree-insert-thread (thread depth tree-status)
-  "Insert the collection of sibling sub-threads THREAD at depth DEPTH in the current forest."
+  "Insert the collection of sibling sub-threads THREAD at depth
+DEPTH in the current forest."
   (let ((n (length thread)))
     (cl-loop for tree in thread
 	     for count from 1 to n

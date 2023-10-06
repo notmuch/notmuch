@@ -2507,10 +2507,12 @@ kill-ring."
 (defun notmuch-show-stash-mlarchive-link (&optional mla)
   "Copy an ML Archive URI for the current message to the kill-ring.
 
-This presumes that the message is available at the selected Mailing List Archive.
+This presumes that the message is available at the selected
+Mailing List Archive.
 
-If optional argument MLA is non-nil, use the provided key instead of prompting
-the user (see `notmuch-show-stash-mlarchive-link-alist')."
+If optional argument MLA is non-nil, use the provided key instead
+of prompting the user (see
+`notmuch-show-stash-mlarchive-link-alist')."
   (interactive)
   (let ((url (cdr (assoc
 		   (or mla
@@ -2527,12 +2529,15 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
        (concat url (notmuch-show-get-message-id t))))))
 
 (defun notmuch-show-stash-mlarchive-link-and-go (&optional mla)
-  "Copy an ML Archive URI for the current message to the kill-ring and visit it.
+  "Copy an ML Archive URI for the current message to the
+ kill-ring and visit it.
 
-This presumes that the message is available at the selected Mailing List Archive.
+This presumes that the message is available at the selected
+Mailing List Archive.
 
-If optional argument MLA is non-nil, use the provided key instead of prompting
-the user (see `notmuch-show-stash-mlarchive-link-alist')."
+If optional argument MLA is non-nil, use the provided key instead
+of prompting the user (see
+`notmuch-show-stash-mlarchive-link-alist')."
   (interactive)
   (notmuch-show-stash-mlarchive-link mla)
   (browse-url (current-kill 0 t)))
