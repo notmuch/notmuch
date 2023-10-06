@@ -153,8 +153,7 @@ matching `notmuch-address-completion-headers-regexp'."
 ;;; Setup
 
 (defun notmuch-address-selection-function (prompt collection initial-input)
-  "Call (`completing-read'
-      PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
+  "Default address selection function: delegate to completing read."
   (completing-read
    prompt collection nil nil initial-input 'notmuch-address-history))
 
