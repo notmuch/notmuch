@@ -67,7 +67,7 @@ sub check_search_cache_maildir($) {
     foreach my $d (@contents) {
         -l "$maildir/$d" and die_dir( $maildir, "contains symlink $d");
         -d "$maildir/$d" or die_dir( $maildir, "contains non-directory $d");
-        exists($required[$d]) or die_dir( $maildir, "contains directory $d");
+        exists($required{$d}) or die_dir( $maildir, "contains directory $d");
     }
 }
 
