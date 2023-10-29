@@ -142,6 +142,16 @@ to `notmuch-mua-send-hook'."
   :type 'regexp
   :group 'notmuch-send)
 
+(defcustom notmuch-mua-subject-regexp
+  "[[:blank:]]*$"
+  "Message subject indicating that something may be amiss.
+By default, this checks for empty subject lines.
+
+This is not used unless `notmuch-mua-subject-check' is added to
+`notmuch-mua-send-hook'."
+  :type 'regexp
+  :group 'notmuch-send)
+
 ;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
@@ -178,6 +188,19 @@ Typically this is added to `notmuch-mua-send-hook'."
 	 (not (y-or-n-p "Attachment mentioned, but no attachment - is that okay?")))
     ;; ...signal an error.
     (error "Missing attachment")))
+
+(defun notmuch-mua-subject-check ()
+  "Signal an error if the subject seems amiss.
+More precisely, if the subject conforms to
+`notmuch-mua-subject-regexp'.
+
+Typically this is added to `notmuch-mua-send-hook'."
+  (or (save-excursion
+        (message-goto-subject)
+        (message-beginning-of-header t)
+        (not (looking-at-p notmuch-mua-subject-regexp)))
+      (y-or-n-p "Subject may be erroneous – is that okay?")
+      (error "Erroneous subject")))
 
 (defun notmuch-mua-get-switch-function ()
   "Get a switch function according to `notmuch-mua-compose-in'."
