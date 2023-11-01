@@ -1,3 +1,21 @@
+Notmuch 0.38.1 (2023-10-26)
+===========================
+
+CLI
+---
+
+Report parse errors in config files.
+
+Emacs
+-----
+
+Fix image toggling for Emacs >= 29.1.
+
+notmuch-mutt
+------------
+
+Fix syntax error in script.
+
 Notmuch 0.38 (2023-09-12)
 =========================
 
