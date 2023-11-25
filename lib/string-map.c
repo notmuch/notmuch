@@ -86,10 +86,14 @@ _notmuch_string_map_append (notmuch_string_map_t *map,
 static int
 cmppair (const void *pa, const void *pb)
 {
+    int cmp = 0;
     notmuch_string_pair_t *a = (notmuch_string_pair_t *) pa;
     notmuch_string_pair_t *b = (notmuch_string_pair_t *) pb;
 
-    return strcmp (a->key, b->key);
+    cmp = strcmp (a->key, b->key);
+    if (cmp == 0)
+	cmp = strcmp (a->value, b->value);
+    return cmp;
 }
 
 static void
