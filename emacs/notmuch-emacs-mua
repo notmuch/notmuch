@@ -41,6 +41,9 @@ CREATE_FRAME=
 ELISP=
 MAILTO=
 HELLO=
+TO_SEP=
+CC_SEP=
+BCC_SEP=
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -86,13 +89,16 @@ while getopts :s:c:b:i:h opt; do
 	    ELISP="${ELISP} (message-goto-subject) (insert \"${OPTARG}\")"
 	    ;;
 	--to)
-	    ELISP="${ELISP} (message-goto-to) (insert \"${OPTARG}, \")"
+	    ELISP="${ELISP} (message-goto-to) (insert \"${TO_SEP}${OPTARG}\")"
+	    TO_SEP=", "
 	    ;;
 	--cc|c)
-	    ELISP="${ELISP} (message-goto-cc) (insert \"${OPTARG}, \")"
+	    ELISP="${ELISP} (message-goto-cc) (insert \"${CC_SEP}${OPTARG}\")"
+	    CC_SEP=", "
 	    ;;
 	--bcc|b)
-	    ELISP="${ELISP} (message-goto-bcc) (insert \"${OPTARG}, \")"
+	    ELISP="${ELISP} (message-goto-bcc) (insert \"${BCC_SEP}${OPTARG}\")"
+	    BCC_SEP=", "
 	    ;;
 	--body|i)
 	    ELISP="${ELISP} (message-goto-body) (insert-file \"${OPTARG}\")"
