@@ -1,3 +1,9 @@
+notmuch (0.38.2-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+
+ -- David Bremner <bremner@debian.org>  Fri, 01 Dec 2023 07:51:09 -0400
+
 notmuch (0.38.1-1) unstable; urgency=medium
 
   * New upstream bugfix release
