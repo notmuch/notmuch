@@ -1,0 +1,81 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 40/44] mm/hugetlb.c: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:59 -0800
+Lines: 28
+Message-ID: <59705f848d35b12ace640f92afcffea02cee0976.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: owner-linux-mm@kvack.org Mon Nov 15 04:06:05 2010
+Return-path: <owner-linux-mm@kvack.org>
+Envelope-to: glkm-linux-mm-2@m.gmane.org
+Received: from kanga.kvack.org ([205.233.56.17])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <owner-linux-mm@kvack.org>)
+	id 1PHpOO-0000gl-5U
+	for glkm-linux-mm-2@m.gmane.org; Mon, 15 Nov 2010 04:06:04 +0100
+Received: by kanga.kvack.org (Postfix)
+	id 6220A8D003C; Sun, 14 Nov 2010 22:06:03 -0500 (EST)
+Delivered-To: linux-mm-outgoing@kvack.org
+Received: by kanga.kvack.org (Postfix, from userid 40)
+	id 5D2638D0017; Sun, 14 Nov 2010 22:06:03 -0500 (EST)
+X-Original-To: int-list-linux-mm@kvack.org
+Delivered-To: int-list-linux-mm@kvack.org
+Received: by kanga.kvack.org (Postfix, from userid 63042)
+	id 427128D003C; Sun, 14 Nov 2010 22:06:03 -0500 (EST)
+X-Original-To: linux-mm@kvack.org
+Delivered-To: linux-mm@kvack.org
+Received: from mail203.messagelabs.com (mail203.messagelabs.com [216.82.254.243])
+	by kanga.kvack.org (Postfix) with SMTP id C08B98D0017
+	for <linux-mm@kvack.org>; Sun, 14 Nov 2010 22:06:02 -0500 (EST)
+X-VirusChecked: Checked
+X-Env-Sender: joe@perches.com
+X-Msg-Ref: server-4.tower-203.messagelabs.com!1289790361!41887937!1
+X-StarScan-Version: 6.2.9; banners=-,-,-
+X-Originating-IP: [173.55.12.10]
+X-SpamReason: No, hits=0.0 required=7.0 tests=
+Received: (qmail 4485 invoked from network); 15 Nov 2010 03:06:01 -0000
+Received: from mail.perches.com (HELO mail.perches.com) (173.55.12.10)
+  by server-4.tower-203.messagelabs.com with SMTP; 15 Nov 2010 03:06:01 -0000
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id EB70E2436B;
+	Sun, 14 Nov 2010 19:04:28 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+X-Bogosity: Ham, tests=bogofilter, spamicity=0.000000, version=1.2.2
+Sender: owner-linux-mm@kvack.org
+Precedence: bulk
+X-Loop: owner-majordomo@kvack.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062276>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ mm/hugetlb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index c4a3558..8875242 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -540,7 +540,7 @@ static struct page *dequeue_huge_page_vma(struct hstate *h,
+ 
+ 	/* If reserves cannot be used, ensure enough pages are in the pool */
+ 	if (avoid_reserve && h->free_huge_pages - h->resv_huge_pages == 0)
+-		goto err;;
++		goto err;
+ 
+ 	for_each_zone_zonelist_nodemask(zone, z, zonelist,
+ 						MAX_NR_ZONES - 1, nodemask) {
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom policy in Canada: sign http://dissolvethecrtc.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
+

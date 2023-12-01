@@ -1,0 +1,36 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 12:19:24 -0800
+Subject: [notmuch] preliminary FreeBSD support
+In-Reply-To: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
+References: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
+Message-ID: <87lji4lx9v.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 11:36:14 -0800, Alex Botero-Lowry <alex.boterolowry at gmail.com> wrote:
+> I saw the announcement this morning, and was very excited, as I had been
+> hoping sup would be turned into a library,
+> since I like the concept more than the UI (I'd rather an emacs interface).
+
+Hi Alex,
+
+That's great! It's good to hear that there are like-minded people out
+there. I hope that Notmuch will be useful for you.
+
+> I did a preliminary compile which worked out fine, but
+> sysconf(_SC_SC_GETPW_R_SIZE_MAX) returns -1 on
+> FreeBSD, so notmuch_config_open segfaulted.
+> 
+> Attached is a patch that supplies a default buffer size of 64 in cases where
+> -1 is returned.
+
+Thanks for the patch. As we discussed in IRC[*], we should probably
+do the correct thing and check for ERANGE and loop as necessary (even if
+sysconf returns a positive value). Example code here:
+
+http://www.opengroup.org/austin/docs/austin_328.txt
+
+-Carl
+
+[*] #notmuch on irc.freenode.net for those who didn't just guess that
+already, (and I'll add that to the website soon).
+

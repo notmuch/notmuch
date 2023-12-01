@@ -1,0 +1,38 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: [mailing-list] Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <wrapped-protected-header@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="zzzz"
+
+--zzzz
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAbnAG8Oxige+8PXg1B/Ex8Nc/IcBW7R4Cmnq3rArI3g0w
+rb1P2LngDMpqMxRGAkucBU/omYHuyDyLIoQZc84XYQy9N+M/u4HK187tyXaKx970
+0qIBnZhdiVm9RFn8CvQLG1hhw8E6UFm/YlURkMoaP66HIU9WLFAlmHrZPOnXJBr5
+2qOWnqSttuD/1Bjt1R2dguoltYqv1iBkwDlE2mWubSTkDp3Pf3QeJGz3Q727+bHV
+MI3k/5sNfJyyx9lIB3nyjwa/+Ap5orrPBwe+Y8tRdLO9xtvIFO+U9l9L6yPTYPyz
+4P+LVzDS+6tnWxPiLeEz/sRGmtA=
+=pPju
+-----END PGP MESSAGE-----
+--=-=-=--
+
+--zzzz
+Content-Type: text/plain
+
+This message body was re-wrapped by a mailing list
+which is why the protected headers no longer work.
+--zzzz--

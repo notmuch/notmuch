@@ -1,0 +1,63 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 33/44] fs/ceph: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:52 -0800
+Lines: 26
+Message-ID: <e01252afc842668a94fb0549e2d1833d77a6411f.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: Sage Weil <sage@newdream.net>, ceph-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: ceph-devel-owner@vger.kernel.org Mon Nov 15 04:09:34 2010
+Return-path: <ceph-devel-owner@vger.kernel.org>
+Envelope-to: gcfcd-ceph-devel3-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <ceph-devel-owner@vger.kernel.org>)
+	id 1PHpRl-000297-Hx
+	for gcfcd-ceph-devel3-2@lo.gmane.org; Mon, 15 Nov 2010 04:09:33 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932690Ab0KODJN (ORCPT <rfc822;gcfcd-ceph-devel3-2@m.gmane.org>);
+	Sun, 14 Nov 2010 22:09:13 -0500
+Received: from mail.perches.com ([173.55.12.10]:1231 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932849Ab0KODF5 (ORCPT <rfc822;ceph-devel@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:05:57 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 69DEF2436B;
+	Sun, 14 Nov 2010 19:04:24 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: ceph-devel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <ceph-devel.vger.kernel.org>
+X-Mailing-List: ceph-devel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062297>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ fs/ceph/mds_client.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/ceph/mds_client.c b/fs/ceph/mds_client.c
+index 3142b15..931124c 100644
+--- a/fs/ceph/mds_client.c
++++ b/fs/ceph/mds_client.c
+@@ -2023,7 +2023,7 @@ static void handle_reply(struct ceph_mds_session *session, struct ceph_msg *msg)
+ 		} else  {
+ 			struct ceph_inode_info *ci = ceph_inode(req->r_inode);
+ 			struct ceph_cap *cap =
+-				ceph_get_cap_for_mds(ci, req->r_mds);;
++				ceph_get_cap_for_mds(ci, req->r_mds);
+ 
+ 			dout("already using auth");
+ 			if ((!cap || cap != ci->i_auth_cap) ||
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe ceph-devel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

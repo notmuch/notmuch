@@ -1,0 +1,15 @@
+From: David Bremner <david@example.net>
+To: David Bremner <david@example.net>
+Subject: test html attachment
+Date: Tue, 17 Nov 2009 21:28:38 +0600
+Message-ID: <87d1dajhgf.fsf@example.net>
+MIME-Version: 1.0
+Content-Type: text/html
+Content-Disposition: inline; filename=test.html
+
+<html>
+  <body>
+    <input value="a>swordfish">
+  </body>
+  hunter2
+</html>

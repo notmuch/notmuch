@@ -1,0 +1,145 @@
+Date: Tue, 17 Nov 2009 19:58:29 -0500
+From: Lars Kellogg-Stedman <lars@seas.harvard.edu>
+To: notmuch <notmuch@notmuchmail.org>
+Message-ID: <20091118005829.GB25380@dottiness.seas.harvard.edu>
+MIME-Version: 1.0
+User-Agent: Mutt/1.5.19 (2009-01-05)
+Subject: [notmuch] "notmuch help" outputs to stderr?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============1359248349=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+
+--===============1359248349==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="L6iaP+gRLNZHKoI4"
+Content-Disposition: inline
+
+
+--L6iaP+gRLNZHKoI4
+Content-Type: multipart/mixed; boundary="z6Eq5LdranGa6ru8"
+Content-Disposition: inline
+
+
+--z6Eq5LdranGa6ru8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+I'm just noticing that 'notmuch help ...' outputs to stderr, which
+isn't terribly intuitive.  For example, the obvious invocation:
+
+  notmuch help | less
+
+=2E..isn't terribly helpful.
+
+I've attached a patch that lets usage() take a FILE * argument so that
+you can output to stderr in response to usage errors, and stdout in
+response to an explicit request.
+
+--=20
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+
+--z6Eq5LdranGa6ru8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="notmuch-help.patch"
+Content-Transfer-Encoding: quoted-printable
+
+diff --git a/notmuch.c b/notmuch.c
+index c47e640..a35cb99 100644
+--- a/notmuch.c
++++ b/notmuch.c
+@@ -157,23 +157,23 @@ command_t commands[] =3D {
+ };
+=20
+ static void
+-usage (void)
++usage (FILE *out)
+ {
+     command_t *command;
+     unsigned int i;
+=20
+-    fprintf (stderr, "Usage: notmuch <command> [args...]\n");
+-    fprintf (stderr, "\n");
+-    fprintf (stderr, "Where <command> and [args...] are as follows:\n");
+-    fprintf (stderr, "\n");
++    fprintf (out, "Usage: notmuch <command> [args...]\n");
++    fprintf (out, "\n");
++    fprintf (out, "Where <command> and [args...] are as follows:\n");
++    fprintf (out, "\n");
+=20
+     for (i =3D 0; i < ARRAY_SIZE (commands); i++) {
+ 	command =3D &commands[i];
+=20
+-	fprintf (stderr, "\t%s\t%s\n\n", command->name, command->summary);
++	fprintf (out, "\t%s\t%s\n\n", command->name, command->summary);
+     }
+=20
+-    fprintf (stderr, "Use \"notmuch help <command>\" for more details on e=
+ach command.\n\n");
++    fprintf (out, "Use \"notmuch help <command>\" for more details on each=
+ command.\n\n");
+ }
+=20
+ static int
+@@ -183,8 +183,8 @@ notmuch_help_command (unused (void *ctx), int argc, cha=
+r *argv[])
+     unsigned int i;
+=20
+     if (argc =3D=3D 0) {
+-	fprintf (stderr, "The notmuch mail system.\n\n");
+-	usage ();
++	fprintf (stdout, "The notmuch mail system.\n\n");
++	usage (stdout);
+ 	return 0;
+     }
+=20
+
+--z6Eq5LdranGa6ru8--
+
+--L6iaP+gRLNZHKoI4
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBCAAGBQJLA0a1AAoJENdGlQYxQazYr78IAJtqTWIpBqSdOWqTzt/r4XNn
+KJ5mWAoNfq4H+3kx3xoWOFYS7qAYeJoHQWCDbMdb+zEXvPX6hMFn9+OxRN+N5FdQ
+uxGTugSG9xSsK28oGDCQUtr5uheo+tH0jygPjI+LTD97vjUYS4K2qzhLGFJmpLcj
+1akMJXM0gSdPZT8dJyjxvC15pgboLspE4+b6jexXmd4UoFvXgqvjkYHeV4Wk+s0L
+xu+HkCGXL9WHYc3t171fFAru4Zd1AUxFQl4BZ2Y+OqRZUrD28Mtz3zGQxbJQoifl
+JFrgPAWioLN71SkVq/y+efjvGSl0osPpKU5dftMmyY1zV7k7mMlO08ZSJU+wANA=
+=Iijt
+-----END PGP SIGNATURE-----
+
+--L6iaP+gRLNZHKoI4--
+
+--===============1359248349==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============1359248349==--
+

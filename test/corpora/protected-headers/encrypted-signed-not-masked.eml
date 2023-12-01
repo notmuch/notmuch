@@ -1,0 +1,33 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Rhinoceros dinner
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <encrypted-signed-not-masked@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAhRhcdC3r33MMW+D1PgLAoIhstxnEWOjI0s5wyH2gKTIw
+ceJ7nVvmnqLNWbEaoLp2tVH1+cI4guvgqzV60BoxNU5G5YMGqzMS4VQ47N4BENmn
+0sDEAWcBT1+PGFlXAeotmryF5ErMXesEVJJHru/KHZxsP3wwRp3qZjrwIWVgVlVo
+SpJJ+hwIRqCTbdsw0ejKY0+BJwQ/z+GPmYkWE+ARxkzwMzfA47PW+iNudrQNEJuu
+ALnsbyVX0/JA6E8jhvIA2OHb6G2yqFA499I6kWiSkT3m2SikuyKGybwWbaUDZVJW
+Y+JN2L8snDUHJKfl5JMhAgu2+fx/joE9PxM6fdx8rJJbpmTrPqrYf6vYyuq5BGYV
+snGJozwiN/cqR+PruMT7i5/Dhs/EDl3Z9D8iH7FEDtIzpSJNvGFIHetXC4JXgO7d
+C48g+0uuUL3SSuZviz+OgLJbyDu1Pc3tCrtBUs0zYJGio5ghJljU5tUnCNhbBwd7
+oWgYxOmSzbZrs73E5Lpvnq+juZpXSGNoYzaZHacp2FTpo0LlZ2k6o8kx6eYfOlHs
+JN+43CnzTnR6eZYkfjIaBbjYKi0rMH2DRJjMXyeYRLjEi9ET2fFX3WWn487snIjw
+om8EPhsOxQ==
+=wKPm
+-----END PGP MESSAGE-----
+--=-=-=--

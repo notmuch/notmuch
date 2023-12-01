@@ -1,0 +1,106 @@
+Build and install instructions for Notmuch.
+
+Compilation commands
+--------------------
+The process for compiling and installing Notmuch is the very standard
+sequence of:
+
+	./configure
+	make
+	sudo make install
+
+In fact, if you don't plan to pass any arguments to the configure
+script, then you can skip that step and just start with "make", (which
+will call configure for you). See this command:
+
+	./configure --help
+
+for detailed documentation of the things you can control at the
+configure stage.
+
+Dependencies
+------------
+Notmuch depends on four libraries: Xapian, GMime 3.0,
+Talloc, and zlib which are each described below:
+
+	Xapian
+	------
+	Xapian is the search-engine library underlying Notmuch.
+
+	It provides all the real machinery of indexing and searching,
+	(including the very nice parsing of the query string).
+
+	Xapian is available from https://xapian.org
+
+	GMime
+	-----
+	GMime provides decoding of MIME email messages for Notmuch.
+
+	Without GMime, Notmuch would not be able to extract and index
+	the actual text from email message encoded as BASE64, etc.
+
+	GMime is available from https://github.com/jstedfast/gmime
+
+        Sfsexp
+        ------
+
+        sfsexp is the "small fast s-expression" library. Notmuch
+        optionally use it to provide a second query parser.
+
+        sfsexp is available from https://github.com/mjsottile/sfsexp.
+        In Debian Bookworm and later, install libsexp-dev.
+
+	Talloc
+	------
+	Talloc is a memory-pool allocator used by Notmuch.
+
+	Talloc is an extremely lightweight and easy-to-use tool for
+	allocating memory in a hierarchical fashion and then freeing
+	it with a single call of the top-level handle. Using it has
+	made development of Notmuch much easier and much less prone to
+	memory leaks.
+
+	Talloc is available from https://talloc.samba.org/
+
+	zlib
+	----
+
+	zlib is an extremely popular compression library. It is used
+	by Xapian, so if you installed that you will already have
+	zlib. You may need to install the zlib headers separately.
+
+	Notmuch needs the transparent write feature of zlib introduced
+	in version 1.2.5.2 (Dec. 2011).
+
+	zlib is available from https://zlib.net
+
+Building Documentation
+----------------------
+
+To build the documentation for notmuch you need at least version 1.0
+of sphinx (Jul. 2010).
+
+Sphinx is available from www.sphinx-doc.org.
+
+To install the documentation as "info" pages, you will need the
+additional tools makeinfo and install-info.
+
+Installing Dependencies from Packages
+-------------------------------------
+
+On a modern, package-based operating system you can install all of the
+dependencies with a single simple command line. For example:
+
+  For Debian and similar:
+
+        sudo apt-get install libxapian-dev libgmime-3.0-dev libtalloc-dev zlib1g-dev python3-sphinx texinfo install-info
+
+  For Fedora and similar:
+
+	sudo dnf install xapian-core-devel gmime30-devel libtalloc-devel zlib-devel python3-sphinx texinfo info
+
+On other systems, a similar command can be used, but the details of
+the package names may be different.
+
+	
+

@@ -1,0 +1,27 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 13:24:13 -0800
+Subject: [notmuch] Working with Maildir storage?
+In-Reply-To: <20091117203301.GV3165@dottiness.seas.harvard.edu>
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+	<87iqd9rn3l.fsf@vertex.dottedmag>
+	<20091117203301.GV3165@dottiness.seas.harvard.edu>
+Message-ID: <yunaayketfm.fsf@aiko.keithp.com>
+
+On Tue, 17 Nov 2009 15:33:01 -0500, Lars Kellogg-Stedman <lars at seas.harvard.edu> wrote:
+> > See the patch just posted here.
+
+I've also pushed a slightly more complicated (and complete) fix to my
+private notmuch repository
+
+git://keithp.com/git/notmuch
+
+> Is the list archived anywhere?
+
+Oops. Looks like Carl's mail server is broken. He's traveling to
+Barcelona today and so it won't get fixed for a while.
+
+Thanks to everyone for trying out notmuch!
+
+-keith
+

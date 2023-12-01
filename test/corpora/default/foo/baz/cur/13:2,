@@ -1,0 +1,178 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 13:32:45 -0800
+Subject: [notmuch] [PATCH] Make notmuch-show 'X' (and 'x') commands remove
+	inbox (and unread) tags
+Message-ID: <1258493565-13508-1-git-send-email-keithp@keithp.com>
+
+When closing a thread view, mark the thread as archived by removing
+the "inbox" tag, and for the 'x' variant, the "unread" tag as well,
+then kill the buffer and update the search window view as well.
+
+This makes 'x' much the same as 'a', but instead of taking you to the
+next message, it takes you back to the search window instead.
+
+Signed-off-by: Keith Packard <keithp at keithp.com>
+---
+ notmuch.el |   86 ++++++++++++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 67 insertions(+), 19 deletions(-)
+
+diff --git a/notmuch.el b/notmuch.el
+index 638d49d..7b0d72c 100644
+--- a/notmuch.el
++++ b/notmuch.el
+@@ -31,8 +31,8 @@
+     ; Will be much preferable to switch to direct manipulation for
+     ; toggling visibility of these components. Probably using
+     ; overlays-at to query and manipulate the current overlay.
+-    (define-key map "a" 'notmuch-show-archive-thread)
+-    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
++    (define-key map "a" 'notmuch-show-mark-read-archive-thread-next-thread)
++    (define-key map "A" 'notmuch-show-archive-thread-next-thread)
+     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
+     (define-key map "c" 'notmuch-show-toggle-citations-visible)
+     (define-key map "h" 'notmuch-show-toggle-headers-visible)
+@@ -47,7 +47,8 @@
+     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
+     (define-key map "v" 'notmuch-show-view-all-mime-parts)
+     (define-key map "w" 'notmuch-show-view-raw-message)
+-    (define-key map "x" 'kill-this-buffer)
++    (define-key map "x" 'notmuch-show-mark-read-archive-thread-kill-buffer)
++    (define-key map "X" 'notmuch-show-archive-thread-kill-buffer)
+     (define-key map "+" 'notmuch-show-add-tag)
+     (define-key map "-" 'notmuch-show-remove-tag)
+     (define-key map (kbd "DEL") 'notmuch-show-rewind)
+@@ -183,7 +184,33 @@ Unlike builtin `next-line' this version accepts no arguments."
+ 			 (cons (notmuch-show-get-message-id) nil)))
+ 	  (notmuch-show-set-tags (sort (set-difference tags toremove :test 'string=) 'string<))))))
+ 
+-(defun notmuch-show-archive-thread-maybe-mark-read (markread)
++(defun notmuch-show-next-thread (markread)
++  (let ((parent-buffer notmuch-show-parent-buffer))
++    (kill-this-buffer)
++    (if parent-buffer
++	(progn
++	  (switch-to-buffer parent-buffer)
++	  (forward-line)
++	  (notmuch-search-show-thread)))))
++  
++(defun notmuch-delete-tags (to-remove from)
++  (if to-remove
++      (delete (car to-remove) (notmuch-delete-tags (cdr to-remove) from))
++    from))
++
++(defun notmuch-kill-message-buffer (markread)
++  (let ((parent-buffer notmuch-show-parent-buffer))
++    (kill-this-buffer)
++    (if parent-buffer
++	(progn
++	  (switch-to-buffer parent-buffer)
++	  (let ((tags (notmuch-search-get-tags)))
++	    (setq tags (delete "inbox" tags))
++	    (if markread (setq tags (delete "unread" tags)))
++	    (notmuch-search-set-tags tags))
++	  (forward-line)))))
++
++(defun notmuch-show-archive-thread-maybe-mark-read (markread shownext)
+   (save-excursion
+     (goto-char (point-min))
+     (while (not (eobp))
+@@ -194,15 +221,9 @@ Unlike builtin `next-line' this version accepts no arguments."
+ 	  (forward-char))
+       (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
+ 	  (goto-char (point-max)))))
+-  (let ((parent-buffer notmuch-show-parent-buffer))
+-    (kill-this-buffer)
+-    (if parent-buffer
+-	(progn
+-	  (switch-to-buffer parent-buffer)
+-	  (forward-line)
+-	  (notmuch-search-show-thread)))))
++  (if shownext (notmuch-show-next-thread markread) (notmuch-kill-message-buffer markread)))
+ 
+-(defun notmuch-show-mark-read-then-archive-thread ()
++(defun notmuch-show-mark-read-archive-thread-next-thread ()
+   "Remove \"unread\" tag from each message, then archive and show next thread.
+ 
+ Archive each message currrently shown by removing the \"unread\"
+@@ -215,9 +236,22 @@ being delivered to the same thread. It does not archive the
+ entire thread, but only the messages shown in the current
+ buffer."
+   (interactive)
+-  (notmuch-show-archive-thread-maybe-mark-read t))
++  (notmuch-show-archive-thread-maybe-mark-read t t))
++
++(defun notmuch-show-mark-read-archive-thread-kill-buffer ()
++  "Remove \"unread\" tag from each message, then archive and kill the buffer.
++
++Archive each message currrently shown by removing the \"unread\"
++and \"inbox\" tag from each. Then kill this buffer.
++
++Note: This command is safe from any race condition of new messages
++being delivered to the same thread. It does not archive the
++entire thread, but only the messages shown in the current
++buffer."
++  (interactive)
++  (notmuch-show-archive-thread-maybe-mark-read t nil))
+ 
+-(defun notmuch-show-archive-thread ()
++(defun notmuch-show-archive-thread-next-thread ()
+   "Archive each message in thread, and show next thread from search.
+ 
+ Archive each message currrently shown by removing the \"inbox\"
+@@ -229,7 +263,20 @@ being delivered to the same thread. It does not archive the
+ entire thread, but only the messages shown in the current
+ buffer."
+   (interactive)
+-  (notmuch-show-archive-thread-maybe-mark-read nil))
++  (notmuch-show-archive-thread-maybe-mark-read nil t))
++
++(defun notmuch-show-archive-thread-kill-buffer ()
++  "Archive each message in thread, and kill the thread buffer.
++
++Archive each message currrently shown by removing the \"inbox\"
++tag from each. Then kill this buffer.
++
++Note: This command is safe from any race condition of new messages
++being delivered to the same thread. It does not archive the
++entire thread, but only the messages shown in the current
++buffer."
++  (interactive)
++  (notmuch-show-archive-thread-maybe-mark-read nil t))
+ 
+ (defun notmuch-show-view-raw-message ()
+   "View the raw email of the current message."
+@@ -297,7 +344,7 @@ by searching backward)."
+       (not (re-search-forward notmuch-show-message-begin-regexp nil t)))))
+ 
+ (defun notmuch-show-message-unread-p ()
+-  "Preficate testing whether current message is unread."
++  "Predicate testing whether current message is unread."
+   (member "unread" (notmuch-show-get-tags)))
+ 
+ (defun notmuch-show-next-message ()
+@@ -434,7 +481,7 @@ which this thread was originally shown."
+       (let ((last (notmuch-show-last-message-p)))
+ 	(notmuch-show-mark-read-then-next-open-message)
+ 	(if last
+-	    (notmuch-show-archive-thread))))))
++	    (notmuch-show-archive-thread-next-thread))))))
+ 
+ (defun notmuch-show-markup-citations-region (beg end depth)
+   (goto-char beg)
+@@ -618,8 +665,9 @@ messages. Each time you navigate away from a message with
+ 
+ You can add or remove tags from the current message with '+' and
+ '-'.  You can also archive all messages in the current
+-view, (remove the \"inbox\" tag from each), with
+-`notmuch-show-archive-thread' (bound to 'a' by default).
++view, (remove the \"inbox\" tag from each), with either
++`notmuch-show-archive-thread-next-thread' (bound to 'a' by default) or
++`notmuch-show-archive-thread-kill-buffer' (bound to 'x' by default).
+ 
+ \\{notmuch-show-mode-map}"
+   (interactive)
+-- 
+1.6.5.2
+
+

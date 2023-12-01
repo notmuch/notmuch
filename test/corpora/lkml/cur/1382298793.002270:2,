@@ -1,0 +1,68 @@
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 41/44] net/ipv6/mcast.c: Remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:05:00 -0800
+Lines: 26
+Message-ID: <1f3e1f7e454f3c62b66fc5f3e1e1ed90d62b7fb0.1289789605.git.joe@perches.com>
+References: <cover.1289789604.git.joe@perches.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+	"Pekka Savola (ipv6)" <pekkas@netcore.fi>,
+	James Morris <jmorris@namei.org>,
+	Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+	Patrick McHardy <kaber@trash.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+X-From: netdev-owner@vger.kernel.org Mon Nov 15 04:07:30 2010
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1PHpPi-0001H8-UT
+	for linux-netdev-2@lo.gmane.org; Mon, 15 Nov 2010 04:07:27 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S933051Ab0KODGq (ORCPT <rfc822;linux-netdev-2@m.gmane.org>);
+	Sun, 14 Nov 2010 22:06:46 -0500
+Received: from mail.perches.com ([173.55.12.10]:1258 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932980Ab0KODGC (ORCPT <rfc822;netdev@vger.kernel.org>);
+	Sun, 14 Nov 2010 22:06:02 -0500
+Received: from Joe-Laptop.home (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 8F37A24377;
+	Sun, 14 Nov 2010 19:04:29 -0800 (PST)
+X-Mailer: git-send-email 1.7.3.1.g432b3.dirty
+In-Reply-To: <cover.1289789604.git.joe@perches.com>
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062289>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/ipv6/mcast.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/ipv6/mcast.c b/net/ipv6/mcast.c
+index d1444b9..9c50745 100644
+--- a/net/ipv6/mcast.c
++++ b/net/ipv6/mcast.c
+@@ -257,7 +257,7 @@ static struct inet6_dev *ip6_mc_find_dev_rcu(struct net *net,
+ 		return NULL;
+ 	idev = __in6_dev_get(dev);
+ 	if (!idev)
+-		return NULL;;
++		return NULL;
+ 	read_lock_bh(&idev->lock);
+ 	if (idev->dead) {
+ 		read_unlock_bh(&idev->lock);
+-- 
+1.7.3.1.g432b3.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

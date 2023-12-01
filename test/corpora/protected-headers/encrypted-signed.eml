@@ -1,0 +1,33 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <encrypted-signed@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAliiUK1XTMeUUmjJ6n4yEEBGVPmQuVTD4wdJZx4r2J3Mw
+uSVIq8qBJ7NrZfvDa63807usyKpk0Io3tdH83hn3wIKKmUMTroaRZMP1BdJ3aVdh
+0sDEAf18AhE5POknHzzolNbTXmQkPNspdNpu0ANdKkukvUZjfWvssZ1WN3jB08Fc
+Wr2Byez+UyLggj1bm+HuzbcZGPfyMOpoajFG0+yK4Ccqpf3XapNJn7v1ic2QhR/B
+pmWpJR0cXDigNLYQ/RoNEiSur2+0hzeVkDiYQtDYD02Cv4rnhyJdCalyriRaLOZr
+4Tau4xfK9PdOydahZZHEFllDU+yfEb9xtBZ+DEGh5AyR1/sG8ORnJc+5m/z54zmJ
+W3MmZ7M+4O1q5l5MbDwHq1TrQF5R9JSXyeGTW2XscsIPdvY5bExMwyMoW/XY4E8+
+GJ12UVpC/EWt2Nisfx2LhIoxtwaZm2r0Xkt6hY5DSMkpHLZtGPOOe1QxtXF1qXH2
+owTZynRxlmaWslOXdhtFRHyfGiFK4pNoV6fVB0e2khKKfXynN9Zx99GJ+DoJsOFT
+AYOadP1WlbIbSaimv/xSpaijE2XReKTLfN6aK1vSe90r96nCWr31fcd6x9ax0nVx
+jDReMRJrHA==
+=8mRD
+-----END PGP MESSAGE-----
+--=-=-=--

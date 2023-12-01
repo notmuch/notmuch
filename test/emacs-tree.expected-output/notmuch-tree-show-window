@@ -1,0 +1,41 @@
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
+Subject: [notmuch] Working with Maildir storage?
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 14:00:54 -0500
+
+[ multipart/mixed ]
+[ multipart/signed ]
+[ Unknown key ID 0xD74695063141ACD8 or unsupported algorithm ]
+[ text/plain ]
+I saw the LWN article and decided to take a look at notmuch.  I'm
+currently using mutt and mairix to index and read a collection of
+Maildir mail folders (around 40,000 messages total).
+
+notmuch indexed the messages without complaint, but my attempt at
+searching bombed out. Running, for example:
+
+  notmuch search storage
+
+Resulted in 4604 lines of errors along the lines of:
+
+  Error opening
+  /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostname,U=3026:2,S:
+  Too many open files
+
+I'm curious if this is expected behavior (i.e., notmuch does not work
+with Maildir) or if something else is going on.
+
+Cheers,
+
+[ 4-line signature. Click/Enter to show. ]
+-- 
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+[ application/pgp-signature ]
+[ text/plain ]
+[ 4-line signature. Click/Enter to show. ]
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch

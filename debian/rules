@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+include /usr/share/dpkg/architecture.mk
+
+ifeq ($(DEB_HOST_ARCH),ppc64el)
+	export NOTMUCH_SKIP_TESTS = T810-tsan
+endif
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@ --with python3,elpa,sphinxdoc
+
+override_dh_auto_configure:
+	BASHCMD=/bin/bash ./configure --prefix=/usr \
+		--libdir=/usr/lib/${DEB_TARGET_MULTIARCH} \
+		--includedir=/usr/include \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--sysconfdir=/etc \
+		--zshcompletiondir=/usr/share/zsh/vendor-completions \
+		--localstatedir=/var
+
+override_dh_auto_build:
+	dh_auto_build -- V=1 all sphinx-html
+	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch2 dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python-cffi
+	$(MAKE) -C contrib/notmuch-mutt
+
+override_dh_auto_clean:
+	dh_auto_clean
+	PYBUILD_NAME=notmuch dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
+	dh_auto_clean --sourcedirectory bindings/ruby
+	$(MAKE) -C contrib/notmuch-mutt clean
+
+override_dh_auto_install:
+	dh_auto_install
+	PYBUILD_NAME=notmuch dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python
+	PYBUILD_NAME=notmuch2 dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python-cffi
+	$(MAKE) -C contrib/notmuch-mutt DESTDIR=$(CURDIR)/debian/tmp install
+	dh_auto_install --sourcedirectory bindings/ruby

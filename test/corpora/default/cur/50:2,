@@ -1,0 +1,39 @@
+From: "Chris Wilson" <chris@chris-wilson.co.uk>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 11:34:54 +0000
+Subject: [notmuch] [PATCH 1/2] Makefile: evaluate pkg-config once
+Message-ID: <1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk>
+
+Currently the same `pkg-config ...` is executed for every target, so
+just store the results in a variable.
+---
+ Makefile |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 96aaa73..023b2ec 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,15 +4,16 @@ CFLAGS=-O2
+ 
+ # Additional flags that we will append to whatever the user set.
+ # These aren't intended for the user to manipulate.
+-extra_cflags = `pkg-config --cflags glib-2.0 gmime-2.4 talloc`
+-extra_cxxflags = `xapian-config --cxxflags`
++extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
++extra_cxxflags := $(shell xapian-config --cxxflags)
+ 
+ # Now smash together user's values with our extra values
+ override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
+ override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
+ 
+-override LDFLAGS += `pkg-config --libs glib-2.0 gmime-2.4 talloc` \
+-			`xapian-config --libs`
++override LDFLAGS += \
++	$(shell pkg-config --libs glib-2.0 gmime-2.4 talloc) \
++	$(shell xapian-config --libs)
+ 
+ # Include our local Makefile.local first so that its first target is default
+ include Makefile.local
+-- 
+1.6.5.2

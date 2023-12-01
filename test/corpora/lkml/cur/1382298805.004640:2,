@@ -1,0 +1,69 @@
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH 2/6] x86: ifdef enable_IR_x2apic() out
+Date: Mon, 14 Feb 2011 12:03:40 +0100
+Lines: 15
+Message-ID: <20110214110340.GC7140@elte.hu>
+References: <1297677612-12405-1-git-send-email-henne@nachtwindheim.de>
+ <1297677612-12405-2-git-send-email-henne@nachtwindheim.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Cc: mingo@readhat.com, tglx@linutronix.de, hpa@zytor.com,
+	x86@kernel.org, tj@kernel.org, yinghai@kernel.org,
+	ak@linux.intel.com, robert.richter@amd.com,
+	linux-kernel@vger.kernel.org
+To: Henrik Kretzschmar <henne@nachtwindheim.de>
+X-From: linux-kernel-owner@vger.kernel.org Mon Feb 14 12:04:03 2011
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PowDr-0002js-9K
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 14 Feb 2011 12:04:03 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1753399Ab1BNLDz (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 14 Feb 2011 06:03:55 -0500
+Received: from mx2.mail.elte.hu ([157.181.151.9]:54341 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab1BNLDx (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 14 Feb 2011 06:03:53 -0500
+Received: from elvis.elte.hu ([157.181.1.14])
+	by mx2.mail.elte.hu with esmtp (Exim)
+	id 1PowDY-0002Mp-4N
+	from <mingo@elte.hu>; Mon, 14 Feb 2011 12:03:45 +0100
+Received: by elvis.elte.hu (Postfix, from userid 1004)
+	id 458B63E2369; Mon, 14 Feb 2011 12:03:40 +0100 (CET)
+Content-Disposition: inline
+In-Reply-To: <1297677612-12405-2-git-send-email-henne@nachtwindheim.de>
+User-Agent: Mutt/1.5.20 (2009-08-17)
+Received-SPF: neutral (mx2.mail.elte.hu: 157.181.1.14 is neither permitted nor denied by domain of elte.hu) client-ip=157.181.1.14; envelope-from=mingo@elte.hu; helo=elvis.elte.hu;
+X-ELTE-SpamScore: -2.0
+X-ELTE-SpamLevel: 
+X-ELTE-SpamCheck: no
+X-ELTE-SpamVersion: ELTE 2.0 
+X-ELTE-SpamCheck-Details: score=-2.0 required=5.9 tests=BAYES_00 autolearn=no SpamAssassin version=3.2.5
+	-2.0 BAYES_00               BODY: Bayesian spam probability is 0 to 1%
+	[score: 0.0000]
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099672>
+
+
+
+* Henrik Kretzschmar <henne@nachtwindheim.de> wrote:
+
+> +#ifdef CONFIG_X86_64
+>  extern void enable_IR_x2apic(void);
+> +#endif
+
+Cannot we use the CONFIG_X86_X2APIC Kconfig switch here, instead of CONFIG_X86_64?
+
+enable_IR_x2apic() is not a 64-bit CPU feature.
+
+Thanks,
+
+	Ingo
+
+

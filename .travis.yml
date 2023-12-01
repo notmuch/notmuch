@@ -1,0 +1,29 @@
+language: c
+
+dist: bionic
+
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:xapian-backports/ppa'
+    packages:
+    - dtach
+    - libxapian-dev
+    - libgmime-3.0-dev
+    - libtalloc-dev
+    - python3-sphinx
+    - python3-cffi
+    - python3-pytest
+    - python3-setuptools
+    - libpython3-all-dev
+    - gpgsm
+
+script:
+  - ./configure
+  - make test
+
+notifications:
+  irc:
+    channels:
+      - "irc.libera.chat#notmuch"
+    on_success: change

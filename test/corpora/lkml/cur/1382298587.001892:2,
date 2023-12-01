@@ -1,0 +1,254 @@
+From: Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>
+Subject: Re: [RFC][PATCH 04/10] cifs: define server-level cache index
+ objects and register them with FS-Cache
+Date: Tue, 22 Jun 2010 17:52:14 -0400
+Lines: 204
+Message-ID: <20100622175214.4c56234f@corrin.poochiereds.net>
+References: <yes>
+	<1277220198-3522-1-git-send-email-sjayaraman@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Cc: Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Tue Jun 22 23:50:23 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1ORBMJ-0005WJ-Lj
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Tue, 22 Jun 2010 23:50:20 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1750777Ab0FVVuS (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Tue, 22 Jun 2010 17:50:18 -0400
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:55670 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749Ab0FVVuR (ORCPT
+	<rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>); Tue, 22 Jun 2010 17:50:17 -0400
+X-Authority-Analysis: v=1.1 cv=8MuG1bpxLlSbaYWWtODGdBCK7StbFcRsMXhWm1NVx/I= c=1 sm=0 a=wpY4Lvx3kJcA:10 a=UBIxAjGgU1YA:10 a=kj9zAlcOel0A:10 a=ld/erqUjW76FpBUqCqkKeA==:17 a=VwQbUJbxAAAA:8 a=qYub2k57AAAA:8 a=uYIlwBZcjrF9BUCsR4kA:9 a=OO1ZLbZb6q4TPdC5pcAA:7 a=jFshslHAf8hJVDYUYRlYN4n-w5YA:4 a=CjuIK1q_8ugA:10 a=x8gzFH9gYPwA:10 a=0kPLrQdw3YYA:10 a=jBoGP612-tUA:10 a=t5DF_bUGhurCx8LQ:21 a=W6P_Gh1y2IibdbqZ:21 a=ld/erqUjW76FpBUqCqkKeA==:117
+X-Cloudmark-Score: 0
+X-Originating-IP: 71.70.153.3
+Received: from [71.70.153.3] ([71.70.153.3:59154] helo=mail.poochiereds.net)
+	by cdptpa-oedge03.mail.rr.com (envelope-from <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>)
+	(ecelerity 2.2.2.39 r()) with ESMTP
+	id AC/10-00502-710312C4; Tue, 22 Jun 2010 21:50:16 +0000
+Received: from corrin.poochiereds.net (unknown [65.88.2.5])
+	by mail.poochiereds.net (Postfix) with ESMTPSA id 03B11580F4;
+	Tue, 22 Jun 2010 17:50:14 -0400 (EDT)
+In-Reply-To: <1277220198-3522-1-git-send-email-sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-Mailer: Claws Mail 3.7.6 (GTK+ 2.20.1; x86_64-redhat-linux-gnu)
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1001918>
+
+On Tue, 22 Jun 2010 20:53:18 +0530
+Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+
+> Define server-level cache index objects (as managed by TCP_ServerInfo structs).
+> Each server object is created in the CIFS top-level index object and is itself
+> an index into which superblock-level objects are inserted.
+> 
+> Currently, the server objects are keyed by hostname.
+> 
+> Signed-off-by: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+> ---
+>  fs/cifs/Makefile   |    2 +-
+>  fs/cifs/cache.c    |   25 +++++++++++++++++++++++++
+>  fs/cifs/cifsglob.h |    3 +++
+>  fs/cifs/connect.c  |    4 ++++
+>  fs/cifs/fscache.c  |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/cifs/fscache.h  |   12 ++++++++++++
+>  6 files changed, 92 insertions(+), 1 deletion(-)
+>  create mode 100644 fs/cifs/fscache.c
+> 
+> Index: cifs-2.6/fs/cifs/Makefile
+> ===================================================================
+> --- cifs-2.6.orig/fs/cifs/Makefile
+> +++ cifs-2.6/fs/cifs/Makefile
+> @@ -12,4 +12,4 @@ cifs-$(CONFIG_CIFS_UPCALL) += cifs_spneg
+>  
+>  cifs-$(CONFIG_CIFS_DFS_UPCALL) += dns_resolve.o cifs_dfs_ref.o
+>  
+> -cifs-$(CONFIG_CIFS_FSCACHE) += cache.o
+> +cifs-$(CONFIG_CIFS_FSCACHE) += fscache.o cache.o
+> Index: cifs-2.6/fs/cifs/cache.c
+> ===================================================================
+> --- cifs-2.6.orig/fs/cifs/cache.c
+> +++ cifs-2.6/fs/cifs/cache.c
+> @@ -51,3 +51,28 @@ void cifs_fscache_unregister(void)
+>  	fscache_unregister_netfs(&cifs_fscache_netfs);
+>  }
+>  
+> +/*
+> + * Server object currently keyed by hostname
+> + */
+> +static uint16_t cifs_server_get_key(const void *cookie_netfs_data,
+> +				   void *buffer, uint16_t maxbuf)
+> +{
+> +	const struct TCP_Server_Info *server = cookie_netfs_data;
+> +	uint16_t len = strnlen(server->hostname, sizeof(server->hostname));
+> +
+
+Would a tuple of address/family/port be a better choice here? Imagine I
+mount "foo" and then later mount "foor.bar.baz". If they are the same
+address and only the UNC differs, then you won't get the benefit of
+the cache, right?
+
+> +	if (len > maxbuf)
+> +		return 0;
+> +
+> +	memcpy(buffer, server->hostname, len);
+> +
+> +	return len;
+> +}
+> +
+> +/*
+> + * Server object for FS-Cache
+> + */
+> +const struct fscache_cookie_def cifs_fscache_server_index_def = {
+> +	.name = "CIFS.server",
+> +	.type = FSCACHE_COOKIE_TYPE_INDEX,
+> +	.get_key = cifs_server_get_key,
+> +};
+> Index: cifs-2.6/fs/cifs/cifsglob.h
+> ===================================================================
+> --- cifs-2.6.orig/fs/cifs/cifsglob.h
+> +++ cifs-2.6/fs/cifs/cifsglob.h
+> @@ -193,6 +193,9 @@ struct TCP_Server_Info {
+>  	bool	sec_mskerberos;		/* supports legacy MS Kerberos */
+>  	bool	sec_kerberosu2u;	/* supports U2U Kerberos */
+>  	bool	sec_ntlmssp;		/* supports NTLMSSP */
+> +#ifdef CONFIG_CIFS_FSCACHE
+> +	struct fscache_cookie   *fscache; /* client index cache cookie */
+> +#endif
+>  };
+>  
+>  /*
+> Index: cifs-2.6/fs/cifs/connect.c
+> ===================================================================
+> --- cifs-2.6.orig/fs/cifs/connect.c
+> +++ cifs-2.6/fs/cifs/connect.c
+> @@ -48,6 +48,7 @@
+>  #include "nterr.h"
+>  #include "rfc1002pdu.h"
+>  #include "cn_cifs.h"
+> +#include "fscache.h"
+>  
+>  #define CIFS_PORT 445
+>  #define RFC1001_PORT 139
+> @@ -1453,6 +1454,8 @@ cifs_put_tcp_session(struct TCP_Server_I
+>  		return;
+>  	}
+>  
+> +	cifs_fscache_release_client_cookie(server);
+> +
+>  	list_del_init(&server->tcp_ses_list);
+>  	write_unlock(&cifs_tcp_ses_lock);
+>  
+> @@ -1572,6 +1575,7 @@ cifs_get_tcp_session(struct smb_vol *vol
+>  		goto out_err;
+>  	}
+>  
+> +	cifs_fscache_get_client_cookie(tcp_ses);
+>  	/* thread spawned, put it on the list */
+>  	write_lock(&cifs_tcp_ses_lock);
+>  	list_add(&tcp_ses->tcp_ses_list, &cifs_tcp_ses_list);
+> Index: cifs-2.6/fs/cifs/fscache.c
+> ===================================================================
+> --- /dev/null
+> +++ cifs-2.6/fs/cifs/fscache.c
+> @@ -0,0 +1,47 @@
+> +/*
+> + *   fs/cifs/fscache.c - CIFS filesystem cache interface
+> + *
+> + *   Copyright (c) 2010 Novell, Inc.
+> + *   Authors(s): Suresh Jayaraman (sjayaraman-l3A5Bk7waGM@public.gmane.org>
+> + *
+> + *   This library is free software; you can redistribute it and/or modify
+> + *   it under the terms of the GNU Lesser General Public License as published
+> + *   by the Free Software Foundation; either version 2.1 of the License, or
+> + *   (at your option) any later version.
+> + *
+> + *   This library is distributed in the hope that it will be useful,
+> + *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+> + *   the GNU Lesser General Public License for more details.
+> + *
+> + *   You should have received a copy of the GNU Lesser General Public License
+> + *   along with this library; if not, write to the Free Software
+> + *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+> + */
+> +#include <linux/init.h>
+> +#include <linux/kernel.h>
+> +#include <linux/sched.h>
+> +#include <linux/mm.h>
+> +#include <linux/in6.h>
+> +
+> +#include "fscache.h"
+> +#include "cifsglob.h"
+> +#include "cifs_debug.h"
+> +
+> +void cifs_fscache_get_client_cookie(struct TCP_Server_Info *server)
+> +{
+> +	server->fscache =
+> +		fscache_acquire_cookie(cifs_fscache_netfs.primary_index,
+> +				&cifs_fscache_server_index_def, server);
+> +	cFYI(1, "CIFS: get client cookie (0x%p/0x%p)\n",
+> +				server, server->fscache);
+> +}
+> +
+> +void cifs_fscache_release_client_cookie(struct TCP_Server_Info *server)
+> +{
+> +	cFYI(1, "CIFS: release client cookie (0x%p/0x%p)\n",
+> +				server, server->fscache);
+> +	fscache_relinquish_cookie(server->fscache, 0);
+> +	server->fscache = NULL;
+> +}
+> +
+> Index: cifs-2.6/fs/cifs/fscache.h
+> ===================================================================
+> --- cifs-2.6.orig/fs/cifs/fscache.h
+> +++ cifs-2.6/fs/cifs/fscache.h
+> @@ -27,14 +27,26 @@
+>  #ifdef CONFIG_CIFS_FSCACHE
+>  
+>  extern struct fscache_netfs cifs_fscache_netfs;
+> +extern const struct fscache_cookie_def cifs_fscache_server_index_def;
+>  
+>  extern int cifs_fscache_register(void);
+>  extern void cifs_fscache_unregister(void);
+>  
+> +/*
+> + * fscache.c
+> + */
+> +extern void cifs_fscache_get_client_cookie(struct TCP_Server_Info *);
+> +extern void cifs_fscache_release_client_cookie(struct TCP_Server_Info *);
+> +
+>  #else /* CONFIG_CIFS_FSCACHE */
+>  static inline int cifs_fscache_register(void) { return 0; }
+>  static inline void cifs_fscache_unregister(void) {}
+>  
+> +static inline void
+> +cifs_fscache_get_client_cookie(struct TCP_Server_Info *server) {}
+> +static inline void
+> +cifs_fscache_get_client_cookie(struct TCP_Server_Info *server); {}
+> +
+>  #endif /* CONFIG_CIFS_FSCACHE */
+>  
+>  #endif /* _CIFS_FSCACHE_H */
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-cifs" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>
+
+

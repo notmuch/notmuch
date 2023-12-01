@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+# Run tests
+#
+# Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
+#
+# Adapted from a Makefile to a shell script by Carl Worth (2010)
+
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+    echo "Error: The notmuch test suite requires a bash version >= 4.0"
+    echo "due to use of associative arrays within the test suite."
+    echo "Please try again with a newer bash (or help us fix the"
+    echo "test suite to be more portable). Thanks."
+    exit 1
+fi
+
+# Ensure NOTMUCH_SRCDIR and NOTMUCH_BUILDDIR are set.
+. $(dirname "$0")/export-dirs.sh || exit 1
+
+set -eu
+
+# Where to run the tests
+# XXX FIXME this code is duplicated with test-lib.sh
+if [[ -n "${NOTMUCH_BUILDDIR}" ]]; then
+    TEST_DIRECTORY=$NOTMUCH_BUILDDIR/test
+else
+    TEST_DIRECTORY=$NOTMUCH_SRCDIR/test
+fi
+
+TESTS=
+for test in ${NOTMUCH_TESTS-}; do
+    TESTS="$TESTS $NOTMUCH_SRCDIR/test/$test"
+done
+
+if [ -z "$TESTS" ]; then
+    TESTS="$NOTMUCH_SRCDIR/test/T[0-9][0-9][0-9]-*.sh"
+fi
+
+# Clean up any results from a previous run
+rm -rf $NOTMUCH_BUILDDIR/test/test-results
+
+# Test for timeout utility
+if command -v timeout >/dev/null; then
+    TEST_TIMEOUT=${NOTMUCH_TEST_TIMEOUT:-2m}
+    if [ "$TEST_TIMEOUT" = 0 ]; then
+        TEST_TIMEOUT_CMD=""
+        echo "INFO: timeout disabled"
+    else
+        TEST_TIMEOUT_CMD="timeout $TEST_TIMEOUT"
+        echo "INFO: using $TEST_TIMEOUT timeout for tests"
+    fi
+else
+    TEST_TIMEOUT_CMD=""
+fi
+
+META_FAILURE=
+RES=0
+# Run the tests
+if test -z "${NOTMUCH_TEST_SERIALIZE-}" && command -v parallel >/dev/null ; then
+    test -t 1 && export COLORS_WITHOUT_TTY=t || :
+    if parallel --minversion 0 >/dev/null 2>&1 ; then
+        echo "INFO: running tests with GNU parallel"
+        printf '%s\n' $TESTS | $TEST_TIMEOUT_CMD parallel || RES=$?
+    else
+        echo "INFO: running tests with moreutils parallel"
+        $TEST_TIMEOUT_CMD parallel -- $TESTS || RES=$?
+    fi
+    if [ $RES != 0 ]; then
+        META_FAILURE="parallel test suite returned error code $RES"
+    fi
+else
+    trap 'e=$?; trap - 0; kill ${!-}; exit $e' 0 HUP INT TERM
+    for test in $TESTS; do
+        $TEST_TIMEOUT_CMD $test "$@" &
+        wait $! && ev=0 || ev=$?
+        test $ev = 0 || RES=$ev
+    done
+    trap - 0 HUP INT TERM
+    if [ $RES != 0 ]; then
+        META_FAILURE="some tests failed; first failed returned error code $RES"
+    fi
+fi
+
+# Report results
+RESULT_FILES=
+for file in $TESTS
+do
+    file=${file##*/} # drop leading path components
+    file=${file%.sh} # drop trailing '.sh'
+    RESULT_FILES="$RESULT_FILES $TEST_DIRECTORY/test-results/$file"
+done
+
+echo
+$NOTMUCH_SRCDIR/test/aggregate-results.sh $RESULT_FILES && ev=0 || ev=$?
+
+if [ -n "$META_FAILURE" ]; then
+    printf 'ERROR: %s\n' "$META_FAILURE"
+    if [ $ev = 0 ]; then
+        ev=$RES
+    fi
+fi
+
+# Clean up
+rm -rf $TEST_DIRECTORY/test-results
+
+exit $ev

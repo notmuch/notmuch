@@ -1,0 +1,9 @@
+test_suite@notmuchmail.org (2000-01-01) (encrypted inbox)
+Subject: Here is the password
+To: test_suite@notmuchmail.org
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+
+[ multipart/encrypted ]
+[ Unknown encryption status ]
+[ application/pgp-encrypted ]
+[ application/octet-stream ]

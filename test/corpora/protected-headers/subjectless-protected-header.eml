@@ -1,0 +1,28 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <subjectless-protected-header@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+Subject: this should not show up as a protected header
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAxAZy4nBUDdm2u4sgr1inLki0LMCVcsVlax6Pd0AiZAow
+iYz940UtZwQNRRb640w1bB2pAvg5Nn8hJK5ye3qtyUWNW1VEvAa+GXndI/Qt0+7x
+0qIBOXRBCrkOxB10iCvSDVoOMZPj8GgvQwpsnslATJbsp9jV74fU7eFCKE5VWKUw
+FTos+VX1YFZyf2RsznHXdi0CrL2rkUNoLby4SEUa/urd6GKb3xuOjJlIYN4Fh9xz
+e33+Dl3NHohNooytxoJuTNiXbNWe7kidfOwMGzvdYsegk/WMqMLg8DmZPvl0BcYI
+o+4ZU3kuhbk5Pup5nOV6OLrs7A0=
+=BF8X
+-----END PGP MESSAGE-----
+--=-=-=--

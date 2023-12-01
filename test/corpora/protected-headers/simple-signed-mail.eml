@@ -1,0 +1,27 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: This is a signed message
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <simple-signed-mail@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+ protocol="application/pgp-signature";
+ micalg=pgp-sha256
+
+--=-=-=
+Content-Type: text/plain
+
+Here is the signed message body.
+
+--=-=-=
+Content-Disposition: attachment; filename=signature.asc
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQSaOv5sYAZaFI/UtYp+ar6SRkXMYAUCYxiQYgAKCRB+ar6SRkXM
+YJkmAP9TEGDYF4GZcHaxWDZYf6EKHmNqu1RPYuwEN8QdVbUIxAEA7IiFYPQtKXgr
+wyEYNcJ8aD1CYCGhR8pTA9oT/Vp16Qk=
+=a+TS
+-----END PGP SIGNATURE-----
+--=-=-=--

@@ -1,0 +1,74 @@
+notmuch (0.21~rc1-1) experimental; urgency=medium
+
+  This release of notmuch requires a non-reversible database upgrade
+  to support database revision tracking. This upgrade will happen on
+  the first run of 'notmuch-new' after updating. Notmuch will backup
+  your tags for your before doing the upgrade, but it never hurts to
+  make your own backup with notmuch dump.
+
+ -- David Bremner <bremner@debian.org>  Thu, 15 Oct 2015 08:13:04 -0300
+
+notmuch (0.19-1) experimental; urgency=medium
+
+  This release of notmuch again requires a non-reversable database
+  upgrade to support database features. This upgrade will happen on
+  the first run of 'notmuch-new' after updating. Notmuch will backup
+  your tags for your before doing the upgrade, but it never hurts to
+  make your own backup with notmuch dump.
+
+ -- David Bremner <bremner@debian.org>  Fri, 14 Nov 2014 20:34:55 +0100
+
+notmuch (0.18~rc0-1) experimental; urgency=low
+
+  This release of notmuch requires a non-reversable database upgrade
+  to support the new path: and updated folder: prefixes. Notmuch
+  will backup your tags for your before doing the upgrade, but it
+  never hurts to make your own backup with notmuch dump before
+  next running 'notmuch new'
+
+ -- David Bremner <bremner@debian.org>  Tue, 22 Apr 2014 09:32:11 +0900
+
+notmuch (0.17-1) unstable; urgency=low
+
+  Previously on big endian architectures like sparc and powerpc the
+  computation of SHA1 hashes was incorrect. This meant that messages
+  with overlong or missing message-ids were given different computed
+  message-ids than on more common little endian architectures like
+  i386 and amd64.  If you use notmuch on a big endian architecture,
+  you are strongly advised to make a backup of your tags using
+  `notmuch dump` before this upgrade.  You can locate the affected
+  files using something like:
+
+  notmuch dump | \
+    awk '/^notmuch-sha1-[0-9a-f]{40} / \
+      {system("notmuch search --exclude=false --output=files id:" $1)}'
+
+ -- David Bremner <bremner@debian.org>  Mon, 30 Dec 2013 20:31:16 -0400
+
+notmuch (0.16-1) unstable; urgency=low
+
+  The vim interface has been rewritten from scratch. In particular
+  it requires a version of vim with ruby support.
+
+ -- David Bremner <bremner@debian.org>  Sat, 16 Feb 2013 08:12:02 -0400
+
+notmuch (0.14-1) unstable; urgency=low
+
+  There is an incompatible change in option syntax for dump and restore
+  in this release. Please update your scripts.
+
+  From upstream NEWS:
+
+  The deprecated positional output file argument to notmuch dump has
+  been replaced with an --output option. The input file positional
+  argument for restore has been replaced with an --input option for
+  consistency with dump.
+
+ -- David Bremner <bremner@debian.org>  Sun, 05 Aug 2012 11:52:49 -0300
+
+notmuch (0.6~238) unstable; urgency=low
+
+  The emacs user interface to notmuch is now contained in a separate
+  package called notmuch-emacs.
+
+ -- David Bremner <bremner@debian.org>  Mon, 20 Jun 2011 23:57:55 -0300

@@ -1,0 +1,29 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <protected-header@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+Subject: this should not show up as a protected header
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdA3xy46BwN9R4tHbyAqwTMeOSfrrNzqsvCT9hqcVfRIzQw
+ThEINU6n9x5QgU2L/mtSaAMkw7ikOmzrJkvjEEE913dvUsw80+Q3QDYODETYzXBN
+0qIBrEpD0pYlXiQECDAYqox9JBkOPi3K6c4TLdACG2q7oOtHzbApzHC636oOFAXB
+uhARzvr/TN5/Fr4KDM2j4LqdsxSwE2mOJn4lM8EfPAm0jxbDmHKOpjpk/QnKR7ry
+BbctXwYIwlkp6voRsAJ/zG3XcLpbO/w+a5U14P6qCp2RM+bNWKtZTT4Gl0yCBk3A
+CYGvWb797ZA+5BhraXCWAQcscec=
+=WKBy
+-----END PGP MESSAGE-----
+--=-=-=--

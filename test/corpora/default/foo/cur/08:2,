@@ -1,0 +1,87 @@
+Date: Tue, 17 Nov 2009 15:33:01 -0500
+From: Lars Kellogg-Stedman <lars@seas.harvard.edu>
+To: Mikhail Gusarov <dottedmag@dottedmag.net>
+Message-ID: <20091117203301.GV3165@dottiness.seas.harvard.edu>
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+	<87iqd9rn3l.fsf@vertex.dottedmag>
+MIME-Version: 1.0
+In-Reply-To: <87iqd9rn3l.fsf@vertex.dottedmag>
+User-Agent: Mutt/1.5.19 (2009-01-05)
+Cc: notmuch@notmuchmail.org
+Subject: Re: [notmuch] Working with Maildir storage?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============0063752545=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+
+--===============0063752545==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="GGxZz/e2pmGePzrA"
+Content-Disposition: inline
+
+
+--GGxZz/e2pmGePzrA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+> See the patch just posted here.
+
+Is the list archived anywhere?  The obvious archives
+(http://notmuchmail.org/pipermail/notmuch/) aren't available, and I
+think I subscribed too late to get the patch (I only just saw the
+discussion about it).
+
+It doesn't look like the patch is in git yet.
+
+-- Lars
+
+--=20
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+
+--GGxZz/e2pmGePzrA
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBCAAGBQJLAwh9AAoJENdGlQYxQazYHJMIAI+XTPOyBTZIxEGTdgVKd2fR
+k27ucKs6lXozfMIIGchNUDXQho+KmiuTfX1XFJeBkqOlhrd9zlGjBGoBM0YBq/Gs
+aStPdonREzsHORjmyQCCpjg4AcqCRTXFbDXzAeXlxMPOrZ3P0XNPzTEM1mVksbmg
+mBBDLdHncy4sSCfFgXwRGGgLv9z5Acqm8xGYr68c9PIXY939ozIKV9LVUhxiNz9g
+We2a9rLDhfwxUqDlGdiNwZZimiKvD/fsYSrBZMDb5HgIYkeNZ4SD8Xu+OgB550wN
+OFfwGi3o8WFK2AyDe5QJDh9Ub+euPNlVzePoGpkltZEHuCcLFJqCHv5XYpbxcjA=
+=GO2Q
+-----END PGP SIGNATURE-----
+
+--GGxZz/e2pmGePzrA--
+
+--===============0063752545==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============0063752545==--
+

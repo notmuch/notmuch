@@ -1,0 +1,27 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-ID: <phony-protected-header-bad-encryption@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+Subject: this should not show up as a protected header
+
+-----BEGIN PGP MESSAGE-----
+
+BADBADBAD49rSK8SAQdAeybb8KrIaEFV5+Ks5loaz651PudVdzS8ombK8EW7Mnsw
+kEppTiE4jo6ZocHvhjSzPdEK4MPh0qmKvu1RrHa23dc1n7Cutg1FjOb6ZRloTisz
+0jEB3YxBhFDBZyWSGeAeZx93JaNcV6CBjOfZ6GJhzkqmSs73VdwFUWQxcoV4q5sL
+GYCW
+=BADC
+-----END PGP MESSAGE-----
+--=-=-=--

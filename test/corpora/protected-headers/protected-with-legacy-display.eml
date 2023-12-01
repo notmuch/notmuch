@@ -1,0 +1,42 @@
+From: test_suite@notmuchmail.org
+To: test_suite@notmuchmail.org
+Subject: Subject Unavailable
+Date: Sat, 01 Jan 2000 12:00:00 +0000
+Message-Id: <protected-with-legacy-display@crypto.notmuchmail.org>
+MIME-Version: 1.0
+Content-Type: multipart/encrypted; boundary="=-=-=";
+	protocol="application/pgp-encrypted"
+
+--=-=-=
+Content-Type: application/pgp-encrypted
+
+Version: 1
+
+--=-=-=
+Content-Type: application/octet-stream
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAGiLZx0/sI1uoQ27OPpwunlzzlY7ba4E2YNU+AErRA1gw
+YYKlhgfzSgO0LpbxHJfithVAkrGYvj5HNWGxriXEsOyfy+Ax0FtAJuzYr6DGKGx1
+0ukBxLoRfWuoo2C9gXwojieSI9lTh7V+FaVUoVmTXhd/WFjWLtHbkIVmvXI1WVyi
+wM5NfDi3Ho995P+DMZxTKkdqtbdeYgUK7oCw3FHsYsNSTf3XFazjEvHg/TvOWd5u
+m9SbZAKfOBrEGGCzNHfgyluaBKdzVX04GPfZ2GblHlnU9AnGSWys1i8kxmuQYAKp
+UrXDlMcVB4V5bcGd1KMvGyhnKzICXWhXiJhEiNOc+uhl97jxXRujflfT6S1+8thv
+o86332XixGu8o5svVAEWobN8LUXpHZZlnK9a0Zftf4v8ATHEzQLAa5vdx+BYN8ua
+e4dmCtxA4XCfRD58FJ6EwjDqhv45KYnJP2W5eZujQ7Pl1m3HJXGwFQmtnOSB/9dw
+M+y1Aif07VBYE3LmUUqmS0HLZoqmOEoh6rKldzyxFmtfZyn73n/zcUoQblEWTE7z
+lxIqpCmo8jHPcs1tm9QD3sUmqQ/YXwmqZbD3pOn0PIXZKVY8/DaeggMWKQ/UhCWa
+7Z8g2GVq17AjHsS9n3ShDhf6B/8qI+jjaZQqH0W6KLmDQixjf1BoPnTrXNjcloJk
+uf0YAuol05fXNAiyPbFNO9zoFPxm8ZVEZG9nbcnNOz7ac/Aea6hqhxHnzNFPU09K
+J92FZ08XXDlrt0jw11Z/i606U/7kX6Zy4vCtZjGB4h04msBiLQwI0POIcY28SJ0U
+W1AqcReye6lQTz47AkOKAfVQl9hQP++G7nZXlxUQ+z0VRqBEqd/QJdHgoe6X4ctd
+r8093odiz6/DXJNwDTHPkaV5IseghzSLYyjmbLR5DUjnfuxKw5zpG+mK3X2PDx1B
+LtUNfBGmnLN3jBa8Q/i2WYxYpAuMZzJcCcocxW0H+yBf8+rZNpIvi/RsTklKkaap
+EOgP9sZXlgJePUbBmdd4Wwx7WTsjna6ckNp/9WE8CuDy6x9Zkc97Rkd+Oxc/KKtF
+1mQ/VdRZj3trlABnHmF0H/H4Qlrt//P/PCl3qRZpE5v34OHDlTT6UjLh5ahWZ3hf
+pj3cSKy9uajnWPFf9tnI0/9cWYbllaCMhIMbDZXRM3F4H03bi2k=
+=VKCz
+-----END PGP MESSAGE-----
+
+--=-=-=--

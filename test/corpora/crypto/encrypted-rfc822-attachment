@@ -1,0 +1,47 @@
+Content-Type: multipart/encrypted; protocol="application/pgp-encrypted"; boundary="===============9060418334135509864=="
+MIME-Version: 1.0
+From: Notmuch test suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
+Subject: testing encrypted rfc822 attachments
+Date: Sat, 03 Jul 2021 16:00:02 -0300
+Message-ID: <encrypted-rfc822-attachment@crypto.notmuchmail.org>
+User-Agent: alot/0.9.1
+
+--===============9060418334135509864==
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: application/pgp-encrypted; charset="us-ascii"
+
+Version: 1
+--===============9060418334135509864==
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Type: application/octet-stream; charset="us-ascii"
+
+-----BEGIN PGP MESSAGE-----
+
+hF4DHXHP849rSK8SAQdAtWMNBhjdh9Xyig/GYM1RN27B7LmCk0oRkguuFMROXk8w
+wLmcm3HiikqziJzlPY8sBLEx7cLQCkCrg6KarCHGvcqajUJluLAZgrwUsmUpOFy0
+0ukBQ6EnlpNlxdcmOElG9ZYn2Dgp1Gq4eo9rHb9f/TBLxuTr1Yr0vZ5f38bVn+tB
+0FupuYE5h/PAM2JPjVg4rh1pIN2yWvNdFBHCm0Yt3AquS9bwQymUOjh0ZCey5ERy
+WJtUQ7u+f2Hfm5K9CPPqlM7GPqeR8nv2/cgJxsA9nGn4tco7pHEkM1Kwe1dLlTbh
+ZqEMKu+dVK/RqRUjDVdAonM7wz3Uah6HJH3a6W4g2mPiPPkOpnbTClCLiK0H8NRv
+9rbO69kHoNar0YTpTAAbkxlKkdKeM/xAS2UFIdE+tXSofeCHmsFCmcohKH7Rt66l
+rU7BJE7dtTiaPFYgHBuzbrkA+oH8gU9l7PQ1L16zo1rRVRb8IIBPSHY64Ekpy3L4
+FQ3Ttg8e26d2X+6eGca6RIXksTfqOniC33Fal6gBIUqP1w4ky1wjJ+wujkSuf0QB
+yFWPP3o16o9X3nEIa2L8v/engSM5p7pezZfVJej/5hWnuPP3YmbDpn0ir21Qye96
+qxq7XI7GSWukxisxC8WakNA1LHnXo5DvHB8wm3lJIfEfIJ9RHhZqyRMptC563XCZ
+A1NvY+4sKgx9g8PBRai019ZaTMYJRQqE3VlU+xHbJWMf4aymYyeY8ut8HvFhC9Tk
+4D3eol7/LgHhXA9Db4L5MJX8iHtXhqyt62vmMXcFzC1Wi8Co/HnchzGQx2vXnUIZ
+IlomEAvN1RZC2UV8q2NHKzKnfr43WfnIsdt1fQwEfQeTKX6wfhq8FDR5NmEeLeTw
+ddGA95bZEkT2xYh+2g7G1c5Z33l5WLeriA/SUMWK1oafUtcx81lJnmK/xSIg3PKZ
+jKIbTwv4tKjmGUJE5xb/RTUfOTG+v7HOBo0avwofvqz5k7Do8v0BEEmhewjcIKBf
+h2Go8VxFtDj/OG0J98PS3OVQtnv4jzepXUxr2ZW7Z0aPFUHQ2F97Yio3nxb7r7um
+OjKhNgIPp+iAWisqqw+kwWxPx/5GHxVYsOM+fqpFEjELGGNv+ImTG7jS1V5agqIr
+qU+dxYydDKnQi/5xXeE4TO0MEFhCIttOQARw3DPtZmjLuXFjqvaasTV4YyXwrKCJ
+0sfemg3wxkZxY0NI13g3CaJGtSzXdZVfkzpdVxRAZoETT7rLNDbawuq0AzSava2u
+nB/vgcDWfPr4jW21
+=r4Vv
+-----END PGP MESSAGE-----
+
+--===============9060418334135509864==--

@@ -1,0 +1,109 @@
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 44/44] sound/soc/codecs: Remove unnecessary semicolons
+Date: Mon, 15 Nov 2010 09:09:17 -0800
+Lines: 63
+Message-ID: <1289840957.16461.138.camel@Joe-Laptop>
+References: <cover.1289789604.git.joe@perches.com>
+	 <97fd199b7dac50613f6843156687223928cce44a.1289789605.git.joe@perches.com>
+	 <20101115134939.GC12986@rakim.wolfsonmicro.main>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Cc: Jiri Kosina <trivial@kernel.org>,
+	Ian Lartey <ian@opensource.wolfsonmicro.com>,
+	Dimitris Papastamos <dp@opensource.wolfsonmicro.com>,
+	Liam Girdwood <lrg@slimlogic.co.uk>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>,
+	alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+X-From: linux-kernel-owner@vger.kernel.org Mon Nov 15 18:09:51 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PI2Yr-0005ly-Pc
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 15 Nov 2010 18:09:46 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S932795Ab0KORJV (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 15 Nov 2010 12:09:21 -0500
+Received: from mail.perches.com ([173.55.12.10]:1293 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932132Ab0KORJU (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 15 Nov 2010 12:09:20 -0500
+Received: from [192.168.1.162] (unknown [192.168.1.162])
+	by mail.perches.com (Postfix) with ESMTP id 93B872436B;
+	Mon, 15 Nov 2010 09:07:32 -0800 (PST)
+In-Reply-To: <20101115134939.GC12986@rakim.wolfsonmicro.main>
+X-Mailer: Evolution 2.30.3 
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1062578>
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+V2: against -next
+
+ sound/soc/codecs/wm8904.c  |    2 +-
+ sound/soc/codecs/wm8940.c  |    1 -
+ sound/soc/codecs/wm8993.c  |    2 +-
+ sound/soc/codecs/wm_hubs.c |    2 +-
+ 4 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/sound/soc/codecs/wm8904.c b/sound/soc/codecs/wm8904.c
+index be90399..5e57bd2 100644
+--- a/sound/soc/codecs/wm8904.c
++++ b/sound/soc/codecs/wm8904.c
+@@ -1591,7 +1591,7 @@ static int wm8904_hw_params(struct snd_pcm_substream *substream,
+ 		       - wm8904->fs);
+ 	for (i = 1; i < ARRAY_SIZE(clk_sys_rates); i++) {
+ 		cur_val = abs((wm8904->sysclk_rate /
+-			       clk_sys_rates[i].ratio) - wm8904->fs);;
++			       clk_sys_rates[i].ratio) - wm8904->fs);
+ 		if (cur_val < best_val) {
+ 			best = i;
+ 			best_val = cur_val;
+diff --git a/sound/soc/codecs/wm8940.c b/sound/soc/codecs/wm8940.c
+index c2def1b..caed084 100644
+--- a/sound/soc/codecs/wm8940.c
++++ b/sound/soc/codecs/wm8940.c
+@@ -736,7 +736,6 @@ static int wm8940_probe(struct snd_soc_codec *codec)
+ 		return ret;
+ 
+ 	return ret;
+-;
+ }
+ 
+ static int wm8940_remove(struct snd_soc_codec *codec)
+diff --git a/sound/soc/codecs/wm8993.c b/sound/soc/codecs/wm8993.c
+index bcc54be..991d90c 100644
+--- a/sound/soc/codecs/wm8993.c
++++ b/sound/soc/codecs/wm8993.c
+@@ -1227,7 +1227,7 @@ static int wm8993_hw_params(struct snd_pcm_substream *substream,
+ 		       - wm8993->fs);
+ 	for (i = 1; i < ARRAY_SIZE(clk_sys_rates); i++) {
+ 		cur_val = abs((wm8993->sysclk_rate /
+-			       clk_sys_rates[i].ratio) - wm8993->fs);;
++			       clk_sys_rates[i].ratio) - wm8993->fs);
+ 		if (cur_val < best_val) {
+ 			best = i;
+ 			best_val = cur_val;
+diff --git a/sound/soc/codecs/wm_hubs.c b/sound/soc/codecs/wm_hubs.c
+index 8aff0ef..422c7fb 100644
+--- a/sound/soc/codecs/wm_hubs.c
++++ b/sound/soc/codecs/wm_hubs.c
+@@ -119,7 +119,7 @@ static void calibrate_dc_servo(struct snd_soc_codec *codec)
+ 	switch (hubs->dcs_readback_mode) {
+ 	case 0:
+ 		reg_l = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_1)
+-			& WM8993_DCS_INTEG_CHAN_0_MASK;;
++			& WM8993_DCS_INTEG_CHAN_0_MASK;
+ 		reg_r = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_2)
+ 			& WM8993_DCS_INTEG_CHAN_1_MASK;
+ 		break;
+
+
+
+

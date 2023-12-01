@@ -1,0 +1,88 @@
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: rfc: rewrite commit subject line for subsystem
+ maintainer preference tool
+Date: Tue, 16 Nov 2010 23:22:58 +0000
+Lines: 12
+Message-ID: <20101116232258.GC24623@opensource.wolfsonmicro.com>
+References: <1289850773.16461.166.camel@Joe-Laptop>
+	<20101116104921.GL12986@rakim.wolfsonmicro.main>
+	<1289919077.28741.50.camel@Joe-Laptop>
+	<20101116183707.179964dd@schatten.dmk.lab>
+	<20101116181226.GB26239@rakim.wolfsonmicro.main>
+	<20101116203522.65240b18@schatten.dmk.lab>
+	<20101116195530.GA7523@rakim.wolfsonmicro.main>
+	<20101116122102.86e7e0b9.rdunlap@xenotime.net>
+	<1289940156.28741.207.camel@Joe-Laptop>
+	<20101116124609.382e42fb.rdunlap@xenotime.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: alsa-devel@alsa-project.org, Jiri Kosina <trivial@kernel.org>,
+	linux-kernel@vger.kernel.org, Florian Mickler <florian@mickler.org>,
+	Joe Perches <joe@perches.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+X-From: alsa-devel-bounces@alsa-project.org Wed Nov 17 00:22:58 2010
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Envelope-to: glad-alsa-devel-2@m.gmane.org
+Received: from alsa0.perex.cz ([212.20.107.51])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <alsa-devel-bounces@alsa-project.org>)
+	id 1PIUrZ-0001Km-F5
+	for glad-alsa-devel-2@m.gmane.org; Wed, 17 Nov 2010 00:22:57 +0100
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id 28F9610381A; Wed, 17 Nov 2010 00:22:55 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.2.4 (2008-01-01) on mail1.perex.cz
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=5.0 tests=none autolearn=disabled
+	version=3.2.4
+Received: from alsa0.perex.cz (localhost [127.0.0.1])
+	by alsa0.perex.cz (Postfix) with ESMTP id 1CC8D10381B;
+	Wed, 17 Nov 2010 00:22:55 +0100 (CET)
+X-Original-To: alsa-devel@alsa-project.org
+Delivered-To: alsa-devel@alsa-project.org
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id B1B8B10381B; Wed, 17 Nov 2010 00:22:52 +0100 (CET)
+Received: from opensource2.wolfsonmicro.com (opensource.wolfsonmicro.com
+	[80.75.67.52]) by alsa0.perex.cz (Postfix) with ESMTP id CB03810381A
+	for <alsa-devel@alsa-project.org>; Wed, 17 Nov 2010 00:22:51 +0100 (CET)
+Received: from finisterre.wolfsonmicro.main
+	(cpc3-sgyl4-0-0-cust125.sgyl.cable.virginmedia.com [82.41.240.126])
+	by opensource2.wolfsonmicro.com (Postfix) with ESMTPSA id 39A957881C9; 
+	Tue, 16 Nov 2010 23:22:51 +0000 (GMT)
+Received: from broonie by finisterre.wolfsonmicro.main with local (Exim 4.72)
+	(envelope-from <broonie@opensource.wolfsonmicro.com>)
+	id 1PIUra-0001BL-NS; Tue, 16 Nov 2010 23:22:58 +0000
+Content-Disposition: inline
+In-Reply-To: <20101116124609.382e42fb.rdunlap@xenotime.net>
+X-Cookie: Beware of Bigfoot!
+User-Agent: Mutt/1.5.20 (2009-06-14)
+X-BeenThere: alsa-devel@alsa-project.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "Alsa-devel mailing list for ALSA developers -
+	http://www.alsa-project.org" <alsa-devel.alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1063492>
+
+On Tue, Nov 16, 2010 at 12:46:09PM -0800, Randy Dunlap wrote:
+> On Tue, 16 Nov 2010 12:42:36 -0800 Joe Perches wrote:
+
+> > Some subsystem maintainers like upper case, some mixed, some lower.
+> > Some aren't consistent.  (Staging/staging)
+
+> Case usually doesn't matter to most of us.
+
+Given that we're working in case sensitive languages here it's probably
+safe to assume that a reasonable proportion of people will care; being
+reasonably consistent with existing practice for the subsystem seems
+sensible.
+
+

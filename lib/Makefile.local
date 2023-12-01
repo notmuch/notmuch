@@ -1,0 +1,99 @@
+# -*- makefile-gmake -*-
+
+dir := lib
+
+# The (often-reused) $dir works fine within targets/prerequisites,
+# but cannot be used reliably within commands, so copy its value to a
+# variable that is not reused.
+lib := $(dir)
+
+ifeq ($(PLATFORM),MACOSX)
+LIBRARY_SUFFIX = dylib
+# On OS X, library version numbers go before suffix.
+LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
+SONAME = libnotmuch.$(LIBNOTMUCH_VERSION_MAJOR).$(LIBRARY_SUFFIX)
+LIBNAME = libnotmuch.$(LIBNOTMUCH_VERSION_MAJOR).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE).$(LIBRARY_SUFFIX)
+LIBRARY_LINK_FLAG = -dynamiclib -install_name $(libdir)/$(SONAME) -compatibility_version $(LIBNOTMUCH_VERSION_MAJOR).$(LIBNOTMUCH_VERSION_MINOR) -current_version $(LIBNOTMUCH_VERSION_MAJOR).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
+else
+LIBRARY_SUFFIX = so
+LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
+SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
+LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
+LIBRARY_LINK_FLAG = -shared -Wl,--version-script=$(srcdir)/$(lib)/notmuch.sym,-soname=$(SONAME) $(NO_UNDEFINED_LDFLAGS)
+ifeq ($(PLATFORM),OPENBSD)
+LIBRARY_LINK_FLAG += -lc
+endif
+ifeq ($(LIBDIR_IN_LDCONFIG),1)
+ifeq ($(DESTDIR),)
+LIBRARY_INSTALL_POST_COMMAND=ldconfig
+endif
+endif
+endif
+
+extra_cflags += -I$(srcdir)/$(dir) -fPIC -fvisibility=hidden
+extra_cxxflags += -fvisibility-inlines-hidden
+
+libnotmuch_c_srcs =		\
+	$(notmuch_compat_srcs)	\
+	$(dir)/filenames.c	\
+	$(dir)/string-list.c	\
+	$(dir)/message-file.c	\
+	$(dir)/message-id.c	\
+	$(dir)/messages.c	\
+	$(dir)/sha1.c		\
+	$(dir)/built-with.c	\
+	$(dir)/string-map.c	\
+	$(dir)/indexopts.c	\
+	$(dir)/tags.c
+
+libnotmuch_cxx_srcs =		\
+	$(dir)/database.cc	\
+	$(dir)/parse-time-vrp.cc	\
+	$(dir)/directory.cc	\
+	$(dir)/index.cc		\
+	$(dir)/message.cc	\
+	$(dir)/add-message.cc	\
+	$(dir)/message-property.cc \
+	$(dir)/query.cc		\
+	$(dir)/query-fp.cc      \
+	$(dir)/config.cc	\
+	$(dir)/regexp-fields.cc	\
+	$(dir)/thread.cc \
+	$(dir)/thread-fp.cc     \
+	$(dir)/features.cc	\
+	$(dir)/prefix.cc	\
+	$(dir)/open.cc		\
+	$(dir)/init.cc		\
+	$(dir)/parse-sexp.cc	\
+	$(dir)/sexp-fp.cc	\
+	$(dir)/lastmod-fp.cc
+
+libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
+
+$(dir)/libnotmuch.a: $(libnotmuch_modules)
+	$(call quiet,AR) rcs $@ $^
+
+$(dir)/$(LIBNAME): $(libnotmuch_modules) util/libnotmuch_util.a parse-time-string/libparse-time-string.a
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libnotmuch_util.a parse-time-string/libparse-time-string.a
+
+$(dir)/$(SONAME): $(dir)/$(LIBNAME)
+	ln -sf $(LIBNAME) $@
+
+$(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
+	ln -sf $(LIBNAME) $@
+
+install: install-$(dir)
+
+install-$(dir): $(dir)/$(LIBNAME)
+	mkdir -p "$(DESTDIR)$(libdir)/"
+	install -m0644 "$(lib)/$(LIBNAME)" "$(DESTDIR)$(libdir)/"
+	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(SONAME)"
+	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(LINKER_NAME)"
+	mkdir -p "$(DESTDIR)$(includedir)"
+	install -m0644 "$(srcdir)/$(lib)/notmuch.h" "$(DESTDIR)$(includedir)/"
+	$(LIBRARY_INSTALL_POST_COMMAND)
+
+SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
+CLEAN += $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME)
+CLEAN += $(dir)/$(LIBNAME) $(dir)/libnotmuch.a
+CLEAN += $(dir)/notmuch.h.gch

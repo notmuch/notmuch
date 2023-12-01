@@ -1,0 +1,324 @@
+# -*- makefile-gmake -*-
+
+.PHONY: all
+all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings notmuch-git nmbug
+ifeq ($(MAKECMDGOALS),)
+ifeq ($(shell cat .first-build-message 2>/dev/null),)
+	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
+	@echo ""
+	@echo "Compilation of notmuch is now complete. You can install notmuch with:"
+	@echo ""
+	@echo "	make install"
+	@echo ""
+	@echo "Note that depending on the prefix to which you are installing"
+	@echo "you may need root permission (such as \"sudo make install\")."
+	@echo "See \"./configure --help\" for help on setting an alternate prefix."
+	@echo Printed > .first-build-message
+endif
+endif
+
+# Depend (also) on the file 'version'. In case of ifeq ($(IS_GIT),yes)
+# this file may already have been updated.
+version.stamp: $(srcdir)/version.txt
+	echo $(VERSION) > $@
+
+$(TAR_FILE):
+	if git tag -v $(UPSTREAM_TAG) >/dev/null 2>&1; then \
+           ref=$(UPSTREAM_TAG); \
+        else \
+           ref="HEAD" ; \
+	   echo "Warning: No signed tag for $(VERSION)"; \
+	fi ; \
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
+	echo $(VERSION) > version.txt.tmp
+	ct=`git --no-pager log -1 --pretty=format:%ct $$ref` ; \
+	tar --owner root --group root --append -f $(TAR_FILE).tmp \
+		--transform s_^_$(PACKAGE)-$(VERSION)/_  \
+		--transform 's_.tmp$$__' --mtime=@$$ct version.txt.tmp
+	rm version.txt.tmp
+	xz -C sha256 -9 < $(TAR_FILE).tmp > $(TAR_FILE)
+	@echo "Source is ready for release in $(TAR_FILE)"
+
+$(SHA256_FILE): $(TAR_FILE)
+	sha256sum $^ | gpg --clear-sign --output $@ -
+
+$(DETACHED_SIG_FILE): $(TAR_FILE)
+	gpg --armor --detach-sign $^
+
+CLEAN := $(CLEAN) notmuch-git
+notmuch-git: notmuch-git.py
+	cp $< $@
+	chmod ugo+x $@
+
+CLEAN := $(CLEAN) nmbug
+nmbug: notmuch-git
+	ln -s $< $@
+
+.PHONY: dist
+dist: $(TAR_FILE)
+
+.PHONY: update-versions
+
+update-versions:
+	sed -i -e "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" \
+	    -e "s/^SOVERSION[[:blank:]]*=.*$$/SOVERSION = \'${LIBNOTMUCH_VERSION_MAJOR}\'/" \
+	    ${PV_FILE}
+
+# We invoke make recursively only to force ordering of our phony
+# targets in the case of parallel invocation of make (-j).
+#
+# We carefully ensure that our VERSION variable is passed down to any
+# sub-ordinate make invocations (which won't otherwise know that they
+# are part of the release and need to take the version from the
+# version file).
+.PHONY: release
+release: verify-source-tree-and-version
+	$(MAKE) VERSION=$(VERSION) verify-newer
+	$(MAKE) VERSION=$(VERSION) clean
+	$(MAKE) VERSION=$(VERSION) sphinx-html
+	$(MAKE) VERSION=$(VERSION) test
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
+	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	mkdir -p releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
+	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(VERSION) release pristine-tar
+	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
+	rsync --verbose --delete --recursive doc/_build/html/ $(RELEASE_HOST):$(DOC_DIR)
+endif
+	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
+
+.PHONY: pre-release
+pre-release:
+	$(MAKE) VERSION=$(VERSION) clean
+	$(MAKE) VERSION=$(VERSION) test
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
+	$(MAKE) VERSION=$(VERSION) $(SHA256_FILE) $(DETACHED_SIG_FILE)
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	mkdir -p releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) releases
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(UPSTREAM_TAG) release pristine-tar
+	cd releases && scp $(TAR_FILE) $(SHA256_FILE) $(DETACHED_SIG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+endif
+
+.PHONY: debian-snapshot
+debian-snapshot:
+	make VERSION=$(VERSION) clean
+	RETVAL=0 &&						\
+	  TMPFILE=$$(mktemp /tmp/notmuch.XXXXXX) &&		\
+	  cp debian/changelog $${TMPFILE} &&			\
+	  (EDITOR=/bin/true dch -b -v $(VERSION)+1		\
+	    -D UNRELEASED 'test build, not for upload' &&	\
+	  echo '3.0 (native)' > debian/source/format &&		\
+	  debuild -us -uc); RETVAL=$$?				\
+	  mv -f $${TMPFILE} debian/changelog;			\
+	  echo '3.0 (quilt)' > debian/source/format;		\
+	  exit $$RETVAL
+
+.PHONY: release-message
+release-message:
+	@echo "To: notmuch@notmuchmail.org"
+	@echo "Subject: $(PACKAGE) release $(VERSION) now available"
+	@echo ""
+	@echo "Where to obtain notmuch $(VERSION)"
+	@echo "==========================="
+	@echo "  $(RELEASE_URL)/$(TAR_FILE)"
+	@echo ""
+	@echo "Which can be verified with:"
+	@echo ""
+	@echo "  $(RELEASE_URL)/$(SHA256_FILE)"
+	@sed "s/^/  /" releases/$(SHA256_FILE)
+	@echo ""
+	@echo "  $(RELEASE_URL)/$(DETACHED_SIG_FILE)"
+	@echo "  (signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo ""
+	@echo "What's new in notmuch $(VERSION)"
+	@echo "========================="
+	@sed -ne '/^[Nn]otmuch $(VERSION)/{n;n;b NEWS}; d; :NEWS /^===/q; {p;n;b NEWS}' < NEWS | head -n -2
+	@echo ""
+	@echo "What is notmuch"
+	@echo "==============="
+	@echo "Notmuch is a system for indexing, searching, reading, and tagging"
+	@echo "large collections of email messages in maildir or mh format. It uses"
+	@echo "the Xapian library to provide fast, full-text search with a convenient"
+	@echo "search syntax."
+	@echo ""
+	@echo "For more about notmuch, see https://notmuchmail.org"
+
+# This is a chain of dependencies rather than a simple list simply to
+# avoid the messages getting interleaved in the case of a parallel
+# make invocation.
+.PHONY: verify-source-tree-and-version
+verify-source-tree-and-version: verify-no-dirty-code
+
+.PHONY: verify-no-dirty-code
+verify-no-dirty-code: release-checks
+ifeq ($(IS_GIT),yes)
+	@printf "Checking that source tree is clean..."
+ifneq ($(shell git --git-dir=${srcdir}/.git ls-files -m),)
+	@echo "No"
+	@echo "The following files have been modified since the most recent git commit:"
+	@echo ""
+	@git --git-dir=${srcdir}/.git ls-files -m
+	@echo ""
+	@echo "The release will be made from the committed state, but perhaps you meant"
+	@echo "to commit this code first? Please clean this up to make it more clear."
+	@false
+else
+	@echo "Good"
+endif
+endif
+
+.PHONY: release-checks
+release-checks:
+	devel/release-checks.sh
+
+.PHONY: verify-newer
+verify-newer:
+	@printf %s "Checking that no $(VERSION) release already exists..."
+	@wget -q --no-check-certificate -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	case $$? in \
+          8) echo "Good." ;; \
+          0) echo "Ouch."; \
+	     echo "Found: $(RELEASE_URL)/$(TAR_FILE)"; \
+	     echo "Refusing to replace an existing release."; \
+	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
+	     false ;; \
+	  *) echo "An unexpected error occurred"; \
+	     false;; esac
+
+# The user has not set any verbosity, default to quiet mode and inform the
+# user how to enable verbose compiles.
+ifeq ($(V),)
+quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$(1) $(or $(2),$@)\n"; $($(word 1, $(1)))
+endif
+# The user has explicitly enabled quiet compilation.
+ifeq ($(V),0)
+quiet = @printf "$(1) $(or $(2),$@)\n"; $($(word 1, $(1)))
+endif
+# Otherwise, print the full command line.
+quiet ?= $($(word 1, $(1)))
+
+%.o: %.cc $(global_deps)
+	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
+	$(call quiet,CXX $(CPPFLAGS) $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
+
+%.o: %.c $(global_deps)
+	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
+	$(call quiet,CC $(CPPFLAGS) $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
+
+CPPCHECK=cppcheck
+.stamps/cppcheck/%: %
+	@mkdir -p $(@D)
+	$(call quiet,CPPCHECK,$<) --template=gcc --error-exitcode=1 --quiet $<
+	@touch $@
+
+CLEAN := $(CLEAN) .stamps
+
+.PHONY : clean
+clean:
+	rm -rf $(CLEAN)
+
+.PHONY: distclean
+distclean: clean
+	rm -rf $(DISTCLEAN)
+
+.PHONY: dataclean
+dataclean: distclean
+	rm -rf $(DATACLEAN)
+
+notmuch_client_srcs =		\
+	$(notmuch_compat_srcs)	\
+	command-line-arguments.c\
+	debugger.c		\
+	status.c		\
+	gmime-filter-reply.c	\
+	hooks.c			\
+	notmuch.c		\
+	notmuch-client-init.c	\
+	notmuch-compact.c	\
+	notmuch-config.c	\
+	notmuch-count.c		\
+	notmuch-dump.c		\
+	notmuch-insert.c	\
+	notmuch-new.c		\
+	notmuch-reindex.c       \
+	notmuch-reply.c		\
+	notmuch-restore.c	\
+	notmuch-search.c	\
+	notmuch-setup.c		\
+	notmuch-show.c		\
+	notmuch-tag.c		\
+	notmuch-time.c		\
+	sprinter-json.c		\
+	sprinter-sexp.c		\
+	sprinter-text.c		\
+	query-string.c		\
+	mime-node.c		\
+	tag-util.c
+
+notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
+
+notmuch.o: version.stamp
+
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libnotmuch_util.a parse-time-string/libparse-time-string.a
+	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
+
+notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
+	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
+
+.PHONY: install
+install: all install-man install-info
+	mkdir -p "$(DESTDIR)$(prefix)/bin/"
+	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
+ifeq ($(MAKECMDGOALS), install)
+	@echo ""
+	@echo "Notmuch is now installed to $(DESTDIR)$(prefix)"
+	@echo ""
+	@echo "New users should simply run \"notmuch\" to be guided"
+	@echo "through the process of configuring notmuch and creating"
+	@echo "a database of existing email messages. The \"notmuch\""
+	@echo "command will also offer some sample search commands."
+ifeq ($(WITH_EMACS), 1)
+	@echo ""
+	@echo "Beyond the command-line interface, notmuch also offers"
+	@echo "a full-featured interface for reading and writing mail"
+	@echo "within emacs. To use this, each user should add the"
+	@echo "following line to the ~/.emacs file:"
+	@echo ""
+	@echo "	(require 'notmuch)"
+	@echo ""
+	@echo "And then run emacs as \"emacs -f notmuch\" or invoke"
+	@echo "the command \"M-x notmuch\" from within emacs."
+endif
+endif
+
+SRCS  := $(SRCS) $(notmuch_client_srcs)
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
+CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
+CLEAN := $(CLEAN) .deps
+
+DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config sh.config sphinx.config
+
+CPPCHECK_STAMPS := $(SRCS:%=.stamps/cppcheck/%)
+.PHONY: cppcheck
+ifeq ($(HAVE_CPPCHECK),1)
+cppcheck: ${CPPCHECK_STAMPS}
+else
+cppcheck:
+	@echo "No cppcheck found during configure; skipping static checking"
+endif
+
+
+DEPS := $(SRCS:%.c=.deps/%.d)
+DEPS := $(DEPS:%.cc=.deps/%.d)
+-include $(DEPS)
+
+.SUFFIXES: # Delete the default suffixes. Old-Fashioned Suffix Rules not used.

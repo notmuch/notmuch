@@ -1,0 +1,16 @@
+go-notmuch
+==========
+
+simple go bindings to the libnotmuch library[1].
+
+they are heavily inspired from the vala bindings from Sebastian Spaeth: 
+  https://github.com/spaetz/vala-notmuch
+
+note: the whole library hasn't been wrapped (yet?)
+
+todo
+----
+
+ - improve notmuch-addrlookup regexp
+
+[1] https://notmuchmail.org/

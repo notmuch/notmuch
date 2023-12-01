@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Run tests
+#
+# Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
+#
+# Adapted from a Makefile to a shell script by Carl Worth (2010)
+
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+    echo "Error: The notmuch test suite requires a bash version >= 4.0"
+    echo "due to use of associative arrays within the test suite."
+    echo "Please try again with a newer bash (or help us fix the"
+    echo "test suite to be more portable). Thanks."
+    exit 1
+fi
+
+cd "$(dirname "$0")"
+
+for test in T*.sh; do
+    ./"$test" "$@"
+done

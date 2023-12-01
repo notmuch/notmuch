@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Usage suggestion:
+#   git rebase -i --exec devel/check-notmuch-commit origin/master
+
+set -e
+
+quick=0
+case "$1" in
+    -q|-Q|--quick)
+	quick=1
+	;;
+esac
+
+if [ $quick = 0 ]; then
+    make test
+fi
+
+unset uconf
+for file in $(git diff --name-only --diff-filter=AM HEAD^); do
+    case $file in
+	*.c|*.h|*.cc|*.hh)
+	    uncrustify --replace -c "${uconf=$(dirname "$0")/uncrustify.cfg}" "$file"
+	    ;;
+	*.el)
+	    emacs -Q --batch "$file" --eval '(indent-region (point-min) (point-max) nil)' -f save-buffer
+	    ;;
+    esac
+done
+
+git diff --quiet

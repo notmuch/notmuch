@@ -1,0 +1,2 @@
+include MANIFEST.in
+include tox.ini

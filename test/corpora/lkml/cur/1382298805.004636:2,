@@ -1,0 +1,93 @@
+From: Vasiliy Kulikov <segoon@openwall.com>
+Subject: [PATCH] core: dev: don't call BUG() on bad input
+Date: Mon, 14 Feb 2011 13:56:06 +0300
+Lines: 36
+Message-ID: <1297680967-11893-1-git-send-email-segoon@openwall.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Tom Herbert <therbert@google.com>,
+	Changli Gao <xiaosuo@gmail.com>,
+	Jesse Gross <jesse@nicira.com>, netdev@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+X-From: netdev-owner@vger.kernel.org Mon Feb 14 11:56:26 2011
+Return-path: <netdev-owner@vger.kernel.org>
+Envelope-to: linux-netdev-2@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <netdev-owner@vger.kernel.org>)
+	id 1Pow6Q-0007p5-UJ
+	for linux-netdev-2@lo.gmane.org; Mon, 14 Feb 2011 11:56:23 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1753243Ab1BNK4O (ORCPT <rfc822;linux-netdev-2@m.gmane.org>);
+	Mon, 14 Feb 2011 05:56:14 -0500
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60909 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab1BNK4M (ORCPT
+	<rfc822;netdev@vger.kernel.org>); Mon, 14 Feb 2011 05:56:12 -0500
+Received: by bwz15 with SMTP id 15so5332720bwz.19
+        for <multiple recipients>; Mon, 14 Feb 2011 02:56:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:sender:from:to:cc:subject:date:message-id
+         :x-mailer;
+        bh=YQn7OCqAZuXaSsRtgaQYckH74o43k6Rppt54AR6UzDo=;
+        b=CxfBmTAbcMf7ySl3szqU/hLEMbY7aJ+FjefneMcTm/AmBnyihy20JuV2k0yYJzcIBi
+         9+2npC4H9oJn7/ocVARq88j9ZA/4firOi9ZddgGu6c8+o0tWoZylA1ehtHzzk+4I173l
+         H8guqK5rplkryj6+PStELYYt36SpAVfaL2EdY=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=sender:from:to:cc:subject:date:message-id:x-mailer;
+        b=G0AqVbcip2oFA2IqAQa6TWwQydu/mJFzt98tGkR1fVNl3m+HaKY433gNCR+Dqdv0gA
+         SGL/R3HRiBBBku/GM4x3gQ8SoAFZiREw6PDtkU55l/mk+yS+v+8YTq7/InPxHoHeTWsv
+         pX0mWUI2HtTXKALBiM+nLsnBWtcC8yInYtyeQ=
+Received: by 10.204.61.73 with SMTP id s9mr6247440bkh.185.1297680970948;
+        Mon, 14 Feb 2011 02:56:10 -0800 (PST)
+Received: from localhost (ppp91-77-40-235.pppoe.mtu-net.ru [91.77.40.235])
+        by mx.google.com with ESMTPS id u23sm1686152bkw.9.2011.02.14.02.56.09
+        (version=TLSv1/SSLv3 cipher=OTHER);
+        Mon, 14 Feb 2011 02:56:10 -0800 (PST)
+X-Mailer: git-send-email 1.7.0.4
+Sender: netdev-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <netdev.vger.kernel.org>
+X-Mailing-List: netdev@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099668>
+
+alloc_netdev() may be called with too long name (more that IFNAMSIZ bytes).
+Currently this leads to BUG().  Other insane inputs (bad txqs, rxqs) and
+even OOM don't lead to BUG().  Made alloc_netdev() return NULL, like on
+other errors.
+
+Signed-off-by: Vasiliy Kulikov <segoon@openwall.com>
+---
+ Compile tested.
+
+ net/core/dev.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 6392ea0..12ef4b0 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -5761,7 +5761,10 @@ struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
+ 	size_t alloc_size;
+ 	struct net_device *p;
+ 
+-	BUG_ON(strlen(name) >= sizeof(dev->name));
++	if (strnlen(name, sizeof(dev->name)) >= sizeof(dev->name)) {
++		pr_err("alloc_netdev: Too long device name \n");
++		return NULL;
++	}
+ 
+ 	if (txqs < 1) {
+ 		pr_err("alloc_netdev: Unable to allocate device "
+-- 
+1.7.0.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe netdev" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

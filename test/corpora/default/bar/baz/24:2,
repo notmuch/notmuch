@@ -1,0 +1,204 @@
+Return-path: <notmuch-bounces@notmuchmail.org>
+Envelope-to: cworth@localhost
+Delivery-date: Wed, 18 Nov 2009 01:43:47 -0800
+Received: from yoom.home.cworth.org ([127.0.0.1])
+	by yoom.home.cworth.org with esmtp (Exim 4.69)
+	(envelope-from <notmuch-bounces@notmuchmail.org>)
+	id 1NAgpH-0005Ab-20
+	for cworth@localhost; Wed, 18 Nov 2009 01:27:47 -0800
+X-Original-To: cworth@cworth.org
+Delivered-To: cworth@cworth.org
+Received: from olra.theworths.org [82.165.184.25]
+	by yoom.home.cworth.org with IMAP (fetchmail-6.3.9-rc2)
+	for <cworth@localhost> (single-drop); Wed, 18 Nov 2009 01:27:47 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 12248431FC3
+	for <cworth@cworth.org>; Tue, 17 Nov 2009 17:01:22 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+X-Spam-Flag: NO
+X-Spam-Score: -6.17
+X-Spam-Level: 
+X-Spam-Status: No, score=-6.17 tagged_above=-999 required=2 tests=[AWL=0.429,
+	BAYES_00=-2.599, RCVD_IN_DNSWL_MED=-4] autolearn=unavailable
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id TmBdVd1i-Wjb; Tue, 17 Nov 2009 17:01:20 -0800 (PST)
+Received: from olra.theworths.org (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id AF876431FBC;
+	Tue, 17 Nov 2009 17:01:20 -0800 (PST)
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 75784431FBC
+	for <notmuch@notmuchmail.org>; Tue, 17 Nov 2009 17:01:19 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id IoYHzHoKBskU for <notmuch@notmuchmail.org>;
+	Tue, 17 Nov 2009 17:01:18 -0800 (PST)
+Received: from smtp-outbound.seas.harvard.edu (smtp-outbound.seas.harvard.edu
+	[140.247.51.171])
+	by olra.theworths.org (Postfix) with ESMTP id 7E033431FAE
+	for <notmuch@notmuchmail.org>; Tue, 17 Nov 2009 17:01:18 -0800 (PST)
+Received: from dottiness.seas.harvard.edu (dottiness.seas.harvard.edu
+	[140.247.52.224])
+	by smtp-outbound.seas.harvard.edu (8.13.8/8.13.8) with SMTP id
+	nAI11Gkj008772
+	for <notmuch@notmuchmail.org>; Tue, 17 Nov 2009 20:01:16 -0500
+Received: by dottiness.seas.harvard.edu (sSMTP sendmail emulation);
+	Tue, 17 Nov 2009 20:01:16 -0500
+Date: Tue, 17 Nov 2009 20:01:16 -0500
+From: Lars Kellogg-Stedman <lars@seas.harvard.edu>
+To: notmuch <notmuch@notmuchmail.org>
+Message-ID: <20091118010116.GC25380@dottiness.seas.harvard.edu>
+References: <20091118005829.GB25380@dottiness.seas.harvard.edu>
+MIME-Version: 1.0
+In-Reply-To: <20091118005829.GB25380@dottiness.seas.harvard.edu>
+User-Agent: Mutt/1.5.19 (2009-01-05)
+Subject: Re: [notmuch] "notmuch help" outputs to stderr?
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============0848253760=="
+Sender: notmuch-bounces@notmuchmail.org
+Errors-To: notmuch-bounces@notmuchmail.org
+
+
+--===============0848253760==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="ZInfyf7laFu/Kiw7"
+Content-Disposition: inline
+
+
+--ZInfyf7laFu/Kiw7
+Content-Type: multipart/mixed; boundary="KdquIMZPjGJQvRdI"
+Content-Disposition: inline
+
+
+--KdquIMZPjGJQvRdI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+> I've attached a patch that lets usage() take a FILE * argument so that
+> you can output to stderr in response to usage errors, and stdout in
+> response to an explicit request.
+
+Whoops, missed a couple of stderr's in that last patch.  New one
+attached.
+
+--=20
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+
+--KdquIMZPjGJQvRdI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="notmuch-help.patch"
+Content-Transfer-Encoding: quoted-printable
+
+diff --git a/notmuch.c b/notmuch.c
+index c47e640..446c810 100644
+--- a/notmuch.c
++++ b/notmuch.c
+@@ -157,23 +157,23 @@ command_t commands[] =3D {
+ };
+=20
+ static void
+-usage (void)
++usage (FILE *out)
+ {
+     command_t *command;
+     unsigned int i;
+=20
+-    fprintf (stderr, "Usage: notmuch <command> [args...]\n");
+-    fprintf (stderr, "\n");
+-    fprintf (stderr, "Where <command> and [args...] are as follows:\n");
+-    fprintf (stderr, "\n");
++    fprintf (out, "Usage: notmuch <command> [args...]\n");
++    fprintf (out, "\n");
++    fprintf (out, "Where <command> and [args...] are as follows:\n");
++    fprintf (out, "\n");
+=20
+     for (i =3D 0; i < ARRAY_SIZE (commands); i++) {
+ 	command =3D &commands[i];
+=20
+-	fprintf (stderr, "\t%s\t%s\n\n", command->name, command->summary);
++	fprintf (out, "\t%s\t%s\n\n", command->name, command->summary);
+     }
+=20
+-    fprintf (stderr, "Use \"notmuch help <command>\" for more details on e=
+ach command.\n\n");
++    fprintf (out, "Use \"notmuch help <command>\" for more details on each=
+ command.\n\n");
+ }
+=20
+ static int
+@@ -183,8 +183,8 @@ notmuch_help_command (unused (void *ctx), int argc, cha=
+r *argv[])
+     unsigned int i;
+=20
+     if (argc =3D=3D 0) {
+-	fprintf (stderr, "The notmuch mail system.\n\n");
+-	usage ();
++	fprintf (stdout, "The notmuch mail system.\n\n");
++	usage (stdout);
+ 	return 0;
+     }
+=20
+@@ -192,8 +192,8 @@ notmuch_help_command (unused (void *ctx), int argc, cha=
+r *argv[])
+ 	command =3D &commands[i];
+=20
+ 	if (strcmp (argv[0], command->name) =3D=3D 0) {
+-	    fprintf (stderr, "Help for \"notmuch %s\":\n\n", argv[0]);
+-	    fprintf (stderr, "\t%s\t%s\n\n%s\n\n", command->name,
++	    fprintf (stdout, "Help for \"notmuch %s\":\n\n", argv[0]);
++	    fprintf (stdout, "\t%s\t%s\n\n%s\n\n", command->name,
+ 		     command->summary, command->documentation);
+ 	    return 0;
+ 	}
+
+--KdquIMZPjGJQvRdI--
+
+--ZInfyf7laFu/Kiw7
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iQEcBAEBCAAGBQJLA0dcAAoJENdGlQYxQazY4nIIAIBCds86/uTmnouvyoPruUUR
+Bg5mXcnjuopz1Nwotl9s9U5sGeZuZngxyEvDz1Z1aTEjwab8ndNTf1xCwIoqBs+l
+i/sc4nPYubLdy1Ab/84DKVtCSbj+v5rtqhegwUWV7S1BY7t8dKNPNv7YBg7P0Azs
+6s3CUxDV5eJCcxCGxxWHH8JDKRf7rDs6vzDwyPWLxlg1Xb1lEM/sRgPCKiShPdO3
+Ak2hECusjskALhSDYX8/FLMd9HwLBC13sfWuSi/pHUAIOI2jru2p5sXrVSlTnFIJ
+fiMbPhKWiEaJj2kmm4pRwAhbTWp/J8ZvXWp0AyosxXQhQUWqujiyxgfiXS70SdQ=
+=t3Yc
+-----END PGP SIGNATURE-----
+
+--ZInfyf7laFu/Kiw7--
+
+--===============0848253760==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+
+--===============0848253760==--
+

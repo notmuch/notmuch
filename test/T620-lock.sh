@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+test_description="locking"
+. $(dirname "$0")/test-lib.sh || exit 1
+
+add_email_corpus
+
+test_begin_subtest "blocking open"
+if [ $NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK -ne 1 ]; then
+    test_subtest_known_broken
+fi
+test_C ${MAIL_DIR} <<'EOF'
+#include <notmuch-test.h>
+
+void
+taggit (notmuch_database_t *db, const char *tag)
+{
+    notmuch_message_t *message;
+
+    EXPECT0 (notmuch_database_find_message (db, "4EFC743A.3060609@april.org", &message));
+    if (message == NULL) {
+	fprintf (stderr, "unable to find message");
+	exit (1);
+    }
+
+    EXPECT0 (notmuch_message_add_tag (message, tag));
+    notmuch_message_destroy (message);
+}
+
+int
+main (int argc, char **argv)
+{
+    pid_t child;
+    const char *path = argv[1];
+
+    child = fork ();
+    if (child == -1) {
+	fprintf (stderr, "fork failed\n");
+	exit (1);
+    }
+
+    if (child == 0) {
+	notmuch_database_t *db2;
+	char* msg = NULL;
+
+	sleep (1);
+
+        EXPECT0(notmuch_database_open_with_config (argv[1],
+					           NOTMUCH_DATABASE_MODE_READ_WRITE,
+					           "", NULL, &db2, &msg));
+        if (msg) fputs (msg, stderr);
+
+	taggit (db2, "child");
+	EXPECT0 (notmuch_database_close (db2));
+    } else {
+	notmuch_database_t *db;
+	char* msg = NULL;
+
+        EXPECT0(notmuch_database_open_with_config (argv[1],
+					           NOTMUCH_DATABASE_MODE_READ_WRITE,
+					           "", NULL, &db, &msg));
+        if (msg) fputs (msg, stderr);
+	taggit (db, "parent");
+	sleep (2);
+	EXPECT0 (notmuch_database_close (db));
+	wait (NULL);
+    }
+}
+
+EOF
+notmuch search --output=tags id:4EFC743A.3060609@april.org >> OUTPUT
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+child
+inbox
+parent
+unread
+EOF
+if [ $NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK -ne 1 ]; then
+    test_subtest_known_broken
+fi
+test_expect_equal_file EXPECTED OUTPUT
+
+test_done

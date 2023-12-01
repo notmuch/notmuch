@@ -1,0 +1,19 @@
+This directory contains email corpora for testing.
+
+default
+  The default corpus is based on about 50 messages from early in the
+  history of the notmuch mailing list, which allows for reliably
+  testing commands that need to operate on a not-totally-trivial
+  number of messages.
+
+broken
+  The broken corpus contains messages that are broken and/or RFC
+  non-compliant, ensuring we deal with them in a sane way.
+
+html
+  The html corpus contains html parts
+
+crypto
+  The crypto corpus contains encrypted messages for testing.
+  It should probably also contain signed messages in the future.
+  Please add them!

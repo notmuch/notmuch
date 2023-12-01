@@ -1,0 +1,129 @@
+Carl Worth <cworth@cworth.org> was the original author of Notmuch.
+David Bremner has maintained Notmuch since release 0.6 (2011).  But
+there's really not much that they've done. There's been a lot of
+standing on shoulders here:
+
+William Morgan deserves credit for providing the primary inspiration
+for Notmuch with his program Sup (https://sup-heliotrope.github.io/).
+
+Some people have contributed code that has made it into Notmuch
+without their specific knowledge (but with their full permission
+thanks to the GNU General Public License). This includes:
+
+Brian Gladman (with Mikhail Gusarov <dottedmag@dottedmag.net>)
+	Implementation of SHA-1 (nice and small) (libsha1.c)
+
+Please see the various files in the Notmuch distribution for
+individual copyright statements.
+
+And of course, though their code isn't distributed here, Notmuch would
+be not much of anything without the contributors to Xapian, the search
+engine that does the really heavy lifting, as well as the various
+system libraries, compilers, and the kernel that make it all work
+(thanks GNU, thanks Linux). Thanks to everyone who has played a part!
+
+The following list of people have at least 15 lines of code in the
+Notmuch 0.31 release (calculated by devel/author-scan.sh).
+
+ David Bremner
+ Carl Worth
+ Jani Nikula
+ Austin Clements
+ Daniel Kahn Gillmor
+ Mark Walters
+ Floris Bruynooghe
+ David Edmondson
+ Tomi Ollila
+ Sebastian Spaeth
+ Ali Polatel
+ Michal Sojka
+ Justus Winter
+ Sebastien Binet
+ W. Trevor King
+ Jameson Graef Rollins
+ Felipe Contreras
+ Jonas Bernoulli
+ Pieter Praet
+ Peter Feigl
+ Dmitry Kurochkin
+ Peter Wang
+ Gregor Zattler
+ Daniel Schoepe
+ Keith Packard
+ Adam Wolfe Gordon
+ Stefano Zacchiroli
+ Vincent Breitmoser
+ laochailan
+ Ben Gamari
+ Aaron Ecay
+ l-m-h@web.de
+ Thomas Jost
+ Jesse Rosenthal
+ Dirk Hohndel
+ Blake Jones
+ Damien Cassou
+ Anton Khirnov
+ Matt Armstrong
+ Vladimir Panteleev
+ William Casarin
+ Örjan Ekeberg
+ Jan Janak
+ Patrick Totzke
+ Ruben Pollan
+ rhn
+ Ioan-Adrian Ratiu
+ Ethan Glasser-Camp
+ Chunyang Xu
+ Todd
+ Chris Wilson
+ Yuri Volchkov
+ Cédric Cabessa
+ Mark Anderson
+ Jed Brown
+ Maxime Coste
+ Ludovic LANGE
+ Sebastian Poeplau
+ Mikhail
+ Keith Amidon
+ Gaute Hope
+ martin f. krafft
+ Jeffrey C. Ollie
+ Jameson Rollins
+ Scott Henson
+ Bart Trojanowski
+ Vladimir Marek
+ Servilio Afre Puentes
+ Tomas Carnecky
+ Kevin McCarthy
+ Kevin J. McCarthy
+ Scott Robinson
+ Wael M. Nasreddine
+ Charles Celerier
+ Olly Betts
+ Istvan Marko
+ Florian Klink
+ Thibaut Horel
+ Joel Borggrén-Franck
+ Ingmar Vanhassel
+ Olivier Taïbi
+ Ian Main
+ Alexander Botero-Lowry
+ Luis Ressel
+ Sergei Shilovsky
+ Trevor Jim
+ Uli Scholler
+ Matthew Lear
+ Jinwoo Lee
+ Amadeusz Żołnowski
+
+Here is an incomplete list of other people that have made
+contributions to Notmuch (whether by code, bug reporting/fixes,
+ideas, inspiration, testing or feedback):
+
+ Martin Krafft
+ Jamey Sharp
+
+The Notmuch project acknowledges the contributions of the following
+organizations via their employees
+
+ Google LLC

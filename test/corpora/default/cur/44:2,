@@ -1,0 +1,29 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 02:43:50 -0800
+Subject: [notmuch] [PATCH] Older versions of install do not support -C.
+In-Reply-To: <1258496327-12086-1-git-send-email-jan@ryngle.com>
+References: <1258496327-12086-1-git-send-email-jan@ryngle.com>
+Message-ID: <87hbssqfix.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 23:18:47 +0100, Jan Janak <jan at ryngle.com> wrote:
+> Do not use -C cmdline option of install, older versions, commonly found in
+> distributions like Debian, do not seem to support it. Running make install
+> on such systems (tested on Debian Lenny) fails.
+> 
+> Signed-off-by: Jan Janak <jan at ryngle.com>
+
+Thanks, Jan. This is pushed now.
+
+And did I say welcome to notmuch yet? (It's easy to lose track with all
+the newcomers---which I'm not complaining about---especially since so
+many are sharing code.)
+
+-Carl
+
+PS. I actually really like the behavior of -C (especially when
+installing a low-level library to avoid big waterfalls of needless
+recompiles). But since we're *not* actually installing a library (yet)
+I'm happy with this patch rather than writing code in configure to check
+if "install -C" works or not.
+
