@@ -374,6 +374,12 @@ EOF
 	   notmuch new
 	   test_expect_equal "$(xapian-metadata get ${XAPIAN_PATH} version)" 3
 	   ;;
+       home_mail|maildir_env)
+	   test_begin_subtest "No errors from config list ($config)"
+	   test_subtest_known_broken
+	   notmuch config list 2>OUTPUT 1>/dev/null
+	   test_expect_equal_file /dev/null OUTPUT
+	   ;;
        *)
 	   backup_database
 	   test_begin_subtest ".notmuch without xapian/ handled gracefully ($config)"
