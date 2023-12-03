@@ -249,6 +249,11 @@ _choose_database_path (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_NO_DATABASE;
     }
 
+    if (*message) {
+	free (*message);
+	*message = NULL;
+    }
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
