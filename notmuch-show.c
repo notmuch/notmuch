@@ -1399,6 +1399,14 @@ notmuch_show_command (notmuch_database_t *notmuch, int argc, char *argv[])
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	    return EXIT_FAILURE;
 	}
+	if (params.crypto.decrypt != NOTMUCH_DECRYPT_FALSE
+	    && params.crypto.decrypt != NOTMUCH_DECRYPT_AUTO) {
+	    fprintf (stderr, "Warning: mbox format does not support decryption (ignored)\n");
+	}
+	if (params.crypto.verify) {
+	    fprintf (stderr,
+		     "Warning: mbox format does not support signature verification (ignored)\n");
+	}
     } else if (format == NOTMUCH_FORMAT_RAW) {
 	/* raw format only supports single message display */
 	single_message = true;

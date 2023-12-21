@@ -17,6 +17,25 @@ notmuch show foo..
 exit_code=$?
 test_expect_equal 1 $exit_code
 
+test_begin_subtest "warning for --mbox --decrypt"
+notmuch show --format=mbox --decrypt=true '*' 1>/dev/null 2>OUTPUT
+echo $? >> OUTPUT
+cat <<EOF > EXPECTED
+Warning: mbox format does not support decryption (ignored)
+Warning: mbox format does not support signature verification (ignored)
+0
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "warning for --mbox --verify"
+notmuch show --format=mbox --verify '*' 1>/dev/null 2>OUTPUT
+echo $? >> OUTPUT
+cat <<EOF > EXPECTED
+Warning: mbox format does not support signature verification (ignored)
+0
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "notmuch show --sort=newest-first"
 notmuch show --entire-thread=true '*' > EXPECTED
 notmuch show --entire-thread=true --sort=newest-first '*' > OUTPUT
