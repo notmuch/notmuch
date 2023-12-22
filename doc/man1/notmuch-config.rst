@@ -273,6 +273,19 @@ paths are presumed relative to `$HOME` for items in section
     Default: empty list. Note that :any:`notmuch-setup(1)` puts
     ``deleted;spam`` here when creating new configuration file.
 
+.. nmconfig:: search.authors_separator
+
+    The string to separate authors when showing a thread.
+
+    Default: ,
+
+.. nmconfig:: search.authors_matched_separator
+
+    The string to separate matched from non-matched authors when showing a
+    thread.
+
+    Default: |
+
 .. nmconfig:: show.extra_headers
 
     By default :any:`notmuch-show(1)` includes the following headers

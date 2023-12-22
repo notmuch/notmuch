@@ -122,21 +122,28 @@ _thread_add_matched_author (notmuch_thread_t *thread,
 
 /* Construct an authors string from matched_authors_array and
  * authors_array. The string contains matched authors first, then
- * non-matched authors (with the two groups separated by '|'). Within
- * each group, authors are listed in date order. */
+ * non-matched authors (with the two groups separated by '|' or the custom
+ * separator defined in the configuration). Within each group, authors are
+ * listed in date order and separated by ',' or the custom separator defined in
+ * the configuration. */
 static void
 _resolve_thread_authors_string (notmuch_thread_t *thread)
 {
     unsigned int i;
     char *author;
     int first_non_matched_author = 1;
+    const char *authors_sep = notmuch_config_get (thread->notmuch,
+						  NOTMUCH_CONFIG_AUTHORS_SEPARATOR);
+    const char *authors_matched_sep = notmuch_config_get (thread->notmuch,
+							  NOTMUCH_CONFIG_AUTHORS_MATCHED_SEPARATOR);
 
     /* First, list all matched authors in date order. */
     for (i = 0; i < thread->matched_authors_array->len; i++) {
 	author = (char *) g_ptr_array_index (thread->matched_authors_array, i);
 	if (thread->authors)
-	    thread->authors = talloc_asprintf (thread, "%s, %s",
+	    thread->authors = talloc_asprintf (thread, "%s%s%s",
 					       thread->authors,
+					       authors_sep,
 					       author);
 	else
 	    thread->authors = author;
@@ -149,12 +156,14 @@ _resolve_thread_authors_string (notmuch_thread_t *thread)
 					  author, NULL, NULL))
 	    continue;
 	if (first_non_matched_author) {
-	    thread->authors = talloc_asprintf (thread, "%s| %s",
+	    thread->authors = talloc_asprintf (thread, "%s%s%s",
 					       thread->authors,
+					       authors_matched_sep,
 					       author);
 	} else {
-	    thread->authors = talloc_asprintf (thread, "%s, %s",
+	    thread->authors = talloc_asprintf (thread, "%s%s%s",
 					       thread->authors,
+					       authors_sep,
 					       author);
 	}
 

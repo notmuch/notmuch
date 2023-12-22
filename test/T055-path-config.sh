@@ -303,6 +303,8 @@ index.as_text=
 maildir.synchronize_flags=true
 new.ignore=
 new.tags=unread;inbox
+search.authors_matched_separator=| 
+search.authors_separator=, 
 search.exclude_tags=
 user.name=Notmuch Test Suite
 user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
@@ -325,6 +327,8 @@ database.mail_root
 database.path
 maildir.synchronize_flags
 new.tags
+search.authors_matched_separator
+search.authors_separator
 user.name
 user.other_email
 user.primary_email

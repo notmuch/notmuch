@@ -441,6 +441,8 @@ cat <<'EOF' >EXPECTED
 11: '8000'
 12: 'NULL'
 13: ''
+14: ', '
+15: '| '
 == stderr ==
 EOF
 unset MAILDIR
@@ -725,6 +727,8 @@ test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "list by keys (ndlc)"
 notmuch config set search.exclude_tags "foo;bar;fub"
+notmuch config set search.authors_matched_separator "| "
+notmuch config set search.authors_separator ", "
 notmuch config set new.ignore "sekrit_junk"
 notmuch config set index.as_text "text/"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
@@ -754,6 +758,8 @@ cat <<'EOF' >EXPECTED
 11: '8000'
 12: 'NULL'
 13: 'text/'
+14: ', '
+15: '| '
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -789,6 +795,8 @@ cat <<'EOF' >EXPECTED
 11: '8000'
 12: 'NULL'
 13: ''
+14: ', '
+15: '| '
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -865,6 +873,8 @@ key with spaces value, with, spaces!
 maildir.synchronize_flags true
 new.ignore sekrit_junk
 new.tags unread;inbox
+search.authors_matched_separator | 
+search.authors_separator , 
 search.exclude_tags foo;bar;fub
 show.extra_headers (null)
 test.key1 testvalue1

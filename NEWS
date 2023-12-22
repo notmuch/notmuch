@@ -1,3 +1,14 @@
+Notmuch 0.39 (UNRELEASED)
+=========================
+
+General
+-------
+
+Allow to customize the separator between individual and matched and
+non-matched authors when showing threads. See
+`search.authors_separator` and `search.authors_matched_separator` in
+notmuch-config(1).
+
 Notmuch 0.38.3 (2024-03-09)
 ===========================
 
