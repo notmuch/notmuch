@@ -247,7 +247,7 @@ def count_messages(prefix=None):
         stdout=_subprocess.PIPE, wait=True)
     if status != 0:
         _LOG.error("failed to run notmuch config")
-        sys.exit(1)
+        _sys.exit(1)
     return int(stdout.rstrip())
 
 def get_tags(prefix=None):
