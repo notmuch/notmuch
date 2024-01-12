@@ -376,7 +376,7 @@ def check_safe_fraction(status):
 
     total = count_messages (TAG_PREFIX)
     if total == 0:
-        _LOG.error('No existing tags with given prefix, stopping.'.format(safe))
+        _LOG.error('No existing tags with given prefix, stopping.')
         _LOG.error('Use --force to override.')
         exit(1)
     change = len(status['added'])+len(status['deleted'])
