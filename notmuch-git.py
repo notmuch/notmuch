@@ -31,7 +31,6 @@ import locale as _locale
 import logging as _logging
 import os as _os
 import re as _re
-import shutil as _shutil
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
