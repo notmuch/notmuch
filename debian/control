@@ -55,7 +55,7 @@ Depends:
  ${shlibs:Depends},
 Recommends:
  elpa-notmuch | notmuch-vim | notmuch-mutt | alot,
- gnupg-agent,
+ gpg-agent,
  gpgsm,
 Suggests:
  mailscripts,
