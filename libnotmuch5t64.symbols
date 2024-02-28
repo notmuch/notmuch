@@ -1,0 +1,166 @@
+libnotmuch.so.5 libnotmuch5t64 #MINVER#
+* Build-Depends-Package: libnotmuch-dev
+ notmuch_built_with@Base 0.23~rc0
+ notmuch_config_get@Base 0.32~rc0
+ notmuch_config_get_bool@Base 0.32~rc0
+ notmuch_config_get_pairs@Base 0.32~rc0
+ notmuch_config_get_values@Base 0.32~rc0
+ notmuch_config_get_values_string@Base 0.32~rc0
+ notmuch_config_list_destroy@Base 0.23~rc0
+ notmuch_config_list_key@Base 0.23~rc0
+ notmuch_config_list_move_to_next@Base 0.23~rc0
+ notmuch_config_list_valid@Base 0.23~rc0
+ notmuch_config_list_value@Base 0.23~rc0
+ notmuch_config_pairs_destroy@Base 0.32~rc0
+ notmuch_config_pairs_key@Base 0.32~rc0
+ notmuch_config_pairs_move_to_next@Base 0.32~rc0
+ notmuch_config_pairs_valid@Base 0.32~rc0
+ notmuch_config_pairs_value@Base 0.32~rc0
+ notmuch_config_path@Base 0.32~rc0
+ notmuch_config_set@Base 0.32~rc0
+ notmuch_config_values_destroy@Base 0.32~rc0
+ notmuch_config_values_get@Base 0.32~rc0
+ notmuch_config_values_move_to_next@Base 0.32~rc0
+ notmuch_config_values_start@Base 0.32~rc0
+ notmuch_config_values_valid@Base 0.32~rc0
+ notmuch_database_add_message@Base 0.3
+ notmuch_database_begin_atomic@Base 0.9~rc1
+ notmuch_database_close@Base 0.13~rc1
+ notmuch_database_compact@Base 0.17~rc1
+ notmuch_database_compact_db@Base 0.32~rc0
+ notmuch_database_create@Base 0.3
+ notmuch_database_create_verbose@Base 0.20~rc1
+ notmuch_database_create_with_config@Base 0.32~rc0
+ notmuch_database_destroy@Base 0.13~rc1
+ notmuch_database_end_atomic@Base 0.9~rc1
+ notmuch_database_find_message@Base 0.9~rc2
+ notmuch_database_find_message_by_filename@Base 0.9~rc2
+ notmuch_database_get_all_tags@Base 0.3
+ notmuch_database_get_config@Base 0.23~rc0
+ notmuch_database_get_config_list@Base 0.23~rc0
+ notmuch_database_get_default_indexopts@Base 0.26~rc0
+ notmuch_database_get_directory@Base 0.3
+ notmuch_database_get_path@Base 0.3
+ notmuch_database_get_revision@Base 0.21~rc1
+ notmuch_database_get_version@Base 0.3
+ notmuch_database_index_file@Base 0.26~rc0
+ notmuch_database_load_config@Base 0.32~rc0
+ notmuch_database_needs_upgrade@Base 0.3
+ notmuch_database_open@Base 0.3
+ notmuch_database_open_verbose@Base 0.20~rc1
+ notmuch_database_open_with_config@Base 0.32~rc0
+ notmuch_database_remove_message@Base 0.3
+ notmuch_database_reopen@Base 0.32~rc0
+ notmuch_database_set_config@Base 0.23~rc0
+ notmuch_database_status_string@Base 0.20~rc1
+ notmuch_database_upgrade@Base 0.3
+ notmuch_directory_delete@Base 0.21~rc1
+ notmuch_directory_destroy@Base 0.3
+ notmuch_directory_get_child_directories@Base 0.3
+ notmuch_directory_get_child_files@Base 0.3
+ notmuch_directory_get_mtime@Base 0.3
+ notmuch_directory_set_mtime@Base 0.3
+ notmuch_filenames_destroy@Base 0.3
+ notmuch_filenames_get@Base 0.3
+ notmuch_filenames_move_to_next@Base 0.3
+ notmuch_filenames_valid@Base 0.3
+ notmuch_indexopts_destroy@Base 0.26~rc0
+ notmuch_indexopts_get_decrypt_policy@Base 0.26~rc0
+ notmuch_indexopts_set_decrypt_policy@Base 0.26~rc0
+ notmuch_message_add_property@Base 0.23~rc0
+ notmuch_message_add_tag@Base 0.3
+ notmuch_message_count_files@Base 0.26~rc0
+ notmuch_message_count_properties@Base 0.27~rc0
+ notmuch_message_destroy@Base 0.3
+ notmuch_message_freeze@Base 0.3
+ notmuch_message_get_database@Base 0.27~rc0
+ notmuch_message_get_date@Base 0.3
+ notmuch_message_get_filename@Base 0.3
+ notmuch_message_get_filenames@Base 0.5
+ notmuch_message_get_flag@Base 0.3
+ notmuch_message_get_flag_st@Base 0.31~rc0
+ notmuch_message_get_header@Base 0.3
+ notmuch_message_get_message_id@Base 0.3
+ notmuch_message_get_properties@Base 0.23~rc0
+ notmuch_message_get_property@Base 0.23~rc0
+ notmuch_message_get_replies@Base 0.3
+ notmuch_message_get_tags@Base 0.3
+ notmuch_message_get_thread_id@Base 0.3
+ notmuch_message_has_maildir_flag@Base 0.26~rc0
+ notmuch_message_has_maildir_flag_st@Base 0.31~rc0
+ notmuch_message_maildir_flags_to_tags@Base 0.5
+ notmuch_message_properties_destroy@Base 0.23~rc0
+ notmuch_message_properties_key@Base 0.23~rc0
+ notmuch_message_properties_move_to_next@Base 0.23~rc0
+ notmuch_message_properties_valid@Base 0.23~rc0
+ notmuch_message_properties_value@Base 0.23~rc0
+ notmuch_message_reindex@Base 0.26~rc0
+ notmuch_message_remove_all_properties@Base 0.23~rc0
+ notmuch_message_remove_all_properties_with_prefix@Base 0.26~rc0
+ notmuch_message_remove_all_tags@Base 0.3
+ notmuch_message_remove_property@Base 0.23~rc0
+ notmuch_message_remove_tag@Base 0.3
+ notmuch_message_set_flag@Base 0.3
+ notmuch_message_tags_to_maildir_flags@Base 0.5
+ notmuch_message_thaw@Base 0.3
+ notmuch_messages_collect_tags@Base 0.3
+ notmuch_messages_destroy@Base 0.3
+ notmuch_messages_get@Base 0.3
+ notmuch_messages_move_to_next@Base 0.3
+ notmuch_messages_valid@Base 0.3
+ notmuch_query_add_tag_exclude@Base 0.12~rc1
+ notmuch_query_count_messages@Base 0.3
+ notmuch_query_count_messages_st@Base 0.21~rc1
+ notmuch_query_count_threads@Base 0.10~rc1
+ notmuch_query_count_threads_st@Base 0.21~rc1
+ notmuch_query_create@Base 0.3
+ notmuch_query_create_with_syntax@Base 0.34~rc0
+ notmuch_query_destroy@Base 0.3
+ notmuch_query_get_database@Base 0.21~rc1
+ notmuch_query_get_query_string@Base 0.4
+ notmuch_query_get_sort@Base 0.4
+ notmuch_query_search_messages@Base 0.3
+ notmuch_query_search_messages_st@Base 0.20~rc1
+ notmuch_query_search_threads@Base 0.3
+ notmuch_query_search_threads_st@Base 0.20~rc1
+ notmuch_query_set_omit_excluded@Base 0.13~rc1
+ notmuch_query_set_sort@Base 0.3
+ notmuch_status_to_string@Base 0.3
+ notmuch_tags_destroy@Base 0.3
+ notmuch_tags_get@Base 0.3
+ notmuch_tags_move_to_next@Base 0.3
+ notmuch_tags_valid@Base 0.3
+ notmuch_thread_destroy@Base 0.3
+ notmuch_thread_get_authors@Base 0.3
+ notmuch_thread_get_matched_messages@Base 0.3
+ notmuch_thread_get_messages@Base 0.16
+ notmuch_thread_get_newest_date@Base 0.3
+ notmuch_thread_get_oldest_date@Base 0.3
+ notmuch_thread_get_subject@Base 0.3
+ notmuch_thread_get_tags@Base 0.3
+ notmuch_thread_get_thread_id@Base 0.3
+ notmuch_thread_get_toplevel_messages@Base 0.3
+ notmuch_thread_get_total_files@Base 0.26~rc0
+ notmuch_thread_get_total_messages@Base 0.3
+ notmuch_threads_destroy@Base 0.3
+ notmuch_threads_get@Base 0.3
+ notmuch_threads_move_to_next@Base 0.3
+ notmuch_threads_valid@Base 0.3
+ (c++)"typeinfo for Xapian::LogicError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::RuntimeError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::DocNotFoundError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::InvalidArgumentError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::Error@Base" 0.6.1
+ (c++)"typeinfo for Xapian::DatabaseError@Base" 0.24~rc0
+ (c++)"typeinfo for Xapian::DatabaseModifiedError@Base" 0.24~rc0
+ (c++)"typeinfo for Xapian::DatabaseOpeningError@Base" 0.32~rc0
+ (c++|optional=present with Xapian 1.4)"typeinfo for Xapian::QueryParserError@Base" 0.23~rc0
+ (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::DocNotFoundError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::InvalidArgumentError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::Error@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::DatabaseError@Base" 0.24~rc0
+ (c++)"typeinfo name for Xapian::DatabaseModifiedError@Base" 0.24~rc0
+ (c++)"typeinfo name for Xapian::DatabaseOpeningError@Base" 0.32~rc0
+ (c++|optional=present with Xapian 1.4)"typeinfo name for Xapian::QueryParserError@Base" 0.23~rc0
