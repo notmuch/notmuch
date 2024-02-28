@@ -1,4 +1,4 @@
-libnotmuch.so.5 libnotmuch5 #MINVER#
+libnotmuch.so.5 libnotmuch5t64 #MINVER#
 * Build-Depends-Package: libnotmuch-dev
  notmuch_built_with@Base 0.23~rc0
  notmuch_config_get@Base 0.32~rc0
