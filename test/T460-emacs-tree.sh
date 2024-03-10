@@ -100,7 +100,7 @@ test_emacs '(notmuch-hello)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
-test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
+test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox-oldest-first OUTPUT
 
 test_begin_subtest "Tree view of a single thread (from search)"
 test_emacs '(notmuch-hello)

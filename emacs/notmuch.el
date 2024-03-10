@@ -187,6 +187,7 @@ there will be called at other points of notmuch execution."
     (define-key map "r" 'notmuch-search-reply-to-thread-sender)
     (define-key map "R" 'notmuch-search-reply-to-thread)
     (define-key map "o" 'notmuch-search-toggle-order)
+    (define-key map "i" 'notmuch-search-toggle-hide-excluded)
     (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "l" 'notmuch-search-filter)
@@ -550,12 +551,18 @@ Return non-nil on success."
 (defun notmuch-tree-from-search-current-query ()
   "Tree view of current query."
   (interactive)
-  (notmuch-tree notmuch-search-query-string))
+  (notmuch-tree notmuch-search-query-string
+		nil nil nil nil nil nil
+		notmuch-search-oldest-first
+		notmuch-search-hide-excluded))
 
 (defun notmuch-unthreaded-from-search-current-query ()
   "Unthreaded view of current query."
   (interactive)
-  (notmuch-unthreaded notmuch-search-query-string))
+  (notmuch-unthreaded notmuch-search-query-string
+		      nil nil nil nil
+		      notmuch-search-oldest-first
+		      notmuch-search-hide-excluded))
 
 (defun notmuch-tree-from-search-thread ()
   "Show the selected thread with notmuch-tree."
@@ -564,7 +571,9 @@ Return non-nil on success."
 		notmuch-search-query-string
 		nil
 		(notmuch-prettify-subject (notmuch-search-find-subject))
-		t nil (current-buffer)))
+		t nil (current-buffer)
+		notmuch-search-oldest-first
+		notmuch-search-hide-excluded))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply-all to the entire current thread in a new buffer."
@@ -1035,14 +1044,16 @@ PROMPT is the string to prompt with."
 
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
 ;;;###autoload
-(defun notmuch-search (&optional query oldest-first target-thread target-line
-				 no-display)
+(defun notmuch-search (&optional query oldest-first hide-excluded target-thread
+				 target-line no-display)
   "Display threads matching QUERY in a notmuch-search buffer.
 
 If QUERY is nil, it is read interactively from the minibuffer.
 Other optional parameters are used as follows:
 
   OLDEST-FIRST: A Boolean controlling the sort order of returned threads
+  HIDE-EXCLUDED: A boolean controlling whether to omit threads with excluded
+                 tags.
   TARGET-THREAD: A thread ID (without the thread: prefix) that will be made
                  current if it appears in the search results.
   TARGET-LINE: The line number to move to if the target thread does not
@@ -1057,9 +1068,10 @@ the configured default sort order."
    (list
     ;; Prompt for a query
     nil
-    ;; Use the default search order (if we're doing a search from a
-    ;; search buffer, ignore any buffer-local overrides)
-    (default-value 'notmuch-search-oldest-first)))
+    ;; Use the default search order and exclude value (if we're doing a
+    ;; search from a search buffer, ignore any buffer-local overrides)
+    (default-value 'notmuch-search-oldest-first)
+    (default-value 'notmuch-search-hide-excluded)))
 
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
@@ -1073,6 +1085,7 @@ the configured default sort order."
     (setq notmuch-search-oldest-first oldest-first)
     (setq notmuch-search-target-thread target-thread)
     (setq notmuch-search-target-line target-line)
+    (setq notmuch-search-hide-excluded hide-excluded)
     (notmuch-tag-clear-cache)
     (when (get-buffer-process buffer)
       (error "notmuch search process already running for query `%s'" query))
@@ -1086,6 +1099,9 @@ the configured default sort order."
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")
+		     (if hide-excluded
+			 "--exclude=true"
+		       "--exclude=false")
 		     query)))
 	  ;; Use a scratch buffer to accumulate partial output.
 	  ;; This buffer will be killed by the sentinel, which
@@ -1106,10 +1122,20 @@ same relative position within the new buffer."
   (interactive)
   (notmuch-search notmuch-search-query-string
 		  notmuch-search-oldest-first
+		  notmuch-search-hide-excluded
 		  (notmuch-search-find-thread-id 'bare)
 		  (line-number-at-pos)
 		  t)
   (goto-char (point-min)))
+
+(defun notmuch-search-toggle-hide-excluded ()
+  "Toggle whether to hide excluded messages.
+
+This command toggles whether to hide excluded messages for the current
+search. The default value for this is defined by `notmuch-search-hide-excluded'."
+  (interactive)
+  (setq notmuch-search-hide-excluded (not notmuch-search-hide-excluded))
+  (notmuch-search-refresh-view))
 
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.
@@ -1139,7 +1165,8 @@ current search results AND the additional query string provided."
     (notmuch-search (if (string= grouped-original-query "*")
 			grouped-query
 		      (concat grouped-original-query " and " grouped-query))
-		    notmuch-search-oldest-first)))
+		    notmuch-search-oldest-first
+		    notmuch-search-hide-excluded)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single TAG.
@@ -1150,13 +1177,16 @@ search results and that are also tagged with the given TAG."
    (list (notmuch-select-tag-with-completion "Filter by tag: "
 					     notmuch-search-query-string)))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag)
-		  notmuch-search-oldest-first))
+		  notmuch-search-oldest-first
+		  notmuch-search-hide-excluded))
 
 (defun notmuch-search-by-tag (tag)
   "Display threads matching TAG in a notmuch-search buffer."
   (interactive
    (list (notmuch-select-tag-with-completion "Notmuch search tag: ")))
-  (notmuch-search (concat "tag:" tag)))
+  (notmuch-search (concat "tag:" tag)
+		  (default-value 'notmuch-search-oldest-first)
+		  (default-value 'notmuch-search-hide-excluded)))
 
 (defun notmuch-search-edit-search (query)
   "Edit the current search"

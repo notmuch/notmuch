@@ -33,10 +33,11 @@
 (declare-function notmuch-poll "notmuch-lib" ())
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target unthreaded parent-buffer oldest-first))
+			     open-target unthreaded parent-buffer
+			     oldest-first hide-excluded))
 (declare-function notmuch-unthreaded "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target))
+			     open-target oldest-first hide-excluded))
 
 
 ;;; Options
@@ -143,6 +144,10 @@ a plist. Supported properties are
   :sort-order      Specify the sort order to be used for the search.
                    Possible values are `oldest-first', `newest-first'
                    or nil. Nil means use the default sort order.
+  :excluded        Whether to show mail with excluded tags in the
+                   search. Possible values are `hide', `show',
+                   or nil. Nil means use the default value of
+                   `notmuch-search-hide-excluded'.
   :search-type     Specify whether to run the search in search-mode,
                    tree mode or unthreaded mode. Set to `tree' to
                    specify tree mode, \\='unthreaded to specify
@@ -484,19 +489,19 @@ diagonal."
 	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest _ignore)
-  (cl-case (widget-get widget :notmuch-search-type)
-   (tree
-    (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
-      (notmuch-tree (widget-get widget :notmuch-search-terms)
-		    nil nil n nil nil nil
-		    (widget-get widget :notmuch-search-oldest-first))))
-   (unthreaded
-    (let ((n (notmuch-search-format-buffer-name (widget-value widget)
-						"unthreaded" t)))
-      (notmuch-unthreaded (widget-get widget :notmuch-search-terms) nil nil n)))
-   (t
-    (notmuch-search (widget-get widget :notmuch-search-terms)
-		    (widget-get widget :notmuch-search-oldest-first)))))
+  (let ((search-terms (widget-get widget :notmuch-search-terms))
+	(oldest-first (widget-get widget :notmuch-search-oldest-first))
+	(exclude (widget-get widget :notmuch-search-hide-excluded)))
+    (cl-case (widget-get widget :notmuch-search-type)
+      (tree
+       (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
+	 (notmuch-tree search-terms nil nil n nil nil nil oldest-first exclude)))
+      (unthreaded
+       (let ((n (notmuch-search-format-buffer-name (widget-value widget)
+						   "unthreaded" t)))
+	 (notmuch-unthreaded search-terms nil nil n nil oldest-first exclude)))
+      (t
+       (notmuch-search search-terms oldest-first exclude)))))
 
 (defun notmuch-saved-search-count (search)
   (car (notmuch--process-lines notmuch-command "count" search)))
@@ -643,6 +648,10 @@ with `notmuch-hello-query-counts'."
 				     (newest-first nil)
 				     (oldest-first t)
 				     (otherwise notmuch-search-oldest-first)))
+		     (exclude (cl-case (plist-get elem :excluded)
+				(hide t)
+				(show nil)
+				(otherwise notmuch-search-hide-excluded)))
 		     (search-type (plist-get elem :search-type))
 		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
@@ -652,6 +661,7 @@ with `notmuch-hello-query-counts'."
 			       :notmuch-search-terms query
 			       :notmuch-search-oldest-first oldest-first
 			       :notmuch-search-type search-type
+			       :notmuch-search-hide-excluded exclude
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))

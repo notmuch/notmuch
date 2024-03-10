@@ -232,6 +232,10 @@ menu of results that the user can explore further by pressing
 
     Refresh the buffer
 
+.. el:define-key:: i
+
+    Toggle whether to show messages with excluded tags in search results.
+
 .. el:define-key:: ?
 
     Display full set of key bindings
@@ -559,6 +563,9 @@ tags.
 
    Filter the current search results based on an additional tag
 
+.. el:define-key:: i
+
+    Toggle whether to show messages with excluded tags in search results.
 
 .. el:define-key:: g
    =

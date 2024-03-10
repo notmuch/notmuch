@@ -105,6 +105,16 @@ search."
   :group 'notmuch-search)
 (make-variable-buffer-local 'notmuch-search-oldest-first)
 
+(defcustom notmuch-search-hide-excluded t
+  "Hide mail tagged with a excluded tag.
+
+Excluded tags are defined in the users configuration file under
+the search section. When this variable is true, any mail with
+such a tag will not be shown in the search output."
+  :type 'boolean
+  :group 'notmuch-search)
+(make-variable-buffer-local 'notmuch-search-hide-excluded)
+
 (defcustom notmuch-poll-script nil
   "[Deprecated] Command to run to incorporate new mail into the notmuch database.
 
