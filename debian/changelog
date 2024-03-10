@@ -4,7 +4,7 @@ notmuch (0.38.3-1) unstable; urgency=medium
   * Bug fix: "Recommends transitional package gnupg-agent instead of
     gpg-agent", thanks to Andreas Metzler (Closes: #1064114).
 
- -- David Bremner <bremner@debian.org>  Sat, 17 Feb 2024 09:03:50 -0400
+ -- David Bremner <bremner@debian.org>  Sat, 09 Mar 2024 23:13:07 -0400
 
 notmuch (0.38.2-1.1) unstable; urgency=medium
 
