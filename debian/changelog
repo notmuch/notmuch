@@ -1,6 +1,12 @@
 notmuch (0.38.3-1) unstable; urgency=medium
 
   * New upstream bugfix release
+
+ -- David Bremner <bremner@debian.org>  Sat, 09 Mar 2024 22:49:01 -0400
+
+notmuch (0.38.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release
   * Bug fix: "Recommends transitional package gnupg-agent instead of
     gpg-agent", thanks to Andreas Metzler (Closes: #1064114).
 
