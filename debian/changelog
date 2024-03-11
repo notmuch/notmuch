@@ -1,3 +1,18 @@
+notmuch (0.38.3-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Bug fix: "Recommends transitional package gnupg-agent instead of
+    gpg-agent", thanks to Andreas Metzler (Closes: #1064114).
+
+ -- David Bremner <bremner@debian.org>  Sat, 09 Mar 2024 23:13:07 -0400
+
+notmuch (0.38.2-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Rename libraries for 64-bit time_t transition.  Closes: #1063205
+
+ -- Benjamin Drung <bdrung@debian.org>  Wed, 28 Feb 2024 23:56:48 +0000
+
 notmuch (0.38.2-1) unstable; urgency=medium
 
   * New upstream bugfix release
