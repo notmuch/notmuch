@@ -170,7 +170,7 @@ Library
 
 Add the `sexp` prefix to the infix (traditional) query parser. This
 allows specific subqueries to be parsed by the sexp parser (with
-appropropriate quoting). See `notmuch-search-terms(7)` for details.
+appropriate quoting). See `notmuch-search-terms(7)` for details.
 
 Add another heuristic to regexp fields to prevent phrase parsing of
 bracketed sub-expressions.
@@ -192,7 +192,7 @@ the database.
 Documentation
 -------------
 
-Reorganize documention for `notmuch-config`. Add a few links from
+Reorganize documentation for `notmuch-config`. Add a few links from
 other man pages.
 
 Emacs
@@ -239,7 +239,7 @@ Fix some small memory leaks in `notmuch_database_open_with_config`.
 CLI
 ---
 
-Improve handling of leading/trailing punctation and space for
+Improve handling of leading/trailing punctuation and space for
 configuration lists.
 
 Only ignore `.notmuch` at the top level in `notmuch new`.
@@ -258,7 +258,7 @@ lazily.
 Don't add space to completion candidates, improves compatibility with
 third party completion frameworks.
 
-Make citation formating more robust against whitespace.
+Make citation formatting more robust against whitespace.
 
 Use `--excludes=false` when generating the 'All tags' section.
 
@@ -659,7 +659,7 @@ Notmuch 0.31.2 (2020-11-08)
 Build
 -----
 
-Catch one more occurence of "version" in the build system, which
+Catch one more occurrence of "version" in the build system, which
 caused the file to be regenerated in the release tarball.
 
 Notmuch 0.31.1 (2020-11-08)
