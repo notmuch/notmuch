@@ -71,4 +71,36 @@ Fcc: MAIL_DIR/sent
 <#secure method=pgpmime mode=sign>
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
+
+add_email_corpus attachment
+test_begin_subtest "Saving a draft keeps hidden headers"
+test_emacs '(notmuch-mua-new-reply "id:874llc2bkp.fsf@curie.anarc.at")
+            (message-goto-subject)
+            (delete-line)
+            (insert "Subject: draft-test-reply\n")
+	    (test-output "DRAFT")
+	    (notmuch-draft-postpone)
+	    (notmuch-show "subject:draft-test-reply")
+	    (notmuch-show-resume-message)
+	    (test-output)'
+notmuch_dir_sanitize OUTPUT > OUTPUT.clean
+
+cat <<EOF > EXPECTED
+References: <87d10042pu.fsf@curie.anarc.at> <87woy8vx7i.fsf@tesseract.cs.unb.ca> <87a7v42bv9.fsf@curie.anarc.at> <874llc2bkp.fsf@curie.anarc.at>
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Antoine Beaupré <anarcat@orangeseeds.org>
+Subject: draft-test-reply
+In-Reply-To: <874llc2bkp.fsf@curie.anarc.at>
+Fcc: MAIL_DIR/sent
+--text follows this line--
+Antoine Beaupré <anarcat@orangeseeds.org> writes:
+
+> And obviously I forget the frigging attachment.
+>
+>
+> PS: don't we have a "you forgot to actually attach the damn file" plugin
+> when we detect the word "attachment" and there's no attach? :p
+EOF
+test_expect_equal_file EXPECTED OUTPUT.clean
+
 test_done

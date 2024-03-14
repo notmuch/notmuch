@@ -145,14 +145,15 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 
 (defmacro with-temporary-notmuch-message-buffer (&rest body)
   "Set-up a temporary copy of the current message-mode buffer."
-  `(let ((case-fold-search t)
-	 (buf (current-buffer))
-	 (mml-externalize-attachments message-fcc-externalize-attachments))
-     (with-current-buffer (get-buffer-create " *message temp*")
-       (message-clone-locals buf) ;; for message-encoded-mail-cache
-       (erase-buffer)
-       (insert-buffer-substring buf)
-       ,@body)))
+  `(without-restriction
+     (let ((case-fold-search t)
+	   (buf (current-buffer))
+	   (mml-externalize-attachments message-fcc-externalize-attachments))
+       (with-current-buffer (get-buffer-create " *message temp*")
+	 (message-clone-locals buf) ;; for message-encoded-mail-cache
+	 (erase-buffer)
+	 (insert-buffer-substring buf)
+	 ,@body))))
 
 (defun notmuch-maildir-setup-message-for-saving ()
   "Setup message for saving.
