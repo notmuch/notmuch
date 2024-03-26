@@ -1195,6 +1195,7 @@ default sort order is defined by `notmuch-search-oldest-first'."
   (setq notmuch-search-oldest-first (not notmuch-search-oldest-first))
   (notmuch-tree-refresh-view))
 
+;;;###autoload
 (defun notmuch-tree (&optional query query-context target buffer-name
 			       open-target unthreaded parent-buffer oldest-first)
   "Display threads matching QUERY in tree view.
