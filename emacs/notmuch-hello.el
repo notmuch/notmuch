@@ -117,6 +117,12 @@ searches so they still work in customize."
 				    (const :tag "Oldest-first" oldest-first)
 				    (const :tag "Newest-first" newest-first)))
 		     (group :format "%v" :inline t
+			    (const :format "" :excluded)
+			    (choice :tag " Hide Excluded"
+				    (const :tag "Default" nil)
+				    (const :tag "Hide" hide)
+				    (const :tag "Show" show)))
+		     (group :format "%v" :inline t
 			    (const :format "" :search-type)
 			    (choice :tag " Search Type"
 				    (const :tag "Search mode" nil)
