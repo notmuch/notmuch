@@ -222,6 +222,15 @@ test_emacs '(let ((notmuch-tree-outline-enabled t))
 # folding all messages by height or depth should look the same
 test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
+test_begin_subtest "notmuch-tree for message with subject with embedded CRNL"
+test_subtest_known_broken
+add_message "[subject]=\"=?UTF-8?B?8J+Pi++4jw==?= A SALE to boost your =?UTF-8?Q?workout=0D=0A?=\" [body]=the-message-body" 
+test_emacs "(notmuch-tree \"id:${gen_msg_id}\")
+	    (notmuch-test-wait)
+	    (test-output)"
+# one line of output, plus "End of search results."
+test_expect_equal "$(wc -l < OUTPUT)" 2
+
 add_email_corpus duplicate
 
 ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
