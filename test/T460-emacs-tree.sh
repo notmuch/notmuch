@@ -222,8 +222,6 @@ test_emacs '(let ((notmuch-tree-outline-enabled t))
 # folding all messages by height or depth should look the same
 test_expect_equal_file $EXPECTED/notmuch-tree-tag-inbox OUTPUT
 
-test_done
-
 add_email_corpus duplicate
 
 ID3=87r2ecrr6x.fsf@zephyr.silentflame.com
