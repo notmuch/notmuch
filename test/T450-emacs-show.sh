@@ -460,4 +460,19 @@ subject4=$(grep '^Subject:' $FILE4)
 subject=$(grep '^Subject:' OUTPUT)
 test_expect_equal "$subject4" "$subject"
 
+test_begin_subtest "notmuch-show for message with subject with embedded CRNL"
+add_message "[subject]=\"=?UTF-8?B?8J+Pi++4jw==?= A SALE to boost your =?UTF-8?Q?workout=0D=0A?=\" [body]=the-message-body" 
+test_emacs "(notmuch-show \"id:${gen_msg_id}\")
+	    (test-output \"OUTPUT.raw\")"
+cat <<EOF >EXPECTED
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: 🏋️ A SALE to boost your workout 
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: GENERATED_DATE
+
+the-message-body
+EOF
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
