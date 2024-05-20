@@ -946,7 +946,9 @@ unchanged ADDRESS if parsing fails."
 		    'face face)))
 
      ((string-equal field "subject")
-      (let ((bare-subject (notmuch-show-strip-re (plist-get headers :Subject)))
+      (let ((bare-subject
+	     (notmuch-sanitize
+	      (notmuch-show-strip-re (plist-get headers :Subject))))
 	    (previous-subject notmuch-tree-previous-subject)
 	    (face (if match
 		      'notmuch-tree-match-subject-face
