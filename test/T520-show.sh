@@ -45,6 +45,12 @@ if [ "${NOTMUCH_HAVE_SFSEXP-0}" = "1" ]; then
 
 fi
 
+test_begin_subtest "quoting in From"
+test_subtest_known_broken
+add_message '[from]="=?UTF-8?Q?=3Cfoo=40example.org=3E=2C?= <bar@example.org>"'
+output=$(notmuch show id:${gen_msg_id}|grep From:)
+test_expect_equal "${output}" 'From: "<foo@example.org>," <bar@example.org>'
+
 add_email_corpus duplicate
 
 ID1=debian/2.6.1.dfsg-4-1-g87ea161@87ea161e851dfb1ea324af00e4ecfccc18875e15
