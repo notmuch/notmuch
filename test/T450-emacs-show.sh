@@ -341,7 +341,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "display of text/calendar, symlinked tmpdir"
-test_subtest_known_broken
 mkdir real-tmp
 ln -s real-tmp tmp
 test_emacs "(let ((notmuch-show-all-multipart/alternative-parts t)

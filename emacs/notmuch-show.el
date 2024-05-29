@@ -864,7 +864,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 		    (unless (icalendar-import-buffer file t)
 		      (error "Icalendar import error. %s"
 			     "See *icalendar-errors* for more information"))
-		    (set-buffer (get-file-buffer file))
+		    (set-buffer (find-buffer-visiting file))
 		    (setq result (buffer-substring (point-min) (point-max)))
 		    (set-buffer-modified-p nil)
 		    (kill-buffer (current-buffer)))
