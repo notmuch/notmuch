@@ -318,6 +318,28 @@ test_expect_equal "$(cat MESSAGES)" "COMPLETE"
 
 add_email_corpus attachment
 
+test_begin_subtest "display of text/calendar"
+test_emacs '(let ((notmuch-show-all-multipart/alternative-parts t))
+	   (notmuch-show "id:YT3PR01MB10572EFC9F7C81F9446214768CEF72@YT3PR01MB10572.CANPRD01.PROD.OUTLOOK.COM"))
+	(test-visible-output "OUTPUT")'
+cat <<EOF > EXPECTED
+David Bremner <bremner@example.com> (1970-01-01) (inbox)
+Subject: test
+To: "david@tethera.net" <david@tethera.net>
+Date: Thu, 01 Jan 1970 00:00:00 +0000
+
+[ multipart/alternative ]
+[ text/plain ]
+This meeting will could have been an email
+[ text/calendar ]
+%%(and (diary-cyclic 1 5 27 2024) (diary-block 5 27 2024 8 27 2024)) 17:00-17:30 test [In-person]
+ Desc: This meeting will could have been an email
+
+
+ Organizer: mailto:bremner@example.com
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "tar not inlined by default"
 test_emacs '(notmuch-show "id:874llc2bkp.fsf@curie.anarc.at")
 	(test-visible-output "OUTPUT")'
