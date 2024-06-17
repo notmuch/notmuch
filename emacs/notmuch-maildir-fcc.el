@@ -145,7 +145,8 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 
 (defmacro with-temporary-notmuch-message-buffer (&rest body)
   "Set-up a temporary copy of the current message-mode buffer."
-  `(without-restriction
+  `(save-restriction
+     (widen)
      (let ((case-fold-search t)
 	   (buf (current-buffer))
 	   (mml-externalize-attachments message-fcc-externalize-attachments))
