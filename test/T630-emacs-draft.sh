@@ -76,7 +76,7 @@ add_email_corpus attachment
 test_begin_subtest "Saving a draft keeps hidden headers"
 test_emacs '(notmuch-mua-new-reply "id:874llc2bkp.fsf@curie.anarc.at")
             (message-goto-subject)
-            (delete-line)
+            (delete-region (line-beginning-position) (line-beginning-position 2))
             (insert "Subject: draft-test-reply\n")
 	    (test-output "DRAFT")
 	    (notmuch-draft-postpone)
