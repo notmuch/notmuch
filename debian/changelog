@@ -1,3 +1,9 @@
+notmuch (0.38.3-2) unstable; urgency=medium
+
+  * No change upload to rebuild with dh-elpa 2.1.5
+
+ -- David Bremner <bremner@debian.org>  Fri, 26 Jul 2024 11:59:41 +0900
+
 notmuch (0.38.3-1) unstable; urgency=medium
 
   * New upstream bugfix release
