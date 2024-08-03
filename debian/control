@@ -236,9 +236,10 @@ Depends:
  ${misc:Depends},
  ${perl:Depends},
 Recommends:
- mutt,
+ mutt | neomutt,
 Enhances:
  mutt,
+ neomutt,
  notmuch,
 Description: thread-based email index, search and tagging (Mutt interface)
  notmuch-mutt provides integration among the Mutt mail user agent and

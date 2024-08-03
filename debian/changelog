@@ -3,6 +3,9 @@ notmuch (0.38.3-3) UNRELEASED; urgency=medium
   [ James McCoy ]
   * Convert notmuch-vim to Vim addon policy 2.0 (Closes: #1015936).
 
+  [ Nicholas D Steeves ]
+  * Allow neomutt to fulfill the "mutt" requirement of notmuch-mutt, and add
+    related Enhances (Closes: #1029190).
  -- Nicholas D Steeves <sten@debian.org>  Sat, 03 Aug 2024 14:33:27 -0400
 
 notmuch (0.38.3-2) unstable; urgency=medium
