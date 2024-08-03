@@ -1,3 +1,10 @@
+notmuch (0.38.3-3) UNRELEASED; urgency=medium
+
+  [ James McCoy ]
+  * Convert notmuch-vim to Vim addon policy 2.0 (Closes: #1015936).
+
+ -- Nicholas D Steeves <sten@debian.org>  Sat, 03 Aug 2024 14:33:27 -0400
+
 notmuch (0.38.3-2) unstable; urgency=medium
 
   * No change upload to rebuild with dh-elpa 2.1.5
