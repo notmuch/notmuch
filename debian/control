@@ -14,6 +14,7 @@ Build-Depends: dpkg-dev (>= 1.22.5),
  debhelper-compat (= 13),
  dh-elpa (>= 1.3),
  dh-python,
+ dh-sequence-vim-addon,
  desktop-file-utils,
  doxygen,
  dpkg-dev (>= 1.17.14),
@@ -211,9 +212,9 @@ Replaces:
 Depends:
  notmuch,
  ruby-notmuch,
- vim-addon-manager,
  vim-ruby,
  ${misc:Depends},
+ ${vim-addon:Depends},
 Recommends:
  ruby-mail,
 Description: thread-based email index, search and tagging (vim interface)
