@@ -55,7 +55,7 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
 Recommends:
- elpa-notmuch | notmuch-vim | notmuch-mutt | alot,
+ elpa-notmuch | notmuch-vim | notmuch-mutt | alot | astroid,
  gpg-agent,
  gpgsm,
 Suggests:
