@@ -1,3 +1,29 @@
+notmuch (0.38.3-3) unstable; urgency=medium
+
+  [ James McCoy ]
+  * Convert notmuch-vim to Vim addon policy 2.0 (Closes: #1015936).
+
+  [ Nicholas D Steeves ]
+  * Allow neomutt to fulfill the "mutt" requirement of notmuch-mutt, and add
+    related Enhances (Closes: #1029190).
+  * Add Astroid as an alternative Recommends; this one is a GUI client that
+    may be less intimidating for new users.
+
+  [ David Bremner ]
+  * remove "Build-Conflicts: gdb-minimal", thanks to Jeremy Bícha (Closes:
+    #1077911).
+  * skip test T810-tsan everywhere, as it seems broken by the latest glib
+    (Closes: #1077910). Thanks to Jeremy Bícha for the report
+  * Replace build-dependency on pkg-config with pkgconf
+
+ -- David Bremner <bremner@debian.org>  Mon, 05 Aug 2024 10:13:01 -0300
+
+notmuch (0.38.3-2) unstable; urgency=medium
+
+  * No change upload to rebuild with dh-elpa 2.1.5
+
+ -- David Bremner <bremner@debian.org>  Fri, 26 Jul 2024 11:59:41 +0900
+
 notmuch (0.38.3-1) unstable; urgency=medium
 
   * New upstream bugfix release
