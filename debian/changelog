@@ -1,4 +1,4 @@
-notmuch (0.38.3-3) UNRELEASED; urgency=medium
+notmuch (0.38.3-3) unstable; urgency=medium
 
   [ James McCoy ]
   * Convert notmuch-vim to Vim addon policy 2.0 (Closes: #1015936).
@@ -12,8 +12,10 @@ notmuch (0.38.3-3) UNRELEASED; urgency=medium
   [ David Bremner ]
   * remove "Build-Conflicts: gdb-minimal", thanks to Jeremy Bícha (Closes:
     #1077911).
+  * skip test T810-tsan everywhere, as it seems broken by the latest glib
+    (Closes: #1077910). Thanks to Jeremy Bícha for the report
 
- -- David Bremner <bremner@debian.org>  Mon, 05 Aug 2024 07:02:47 -0300
+ -- David Bremner <bremner@debian.org>  Mon, 05 Aug 2024 08:48:01 -0300
 
 notmuch (0.38.3-2) unstable; urgency=medium
 
