@@ -9,7 +9,11 @@ notmuch (0.38.3-3) UNRELEASED; urgency=medium
   * Add Astroid as an alternative Recommends; this one is a GUI client that
     may be less intimidating for new users.
 
- -- Nicholas D Steeves <sten@debian.org>  Sat, 03 Aug 2024 14:33:27 -0400
+  [ David Bremner ]
+  * remove "Build-Conflicts: gdb-minimal", thanks to Jeremy Bícha (Closes:
+    #1077911).
+
+ -- David Bremner <bremner@debian.org>  Mon, 05 Aug 2024 07:02:47 -0300
 
 notmuch (0.38.3-2) unstable; urgency=medium
 
