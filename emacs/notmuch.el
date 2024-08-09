@@ -973,20 +973,17 @@ unthreaded) and whether it's SAVED (t or nil)."
 (defun notmuch-search-buffer-title (query &optional type)
   "Returns the title for a buffer with notmuch search results."
   (let* ((saved-search
-	  (cl-loop with match
-		   with match-length = 0
-		   for candidate in notmuch-saved-searches
-		   for length = (let* ((query* (notmuch-saved-search-get
-						candidate
-						:query))
-				       (regexp (concat "^"
-						       (regexp-quote query*))))
-				  (and (string-match regexp query)
-				       (length (match-string 0 query))))
-		   if (and length (> length match-length))
-		   do (setq match candidate
-			    match-length length)
-		   finally return match))
+	  (let (longest
+		(longest-length 0))
+	    (cl-loop for tuple in notmuch-saved-searches
+		     if (let ((quoted-query
+			       (regexp-quote
+				(notmuch-saved-search-get tuple :query))))
+			  (and (string-match (concat "^" quoted-query) query)
+			       (> (length (match-string 0 query))
+				  longest-length)))
+		     do (setq longest tuple))
+	    longest))
 	 (saved-search-name (notmuch-saved-search-get saved-search :name))
 	 (saved-search-type (notmuch-saved-search-get saved-search :search-type))
 	 (saved-search-query (notmuch-saved-search-get saved-search :query)))
