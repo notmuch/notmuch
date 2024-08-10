@@ -1139,7 +1139,10 @@ object, and with the tree results buffer as the current buffer.")
 	  (goto-char (point-max))
 	  (insert string))
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
-					 results-buf)))))
+					 results-buf))
+      (with-current-buffer results-buf
+	(when notmuch-hl-line
+	  (notmuch-hl-line-mode))))))
 
 (defun notmuch-tree-worker (basic-query &optional query-context target
 					open-target unthreaded oldest-first
