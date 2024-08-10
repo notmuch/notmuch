@@ -1091,7 +1091,8 @@ Complete list of currently available key bindings:
 
 \\{notmuch-tree-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
-  (hl-line-mode 1)
+  (when notmuch-hl-line
+    (hl-line-mode 1))
   (setq buffer-read-only t)
   (setq truncate-lines t)
   (when notmuch-tree-outline-enabled (notmuch-tree-outline-mode 1)))

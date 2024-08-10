@@ -147,7 +147,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line nil))
 			   nil))'
 
 test_begin_subtest "hl-line disabled, tree"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line nil))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -156,7 +155,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line nil))
 			   nil))'
 
 test_begin_subtest "hl-line disabled, unthreaded"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line nil))
 			(notmuch-unthreaded "tag:inbox")
 			(notmuch-test-wait)
