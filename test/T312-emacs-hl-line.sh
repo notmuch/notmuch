@@ -20,7 +20,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			 (list 1 t)))'
 
 test_begin_subtest "line 1, tree"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -31,7 +30,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			 (list 1 t)))'
 
 test_begin_subtest "line 1, unthreaded"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -50,7 +48,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-test-expect-equal (overlay-start hl-line-overlay) 1))'
 
 test_begin_subtest "line 1, tree, refresh"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -63,7 +60,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			 (list 1 t)))'
 
 test_begin_subtest "line 1, unthreaded, refresh"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -115,7 +111,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			   (line-number-at-pos (overlay-start hl-line-overlay)) 12))'
 
 test_begin_subtest "line 12, tree, refresh"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)
@@ -127,7 +122,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			   (line-number-at-pos (overlay-start hl-line-overlay)) 12))'
 
 test_begin_subtest "line 12, unthreaded, refresh"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-tree "tag:inbox")
 			(notmuch-test-wait)

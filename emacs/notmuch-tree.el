@@ -1122,6 +1122,8 @@ object, and with the tree results buffer as the current buffer.")
 		(unless (= exit-status 0)
 		  (insert (format " (process returned %d)" exit-status)))
 		(insert "\n"))))
+	  (when (and notmuch-hl-line (= exit-status 0))
+	    (notmuch-hl-line-mode))
 	  (run-hook-with-args 'notmuch-tree-process-exit-functions proc))))))
 
 (defun notmuch-tree-process-filter (proc string)
