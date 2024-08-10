@@ -104,7 +104,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			   (line-number-at-pos (overlay-start hl-line-overlay)) 12))'
 
 test_begin_subtest "line 12, search, refresh"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line t))
 			(notmuch-search "tag:inbox")
 			(notmuch-test-wait)
@@ -140,7 +139,6 @@ test_emacs_expect_t '(let ((notmuch-hl-line t))
 			   (line-number-at-pos (overlay-start hl-line-overlay)) 12))'
 
 test_begin_subtest "hl-line disabled, search"
-test_subtest_known_broken
 test_emacs_expect_t '(let ((notmuch-hl-line nil))
 			(notmuch-search "tag:inbox")
 			(notmuch-test-wait)
