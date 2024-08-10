@@ -133,6 +133,11 @@ there will be called at other points of notmuch execution."
   :group 'notmuch-search
   :group 'notmuch-hooks)
 
+(defcustom notmuch-hl-line t
+  "Use hl-line-mode to highlight current thread / message"
+  :type 'boolean
+  :group 'notmuch)
+
 ;;; Mime Utilities
 
 (defun notmuch-foreach-mime-part (function mm-handle)
