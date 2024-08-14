@@ -357,6 +357,42 @@ The following motion/navigation bindings are also available in
 
     Move to previous matching message
 
+Actions
+-------
+
+The following actions on messages are also available in
+:ref:`notmuch-tree` and :ref:`notmuch-unthreaded`.
+
+.. el:define-key:: b
+                   M-x notmuch-show-resend-message
+
+   Resend (*bounce*) message.
+
+.. el:define-key:: e
+
+   Resume *editing* a message in :ref:`notmuch-message`. This is
+   particularly useful for :ref:`notmuch-emacs-drafts`, but can be
+   used for other messages as well.
+
+.. el:define-key:: f
+                   M-x notmuch-show-forward-message
+
+   Forward (as a MIME attachment) message
+
+.. el:define-key:: r
+                   M-x notmuch-show-reply-to-sender
+
+   Reply to sender (only) using :ref:`notmuch-message`
+
+.. el:define-key:: w
+                   M-x notmuch-show-save-attachments
+
+   |docstring::notmuch-show-save-attachments|
+
+.. el:define-key:: R
+                   M-x notmuch-show-reply
+
+   |docstring::notmuch-show-reply|
 
 Configuration
 -------------
@@ -666,6 +702,8 @@ Keybindings are the same as :any:`notmuch-tree`.
 
    See also :el:defcustom:`notmuch-search-result-format` and
    :el:defcustom:`notmuch-tree-result-format`.
+
+.. _notmuch-message:
 
 notmuch-message
 ===============
