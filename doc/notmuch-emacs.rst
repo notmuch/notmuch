@@ -320,6 +320,27 @@ pressing RET after positioning the cursor on a hidden part.
 
     :ref:`show-copy`
 
+.. el:define-key:: +
+                   -
+
+    Add or remove arbitrary tags from the current message.
+
+.. el:define-key:: !
+
+    |docstring::notmuch-show-toggle-elide-non-matching|
+
+.. el:define-key:: ?
+
+    Display full set of key bindings
+
+.. _show-navigation:
+
+Navigation
+----------
+
+The following motion/navigation bindings are also available in
+:ref:`notmuch-tree` and :ref:`notmuch-unthreaded`.
+
 .. el:define-key:: N
 
     Move to next message
@@ -336,18 +357,9 @@ pressing RET after positioning the cursor on a hidden part.
 
     Move to previous matching message
 
-.. el:define-key:: +
-                   -
 
-    Add or remove arbitrary tags from the current message.
-
-.. el:define-key:: !
-
-    |docstring::notmuch-show-toggle-elide-non-matching|
-
-.. el:define-key:: ?
-
-    Display full set of key bindings
+Configuration
+-------------
 
 Display of messages can be controlled by the following variables; see also :ref:`show-large`.
 
@@ -522,7 +534,7 @@ notmuch-tree
 ``notmuch-tree-mode`` displays the results of a "notmuch tree" of your
 email archives. Each line in the buffer represents a single
 message giving the relative date, the author, subject, and any
-tags.
+tags. For common navigation commands see :ref:`show-navigation`.
 
 .. el:define-key:: c
 
@@ -531,22 +543,6 @@ tags.
 .. el:define-key:: <return>
 
    Displays that message.
-
-.. el:define-key:: N
-
-    Move to next message
-
-.. el:define-key:: P
-
-    Move to previous message
-
-.. el:define-key:: n
-
-    Move to next matching message
-
-.. el:define-key:: p
-
-    Move to previous matching message
 
 .. el:define-key:: o
    M-x notmuch-tree-toggle-order
