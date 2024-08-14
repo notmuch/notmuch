@@ -5,7 +5,7 @@
 | b            | notmuch-search-scroll-down                   | notmuch-show-resend-message                           | notmuch-show-resend-message                |
 | c            | notmuch-search-stash-map                     | notmuch-show-stash-map                                | notmuch-show-stash-map                     |
 | d            |                                              |                                                       |                                            |
-| e            |                                              |                                                       | (notmuch-tree-button-activate)             |
+| e            |                                              | notmuch-show-resume-message                           | notmuch-tree-resume-message                |
 | f            |                                              | notmuch-show-forward-message                          | notmuch-show-forward-message               |
 | g            |                                              |                                                       |                                            |
 | h            |                                              | notmuch-show-toggle-visibility-headers                |                                            |
