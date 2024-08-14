@@ -671,6 +671,54 @@ Keybindings are the same as :any:`notmuch-tree`.
    See also :el:defcustom:`notmuch-search-result-format` and
    :el:defcustom:`notmuch-tree-result-format`.
 
+notmuch-message
+===============
+
+Notmuch uses a slighly customized version of the standard emacs email
+composition mode info:message.
+
+.. _notmuch-emacs-drafts:
+
+Drafts
+------
+
+.. el:define-key:: C-x C-p
+                   M-x notmuch-draft-postpone
+
+   Postpone (save and bury) a draft.
+
+.. el:define-key:: C-x C-s
+                   M-x notmuch-draft-save
+
+   Save a draft and continue editing.
+
+.. _notmuch-emacs-replies:
+
+.. _notmuch-emacs-fcc:
+
+Fcc
+---
+
+.. el:defcustom:: notmuch-fcc-dirs
+
+   |docstring::notmuch-fcc-dirs|
+
+.. el:defcustom:: notmuch-maildir-use-notmuch-insert
+
+   |docstring::notmuch-maildir-use-notmuch-insert|
+
+Replies
+-------
+
+.. el:defcustom:: message-dont-reply-to-names
+
+       When composing mail replies, Emacs's message mode uses the
+       variable :code:`message-dont-reply-to-names` to exclude
+       recipients matching a given collection of regular expressions
+       or satisfying an arbitrary predicate.  Notmuch's MUA inherits
+       this standard mechanism and will honour your customization of
+       this variable.
+
 Global key bindings
 ===================
 
@@ -769,15 +817,6 @@ Sending Mail
        sending package for commands like :code:`report-emacs-bug` and
        :code:`compose-mail`.  To use ``notmuch`` for this, customize this
        variable to the symbol :code:`notmuch-user-agent`.
-
-.. el:defcustom:: message-dont-reply-to-names
-
-       When composing mail replies, Emacs's message mode uses the
-       variable :code:`message-dont-reply-to-names` to exclude
-       recipients matching a given collection of regular expressions
-       or satisfying an arbitrary predicate.  Notmuch's MUA inherits
-       this standard mechanism and will honour your customization of
-       this variable.
 
 Init File
 ---------

@@ -47,7 +47,7 @@ if tags.has('WITH_EMACS'):
     # Hacky reimplementation of include to workaround limitations of
     # sphinx-doc
     lines = ['.. include:: /../emacs/rstdoc.rsti\n\n'] # in the source tree
-    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-hello.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti', 'notmuch-tree.rsti'):
+    for file in ('notmuch.rsti', 'notmuch-lib.rsti', 'notmuch-hello.rsti', 'notmuch-show.rsti', 'notmuch-tag.rsti', 'notmuch-tree.rsti', 'notmuch-maildir-fcc.rsti'):
         lines.extend(open(rsti_dir+'/'+file))
     rst_epilog = ''.join(lines)
     del lines
