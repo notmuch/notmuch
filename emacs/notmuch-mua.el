@@ -424,7 +424,7 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 	       (addr (and good-tokens (mapconcat #'identity good-tokens ", "))))
 	  (message-replace-header header addr))))))
 
-;;;#autoload
+;;;###autoload
 (defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest _ignored)
@@ -646,24 +646,24 @@ unencrypted.  Really send? "))))
 	  (message-send-and-exit arg)
 	(message-send arg)))))
 
-;;;#autoload
+;;;###autoload
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (notmuch-mua-send-common arg t))
 
-;;;#autoload
+;;;###autoload
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
   (notmuch-mua-send-common arg))
 
-;;;#autoload
+;;;###autoload
 (defun notmuch-mua-kill-buffer ()
   (interactive)
   (message-kill-buffer))
 
 ;;; _
 
-;;;#autoload
+;;;###autoload
 (define-mail-user-agent 'notmuch-user-agent
   'notmuch-mua-mail
   'notmuch-mua-send-and-exit
