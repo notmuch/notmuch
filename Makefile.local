@@ -1,7 +1,8 @@
 # -*- makefile-gmake -*-
 
 .PHONY: all
-all: notmuch notmuch-shared build-man build-info ruby-bindings python-cffi-bindings notmuch-git nmbug
+all: notmuch notmuch-shared git-remote-notmuch git-remote-notmuch-shared \
+	build-man build-info ruby-bindings python-cffi-bindings notmuch-git nmbug
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -272,10 +273,17 @@ notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libnotmuch_util.a parse
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
+git-remote-notmuch: git-remote-notmuch.o status.o tag-util.o query-string.o lib/libnotmuch.a util/libnotmuch_util.a parse-time-string/libparse-time-string.a
+	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
+
+git-remote-notmuch-shared: git-remote-notmuch.o status.o tag-util.o query-string.o
+	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $^ $(FINAL_NOTMUCH_LDFLAGS) -o $@
+
 .PHONY: install
 install: all install-man install-info
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
+	install git-remote-notmuch-shared "$(DESTDIR)$(prefix)/bin/git-remote-notmuch"
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed to $(DESTDIR)$(prefix)"
@@ -300,6 +308,7 @@ endif
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
+CLEAN := $(CLEAN) git-remote-notmuch git-remote-notmuch.o
 CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
 CLEAN := $(CLEAN) .deps
 
