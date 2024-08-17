@@ -9,6 +9,11 @@ non-matched authors when showing threads. See
 `search.authors_separator` and `search.authors_matched_separator` in
 notmuch-config(1).
 
+Emacs
+-----
+
+Support for Emacs older than 27.1 is deprecated with this release.
+
 Notmuch 0.38.3 (2024-03-09)
 ===========================
 
