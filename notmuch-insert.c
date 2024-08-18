@@ -21,13 +21,13 @@
  * Author: Peter Wang <novalazy@gmail.com>
  */
 
+
+#include <fcntl.h>
+
 #include "notmuch-client.h"
 #include "tag-util.h"
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "string-util.h"
+#include "path-util.h"
 
 static volatile sig_atomic_t interrupted;
 
@@ -64,26 +64,6 @@ safe_gethostname (char *hostname, size_t len)
     }
 }
 
-/* Call fsync() on a directory path. */
-static bool
-sync_dir (const char *dir)
-{
-    int fd, r;
-
-    fd = open (dir, O_RDONLY);
-    if (fd == -1) {
-	fprintf (stderr, "Error: open %s: %s\n", dir, strerror (errno));
-	return false;
-    }
-
-    r = fsync (fd);
-    if (r)
-	fprintf (stderr, "Error: fsync %s: %s\n", dir, strerror (errno));
-
-    close (fd);
-
-    return r == 0;
-}
 
 /*
  * Check the specified folder name does not contain a directory
@@ -106,54 +86,6 @@ is_valid_folder_name (const char *folder)
 }
 
 /*
- * Make the given directory and its parents as necessary, using the
- * given mode. Return true on success, false otherwise. Partial
- * results are not cleaned up on errors.
- */
-static bool
-mkdir_recursive (const void *ctx, const char *path, int mode)
-{
-    struct stat st;
-    int r;
-    char *parent = NULL, *slash;
-
-    /* First check the common case: directory already exists. */
-    r = stat (path, &st);
-    if (r == 0) {
-	if (! S_ISDIR (st.st_mode)) {
-	    fprintf (stderr, "Error: '%s' is not a directory: %s\n",
-		     path, strerror (EEXIST));
-	    return false;
-	}
-
-	return true;
-    } else if (errno != ENOENT) {
-	fprintf (stderr, "Error: stat '%s': %s\n", path, strerror (errno));
-	return false;
-    }
-
-    /* mkdir parents, if any */
-    slash = strrchr (path, '/');
-    if (slash && slash != path) {
-	parent = talloc_strndup (ctx, path, slash - path);
-	if (! parent) {
-	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
-	    return false;
-	}
-
-	if (! mkdir_recursive (ctx, parent, mode))
-	    return false;
-    }
-
-    if (mkdir (path, mode)) {
-	fprintf (stderr, "Error: mkdir '%s': %s\n", path, strerror (errno));
-	return false;
-    }
-
-    return parent ? sync_dir (parent) : true;
-}
-
-/*
  * Create the given maildir folder, i.e. maildir and its
  * subdirectories cur/new/tmp. Return true on success, false
  * otherwise. Partial results are not cleaned up on errors.
@@ -165,6 +97,7 @@ maildir_create_folder (const void *ctx, const char *maildir, bool world_readable
     const int mode = (world_readable ? 0755 : 0700);
     char *subdir;
     unsigned int i;
+    char **status_string = NULL;
 
     for (i = 0; i < ARRAY_SIZE (subdirs); i++) {
 	subdir = talloc_asprintf (ctx, "%s/%s", maildir, subdirs[i]);
@@ -173,7 +106,7 @@ maildir_create_folder (const void *ctx, const char *maildir, bool world_readable
 	    return false;
 	}
 
-	if (! mkdir_recursive (ctx, subdir, mode))
+	if (mkdir_recursive (ctx, subdir, mode, status_string))
 	    return false;
     }
 
@@ -347,6 +280,7 @@ static char *
 maildir_write_new (const void *ctx, int fdin, const char *maildir, bool world_readable)
 {
     char *cleanpath, *tmppath, *newpath, *newdir;
+    char *status_string = NULL;
 
     tmppath = maildir_write_tmp (ctx, fdin, maildir, world_readable);
     if (! tmppath)
@@ -375,13 +309,15 @@ maildir_write_new (const void *ctx, int fdin, const char *maildir, bool world_re
 	goto FAIL;
     }
 
-    if (! sync_dir (newdir))
+    if (sync_dir (newdir, &status_string))
 	goto FAIL;
 
     return newpath;
 
   FAIL:
     unlink (cleanpath);
+    if (status_string)
+	fputs (status_string, stderr);
 
     return NULL;
 }
