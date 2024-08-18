@@ -38,6 +38,16 @@ $(dir)/notmuch-pkg.el: $(srcdir)/$(dir)/notmuch-pkg.el.tmpl
 all: $(dir)/notmuch-pkg.el
 install-emacs: $(dir)/notmuch-pkg.el
 
+emacs_autoloads := $(dir)/notmuch-autoloads.el
+ifeq ($(WITH_EMACS),1)
+$(emacs_autoloads): $(emacs_sources) $(dir)/autoloads-gen.el
+	$(call quiet,EMACS) -batch -L emacs -l autoloads-gen.el \
+		-f autoloads-gen-batch $@ $(emacs_sources)
+
+all: $(emacs_autoloads)
+install-emacs: $(emacs_autoloads)
+endif
+
 emacs_mua := $(dir)/notmuch-emacs-mua
 emacs_mua_desktop := $(dir)/notmuch-emacs-mua.desktop
 
@@ -115,6 +125,7 @@ install-emacs: $(emacs_sources) $(emacs_images)
 	install -m0644 $(emacs_sources) "$(DESTDIR)$(emacslispdir)"
 ifeq ($(WITH_EMACS),1)
 	install -m0644 $(emacs_bytecode) "$(DESTDIR)$(emacslispdir)"
+	install -m0644 $(emacs_autoloads) "$(DESTDIR)$(emacslispdir)"
 endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
@@ -130,4 +141,4 @@ ifeq ($(WITH_DESKTOP),1)
 endif
 
 CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el \
-	$(emacs_docstrings) docstring.stamp
+	$(emacs_autoloads) $(emacs_docstrings) docstring.stamp

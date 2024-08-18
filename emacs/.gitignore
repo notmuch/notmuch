@@ -3,3 +3,4 @@
 /*.rsti
 /notmuch-version.el
 /notmuch-pkg.el
+/notmuch-autoloads.el
