@@ -41,6 +41,21 @@ FILE *log_file = NULL;
 char *buffer = NULL;
 size_t buffer_len = 0;
 
+/* message state for tracking e.g. deletions */
+typedef enum {
+    MSG_STATE_UNKNOWN=0,
+    MSG_STATE_SEEN,
+    MSG_STATE_MISSING,
+    MSG_STATE_DELETED
+} _message_state_t;
+
+static bool
+set_message_state (GHashTable *mid_state, const char *mid, _message_state_t state)
+{
+    return g_hash_table_replace (mid_state, g_strdup (mid),
+				 GINT_TO_POINTER (state));
+}
+
 static inline bool
 equal_lastmod (const char *uuid1, unsigned long counter1,
 	       const char *uuid2, unsigned long counter2)
@@ -284,6 +299,226 @@ cmd_import (notmuch_database_t *notmuch,
     store_lastmod (notmuch, nm_dir);
 }
 
+static GString *
+read_data ()
+{
+    ssize_t nread;
+    size_t bytes;
+    size_t data_size;
+
+    g_auto (GStrv) tokens = NULL;
+
+    ASSERT ((nread = getline (&buffer, &buffer_len, stdin) != -1));
+
+    tokens = tokenize_buffer ();
+
+    str2ul (tokens[1], &data_size);
+
+    buffer = realloc (buffer, data_size + 1);
+    bytes = fread (buffer, 1, data_size, stdin);
+    ASSERT (bytes == data_size);
+
+    buffer_len = data_size;
+
+    return g_string_new_len (buffer, buffer_len);
+}
+
+static void
+free_string (GString *str)
+{
+    g_string_free (str, true);
+}
+
+static bool
+path_to_mid (notmuch_database_t *notmuch, const char *path, char **mid_p, size_t *mid_len_p)
+{
+    g_autofree char *basename = NULL;
+    const char *prefix = notmuch_config_get (notmuch, NOTMUCH_CONFIG_GIT_METADATA_PREFIX);
+
+    if (strncmp (prefix, path, strlen (prefix)))
+	return false;
+
+    basename = g_path_get_dirname (path + strlen (prefix) + 7);
+    ASSERT (HEX_SUCCESS ==
+	    hex_decode (notmuch, basename, mid_p, mid_len_p));
+    return true;
+}
+
+static void
+mark_unseen (unused (notmuch_database_t *notmuch),
+	     unused (GHashTable *mid_state))
+{
+}
+
+static void
+purge_database (unused (notmuch_database_t *notmuch),
+		unused (GHashTable *mid_state))
+{
+}
+
+static void
+check_missing (unused (notmuch_database_t *notmuch), unused (GHashTable *mid_state))
+{
+}
+
+static void
+cmd_export (notmuch_database_t *notmuch, const char *nm_dir)
+{
+    ssize_t nread;
+
+    int commit_count = 0;
+
+    g_autoptr (GHashTable) blobs = NULL;
+    g_autoptr (GHashTable) mid_state = NULL;
+
+    /* Do not supply a function to free values, as we use the same
+     * pointer for key and value */
+    ASSERT (mid_state = g_hash_table_new_full ((GHashFunc) g_str_hash,
+					       (GEqualFunc) g_str_equal,
+					       g_free, NULL));
+
+    ASSERT (blobs = g_hash_table_new_full ((GHashFunc) g_str_hash,
+					   (GEqualFunc) g_str_equal,
+					   g_free, (GDestroyNotify) free_string));
+
+    while ((nread = getline (&buffer, &buffer_len, stdin)) != -1) {
+	flog ("export %s\n", buffer);
+	if (STRNCMP_LITERAL (buffer, "done") == 0) {
+	    break;
+	} else if (STRNCMP_LITERAL (buffer, "blob") == 0) {
+	    GString *data;
+	    g_auto (GStrv) tokens = NULL;
+
+
+	    flog ("export blob\n");
+	    buffer_line (stdin);
+
+	    tokens = tokenize_buffer ();
+
+	    data = read_data ();
+
+	    flog ("\tmark%s\n", tokens[1]);
+	    g_hash_table_insert (blobs, g_strdup (tokens[1]), data);
+	    buffer_line (stdin);
+	} else if (STRNCMP_LITERAL (buffer, "commit") == 0) {
+	    char *mid = NULL;
+	    size_t mid_len = 0;
+	    bool process_this_commit = true;
+	    g_autoptr (GString) commit_msg = NULL;
+	    const char *commit_ref = buffer + strlen ("commit ");
+	    const char *database_ref = notmuch_config_get (notmuch, NOTMUCH_CONFIG_GIT_REF);
+	    chomp_newline (buffer);
+	    if (strcmp (commit_ref, database_ref)) {
+		process_this_commit = false;
+		flog ("ignoring commit to ref %s\n", commit_ref);
+	    }
+
+	    if (process_this_commit) {
+		commit_count++;
+		flog ("export commit %d\n", commit_count);
+	    }
+
+	    /* mark for commit (ignored) */
+	    buffer_line (stdin);
+	    /* author (ignored) */
+	    buffer_line (stdin);
+	    /* committer (ignored) */
+	    buffer_line (stdin);
+
+	    /* commit message */
+	    commit_msg = read_data ();
+	    flog ("commit msg %s\n", commit_msg->str);
+	    while (strlen (buffer) > 0) {
+		g_autoptr (GString) mark = NULL;
+		g_autoptr (GString) path = NULL;
+		const GString *blob;
+		notmuch_message_t *message;
+		const char *tok;
+		size_t tok_len;
+		size_t max_tok_len;
+		tag_op_list_t *tag_ops;
+		g_auto (GStrv) tokens = NULL;
+
+		buffer_line (stdin);
+		if (strlen (buffer) == 0)
+		    break;
+		if (! process_this_commit)
+		    break;
+
+		tokens = tokenize_buffer ();
+		if (STRNCMP_LITERAL (tokens[0], "D") == 0) {
+		    if (path_to_mid (notmuch, tokens[1], &mid, &mid_len)) {
+			flog ("marking message %s for deletion\n", mid);
+			set_message_state (mid_state, mid, MSG_STATE_DELETED);
+		    } else {
+			if (debug_flags && strchr (debug_flags, 'd'))
+			    flog ("ignoring non prefixed file %s\n", tokens[1]);
+		    }
+		} else if (STRNCMP_LITERAL (tokens[0], "M") == 0) {
+
+		    ASSERT (blob = g_hash_table_lookup (blobs, tokens[2]));
+
+		    if (! path_to_mid (notmuch, tokens[3], &mid, &mid_len)) {
+			if (debug_flags)
+			    flog ("ignoring non prefixed file %s\n", tokens[3]);
+			continue;
+		    }
+
+		    if (debug_flags && strchr (debug_flags, 'd')) {
+			flog ("marking mid seen: %s\n", mid);
+		    }
+
+		    ASSERT (NOTMUCH_STATUS_SUCCESS ==
+			    notmuch_database_find_message (notmuch, mid, &message));
+		    if (! message) {
+			if (debug_flags && strchr (debug_flags, 'm')) {
+			    flog ("marking mid missing: %s\n", mid);
+			}
+			set_message_state (mid_state, mid, MSG_STATE_MISSING);
+		    } else {
+			set_message_state (mid_state, mid, MSG_STATE_SEEN);
+			ASSERT (NOTMUCH_STATUS_SUCCESS ==
+				notmuch_message_freeze (message));
+
+			tag_ops = tag_op_list_create (message);
+			tok = blob->str;
+			max_tok_len = blob->len;
+			tok_len = 0;
+			while ((tok_len < max_tok_len) &&
+			       (tok = strsplit_len (tok + tok_len, '\n', &tok_len)) != NULL) {
+			    const char *tag = talloc_strndup (message, tok, tok_len);
+			    ASSERT (0 == tag_op_list_append (tag_ops, tag, false));
+			}
+
+			ASSERT (NOTMUCH_STATUS_SUCCESS ==
+				tag_op_list_apply (message, tag_ops, TAG_FLAG_REMOVE_ALL));
+
+			ASSERT (NOTMUCH_STATUS_SUCCESS ==
+				notmuch_message_thaw (message));
+
+			notmuch_message_destroy (message);
+
+		    }
+		} else {
+		    flog ("export ignoring line %s\n", buffer);
+		}
+	    }
+	    puts ("ok refs/heads/master");
+	}
+    }
+
+    mark_unseen (notmuch, mid_state);
+
+    if (commit_count > 0)
+	purge_database (notmuch, mid_state);
+
+    check_missing (notmuch, mid_state);
+
+    store_lastmod (notmuch, nm_dir);
+    puts ("");
+}
+
+
 /* stubs since we cannot link with notmuch.o */
 const notmuch_opt_desc_t notmuch_shared_options[] = {
     { }
@@ -412,6 +647,8 @@ main (int argc, char *argv[])
 
 	if (STRNCMP_LITERAL (s, "capabilities") == 0)
 	    cmd_capabilities ();
+	else if (STRNCMP_LITERAL (s, "export") == 0)
+	    cmd_export (db, nm_dir);
 	else if (STRNCMP_LITERAL (s, "import") == 0)
 	    cmd_import (db, nm_dir, uuid, lastmod);
 	else if (STRNCMP_LITERAL (s, "list") == 0)

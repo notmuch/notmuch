@@ -120,6 +120,16 @@ test_expect_equal_file EXPECTED repo/$TAG_FILE
 restore_state
 
 backup_state
+test_begin_subtest "push empty commit"
+git -C repo pull
+notmuch dump | sort > EXPECTED
+git -C repo pull
+git -C repo push
+notmuch dump | sort > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
 test_begin_subtest "pull sees deletion"
 notmuch tag -unread -- id:4EFC743A.3060609@april.org
 git -C repo pull
@@ -127,6 +137,165 @@ cat<<EOF >EXPECTED
 inbox
 EOF
 test_expect_equal_file EXPECTED repo/$TAG_FILE
+restore_state
+
+backup_state
+test_begin_subtest 'export runs'
+run_helper <<EOF | notmuch_sanitize_git > OUTPUT
+export
+blob
+mark :1
+data 10
+tag1
+tag2
+
+commit refs/heads/master
+mark :2
+author Notmuch Test Suite <notmuch@example.com> 1234 +0000
+committer Notmuch Test Suite <notmuch@example.com> 1234 +0000
+data 8
+ignored
+M 100644 :1 $TAG_FILE
+
+done
+
+EOF
+cat <<EOF > EXPECTED
+ok refs/heads/master
+
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+# this test depends on the previous one
+test_begin_subtest 'export modifies database'
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
++tag1 +tag2 -- id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest 'restore via export'
+notmuch dump > BEFORE
+python3 $MAKE_EXPORT_PY > export.in
+notmuch tag +transient -- id:4EFC743A.3060609@april.org
+run_helper < export.in > OUTPUT
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
++inbox +unread -- id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "push updates database"
+cat<<EOF >repo/$TAG_FILE
+tag1
+tag2
+EOF
+git -C repo add $TAG_FILE
+git -C repo commit -m 'testing push'
+git -C repo push origin master
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
++tag1 +tag2 -- id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "adding tag via repo"
+cat<<EOF >repo/$TAG_FILE
+tag1
+tag2
+tag3
+EOF
+git -C repo add $TAG_FILE
+git -C repo commit -m 'testing push'
+git -C repo push origin master
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
++tag1 +tag2 +tag3 -- id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "non-prefixed file ignored on push"
+cat<<EOF >repo/dummy
+this is outside the notmuch metadata prefix
+EOF
+git -C repo add dummy
+git -C repo commit -m 'testing prefix'
+test_expect_code 0 "git -C repo push origin master"
+restore_state
+
+backup_state
+test_begin_subtest "non-prefixed file ignored on pull"
+cat<<EOF >repo/dummy
+this is outside the notmuch metadata prefix
+EOF
+cp repo/dummy EXPECTED
+git -C repo add dummy
+git -C repo commit -m 'testing prefix'
+git -C repo push origin master
+git -C repo pull origin master
+test_expect_equal_file EXPECTED repo/dummy
+restore_state
+
+backup_state
+test_begin_subtest "push of non-main ref ignored"
+notmuch dump > EXPECTED
+git -C repo switch -c chaos
+git -C repo rm -r _notmuch_metadata
+git -C repo commit -m "delete all the things"
+git -C repo push origin chaos:chaos
+notmuch dump > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "removing all tags via repo"
+cat<<EOF >repo/$TAG_FILE
+EOF
+git -C repo add $TAG_FILE
+git -C repo commit -m 'testing push'
+git -C repo push origin master
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
+ -- id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "removing message via repo"
+test_subtest_known_broken
+parent=$(dirname $TAG_FILE)
+# future proof this for when e.g. properties are stored
+git -C repo rm -r $parent
+git -C repo commit -m 'testing deletion'
+git -C repo push origin master
+notmuch dump id:4EFC743A.3060609@april.org | tail -n 1 > OUTPUT
+cat <<EOF > EXPECTED
+#notmuch-dump batch-tag:3 config,properties,tags
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest 'by default, missing messages are an error during export'
+test_subtest_known_broken
+sed s/4EFC743A.3060609@april.org/missing-message@example.com/ < export.in > missing.in
+test_expect_code 1 "run_helper < missing.in"
+restore_state
+
+backup_state
+test_begin_subtest 'when configured, missing messages are ignored'
+notmuch config set git.fail_on_missing false
+test_expect_code 0 "run_helper < missing.in"
+notmuch config set git.fail_on_missing true
 restore_state
 
 test_done
