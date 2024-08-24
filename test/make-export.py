@@ -39,6 +39,6 @@ print (f"data 8\nignored")
 for msg in db.messages(""):
     digest = sha1(msg.messageid.encode('utf8')).hexdigest()
     filename = hexencode(msg.messageid)
-    print (f"M 100644 :{mark[msg.messageid]} {digest[0:2]}/{digest[2:4]}/{filename}/tags")
+    print (f"M 100644 :{mark[msg.messageid]} _notmuch_metadata/{digest[0:2]}/{digest[2:4]}/{filename}/tags")
 
 print("\ndone\n")
