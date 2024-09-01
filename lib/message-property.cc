@@ -151,6 +151,7 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
     try {
 	/* XXX better error reporting ? */
 	_notmuch_message_remove_terms (message, term_prefix);
+	_notmuch_message_invalidate_metadata (message, "property");
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
 	return _notmuch_xapian_error ();
