@@ -299,6 +299,9 @@ database.backup_dir
 database.hook_dir
 database.mail_root=MAIL_DIR
 database.path
+git.fail_on_missing=true
+git.metadata_prefix=_notmuch_metadata
+git.ref=refs/heads/master
 index.as_text=
 maildir.synchronize_flags=true
 new.ignore=
@@ -325,6 +328,9 @@ database.backup_dir
 database.hook_dir
 database.mail_root
 database.path
+git.fail_on_missing
+git.metadata_prefix
+git.ref
 maildir.synchronize_flags
 new.tags
 search.authors_matched_separator

@@ -608,6 +608,12 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 	return "search.authors_matched_separator";
     case NOTMUCH_CONFIG_INDEX_AS_TEXT:
 	return "index.as_text";
+    case NOTMUCH_CONFIG_GIT_FAIL_ON_MISSING:
+	return "git.fail_on_missing";
+    case NOTMUCH_CONFIG_GIT_METADATA_PREFIX:
+	return "git.metadata_prefix";
+    case NOTMUCH_CONFIG_GIT_REF:
+	return "git.ref";
     default:
 	return NULL;
     }
@@ -636,6 +642,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
     case NOTMUCH_CONFIG_NEW_TAGS:
 	return "unread;inbox";
     case NOTMUCH_CONFIG_SYNC_MAILDIR_FLAGS:
+    case NOTMUCH_CONFIG_GIT_FAIL_ON_MISSING:
 	return "true";
     case NOTMUCH_CONFIG_USER_NAME:
 	name = getenv ("NAME");
@@ -660,6 +667,10 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
 	return ", ";
     case NOTMUCH_CONFIG_AUTHORS_MATCHED_SEPARATOR:
 	return "| ";
+    case NOTMUCH_CONFIG_GIT_METADATA_PREFIX:
+	return "_notmuch_metadata";
+    case NOTMUCH_CONFIG_GIT_REF:
+	return "refs/heads/master";
     case NOTMUCH_CONFIG_EXTRA_HEADERS:
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
