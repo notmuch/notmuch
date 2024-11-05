@@ -318,6 +318,29 @@ Typically this is added to `notmuch-mua-send-hook'."
 	    (when message-signature-insert-empty-line
 	      (forward-line -1))
 	  (goto-char (point-max))))
+      ;; If `message-cite-reply-position' is the symbol 'above, then
+      ;; before inserting the citation, put the point after the
+      ;; signature and insert a newline for spacing.  This emulates
+      ;; the Gmail-style of email replies, where the signature and
+      ;; email reply body are above the email citation.  If
+      ;; `message-cite-style'is non-nil and specifies a value for
+      ;; `message-cite-reply-position', then use that value instead.
+      ;;
+      ;; Regarding the use of `cadadr' instead of `cdr' on the result
+      ;; of `assoc' below: the value stored in `message-cite-style' is
+      ;; itself a quoted form, e.g., (quote above).  Using `cdr' once
+      ;; returns that entire quoted form.  Using `cadadr' skips the
+      ;; `quote' symbol and returns the underlying symbol
+      ;; (e.g. `above').  (We do this to avoid a call to `eval'
+      ;; because of security concerns.)
+      (when (eq (or (cadadr (assoc 'message-cite-reply-position
+				   (if (symbolp message-cite-style)
+				       (symbol-value message-cite-style)
+				     message-cite-style)))
+		    message-cite-reply-position)
+		'above)
+	(goto-char (point-max))
+	(insert "\n"))
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
 	    (start (point)))
