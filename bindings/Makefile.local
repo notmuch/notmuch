@@ -9,8 +9,8 @@ $(dir)/ruby.stamp: lib/$(LINKER_NAME)
 ifeq ($(HAVE_RUBY_DEV),1)
 	cd $(dir)/ruby && \
 		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
+		EXTRA_INCFLAGS="-I$(NOTMUCH_SRCDIR)/lib" \
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
-		NOTMUCH_SRCDIR='$(NOTMUCH_SRCDIR)' \
 		$(RUBY) extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC" && touch $@
 endif

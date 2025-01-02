@@ -5,14 +5,8 @@
 
 require 'mkmf'
 
-dir = File.join(ENV['NOTMUCH_SRCDIR'], 'lib')
-
-# includes
-$INCFLAGS = "-I#{dir} #{$INCFLAGS}"
-
-if ENV['EXTRA_LDFLAGS']
-  $LDFLAGS += " " + ENV['EXTRA_LDFLAGS']
-end
+$INCFLAGS = "#{ENV['EXTRA_INCFLAGS']} #{$INCFLAGS}"
+$LDFLAGS = "#{ENV['EXTRA_LDFLAGS']} #{$LDFLAGS}"
 
 if not ENV['LIBNOTMUCH']
   exit 1
