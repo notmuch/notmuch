@@ -12,7 +12,7 @@ if not ENV['LIBNOTMUCH']
   exit 1
 end
 
-$LOCAL_LIBS += ENV['LIBNOTMUCH']
+$LOCAL_LIBS = ENV['LIBNOTMUCH']
 
 # Create Makefile
 dir_config('notmuch')
