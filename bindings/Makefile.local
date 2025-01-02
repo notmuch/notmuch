@@ -8,8 +8,8 @@ ruby-bindings: $(dir)/ruby.stamp
 $(dir)/ruby.stamp: lib/$(LINKER_NAME)
 ifeq ($(HAVE_RUBY_DEV),1)
 	cd $(dir)/ruby && \
-		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
-		EXTRA_INCFLAGS="-I$(NOTMUCH_SRCDIR)/lib" \
+		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS) $(TALLOC_LDFLAGS)" \
+		EXTRA_INCFLAGS="-I$(NOTMUCH_SRCDIR)/lib $(TALLOC_CFLAGS)" \
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
 		$(RUBY) extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby CFLAGS="$(CFLAGS) -pipe -fno-plt -fPIC" && touch $@
