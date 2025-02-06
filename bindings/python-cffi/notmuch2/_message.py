@@ -610,7 +610,7 @@ class PropertiesMap(base.NotmuchObject, collections.abc.MutableMapping):
     def getall(self, prefix='', *, exact=False):
         """Return an iterator yielding all properties for a given key prefix.
 
-        The returned iterator yields all peroperties which start with
+        The returned iterator yields all properties which start with
         a given key prefix as ``(key, value)`` namedtuples.  If called
         with ``exact=True`` then only properties which exactly match
         the prefix are returned, those a key longer than the prefix
@@ -655,7 +655,6 @@ class PropertiesIter(base.NotmuchIter):
 
     def __next__(self):
         if not self._fn_valid(self._iter_p):
-            self._destroy()
             raise StopIteration
         key = capi.lib.notmuch_message_properties_key(self._iter_p)
         value = capi.lib.notmuch_message_properties_value(self._iter_p)

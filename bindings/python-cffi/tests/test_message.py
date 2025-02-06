@@ -218,6 +218,20 @@ class TestProperties:
         props.add('foo', 'a')
         assert set(props.getall('foo')) == {('foo', 'a')}
 
+    def test_getall_iter(self, props):
+        props.add('foo', 'a')
+        props.add('foobar', 'b')
+        for prop in props.getall('foo'):
+            assert isinstance(prop.value, str)
+
+    def test_getall_iter_list(self, props):
+        props.add('foo', 'a')
+        props.add('foobar', 'b')
+        res = list(props.getall('foo'))
+        assert len(res) == 2
+        for prop in res:
+            assert isinstance(prop.value, str)
+
     def test_getall_prefix(self, props):
         props.add('foo', 'a')
         props.add('foobar', 'b')

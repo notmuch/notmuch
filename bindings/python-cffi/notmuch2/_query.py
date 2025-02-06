@@ -52,7 +52,7 @@ class Query(base.NotmuchObject):
         This executes the query and returns an iterator over the
         :class:`Message` objects found.
         """
-        msgs_pp = capi.ffi.new('notmuch_messages_t**')
+        msgs_pp = capi.ffi.new('notmuch_messages_t **')
         ret = capi.lib.notmuch_query_search_messages(self._query_p, msgs_pp)
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)

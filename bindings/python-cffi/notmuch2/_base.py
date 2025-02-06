@@ -167,7 +167,7 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
     It is tempting to use a generator function instead, but this would
     not correctly respect the :class:`NotmuchObject` memory handling
     protocol and in some unsuspecting cornercases cause memory
-    trouble.  You probably want to sublcass this in order to wrap the
+    trouble.  You probably want to subclass this in order to wrap the
     value returned by :meth:`__next__`.
 
     :param parent: The parent object.
@@ -223,7 +223,6 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
 
     def __next__(self):
         if not self._fn_valid(self._iter_p):
-            self._destroy()
             raise StopIteration()
         obj_p = self._fn_get(self._iter_p)
         self._fn_next(self._iter_p)

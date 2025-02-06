@@ -303,6 +303,18 @@ class TestQuery:
         msgs = db.messages('*')
         assert isinstance(msgs, collections.abc.Iterator)
 
+    def test_messages_iterator(self, db):
+        for msg in db.messages('*'):
+            assert isinstance(msg, notmuch2.Message)
+            assert isinstance(msg.messageid, str)
+
+    def test_messages_iterator_list(self, db):
+        msgs = list(db.messages('*'))
+        assert len(msgs) == 3
+        for msg in msgs:
+            assert isinstance(msg, notmuch2.Message)
+            assert isinstance(msg.messageid, str)
+
     def test_message_no_results(self, db):
         msgs = db.messages('not_a_matching_query')
         with pytest.raises(StopIteration):
@@ -319,6 +331,25 @@ class TestQuery:
     def test_threads_type(self, db):
         threads = db.threads('*')
         assert isinstance(threads, collections.abc.Iterator)
+
+    def test_threads_iterator(self, db):
+        for t in db.threads('*'):
+            assert isinstance(t, notmuch2.Thread)
+            assert isinstance(t.threadid, str)
+            for msg in t:
+                assert isinstance(msg, notmuch2.Message)
+                assert isinstance(msg.messageid, str)
+
+    def test_threads_iterator_list(self, db):
+        threads = list(db.threads('*'))
+        assert len(threads) == 2
+        for t in threads:
+            assert isinstance(t, notmuch2.Thread)
+            assert isinstance(t.threadid, str)
+            msgs = list(t)
+            for msg in msgs:
+                assert isinstance(msg, notmuch2.Message)
+                assert isinstance(msg.messageid, str)
 
     def test_threads_no_match(self, db):
         threads = db.threads('not_a_matching_query')
