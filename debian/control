@@ -134,24 +134,6 @@ Description: thread-based email index, search and tagging (development)
  This package provides the necessary development libraries and header
  files to allow you to develop new software using libnotmuch.
 
-Package: python3-notmuch
-Architecture: all
-Section: python
-Depends:
- libnotmuch5t64 (>= ${source:Version}),
- ${misc:Depends},
- ${python3:Depends},
-Description: Python 3 legacy interface to the notmuch mail search and index library
- Notmuch is a system for indexing, searching, reading, and tagging
- large collections of email messages in maildir or mh format. It uses
- the Xapian library to provide fast, full-text search with a very
- convenient search syntax.
- .
- This package provides a legacy Python 3 interface to the notmuch
- functionality, directly interfacing with a shared notmuch library.
- .
- New projects are encouraged to use python3-notmuch2 instead.
-
 Package: python3-notmuch2
 Architecture: any
 Section: python
@@ -170,7 +152,7 @@ Description: Python 3 interface to the notmuch mail search and index library
  functionality using CFFI bindings, which interface with a shared
  notmuch library.
  .
- This is the preferred way to use notmuch via Python.
+ This is the current supported way to use notmuch via Python.
 
 Package: ruby-notmuch
 Architecture: any

@@ -20,19 +20,16 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	dh_auto_build -- V=1 all sphinx-html
-	PYBUILD_NAME=notmuch dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python
 	PYBUILD_NAME=notmuch2 dh_auto_build --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
-	PYBUILD_NAME=notmuch dh_auto_clean --buildsystem=pybuild --sourcedirectory bindings/python
 	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install
-	PYBUILD_NAME=notmuch dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python
 	PYBUILD_NAME=notmuch2 dh_auto_install --buildsystem=pybuild --sourcedirectory bindings/python-cffi
 	$(MAKE) -C contrib/notmuch-mutt DESTDIR=$(CURDIR)/debian/tmp install
 	$(MAKE) -C vim prefix=/usr/share/notmuch-vim DESTDIR=$(CURDIR)/debian/tmp install
