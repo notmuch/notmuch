@@ -47,8 +47,6 @@ DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.xz
 SHA256_FILE=$(TAR_FILE).sha256.asc
 DETACHED_SIG_FILE=$(TAR_FILE).asc
 
-PV_FILE=bindings/python/notmuch/version.py
-
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(WARN_CFLAGS) $(extra_cflags) $(CPPFLAGS) $(CONFIGURE_CFLAGS) $(CFLAGS)
 FINAL_CXXFLAGS = $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CPPFLAGS) $(CONFIGURE_CXXFLAGS) $(CXXFLAGS)

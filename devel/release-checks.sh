@@ -18,8 +18,6 @@ readonly DEFAULT_IFS="$IFS" # Note: In this particular case quotes are needed.
 # Avoid locale-specific differences in output of executed commands
 LANG=C LC_ALL=C; export LANG LC_ALL
 
-readonly PV_FILE='bindings/python/notmuch/version.py'
-
 # Using array here turned out to be unnecessarily complicated
 emsgs=''
 emsg_count=0
@@ -29,7 +27,7 @@ append_emsg ()
 	emsgs="${emsgs:+$emsgs\n}  $1"
 }
 
-for f in ./version.txt debian/changelog NEWS "$PV_FILE"
+for f in ./version.txt debian/changelog NEWS
 do
 	if   [ ! -f "$f" ]; then append_emsg "File '$f' is missing"
 	elif [ ! -r "$f" ]; then append_emsg "File '$f' is unreadable"
@@ -106,16 +104,6 @@ then
 else
 	echo No.
 	append_emsg "Version '$deb_version' is not '($VERSION-1)' in debian/changelog"
-fi
-
-printf %s "Checking that python bindings version is $VERSION... "
-py_version=`python3 -c "with open('$PV_FILE') as vf: exec(vf.read()); print(__VERSION__)"`
-if [ "$py_version" = "$VERSION" ]
-then
-	echo Yes.
-else
-	echo No.
-	append_emsg "Version '$py_version' is not '$VERSION' in $PV_FILE"
 fi
 
 printf %s "Checking that NEWS header is tidy... "
