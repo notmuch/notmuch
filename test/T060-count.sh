@@ -132,28 +132,53 @@ restore_database
 
 test_begin_subtest "count library function is non-destructive"
 cat<<EOF > EXPECTED
+== stdout ==
 1: 52 messages
 2: 52 messages
 Exclude 'spam'
 3: 52 messages
 4: 52 messages
+== stderr ==
 EOF
-test_python <<EOF
-import sys
-import notmuch
 
-query_string = 'tag:inbox or tag:spam'
-tag_string = 'spam'
+test_C ${MAIL_DIR} <<'EOF' > OUTPUT
+#include <notmuch-test.h>
 
-database = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
-query = notmuch.Query(database, query_string)
+int main (int argc, char** argv)
+{
+   notmuch_database_t *db;
+   notmuch_status_t stat = NOTMUCH_STATUS_SUCCESS;
+   char *msg = NULL;
+   notmuch_query_t *query;
+   const char *str = "tag:inbox or tag:spam";
+   const char *tag_str = "spam";
+   unsigned int count;
 
-print("1: {} messages".format(query.count_messages()))
-print("2: {} messages".format(query.count_messages()))
-print("Exclude '{}'".format(tag_string))
-query.exclude_tag(tag_string)
-print("3: {} messages".format(query.count_messages()))
-print("4: {} messages".format(query.count_messages()))
+   stat=notmuch_database_open_with_config (argv[1],
+				       NOTMUCH_DATABASE_MODE_READ_ONLY,
+				       NULL, NULL, &db, &msg);
+   if (stat) {
+       fprintf (stderr, "open: %s\n", msg);
+       exit(1);
+   }
+
+   EXPECT0(notmuch_query_create_with_syntax (db, str,
+					     NOTMUCH_QUERY_SYNTAX_XAPIAN, &query));
+   EXPECT0(notmuch_query_count_messages (query, &count));
+   printf("1: %d messages\n", count);
+   EXPECT0(notmuch_query_count_messages (query, &count));
+   printf("2: %d messages\n", count);
+   printf("Exclude '%s'\n",tag_str);
+   stat = notmuch_query_add_tag_exclude (query, tag_str);
+   if (stat && stat != NOTMUCH_STATUS_IGNORED) {
+     fprintf(stderr, "status=%d\n", stat);
+     exit(1);
+   }
+   EXPECT0(notmuch_query_count_messages (query, &count));
+   printf("3: %d messages\n", count);
+   EXPECT0(notmuch_query_count_messages (query, &count));
+   printf("4: %d messages\n", count);
+}
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
