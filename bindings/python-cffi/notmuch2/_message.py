@@ -349,7 +349,7 @@ class Message(base.NotmuchObject):
         and thus are only recommended if you know there to be only one
         value.
 
-        Instead the map has an additional :meth:`PropertiesMap.all`
+        Instead the map has an additional :meth:`PropertiesMap.getall`
         method which can be used to retrieve all properties of a given
         key.  This method also allows iterating of a a subset of the
         keys starting with a given prefix.
