@@ -299,26 +299,12 @@ id:4EFC743A.3060609@april.org
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "msg.get_property (python)"
+test_begin_subtest "msg.properties (python)"
 test_python <<'EOF'
-import notmuch
-db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
-msg = db.find_message("4EFC743A.3060609@april.org")
-print("testkey1 = {0}".format(msg.get_property("testkey1")))
-print("testkey3 = {0}".format(msg.get_property("testkey3")))
-EOF
-cat <<'EOF' > EXPECTED
-testkey1 = alice
-testkey3 = alice3
-EOF
-test_expect_equal_file EXPECTED OUTPUT
-
-test_begin_subtest "msg.get_properties (python)"
-test_python <<'EOF'
-import notmuch
-db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
-msg = db.find_message("4EFC743A.3060609@april.org")
-for (key,val) in msg.get_properties("testkey1"):
+import notmuch2
+db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_ONLY)
+msg = db.find("4EFC743A.3060609@april.org")
+for (key,val) in msg.properties.getall("testkey1"):
         print("{0} = {1}".format(key,val))
 EOF
 cat <<'EOF' > EXPECTED
@@ -328,12 +314,12 @@ testkey1 = testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "msg.get_properties (python, prefix)"
+test_begin_subtest "msg.properties (python, prefix)"
 test_python <<'EOF'
-import notmuch
-db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
-msg = db.find_message("4EFC743A.3060609@april.org")
-for (key,val) in msg.get_properties("testkey"):
+import notmuch2
+db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_ONLY)
+msg = db.find("4EFC743A.3060609@april.org")
+for (key,val) in msg.properties.getall("testkey"):
         print("{0} = {1}".format(key,val))
 EOF
 cat <<'EOF' > EXPECTED
@@ -346,12 +332,12 @@ testkey3 = testvalue3
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "msg.get_properties (python, exact)"
+test_begin_subtest "msg.properties (python, exact)"
 test_python <<'EOF'
-import notmuch
-db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
-msg = db.find_message("4EFC743A.3060609@april.org")
-for (key,val) in msg.get_properties("testkey",True):
+import notmuch2
+db = notmuch2.Database(mode=notmuch2.Database.MODE.READ_ONLY)
+msg = db.find("4EFC743A.3060609@april.org")
+for (key,val) in msg.properties("testkey",True):
         print("{0} = {1}".format(key,val))
 EOF
 test_expect_equal_file /dev/null OUTPUT
