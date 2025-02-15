@@ -2,7 +2,7 @@ import setuptools
 from _notmuch_config import *
 
 with open(NOTMUCH_VERSION_FILE) as fp:
-    VERSION = fp.read().strip()
+    VERSION = fp.read().strip().replace('~', '')
 
 setuptools.setup(
     name='notmuch2',
