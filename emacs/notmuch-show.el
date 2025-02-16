@@ -2686,7 +2686,9 @@ This function is used as a value for
 `imenu-prev-index-position-function'."
   (if (bobp)
       nil
-    (notmuch-show-previous-message)
+    (if (eobp)
+	(notmuch-show-move-to-message-top)
+      (notmuch-show-goto-message-previous))
     t))
 
 (defun notmuch-show-imenu-extract-index-name-function ()
