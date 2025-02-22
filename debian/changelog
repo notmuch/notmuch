@@ -1,8 +1,11 @@
-notmuch (0.39~rc0-1) unstable; urgency=medium
+notmuch (0.39~rc0-1) experimental; urgency=medium
 
   * New upstream pre-release
+  * Remove binary package python3-notmuch (Closes: #893057, #970834, #749890).
+  * Bug fix: "saving draft causing missing header fields", thanks to
+    Xiyue Deng (Closes: #1092047).
 
- -- David Bremner <bremner@debian.org>  Sun, 26 Jan 2025 09:42:13 -0400
+ -- David Bremner <bremner@debian.org>  Sat, 22 Feb 2025 08:12:33 -0400
 
 notmuch (0.38.3-3) unstable; urgency=medium
 
