@@ -75,10 +75,10 @@ Dump a tar archive of a committed tag set using 'git archive'. See
 
 .. option:: checkout [-f|--force]
 
-Update the notmuch database from Git.
+Update the notmuch database from git.
 
 This is mainly useful to discard your changes in notmuch relative
-to Git.
+to git.
 
    .. describe:: [-f|--force]
 
@@ -101,7 +101,7 @@ upstreams.
 
 .. option:: commit [-f|--force] [message]
 
-Commit prefix-matching tags from the notmuch database to Git.
+Commit prefix-matching tags from the notmuch database to git.
 
    .. describe:: message
 
@@ -166,7 +166,7 @@ Merge changes from 'reference' into HEAD and load the result into notmuch.
 Pull (merge) remote repository changes to notmuch.
 
 **pull** is equivalent to **fetch** followed by **merge**.  We use the
-Git-configured repository for your current branch
+git-configured repository for your current branch
 (`branch.<name>.repository`, likely `origin`, and `branch.<name>.merge`,
 likely `master` or `main`).
 
@@ -184,7 +184,7 @@ likely `master` or `main`).
 
 .. option:: push [repository] [refspec]
 
-Push the local `notmuch git` Git state to a remote repository.
+Push the local `notmuch git` git state to a remote repository.
 
     .. describe::  repository
 
@@ -210,13 +210,13 @@ where n is a single character representing notmuch database status
 
    .. describe:: A
 
-   Tag is present in notmuch database, but not committed to nmbug
-   (equivalently, tag has been deleted in nmbug repo, e.g. by a
+   Tag is present in notmuch database, but not committed to git
+   (equivalently, tag has been deleted in git repo, e.g. by a
    pull, but not restored to notmuch database).
 
    .. describe:: D
 
-   Tag is present in nmbug repo, but not restored to notmuch
+   Tag is present in git repo, but not restored to notmuch
    database (equivalently, tag has been deleted in notmuch).
 
    .. describe:: U
@@ -229,11 +229,11 @@ run to update this.
 
    .. describe:: a
 
-   Tag is present in upstream, but not in the local Git branch.
+   Tag is present in upstream, but not in the local git branch.
 
    .. describe:: d
 
-   Tag is present in local Git branch, but not upstream.
+   Tag is present in local git branch, but not upstream.
 
 .. _format:
 
