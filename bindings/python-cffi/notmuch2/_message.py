@@ -80,12 +80,6 @@ class Message(base.NotmuchObject):
     def messageid(self):
         """The message ID as a string.
 
-        The message ID is decoded with the ignore error handler.  This
-        is fine as long as the message ID is well formed.  If it is
-        not valid ASCII then this will be lossy.  So if you need to be
-        able to write the exact same message ID back you should use
-        :attr:`messageidb`.
-
         Note that notmuch will decode the message ID value and thus
         strip off the surrounding ``<`` and ``>`` characters.  This is
         different from Python's :mod:`email` package behaviour which
