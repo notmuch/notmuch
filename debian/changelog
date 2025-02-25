@@ -1,12 +1,11 @@
-notmuch (0.39~rc1-1) unstable; urgency=medium
+notmuch (0.39~rc1-1) experimental; urgency=medium
 
   * New upstream pre-release
   * Bug fix: "FTBFS: 3 tests fail against Emacs 30.1", thanks to Sean
     Whitton (Closes: #1098852). Force emacs 30 to use the older
     pretty-printing style.
-  * Upload to unstable to ease Emacs 30 transition.
 
- -- David Bremner <bremner@debian.org>  Tue, 25 Feb 2025 16:10:57 -0400
+ -- David Bremner <bremner@debian.org>  Tue, 25 Feb 2025 16:35:06 -0400
 
 notmuch (0.39~rc0-1) experimental; urgency=medium
 
