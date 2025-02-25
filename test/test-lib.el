@@ -33,6 +33,9 @@
 
 (require 'cl-lib)
 
+;; Use old pretty print algorithm, so tests don't break with Emacs 30
+(setq-default pp-default-function 'pp-28)
+
 ;; Ensure that the dynamic variables that are defined by this library
 ;; are defined by the time that we let-bind them.  This is needed
 ;; because starting with Emacs 27 undeclared variables in evaluated
