@@ -1,3 +1,10 @@
+notmuch (0.38.3-4) unstable; urgency=medium
+
+  * Bug fix: "FTBFS: 3 tests fail against Emacs 30.1", thanks to Sean
+    Whitton (Closes: #1098852). Cherry-pick upstream commit e3d4721b1.
+
+ -- David Bremner <bremner@debian.org>  Tue, 25 Feb 2025 16:51:36 -0400
+
 notmuch (0.38.3-3) unstable; urgency=medium
 
   [ James McCoy ]
