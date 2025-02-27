@@ -453,6 +453,7 @@ y
     | gpg --no-tty --quiet --import
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
+    | sed -e 's/"key-\(revoked\|missing\)"/"key-revoked"/g' \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
