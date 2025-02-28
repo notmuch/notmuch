@@ -1,3 +1,10 @@
+notmuch (0.38.3-5) unstable; urgency=medium
+
+  * Bug fix: "test suite regressions with fixed GnuPG", thanks to
+    Daniel Kahn Gillmor (Closes: #1098995).
+
+ -- David Bremner <bremner@debian.org>  Fri, 28 Feb 2025 16:24:35 -0500
+
 notmuch (0.38.3-4) unstable; urgency=medium
 
   * Bug fix: "FTBFS: 3 tests fail against Emacs 30.1", thanks to Sean
