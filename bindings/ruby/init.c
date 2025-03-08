@@ -293,6 +293,7 @@ Init_notmuch (void)
      * Notmuch query
      */
     notmuch_rb_cQuery = rb_define_class_under (mod, "Query", rb_cObject);
+    rb_undef_alloc_func(notmuch_rb_cQuery);
     rb_undef_method (notmuch_rb_cQuery, "initialize");
     rb_define_method (notmuch_rb_cQuery, "destroy!", notmuch_rb_query_destroy, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0); /* in query.c */
@@ -311,6 +312,7 @@ Init_notmuch (void)
      * Notmuch threads
      */
     notmuch_rb_cThreads = rb_define_class_under (mod, "Threads", rb_cObject);
+    rb_undef_alloc_func(notmuch_rb_cThreads);
     rb_undef_method (notmuch_rb_cThreads, "initialize");
     rb_define_method (notmuch_rb_cThreads, "destroy!", notmuch_rb_threads_destroy, 0); /* in threads.c */
     rb_define_method (notmuch_rb_cThreads, "each", notmuch_rb_threads_each, 0); /* in threads.c */
@@ -322,6 +324,7 @@ Init_notmuch (void)
      * Notmuch messages
      */
     notmuch_rb_cMessages = rb_define_class_under (mod, "Messages", rb_cObject);
+    rb_undef_alloc_func(notmuch_rb_cMessages);
     rb_undef_method (notmuch_rb_cMessages, "initialize");
     rb_define_method (notmuch_rb_cMessages, "destroy!", notmuch_rb_messages_destroy, 0); /* in messages.c */
     rb_define_method (notmuch_rb_cMessages, "each", notmuch_rb_messages_each, 0); /* in messages.c */
@@ -334,6 +337,7 @@ Init_notmuch (void)
      * Notmuch thread
      */
     notmuch_rb_cThread = rb_define_class_under (mod, "Thread", rb_cObject);
+    rb_undef_alloc_func(notmuch_rb_cThread);
     rb_undef_method (notmuch_rb_cThread, "initialize");
     rb_define_method (notmuch_rb_cThread, "destroy!", notmuch_rb_thread_destroy, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "thread_id", notmuch_rb_thread_get_thread_id, 0); /* in thread.c */
@@ -353,6 +357,7 @@ Init_notmuch (void)
      * Notmuch message
      */
     notmuch_rb_cMessage = rb_define_class_under (mod, "Message", rb_cObject);
+    rb_undef_alloc_func(notmuch_rb_cMessage);
     rb_undef_method (notmuch_rb_cMessage, "initialize");
     rb_define_method (notmuch_rb_cMessage, "destroy!", notmuch_rb_message_destroy, 0); /* in message.c */
     rb_define_method (notmuch_rb_cMessage, "message_id", notmuch_rb_message_get_message_id, 0); /* in message.c */
