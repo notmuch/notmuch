@@ -1,3 +1,11 @@
+notmuch (0.39~rc2-1) experimental; urgency=medium
+
+  * New upstream pre-release
+  * Bug fix: "FTBFS: 1 test failed.", thanks to Santiago Vila (Closes:
+    #1099252).
+
+ -- David Bremner <bremner@debian.org>  Mon, 10 Mar 2025 21:00:09 -0300
+
 notmuch (0.39~rc1-1) experimental; urgency=medium
 
   * New upstream pre-release
