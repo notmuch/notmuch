@@ -1696,6 +1696,8 @@ All currently available key bindings:
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
   (setq buffer-read-only t)
   (setq truncate-lines t)
+  (when (boundp 'untrusted-content)
+    (setq untrusted-content t))
   (setq imenu-prev-index-position-function
 	#'notmuch-show-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function
