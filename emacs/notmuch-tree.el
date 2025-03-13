@@ -1091,7 +1091,8 @@ Complete list of currently available key bindings:
 
 \\{notmuch-tree-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
-  (hl-line-mode 1)
+  (when notmuch-hl-line
+    (hl-line-mode 1))
   (setq buffer-read-only t)
   (setq truncate-lines t)
   (when notmuch-tree-outline-enabled (notmuch-tree-outline-mode 1)))
@@ -1121,6 +1122,8 @@ object, and with the tree results buffer as the current buffer.")
 		(unless (= exit-status 0)
 		  (insert (format " (process returned %d)" exit-status)))
 		(insert "\n"))))
+	  (when (and notmuch-hl-line (= exit-status 0))
+	    (notmuch-hl-line-mode))
 	  (run-hook-with-args 'notmuch-tree-process-exit-functions proc))))))
 
 (defun notmuch-tree-process-filter (proc string)
@@ -1136,7 +1139,10 @@ object, and with the tree results buffer as the current buffer.")
 	  (goto-char (point-max))
 	  (insert string))
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
-					 results-buf)))))
+					 results-buf))
+      (with-current-buffer results-buf
+	(when notmuch-hl-line
+	  (notmuch-hl-line-mode))))))
 
 (defun notmuch-tree-worker (basic-query &optional query-context target
 					open-target unthreaded oldest-first

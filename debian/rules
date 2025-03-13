@@ -2,7 +2,7 @@
 include /usr/share/dpkg/architecture.mk
 
 export NOTMUCH_SKIP_TESTS = T810-tsan
-
+export NOTMUCH_TEST_TIMEOUT = 10m
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:

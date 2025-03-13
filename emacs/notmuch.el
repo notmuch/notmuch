@@ -126,12 +126,16 @@ there will be called at other points of notmuch execution."
   :type 'file
   :group 'notmuch)
 
-(defcustom notmuch-search-hook '(notmuch-hl-line-mode)
+(defcustom notmuch-search-hook nil
   "List of functions to call when notmuch displays the search results."
   :type 'hook
-  :options '(notmuch-hl-line-mode)
   :group 'notmuch-search
   :group 'notmuch-hooks)
+
+(defcustom notmuch-hl-line t
+  "Use hl-line-mode to highlight current thread / message"
+  :type 'boolean
+  :group 'notmuch)
 
 ;;; Mime Utilities
 
@@ -925,6 +929,16 @@ sets the :orig-tag property."
 	(notmuch-sexp-parse-partial-list 'notmuch-search-append-result
 					 results-buf))
       (with-current-buffer results-buf
+	(when (and notmuch-hl-line
+		   ;; If we know where the cursor will end up (from
+		   ;; the call to notmuch-search), avoid redrawing the
+		   ;; hl-line overlay until the buffer is sufficiently
+		   ;; filled. This check is intended as an
+		   ;; optimization to reduce flicker.
+		   (>=
+		    (line-number-at-pos (point-max) t)
+		    (or notmuch-search-target-line -1)))
+	  (notmuch-hl-line-mode))
 	(notmuch--search-hook-wrapper)))))
 
 ;;; Commands (and some helper functions used by them)
