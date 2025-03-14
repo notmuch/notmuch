@@ -240,8 +240,7 @@ class Message(base.NotmuchObject):
         :param header: Case-insensitive header name to retrieve.
         :type header: str or bytes
 
-        :returns: The header value, an empty string if the header is
-           not present.
+        :returns: The header value.
         :rtype: str
 
         :raises LookupError: if the header is not present.
