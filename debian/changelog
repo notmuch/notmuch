@@ -1,3 +1,11 @@
+notmuch (0.39-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Legacy python bindings (package python3-notmuch) are no longer
+    built. Consider switching to python3-notmuch2.
+
+ -- David Bremner <bremner@debian.org>  Sat, 15 Mar 2025 07:03:50 -0300
+
 notmuch (0.39~rc3-1) experimental; urgency=medium
 
   * New upstream pre-release
