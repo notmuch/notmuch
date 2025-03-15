@@ -1,3 +1,9 @@
+notmuch (0.39~rc3-1) experimental; urgency=medium
+
+  * New upstream pre-release
+
+ -- David Bremner <bremner@debian.org>  Fri, 14 Mar 2025 19:07:04 -0300
+
 notmuch (0.39~rc2-2) experimental; urgency=medium
 
   * Increase test timeout to 10m (per test script). This is currently

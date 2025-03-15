@@ -416,6 +416,8 @@ Complete list of currently available key bindings:
   (add-to-invisibility-spec (cons 'ellipsis t))
   (setq truncate-lines t)
   (setq buffer-read-only t)
+  (when (boundp 'untrusted-content)
+    (setq untrusted-content t))
   (setq imenu-prev-index-position-function
 	#'notmuch-search-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function

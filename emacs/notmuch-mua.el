@@ -379,7 +379,9 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'."
-  (notmuch-address-setup))
+  (notmuch-address-setup)
+  (when (boundp 'untrusted-content)
+    (setq untrusted-content t)))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 

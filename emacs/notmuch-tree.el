@@ -1095,6 +1095,8 @@ Complete list of currently available key bindings:
     (hl-line-mode 1))
   (setq buffer-read-only t)
   (setq truncate-lines t)
+  (when (boundp 'untrusted-content)
+    (setq untrusted-content t))
   (when notmuch-tree-outline-enabled (notmuch-tree-outline-mode 1)))
 
 (defvar notmuch-tree-process-exit-functions nil
