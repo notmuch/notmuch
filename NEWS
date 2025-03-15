@@ -9,10 +9,56 @@ non-matched authors when showing threads. See
 `search.authors_separator` and `search.authors_matched_separator` in
 notmuch-config(1).
 
+Library
+-------
+
+Make the s-expression query parser thread-safe.
+
 Emacs
 -----
 
+The new variable `untrusted-content` is now (conditionally) set in
+relevant modes.
+
+Add `notmuch-mua-subject-regexp` to help avoid sending erroneous
+subjects.
+
+Allow toggling display of excluded messages.
+
+Fix for text/calendar display. Fix for subject sanitizing in tree
+mode. Fix for hl-line location in search and tree mode. Fix for
+interaction with which-func-mode and imenu. Fix for saving hidden
+headers in drafts.
+
 Support for Emacs older than 27.1 is deprecated with this release.
+
+Legacy Python Bindings
+----------------------
+
+The legacy python bindings previously in `bindings/python` are no
+longer supported. These bindings have been deprecated since 2020. As
+of this release they are no longer built or tested, and patches for
+them will no longer be accepted. They have been moved to `contrib` to
+smooth the transition. Thanks very much to Sebastian Spaeth and all of
+the other contributors to these bindings over the years.
+
+Python Bindings
+---------------
+
+Adapt python-cffi version handling to stricter version constraints in
+setuptools.
+
+Fix iterator related segfaults.
+
+Ruby Bindings
+-------------
+
+Fix for warnings about "undefining the allocator of T_DATA".
+
+Test Suite
+----------
+
+Adapt test suite for changes in Emacs 30.1 and GnuPG 2.4 series.
 
 Notmuch 0.38.3 (2024-03-09)
 ===========================
