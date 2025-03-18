@@ -37,9 +37,9 @@ In these python bindings they have sometimes been exposed as
 like :class:`collections.abc.Set` or :class:`collections.abc.Mapping`
 etc.  This gives a more natural API to work with, e.g. being able to
 treat tags as sets.  However it does mean that the
-:meth:`__contains__`, :meth:`__len__` and frieds methods on these are
-usually more and essentially O(n) rather than O(1) as you might
-usually expect from Python containers.
+:meth:`__contains__`, :meth:`__len__` and similar methods on these are
+usually more expensive and essentially O(n) rather than O(1) as you might
+expect from Python containers.
 """
 
 from notmuch2 import _capi
