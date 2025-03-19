@@ -28,7 +28,7 @@ class NotmuchObject(metaclass=abc.ABCMeta):
 
     However during some peculiar situations, e.g. interpreter
     shutdown, it is possible for the :meth:`__del__` method to have
-    been called, whele there are still references to an object.  This
+    been called, while there are still references to an object.  This
     could result in child objects asking their memory to be freed
     after the parent has already freed the memory, making things
     rather unhappy as double frees are not taken lightly in C.  To
@@ -174,7 +174,7 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
     :type parent: NotmuchObject
     :param iter_p: The CFFI pointer to the C iterator.
     :type iter_p: cffi.cdata
-    :param fn_destory: The CFFI notmuch_*_destroy function.
+    :param fn_destroy: The CFFI notmuch_*_destroy function.
     :param fn_valid: The CFFI notmuch_*_valid function.
     :param fn_get: The CFFI notmuch_*_get function.
     :param fn_next: The CFFI notmuch_*_move_to_next function.

@@ -35,7 +35,7 @@ class ConfigIter(base.NotmuchIter):
 
 class ConfigMapping(base.NotmuchObject, collections.abc.MutableMapping):
     """The config key/value pairs loaded from the database, config file,
-    and and/or defaults.
+    and/or defaults.
 
     The entries are exposed as a :class:`collections.abc.MutableMapping` object.
     Note that setting a value to an empty string is the same as deleting it.

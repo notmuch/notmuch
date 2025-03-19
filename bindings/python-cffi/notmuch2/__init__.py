@@ -22,7 +22,7 @@ Libnotmuch uses a hierarchical memory allocator, this means all
 objects have a strict parent-child relationship and when the parent is
 freed all the children are freed as well.  This has some implications
 for these Python bindings as parent objects need to be kept alive.
-This is normally schielded entirely from the user however and the
+This is normally shielded entirely from the user however and the
 Python objects automatically make sure the right references are kept
 alive.  It is however the reason the :class:`BaseObject` exists as it
 defines the API all Python objects need to implement to work

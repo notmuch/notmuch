@@ -69,7 +69,7 @@ class ImmutableTagSet(base.NotmuchObject, collections.abc.Set):
         return self.iter(encoding='utf-8', errors='ignore')
 
     def iter(self, *, encoding=None, errors='strict'):
-        """Aternate iterator constructor controlling string decoding.
+        """Alternate iterator constructor controlling string decoding.
 
         Tags are stored as bytes in the notmuch database, in Python
         it's easier to work with unicode strings and thus is what the
@@ -87,7 +87,7 @@ class ImmutableTagSet(base.NotmuchObject, collections.abc.Set):
         """
         # self._cffi_fn should point either to
         # notmuch_database_get_all_tags, notmuch_thread_get_tags or
-        # notmuch_message_get_tags.  nothmuch.h suggests these never
+        # notmuch_message_get_tags.  notmuch.h suggests these never
         # fail, let's handle NULL anyway.
         tags_p = self._cffi_fn(self._ptr())
         if tags_p == capi.ffi.NULL:
@@ -155,7 +155,7 @@ class MutableTagSet(ImmutableTagSet, collections.abc.MutableSet):
     Tags are bytestrings and calling ``iter()`` will return an
     iterator yielding bytestrings.  However the :meth:`iter` method
     can be used to return tags as unicode strings, while all other
-    operations accept either byestrings or unicode strings.  In case
+    operations accept either bytestrings or unicode strings.  In case
     unicode strings are used they will be encoded using utf-8 before
     being passed to notmuch.
     """

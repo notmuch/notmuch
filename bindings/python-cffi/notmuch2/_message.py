@@ -344,7 +344,7 @@ class Message(base.NotmuchObject):
 
         Instead the map has an additional :meth:`PropertiesMap.getall`
         method which can be used to retrieve all properties of a given
-        key.  This method also allows iterating of a a subset of the
+        key.  This method also allows iterating of a subset of the
         keys starting with a given prefix.
         """
         try:
@@ -428,7 +428,7 @@ class PropertiesMap(base.NotmuchObject, collections.abc.MutableMapping):
     """A mutable mapping to manage properties.
 
     Both keys and values of properties are supposed to be UTF-8
-    strings in libnotmuch.  However since the uderlying API uses
+    strings in libnotmuch.  However since the underlying API uses
     bytestrings you can use either str or bytes to represent keys and
     all returned keys and values use :class:`BinString`.
 
@@ -486,7 +486,7 @@ class PropertiesMap(base.NotmuchObject, collections.abc.MutableMapping):
         return len(list(it))
 
     def __getitem__(self, key):
-        """Return **the first** peroperty associated with a key."""
+        """Return **the first** property associated with a key."""
         if isinstance(key, str):
             key = key.encode('utf-8')
         value_pp = capi.ffi.new('char**')
@@ -509,7 +509,7 @@ class PropertiesMap(base.NotmuchObject, collections.abc.MutableMapping):
         """Return a :class:`collections.abc.ItemsView` for this map.
 
         The ItemsView treats a ``(key, value)`` pair as unique, so
-        dupcliate ``(key, value)`` pairs will be merged together.
+        duplicate ``(key, value)`` pairs will be merged together.
         However duplicate keys with different values will be returned.
         """
         items = set()
@@ -524,7 +524,7 @@ class PropertiesMap(base.NotmuchObject, collections.abc.MutableMapping):
         return PropertiesItemsView(items)
 
     def values(self):
-        """Return a :class:`collecions.abc.ValuesView` for this map.
+        """Return a :class:`collections.abc.ValuesView` for this map.
 
         All unique property values are included in the view.
         """

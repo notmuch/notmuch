@@ -351,7 +351,7 @@ class Database(base.NotmuchObject):
         The returned context manager can be used to perform atomic
         operations on the database.
 
-        .. note:: Unlinke a traditional RDBMS transaction this does
+        .. note:: Unlike a traditional RDBMS transaction this does
            not imply durability, it only ensures the changes are
            performed atomically.
 
@@ -416,7 +416,7 @@ class Database(base.NotmuchObject):
         :raises XapianError: A Xapian exception occurred.
         :raises FileError: The file referred to by ``pathname`` could
            not be opened.
-        :raises FileNotEmailError: The file referreed to by
+        :raises FileNotEmailError: The file referred to by
            ``pathname`` is not recognised as an email message.
         :raises ReadOnlyDatabaseError: The database is opened in
            READ_ONLY mode.
