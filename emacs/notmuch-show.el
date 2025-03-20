@@ -104,7 +104,7 @@ notmuch-show functions such as
 
 Finally, if this variable is set to nil, no header is
 displayed."
-  :type '(choice (const :tag "No header" ni)
+  :type '(choice (const :tag "No header" nil)
                  (const :tag "Subject" t)
                  (string :tag "Format")
 		 (function :tag "Function"))
