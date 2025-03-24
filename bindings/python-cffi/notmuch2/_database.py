@@ -15,7 +15,7 @@ import notmuch2._query as querymod
 import notmuch2._tags as tags
 
 
-__all__ = ['Database', 'AtomicContext', 'DbRevision']
+__all__ = ['Database', 'AtomicContext', 'DbRevision', 'IndexOptions']
 
 
 def _config_pathname():
