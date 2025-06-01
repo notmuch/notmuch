@@ -1091,10 +1091,10 @@ the configured default sort order."
 
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
-    (if no-display
-	(set-buffer buffer)
-      (pop-to-buffer-same-window buffer))
+    (set-buffer buffer)
     (notmuch-search-mode)
+    (unless no-display
+      (pop-to-buffer-same-window buffer))
     ;; Don't track undo information for this buffer
     (setq buffer-undo-list t)
     (setq notmuch-search-query-string query)
