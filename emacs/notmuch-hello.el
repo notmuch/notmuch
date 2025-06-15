@@ -438,7 +438,7 @@ supported for \"Customized queries section\" items."
       (setq search (string-trim search))
       (let ((history-delete-duplicates t))
 	(add-to-history 'notmuch-search-history search)))
-    (notmuch-search search notmuch-search-oldest-first)))
+    (notmuch-search search notmuch-search-oldest-first notmuch-search-hide-excluded)))
 
 (defun notmuch-hello-add-saved-search (widget &rest _event)
   (let ((search (widget-value (widget-get widget :parent)))

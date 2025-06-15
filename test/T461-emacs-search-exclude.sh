@@ -24,7 +24,6 @@ test_emacs '(notmuch-hello)
 test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox-without-excluded OUTPUT
 
 test_begin_subtest "Search from search box doesn't contain excluded mail by default"
-test_subtest_known_broken
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "Search:")
@@ -37,7 +36,6 @@ test_emacs '(notmuch-hello)
 test_expect_equal_file $EXPECTED/notmuch-search-tag-inbox-without-excluded OUTPUT
 
 test_begin_subtest "Search from search box doesn't contain excluded mail by default"
-test_subtest_known_broken
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "Search:")
