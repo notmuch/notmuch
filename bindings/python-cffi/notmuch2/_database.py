@@ -833,7 +833,7 @@ class IndexOptions(base.NotmuchObject):
         """The decryption policy.
 
         This is an enum from the :class:`DecryptionPolicy`.  See the
-        `index.decrypt` section in :man:`notmuch-config` for details
+        `index.decrypt` section in :any:`notmuch-config(1)` for details
         on the options.  **Do not set this to
         :attr:`DecryptionPolicy.TRUE`** without considering the
         security of your index.
