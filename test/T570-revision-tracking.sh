@@ -63,6 +63,11 @@ test_expect_success "notmuch --uuid=$(cat UUID) search '*'"
 test_begin_subtest "uuid works as global option II"
 test_expect_code 1 "notmuch --uuid=this-is-no-uuid search '*'"
 
+test_begin_subtest "no warning from uuid as global option"
+test_subtest_known_broken
+notmuch --uuid=$(cat UUID) search '*' 1>OUTPUT 2>ERROR
+test_expect_equal_file /dev/null ERROR
+
 test_begin_subtest "search fails with incorrect uuid"
 test_expect_code 1 "notmuch search --uuid=this-is-no-uuid '*'"
 
