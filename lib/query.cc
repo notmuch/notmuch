@@ -371,6 +371,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
 	messages->base.is_of_list_type = false;
 	messages->base.iterator = NULL;
+	messages->base.status = NOTMUCH_STATUS_SUCCESS;
 	messages->notmuch = notmuch;
 	new (&messages->iterator) Xapian::MSetIterator ();
 	new (&messages->iterator_end) Xapian::MSetIterator ();
@@ -509,9 +510,15 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
 				       mset_messages->notmuch, doc_id,
 				       &status);
 
-    if (message == NULL &&
-	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
+    if (message == NULL) {
+	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	    INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
+	} else if (status != NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+	    messages->status = COERCE_STATUS (status, "error creating a message");
+	    return NULL;
+	}
+
+	INTERNAL_ERROR ("NULL message with no error code\n");
     }
 
     if (messages->excluded_doc_ids &&

@@ -79,6 +79,7 @@ _notmuch_messages_create (notmuch_message_list_t *list)
 
     messages->is_of_list_type = true;
     messages->iterator = list->head;
+    messages->status = NOTMUCH_STATUS_SUCCESS;
 
     return messages;
 }
@@ -98,16 +99,30 @@ _notmuch_messages_create (notmuch_message_list_t *list)
  *	   carefully control object construction with placement new
  *	   anyway. *sigh*
  */
+notmuch_status_t
+notmuch_messages_status (notmuch_messages_t *messages)
+{
+    bool valid;
+
+    if (messages == NULL)
+	return NOTMUCH_STATUS_ITERATOR_EXHAUSTED;
+
+    if (messages->status != NOTMUCH_STATUS_SUCCESS)
+	return messages->status;
+
+    if (! messages->is_of_list_type)
+	valid = _notmuch_mset_messages_valid (messages);
+    else
+	valid = messages->iterator != NULL;
+
+    return valid ?
+	NOTMUCH_STATUS_SUCCESS : NOTMUCH_STATUS_ITERATOR_EXHAUSTED;
+}
+
 notmuch_bool_t
 notmuch_messages_valid (notmuch_messages_t *messages)
 {
-    if (messages == NULL)
-	return false;
-
-    if (! messages->is_of_list_type)
-	return _notmuch_mset_messages_valid (messages);
-
-    return (messages->iterator != NULL);
+    return notmuch_messages_status (messages) == NOTMUCH_STATUS_SUCCESS;
 }
 
 bool
@@ -142,7 +157,7 @@ notmuch_messages_move_to_next (notmuch_messages_t *messages)
 	return;
     }
 
-    if (messages->iterator == NULL)
+    if (! notmuch_messages_valid (messages))
 	return;
 
     messages->iterator = messages->iterator->next;

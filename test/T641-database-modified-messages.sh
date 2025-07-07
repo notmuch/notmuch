@@ -16,7 +16,6 @@ add_email_corpus
 cp -a $NOTMUCH_SRCDIR/test/corpora/lkml ${MAIL_DIR}/
 
 test_begin_subtest "catching DatabaseModifiedError in _notmuch_message_create"
-test_subtest_known_broken
 
 test_C ${MAIL_DIR} <<EOF
 #include <notmuch-test.h>
@@ -29,7 +28,9 @@ main (int argc, char **argv)
     notmuch_database_t *rw_db, *ro_db;
     notmuch_messages_t *messages_ro, *messages_rw;
     notmuch_query_t *query_ro, *query_rw;
+    notmuch_status_t status;
     char* msg = NULL;
+    unsigned try;
 
     EXPECT0 (notmuch_database_open_with_config (argv[1],
 						NOTMUCH_DATABASE_MODE_READ_ONLY,
@@ -54,7 +55,7 @@ main (int argc, char **argv)
     EXPECT0 (notmuch_query_search_messages (query_rw, &messages_rw));
 
     for (;
-	 notmuch_messages_valid (messages_rw);
+	 ! notmuch_messages_status (messages_rw);
 	 notmuch_messages_move_to_next (messages_rw)) {
 	notmuch_message_t *message = notmuch_messages_get (messages_rw);
 	EXPECT0 (notmuch_message_add_tag (message, "tag"));
@@ -62,13 +63,34 @@ main (int argc, char **argv)
 
     notmuch_database_close (rw_db);
 
-    for (;
-	 notmuch_messages_valid (messages_ro);
-	 notmuch_messages_move_to_next (messages_ro)) {
-	notmuch_message_t *message = notmuch_messages_get (messages_ro);
+    // try iterating over the query up to twice, we expect a Xapian
+    // DatabaseModifiedError (mapped to NOTMUCH_STATUS_OPERATION_INVALIDATED)
+    // on the first try
+    for (try = 0; try < 2; try++) {
+	for (;
+	     ! notmuch_messages_status (messages_ro);
+	     notmuch_messages_move_to_next (messages_ro)) {
+	    notmuch_message_t *message = notmuch_messages_get (messages_ro);
+	}
+	status = notmuch_messages_status (messages_ro);
+	if (status != NOTMUCH_STATUS_OPERATION_INVALIDATED)
+	    break;
+
+	notmuch_query_destroy (query_ro);
+	notmuch_database_close (ro_db);
+
+	EXPECT0 (notmuch_database_open_with_config (argv[1],
+						    NOTMUCH_DATABASE_MODE_READ_ONLY,
+						    "", NULL, &ro_db, &msg));
+	query_ro = notmuch_query_create (ro_db, "");
+	assert (query_ro);
+	EXPECT0 (notmuch_query_search_messages (query_ro, &messages_ro));
     }
 
-    printf ("SUCCESS\n");
+    if (status == NOTMUCH_STATUS_ITERATOR_EXHAUSTED)
+	printf ("SUCCESS\n");
+    else
+	printf ("status: %s\n", notmuch_status_to_string (status));
     return 0;
 }
 EOF

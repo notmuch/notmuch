@@ -313,6 +313,10 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Syntax error in query";
     case NOTMUCH_STATUS_NO_MAIL_ROOT:
 	return "No mail root found";
+    case NOTMUCH_STATUS_ITERATOR_EXHAUSTED:
+	return "Iterator exhausted";
+    case NOTMUCH_STATUS_OPERATION_INVALIDATED:
+	return "Operation invalidated due to concurrent database modification";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";

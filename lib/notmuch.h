@@ -233,6 +233,20 @@ typedef enum {
      */
     NOTMUCH_STATUS_CLOSED_DATABASE,
     /**
+     * The iterator being examined has been exhausted and contains no more
+     * items.
+     */
+    NOTMUCH_STATUS_ITERATOR_EXHAUSTED,
+    /**
+     * An operation that was being performed on the database has been
+     * invalidated while in progress, and must be re-executed.
+     *
+     * This will typically happen while iterating over query results and the
+     * underlying Xapian database is modified by another process so that the
+     * currently open version cannot be read anymore.
+     */
+    NOTMUCH_STATUS_OPERATION_INVALIDATED,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -1177,13 +1191,16 @@ notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out
  *         return EXIT_FAILURE;
  *
  *     for (;
- *          notmuch_messages_valid (messages);
+ *          ! notmuch_messages_status (messages);
  *          notmuch_messages_move_to_next (messages))
  *     {
  *         message = notmuch_messages_get (messages);
  *         ....
  *         notmuch_message_destroy (message);
  *     }
+ *
+ *     if (notmuch_messages_status (messages) != NOTMUCH_STATUS_ITERATOR_EXHAUSTED)
+ *         return EXIT_FAILURE;
  *
  *     notmuch_query_destroy (query);
  *
@@ -1516,9 +1533,34 @@ notmuch_thread_destroy (notmuch_thread_t *thread);
  *
  * See the documentation of notmuch_query_search_messages for example
  * code showing how to iterate over a notmuch_messages_t object.
+ *
+ * Note that an iterator may become invalid either due to getting exhausted or
+ * due to a runtime error. Use notmuch_messages_status to distinguish
+ * between those cases.
  */
 notmuch_bool_t
 notmuch_messages_valid (notmuch_messages_t *messages);
+
+/**
+ * Get the status of the given 'messages' iterator.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: The iterator is valid; notmuch_messages_get will
+ *     return a valid object
+ *
+ * NOTMUCH_STATUS_ITERATOR_EXHAUSTED: All items have been read
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Iteration failed to allocate memory
+ *
+ * NOTMUCH_STATUS_OPERATION_INVALIDATED: Iteration was invalidated by the
+ *     database. Re-open the database and try again.
+ *
+ * See the documentation of notmuch_query_search_messages for example
+ * code showing how to iterate over a notmuch_messages_t object.
+ */
+notmuch_status_t
+notmuch_messages_status (notmuch_messages_t *messages);
 
 /**
  * Get the current message from 'messages' as a notmuch_message_t.
@@ -1540,8 +1582,8 @@ notmuch_messages_get (notmuch_messages_t *messages);
  *
  * If 'messages' is already pointing at the last message then the
  * iterator will be moved to a point just beyond that last message,
- * (where notmuch_messages_valid will return FALSE and
- * notmuch_messages_get will return NULL).
+ * (where notmuch_messages_status will return NOTMUCH_STATUS_ITERATOR_EXHAUSTED
+ * and notmuch_messages_get will return NULL).
  *
  * See the documentation of notmuch_query_search_messages for example
  * code showing how to iterate over a notmuch_messages_t object.
@@ -1627,8 +1669,9 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
  * will return NULL.
  *
  * If there are no replies to 'message', this function will return
- * NULL. (Note that notmuch_messages_valid will accept that NULL
- * value as legitimate, and simply return FALSE for it.)
+ * NULL. (Note that notmuch_messages_status will accept that NULL
+ * value as legitimate, and simply return NOTMUCH_STATUS_ITERATOR_EXHAUSTED
+ * for it.)
  *
  * This function also returns NULL if it triggers a Xapian exception.
  *

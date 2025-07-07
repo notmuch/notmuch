@@ -147,6 +147,8 @@ typedef enum {
     NOTMUCH_PRIVATE_STATUS_NO_MAIL_ROOT				= NOTMUCH_STATUS_NO_MAIL_ROOT,
     NOTMUCH_PRIVATE_STATUS_BAD_QUERY_SYNTAX			= NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
     NOTMUCH_PRIVATE_STATUS_CLOSED_DATABASE			= NOTMUCH_STATUS_CLOSED_DATABASE,
+    NOTMUCH_PRIVATE_STATUS_ITERATOR_EXHAUSTED			= NOTMUCH_STATUS_ITERATOR_EXHAUSTED,
+    NOTMUCH_PRIVATE_STATUS_OPERATION_INVALIDATED		= NOTMUCH_STATUS_OPERATION_INVALIDATED,
 
     /* Then add our own private values. */
     NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG		= NOTMUCH_STATUS_LAST_STATUS,
@@ -508,6 +510,7 @@ struct _notmuch_messages {
     bool is_of_list_type;
     notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
+    notmuch_status_t status;
 };
 
 notmuch_message_list_t *

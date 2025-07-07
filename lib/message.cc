@@ -212,6 +212,10 @@ _notmuch_message_create (const void *talloc_owner,
 	if (status)
 	    *status = NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
 	return NULL;
+    } catch (const Xapian::DatabaseModifiedError &error) {
+	if (status)
+	    *status = NOTMUCH_PRIVATE_STATUS_OPERATION_INVALIDATED;
+	return NULL;
     }
 
     return _notmuch_message_create_for_document (talloc_owner, notmuch,
