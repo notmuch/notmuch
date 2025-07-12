@@ -460,8 +460,39 @@ purge_database (notmuch_database_t *notmuch, GHashTable *msg_state)
 }
 
 static void
-check_missing (unused (notmuch_database_t *notmuch), unused (GHashTable *mid_state))
+check_missing (notmuch_database_t *notmuch, GHashTable *mid_state)
 {
+    notmuch_status_t status;
+    notmuch_bool_t strict;
+    gpointer key, value;
+
+    GHashTableIter iter;
+    int count = 0;
+
+    status = notmuch_config_get_bool (notmuch,
+				      NOTMUCH_CONFIG_GIT_FAIL_ON_MISSING,
+				      &strict);
+    if (print_status_database ("config_get_bool", notmuch,  status))
+	exit (EXIT_FAILURE);
+
+    g_hash_table_iter_init (&iter, mid_state);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+	if (GPOINTER_TO_INT (value) != MSG_STATE_MISSING)
+	    continue;
+
+	fprintf (stderr, "%c: missing mid %s\n", strict ? 'E' : 'W', (const char *) key);
+	flog ("%c: missing mid %s\n", strict ? 'E' : 'W', (const char *) key);
+	count++;
+    }
+
+    if (count > 0) {
+	if (strict) {
+	    fprintf (stderr, "E: %d missing messages\n", count);
+	    exit (1);
+	} else {
+	    flog ("I: ignoring missing messages\n");
+	}
+    }
 }
 
 static void
