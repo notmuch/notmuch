@@ -49,6 +49,18 @@ typedef enum {
     MSG_STATE_DELETED
 } _message_state_t;
 
+static _message_state_t
+get_message_state (GHashTable *mid_state, const char *key)
+{
+    gpointer val = NULL;
+
+    if (! g_hash_table_lookup_extended (mid_state, key, NULL,
+					&val))
+	return MSG_STATE_UNKNOWN;
+    else
+	return GPOINTER_TO_INT (val);
+}
+
 static bool
 set_message_state (GHashTable *mid_state, const char *mid, _message_state_t state)
 {
@@ -344,16 +356,107 @@ path_to_mid (notmuch_database_t *notmuch, const char *path, char **mid_p, size_t
     return true;
 }
 
-static void
-mark_unseen (unused (notmuch_database_t *notmuch),
-	     unused (GHashTable *mid_state))
+/* In order to force a message to be deleted from the database, we
+ * need to delete all of its filenames. XXX TODO Add to library
+ * API? */
+static notmuch_status_t
+remove_message_all (notmuch_database_t *notmuch,
+		    notmuch_message_t *message)
 {
+    notmuch_filenames_t *filenames = NULL;
+    notmuch_status_t status;
+
+    for (filenames = notmuch_message_get_filenames (message);
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames)) {
+	const char *filename =  notmuch_filenames_get (filenames);
+	status = notmuch_database_remove_message (notmuch, filename);
+	if (status != NOTMUCH_STATUS_SUCCESS &&
+	    status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+	    fprintf (stderr, "failed to remove %s from database\n", filename);
+	    return status;
+	}
+    }
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static void
-purge_database (unused (notmuch_database_t *notmuch),
-		unused (GHashTable *mid_state))
+mark_unseen (notmuch_database_t *notmuch,
+	     GHashTable *mid_state)
 {
+    notmuch_status_t status;
+    notmuch_messages_t *messages;
+    notmuch_query_t *query;
+
+    if (debug_flags && strchr (debug_flags, 'd')) {
+	flog ("total mids = %d\n", g_hash_table_size (mid_state));
+    }
+    status = notmuch_query_create_with_syntax (notmuch,
+					       "",
+					       NOTMUCH_QUERY_SYNTAX_XAPIAN,
+					       &query);
+
+    if (print_status_database ("git-remote-nm", notmuch, status))
+	exit (EXIT_FAILURE);
+
+    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
+
+    status = notmuch_query_search_messages (query, &messages);
+    if (print_status_query ("git-remote-nm", query, status))
+	exit (EXIT_FAILURE);
+
+    for (;
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages)) {
+	notmuch_message_t *message = notmuch_messages_get (messages);
+	const char *mid = notmuch_message_get_message_id (message);
+
+	switch (get_message_state (mid_state, mid)) {
+	case MSG_STATE_SEEN:
+	case MSG_STATE_DELETED:
+	    break;
+	case MSG_STATE_UNKNOWN:
+	    set_message_state (mid_state, mid, MSG_STATE_DELETED);
+	    break;
+	case MSG_STATE_MISSING:
+	    INTERNAL_ERROR ("found missing mid %s", mid);
+	}
+	notmuch_message_destroy (message);
+    }
+}
+
+static void
+purge_database (notmuch_database_t *notmuch, GHashTable *msg_state)
+{
+    gpointer key, value;
+
+    GHashTableIter iter;
+    int count = 0;
+
+    if (debug_flags && strchr (debug_flags, 'd'))
+	flog ("removing unseen messages from database\n");
+
+    g_hash_table_iter_init (&iter, msg_state);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+	notmuch_message_t *message;
+	const char *mid = key;
+
+	if (GPOINTER_TO_INT (value) != MSG_STATE_DELETED)
+	    continue;
+
+	ASSERT (NOTMUCH_STATUS_SUCCESS ==
+		notmuch_database_find_message (notmuch,
+					       mid, &message));
+	/* If the message is in the database, clean up */
+	if (message) {
+	    remove_message_all (notmuch, message);
+	    if (debug_flags && strchr (debug_flags, 'd'))
+		flog ("removed from database %s\n", mid);
+	    count++;
+	}
+    }
+    if (debug_flags && strchr (debug_flags, 'd'))
+	flog ("removed %d messages from database\n", count);
 }
 
 static void
