@@ -35,6 +35,7 @@
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 #ifdef SILENCE_XAPIAN_DEPRECATION_WARNINGS
+#undef XAPIAN_DEPRECATED
 #define XAPIAN_DEPRECATED(D) D
 #endif
 
