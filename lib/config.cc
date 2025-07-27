@@ -170,14 +170,8 @@ notmuch_database_get_config_list (notmuch_database_t *notmuch,
     *out = list;
 
   DONE:
-    if (status) {
-	if (list) {
-	    talloc_free (list);
-	    if (status != NOTMUCH_STATUS_XAPIAN_EXCEPTION)
-		_notmuch_config_list_destroy (list);
-	}
-    } else {
-	talloc_set_destructor (list, _notmuch_config_list_destroy);
+    if (status && list) {
+	talloc_free (list);
     }
 
     return status;
