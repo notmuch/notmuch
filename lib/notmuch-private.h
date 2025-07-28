@@ -707,14 +707,15 @@ _notmuch_filenames_create (const void *ctx,
 
 /* thread.cc */
 
-notmuch_thread_t *
+notmuch_private_status_t
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
 			notmuch_string_list_t *excluded_terms,
 			notmuch_exclude_t omit_exclude,
-			notmuch_sort_t sort);
+			notmuch_sort_t sort,
+			notmuch_thread_t **thread);
 
 /* indexopts.c */
 

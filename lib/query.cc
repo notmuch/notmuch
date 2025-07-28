@@ -61,6 +61,7 @@ struct _notmuch_threads {
     /* The set of matched docid's that have not been assigned to a
      * thread. Initially, this contains every docid in doc_ids. */
     notmuch_doc_id_set_t match_set;
+    notmuch_status_t status;
 };
 
 /* We need this in the message functions so forward declare. */
@@ -611,6 +612,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
     threads = talloc (query, notmuch_threads_t);
     if (threads == NULL)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+    threads->status = NOTMUCH_STATUS_SUCCESS;
     threads->doc_ids = NULL;
     talloc_set_destructor (threads, _notmuch_threads_destructor);
 
@@ -651,10 +653,18 @@ notmuch_query_destroy (notmuch_query_t *query)
 notmuch_bool_t
 notmuch_threads_valid (notmuch_threads_t *threads)
 {
+    return notmuch_threads_status (threads) == NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_threads_status (notmuch_threads_t *threads)
+{
     unsigned int doc_id;
 
     if (! threads)
-	return false;
+	return NOTMUCH_STATUS_ITERATOR_EXHAUSTED;
+    if (threads->status)
+	return threads->status;
 
     while (threads->doc_id_pos < threads->doc_ids->len) {
 	doc_id = g_array_index (threads->doc_ids, unsigned int,
@@ -665,26 +675,35 @@ notmuch_threads_valid (notmuch_threads_t *threads)
 	threads->doc_id_pos++;
     }
 
-    return threads->doc_id_pos < threads->doc_ids->len;
+    return (threads->doc_id_pos < threads->doc_ids->len) ?
+	   NOTMUCH_STATUS_SUCCESS : NOTMUCH_STATUS_ITERATOR_EXHAUSTED;
 }
 
 notmuch_thread_t *
 notmuch_threads_get (notmuch_threads_t *threads)
 {
+    notmuch_thread_t *thread;
     unsigned int doc_id;
+    notmuch_private_status_t status;
 
     if (! notmuch_threads_valid (threads))
 	return NULL;
 
     doc_id = g_array_index (threads->doc_ids, unsigned int,
 			    threads->doc_id_pos);
-    return _notmuch_thread_create (threads->query,
-				   threads->query->notmuch,
-				   doc_id,
-				   &threads->match_set,
-				   threads->query->exclude_terms,
-				   threads->query->omit_excluded,
-				   threads->query->sort);
+    status = _notmuch_thread_create (threads->query,
+				     threads->query->notmuch,
+				     doc_id,
+				     &threads->match_set,
+				     threads->query->exclude_terms,
+				     threads->query->omit_excluded,
+				     threads->query->sort,
+				     &thread);
+    if (status) {
+	threads->status = COERCE_STATUS (status, "error creating a thread");
+    }
+
+    return thread;
 }
 
 void

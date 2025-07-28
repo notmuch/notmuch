@@ -544,16 +544,17 @@ _resolve_thread_relationships (notmuch_thread_t *thread)
  *
  * Here, 'ctx' is talloc context for the resulting thread object.
  *
- * This function returns NULL in the case of any error.
+ * This function write NULL in the case of any error.
  */
-notmuch_thread_t *
+notmuch_private_status_t
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
 			notmuch_string_list_t *exclude_terms,
 			notmuch_exclude_t omit_excluded,
-			notmuch_sort_t sort)
+			notmuch_sort_t sort,
+			notmuch_thread_t **pthread)
 {
     void *local = talloc_new (ctx);
     notmuch_thread_t *thread = NULL;
@@ -564,11 +565,13 @@ _notmuch_thread_create (void *ctx,
 
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    notmuch_status_t status;
+    notmuch_private_status_t status;
 
-    seed_message = _notmuch_message_create (local, notmuch, seed_doc_id, NULL);
-    if (! seed_message)
-	INTERNAL_ERROR ("Thread seed message %u does not exist", seed_doc_id);
+    *pthread = NULL;
+
+    seed_message = _notmuch_message_create (local, notmuch, seed_doc_id, &status);
+    if (status)
+	return status;
 
     thread_id = notmuch_message_get_thread_id (seed_message);
     thread_id_query_string = talloc_asprintf (local, "thread:%s", thread_id);
@@ -623,7 +626,7 @@ _notmuch_thread_create (void *ctx,
      * oldest or newest subject is desired. */
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
-    status = notmuch_query_search_messages (thread_id_query, &messages);
+    status = (notmuch_private_status_t) notmuch_query_search_messages (thread_id_query, &messages);
     if (status)
 	goto DONE;
 
@@ -656,10 +659,13 @@ _notmuch_thread_create (void *ctx,
 
     /* Commit to returning thread. */
     (void) talloc_steal (ctx, thread);
+    *pthread = thread;
 
   DONE:
     talloc_free (local);
-    return thread;
+    if (! *pthread && ! status)
+	status = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
+    return status;
 }
 
 notmuch_messages_t *

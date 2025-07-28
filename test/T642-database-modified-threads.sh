@@ -11,7 +11,6 @@ add_email_corpus
 cp -a $NOTMUCH_SRCDIR/test/corpora/lkml ${MAIL_DIR}/
 
 test_begin_subtest "handling NOTMUCH_STATUS_OPERATION_INVALIDATED in _notmuch_thread_create"
-test_subtest_known_broken
 
 test_C ${MAIL_DIR} <<EOF
 #include <notmuch-test.h>
@@ -65,11 +64,11 @@ main (int argc, char **argv)
     // on the first try
     for (try = 0; try < 2; try++) {
 	for (;
-	     notmuch_threads_valid (threads);
+	     ! notmuch_threads_status (threads);
 	     notmuch_threads_move_to_next (threads)) {
 	    notmuch_thread_t *thread = notmuch_threads_get (threads);
 	}
-	status = NOTMUCH_STATUS_ITERATOR_EXHAUSTED;
+	status = notmuch_threads_status (threads);
 	if (status != NOTMUCH_STATUS_OPERATION_INVALIDATED)
 	    break;
 

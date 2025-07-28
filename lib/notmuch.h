@@ -1134,7 +1134,7 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  *
  *     for (stat = notmuch_query_search_threads (query, &threads);
  *	    stat == NOTMUCH_STATUS_SUCCESS &&
- *          notmuch_threads_valid (threads);
+ *          ! notmuch_threads_status (threads);
  *          notmuch_threads_move_to_next (threads))
  *     {
  *         thread = notmuch_threads_get (threads);
@@ -1259,9 +1259,34 @@ notmuch_query_destroy (notmuch_query_t *query);
  *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
+ *
+ * Note that an iterator may become invalid either due to getting exhausted or
+ * due to a runtime error. Use notmuch_threads_status to distinguish
+ * between those cases.
  */
 notmuch_bool_t
 notmuch_threads_valid (notmuch_threads_t *threads);
+
+/**
+ * Get the status of the given 'threads' iterator.
+ *
+ * Return value:
+ *
+ * @retval #NOTMUCH_STATUS_SUCCESS The iterator is valid; notmuch_threads_get
+ * 	may return a valid object
+ *
+ * @retval #NOTMUCH_STATUS_ITERATOR_EXHAUSTED All items have been read
+ *
+ * @retval #NOTMUCH_STATUS_OUT_OF_MEMORY Iteration failed to allocate memory
+ *
+ * @retval #NOTMUCH_STATUS_OPERATION_INVALIDATED Iteration was invalidated by
+ * 	the database. Re-open the database and try again.
+ *
+ * See the documentation of notmuch_query_search_threads for example
+ * code showing how to iterate over a notmuch_threads_t object.
+ */
+notmuch_status_t
+notmuch_threads_status (notmuch_threads_t *threads);
 
 /**
  * Get the current thread from 'threads' as a notmuch_thread_t.
@@ -1283,8 +1308,8 @@ notmuch_threads_get (notmuch_threads_t *threads);
  *
  * If 'threads' is already pointing at the last thread then the
  * iterator will be moved to a point just beyond that last thread,
- * (where notmuch_threads_valid will return FALSE and
- * notmuch_threads_get will return NULL).
+ * (where notmuch_threads_status will return NOTMUCH_STATUS_ITERATOR_EXHAUSTED
+ * and notmuch_threads_get will return NULL).
  *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
