@@ -206,7 +206,7 @@ _notmuch_directory_find_or_create (notmuch_database_t *notmuch,
 	notmuch->exception_reported = true;
 	notmuch_directory_destroy (directory);
 	directory = NULL;
-	*status_ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	*status_ret = _notmuch_xapian_error ();
     }
 
   DONE:
@@ -247,7 +247,7 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 			       "A Xapian exception occurred setting directory mtime: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     return NOTMUCH_STATUS_SUCCESS;
@@ -321,7 +321,7 @@ notmuch_directory_delete (notmuch_directory_t *directory)
 			       "A Xapian exception occurred deleting directory entry: %s.\n",
 			       error.get_msg ().c_str ());
 	directory->notmuch->exception_reported = true;
-	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	status = _notmuch_xapian_error ();
     }
     notmuch_directory_destroy (directory);
 

@@ -746,6 +746,9 @@ _notmuch_choose_xapian_path (void *ctx, const char *database_path, const char **
 NOTMUCH_END_DECLS
 
 #ifdef __cplusplus
+
+#include <xapian.h>
+
 /* Implicit typecast from 'void *' to 'T *' is okay in C, but not in
  * C++. In talloc_steal, an explicit cast is provided for type safety
  * in some GCC versions. Otherwise, a cast is required. Provide a
@@ -767,6 +770,27 @@ _notmuch_talloc_steal (const void *new_ctx, const T *ptr)
 #else
 #define NODISCARD /**/
 #endif
+
+/* Should be called from a Xapian::Error exception handler to map it
+ * into a notmuch status code. */
+static inline notmuch_private_status_t
+_notmuch_xapian_error_private (void)
+{
+    try {
+	throw;
+    } catch (const Xapian::DatabaseModifiedError& _e) {
+	return NOTMUCH_PRIVATE_STATUS_OPERATION_INVALIDATED;
+    } catch (const Xapian::Error& _e) {
+	return NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+    }
+}
+
+static inline notmuch_status_t
+_notmuch_xapian_error (void)
+{
+    return COERCE_STATUS (_notmuch_xapian_error_private (),
+			  "mapping Xapian exception");
+}
 #endif
 
 #endif

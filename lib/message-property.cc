@@ -104,7 +104,7 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
 	    private_status = _notmuch_message_add_term (message, "property", term);
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     if (private_status)
@@ -153,7 +153,7 @@ _notmuch_message_remove_all_properties (notmuch_message_t *message, const char *
 	_notmuch_message_remove_terms (message, term_prefix);
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     if (! _notmuch_message_frozen (message))

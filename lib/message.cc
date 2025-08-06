@@ -297,7 +297,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 			       "A Xapian exception occurred creating message: %s\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+	*status_ret = _notmuch_xapian_error_private ();
 	return NULL;
     }
 
@@ -1211,7 +1211,7 @@ notmuch_message_get_flag_st (notmuch_message_t *message,
 	    _notmuch_message_ensure_metadata (message, NULL);
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     *is_set = NOTMUCH_TEST_BIT (message->flags, flag);
@@ -1433,7 +1433,7 @@ _notmuch_message_delete (notmuch_message_t *message)
 	}
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
     if (count > 0) {
 	/* reintroduce a ghost in its place because there are still
@@ -1464,7 +1464,7 @@ _notmuch_message_delete (notmuch_message_t *message)
 	    }
 	} catch (Xapian::Error &error) {
 	    LOG_XAPIAN_EXCEPTION (message, error);
-	    return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	    return _notmuch_xapian_error ();
 	}
 
     }
@@ -1534,7 +1534,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
 	_notmuch_message_invalidate_metadata (message, prefix_name);
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+	status = _notmuch_xapian_error_private ();
     }
 
   DONE:
@@ -1645,7 +1645,7 @@ _notmuch_message_has_term (notmuch_message_t *message,
 	    ! strcmp ((*i).c_str (), term))
 	    out = true;
     } catch (Xapian::Error &error) {
-	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+	status = _notmuch_xapian_error_private ();
     }
     talloc_free (term);
 
@@ -1682,7 +1682,7 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     return NOTMUCH_STATUS_SUCCESS;
@@ -1716,7 +1716,7 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 	    _notmuch_message_sync (message);
     } catch (Xapian::Error &error) {
 	LOG_XAPIAN_EXCEPTION (message, error);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     return NOTMUCH_STATUS_SUCCESS;

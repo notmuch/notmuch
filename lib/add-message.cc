@@ -565,7 +565,7 @@ notmuch_database_index_file (notmuch_database_t *notmuch,
 	_notmuch_database_log (notmuch, "A Xapian exception occurred adding message: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	ret = _notmuch_xapian_error ();
 	goto DONE;
     }
 

@@ -468,7 +468,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
 	*message_ret = NULL;
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 }
 
@@ -520,7 +520,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	     * transaction, ALL pending changes will be discarded */
 	    notmuch->xapian_db->close ();
 	} catch (const Xapian::Error &error) {
-	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	    status = _notmuch_xapian_error ();
 	    if (! notmuch->exception_reported) {
 		_notmuch_database_log (notmuch,
 				       "Error: A Xapian exception occurred closing database: %s\n",
@@ -689,7 +689,7 @@ notmuch_database_compact_db (notmuch_database_t *notmuch,
 				     compactor);
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg ().c_str ());
-	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	ret = _notmuch_xapian_error ();
 	goto DONE;
     }
 
@@ -1127,7 +1127,7 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	_notmuch_database_log (notmuch, "A Xapian exception occurred beginning transaction: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
   DONE:
@@ -1169,7 +1169,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     if (notmuch->atomic_dirty) {
@@ -1417,7 +1417,7 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 	_notmuch_database_log (notmuch, "A Xapian exception occurred getting directory: %s.\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	status = _notmuch_xapian_error ();
     }
     return status;
 }
@@ -1517,7 +1517,7 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 			       "Error: A Xapian exception occurred finding message by filename: %s\n",
 			       error.get_msg ().c_str ());
 	notmuch->exception_reported = true;
-	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	status = _notmuch_xapian_error ();
     }
 
   DONE:

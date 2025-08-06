@@ -206,7 +206,7 @@ _notmuch_query_string_to_xapian_query (notmuch_database_t *notmuch,
 	}
 
 	msg = error.get_msg ();
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -465,7 +465,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
 	notmuch->exception_reported = true;
 	talloc_free (messages);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 }
 
@@ -786,7 +786,7 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	_notmuch_database_log_append (notmuch,
 				      "Query string was: %s\n",
 				      query->query_string);
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     *count_out = count;
@@ -893,7 +893,7 @@ _notmuch_query_expand (notmuch_database_t *notmuch, const char *field, Xapian::Q
 			       "A Xapian exception occurred expanding query: %s\n",
 			       error.get_msg ().c_str ());
 	msg = error.get_msg ();
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return _notmuch_xapian_error ();
     }
 
     return NOTMUCH_STATUS_SUCCESS;

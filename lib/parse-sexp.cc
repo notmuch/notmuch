@@ -366,7 +366,7 @@ _sexp_parse_infix (notmuch_database_t *notmuch, const sexp_t *sx, Xapian::Query 
 					  "Query string was: %s\n",
 					  sx->val);
 	    notmuch->exception_reported = true;
-	    return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	    return _notmuch_xapian_error ();
 	}
     }
     return NOTMUCH_STATUS_SUCCESS;
