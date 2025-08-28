@@ -28,6 +28,8 @@ class NotmuchError(Exception):
                 ReadOnlyDatabaseError,
             capi.lib.NOTMUCH_STATUS_XAPIAN_EXCEPTION:
                 XapianError,
+            capi.lib.NOTMUCH_STATUS_OPERATION_INVALIDATED:
+                OperationInvalidatedError,
             capi.lib.NOTMUCH_STATUS_FILE_ERROR:
                 FileError,
             capi.lib.NOTMUCH_STATUS_FILE_NOT_EMAIL:
@@ -92,6 +94,7 @@ class NotmuchError(Exception):
 class OutOfMemoryError(NotmuchError): pass
 class ReadOnlyDatabaseError(NotmuchError): pass
 class XapianError(NotmuchError): pass
+class OperationInvalidatedError(XapianError): pass
 class FileError(NotmuchError): pass
 class FileNotEmailError(NotmuchError): pass
 class DuplicateMessageIdError(NotmuchError): pass

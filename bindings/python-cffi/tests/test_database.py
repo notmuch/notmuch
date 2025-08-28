@@ -322,6 +322,41 @@ class TestQuery:
         with dbmod.Database(maildir.path, 'rw', config=notmuch2.Database.CONFIG.EMPTY) as db:
             yield db
 
+    def _db_modified(self, maildir, notmuch, ret_prepare=None):
+        # populate the database for the initial query
+        with dbmod.Database.create(maildir.path, config=notmuch2.Database.CONFIG.EMPTY) as db:
+            for i in range(32):
+                pathname = maildir.deliver(body = str(i))[1]
+                msg = db.add(str(pathname))[0]
+                msg.tags.add(str(i))
+
+        with dbmod.Database(maildir.path, 'ro', config=notmuch2.Database.CONFIG.EMPTY) as db:
+            # prepare value to be returned to caller
+            ret = ret_prepare(db) if ret_prepare else db
+
+            # modify the database sufficiently to trigger DatabaseModifiedException
+            for i in range(16):
+                with dbmod.Database(maildir.path, 'rw', config=notmuch2.Database.CONFIG.EMPTY) as db_rw:
+                    pathname = maildir.deliver(body = str(i))[1]
+                    db_rw.add(str(pathname))
+
+            yield ret
+
+    @pytest.fixture
+    def db_modified(self, maildir, notmuch):
+        "A db triggering DatabaseModifiedException."
+        yield from self._db_modified(maildir, notmuch)
+
+    @pytest.fixture
+    def db_modified_messages(self, maildir, notmuch):
+        "A tuple of (db, messages) triggering DatabaseModifiedException."
+        yield from self._db_modified(maildir, notmuch, lambda db: (db, db.messages('*')))
+
+    @pytest.fixture
+    def db_modified_threads(self, maildir, notmuch):
+        "A tuple of (db, threads) triggering DatabaseModifiedException."
+        yield from self._db_modified(maildir, notmuch, lambda db: (db, db.threads('*')))
+
     def test_count_messages(self, db):
         assert db.count_messages('*') == 3
 
@@ -397,3 +432,52 @@ class TestQuery:
             assert isinstance(msg, notmuch2.Message)
             assert msg.alive
             del msg
+
+    def test_operation_invalidated_query(self, db_modified):
+        # Test OperationInvalidatedError raised by instantiating the query.
+        for attempt in 1, 2:
+            try:
+                for msg in db_modified.messages('*'):
+                    pass
+                break
+            except notmuch2.OperationInvalidatedError:
+                if attempt == 1:
+                    db_modified.reopen()
+                    continue
+
+                raise
+
+    def test_operation_invalidated_messages(self, db_modified_messages):
+        # Test OperationInvalidatedError raised by iterating over query results;
+        # the query itself is created while the database is still usable.
+        db, messages = db_modified_messages
+
+        for attempt in 1, 2:
+            try:
+                for msg in messages:
+                    pass
+                break
+            except notmuch2.OperationInvalidatedError:
+                if attempt == 1:
+                    db.reopen()
+                    messages = db.messages('*')
+                    continue
+
+                raise
+
+    def test_operation_invalidated_threads(self, db_modified_threads):
+        db, threads = db_modified_threads
+
+        for attempt in 1, 2:
+            try:
+                for t in threads:
+                    for msg in t:
+                        pass
+                break
+            except notmuch2.OperationInvalidatedError:
+                if attempt == 1:
+                    db.reopen()
+                    threads = db.threads('*')
+                    continue
+
+                raise

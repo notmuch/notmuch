@@ -185,7 +185,8 @@ class ThreadIter(base.NotmuchIter):
         self._db = db
         super().__init__(parent, threads_p,
                          fn_destroy=capi.lib.notmuch_threads_destroy,
-                         fn_valid=capi.lib.notmuch_threads_valid,
+                         fn_valid=None,
+                         fn_status=capi.lib.notmuch_threads_status,
                          fn_get=capi.lib.notmuch_threads_get,
                          fn_next=capi.lib.notmuch_threads_move_to_next)
 

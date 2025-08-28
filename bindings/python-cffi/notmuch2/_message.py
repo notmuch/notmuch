@@ -707,7 +707,8 @@ class MessageIter(base.NotmuchIter):
         self._msg_cls = msg_cls
         super().__init__(parent, msgs_p,
                          fn_destroy=capi.lib.notmuch_messages_destroy,
-                         fn_valid=capi.lib.notmuch_messages_valid,
+                         fn_valid=None,
+                         fn_status=capi.lib.notmuch_messages_status,
                          fn_get=capi.lib.notmuch_messages_get,
                          fn_next=capi.lib.notmuch_messages_move_to_next)
 

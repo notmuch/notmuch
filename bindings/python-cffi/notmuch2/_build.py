@@ -56,6 +56,8 @@ ffibuilder.cdef(
         NOTMUCH_STATUS_BAD_QUERY_SYNTAX,
         NOTMUCH_STATUS_NO_MAIL_ROOT,
         NOTMUCH_STATUS_CLOSED_DATABASE,
+        NOTMUCH_STATUS_ITERATOR_EXHAUSTED,
+        NOTMUCH_STATUS_OPERATION_INVALIDATED,
         NOTMUCH_STATUS_LAST_STATUS
     } notmuch_status_t;
     typedef enum {
@@ -187,6 +189,8 @@ ffibuilder.cdef(
 
     notmuch_bool_t
     notmuch_threads_valid (notmuch_threads_t *threads);
+    notmuch_status_t
+    notmuch_threads_status (notmuch_threads_t *threads);
     notmuch_thread_t *
     notmuch_threads_get (notmuch_threads_t *threads);
     void
@@ -221,6 +225,8 @@ ffibuilder.cdef(
 
     notmuch_bool_t
     notmuch_messages_valid (notmuch_messages_t *messages);
+    notmuch_status_t
+    notmuch_messages_status (notmuch_messages_t *messages);
     notmuch_message_t *
     notmuch_messages_get (notmuch_messages_t *messages);
     void

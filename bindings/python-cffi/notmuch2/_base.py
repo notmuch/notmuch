@@ -176,17 +176,25 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
     :type iter_p: cffi.cdata
     :param fn_destroy: The CFFI notmuch_*_destroy function.
     :param fn_valid: The CFFI notmuch_*_valid function.
+    :param fn_status: The CFFI notmuch_*_status function. Exactly one of
+       fn_valid or fn_status must be provided, the other one must be None.
     :param fn_get: The CFFI notmuch_*_get function.
     :param fn_next: The CFFI notmuch_*_move_to_next function.
     """
     _iter_p = MemoryPointer()
 
     def __init__(self, parent, iter_p,
-                 *, fn_destroy, fn_valid, fn_get, fn_next):
+                 *, fn_destroy, fn_valid, fn_get, fn_next,
+                 fn_status = None):
+        # exactly one of those must be provided
+        assert((fn_valid  and not fn_status) or
+               (fn_status and not fn_valid))
+
         self._parent = parent
         self._iter_p = iter_p
         self._fn_destroy = fn_destroy
         self._fn_valid = fn_valid
+        self._fn_status = fn_status
         self._fn_get = fn_get
         self._fn_next = fn_next
 
@@ -212,6 +220,18 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
                 pass
         self._iter_p = None
 
+    def _check_status(self):
+        if self._fn_valid:
+            # fall back on fn_valid for iterators that do not implement fn_status
+            if not self._fn_valid(self._iter_p):
+                raise StopIteration
+        else:
+            status = self._fn_status(self._iter_p)
+            if status == capi.lib.NOTMUCH_STATUS_ITERATOR_EXHAUSTED:
+                raise StopIteration
+            elif status != capi.lib.NOTMUCH_STATUS_SUCCESS:
+                raise errors.NotmuchError(status)
+
     def __iter__(self):
         """Return the iterator itself.
 
@@ -222,9 +242,11 @@ class NotmuchIter(NotmuchObject, collections.abc.Iterator):
         return self
 
     def __next__(self):
-        if not self._fn_valid(self._iter_p):
-            raise StopIteration()
+        self._check_status()
         obj_p = self._fn_get(self._iter_p)
+        if obj_p == capi.ffi.NULL:
+            self._check_status()
+            raise StopIteration
         self._fn_next(self._iter_p)
         return obj_p
 
