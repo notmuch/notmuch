@@ -285,6 +285,30 @@ class Database(base.NotmuchObject):
             raise errors.NotmuchError(ret)
         self.closed = True
 
+    def reopen(self, mode=None):
+        """Reopen an opened notmuch database.
+
+        :param mode: Mode to reopen the database with. When None, the previously
+           active mode is preserved.
+        :type mode: :attr:`MODE`, str, or None.
+
+        This is useful e.g. for:
+        - switching the mode between read-only and read-write
+        - recovering from OperationInvalidatedError
+        """
+        if isinstance(mode, str):
+            try:
+                mode = self.STR_MODE_MAP[mode]
+            except KeyError:
+                raise ValueError('Invalid mode: %s' % mode)
+        else:
+            mode = mode or self.mode
+        self.mode = mode
+
+        ret = capi.lib.notmuch_database_reopen(self._db_p, mode.value)
+        if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
+            raise errors.NotmuchError(ret)
+
     def __enter__(self):
         return self
 

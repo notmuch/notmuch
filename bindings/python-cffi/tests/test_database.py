@@ -173,6 +173,32 @@ class TestRevision:
 
     # XXX add tests for revisions comparisons
 
+
+class TestMode:
+
+    def test_readonly_raises(self, db, maildir):
+        with pytest.raises(errors.ReadOnlyDatabaseError):
+            with dbmod.Database(maildir.path, 'ro',
+                                config=notmuch2.Database.CONFIG.EMPTY) as db_ro:
+                _, pathname = maildir.deliver()
+                db_ro.add(pathname)
+
+    def test_reopen_ro(self, db, maildir):
+        db.reopen(mode = dbmod.Mode.READ_ONLY)
+        with pytest.raises(errors.ReadOnlyDatabaseError):
+            _, pathname = maildir.deliver()
+            db.add(pathname)
+
+    def test_reopen_rw(self, db, maildir):
+        # release the write lock
+        db.close()
+
+        with dbmod.Database(maildir.path, 'ro',
+                            config=notmuch2.Database.CONFIG.EMPTY) as db:
+            _, pathname = maildir.deliver()
+            db.reopen(mode = dbmod.Mode.READ_WRITE)
+            db.add(pathname)
+
 class TestMessages:
 
     def test_add_message(self, db, maildir):

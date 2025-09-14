@@ -118,6 +118,9 @@ ffibuilder.cdef(
                                        notmuch_database_t **database,
                                        char **error_message);
     notmuch_status_t
+    notmuch_database_reopen (notmuch_database_t *database,
+                             notmuch_database_mode_t new_mode);
+    notmuch_status_t
     notmuch_database_close (notmuch_database_t *database);
     notmuch_status_t
     notmuch_database_destroy (notmuch_database_t *database);
