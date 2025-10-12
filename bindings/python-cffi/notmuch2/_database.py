@@ -877,4 +877,4 @@ class IndexOptions(base.NotmuchObject):
         ret = capi.lib.notmuch_indexopts_set_decrypt_policy(
             self._opts_p, val.value)
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
-            raise errors.NotmuchError(ret, msg)
+            raise errors.NotmuchError(ret)
