@@ -434,6 +434,16 @@ _load_database_state (notmuch_database_t *notmuch)
 	notmuch, notmuch->xapian_db->get_uuid ().c_str ());
 }
 
+static int
+_index_as_text_free (regex_t *regexv)
+{
+    size_t num_regex = talloc_get_size (regexv) / sizeof (*regexv);
+
+    for (size_t i = 0; i < num_regex; i++)
+	regfree (&regexv[i]);
+    return 0;
+}
+
 /* XXX This should really be done lazily, but the error reporting path in the indexing code
  * would need to be redone to report any errors.
  */
@@ -460,6 +470,10 @@ _ensure_index_as_text (notmuch_database_t *notmuch, char **message)
 	assert (len > 0);
 
 	regexv = talloc_realloc (notmuch, regexv, regex_t, nregex + 1);
+	/* destructor applies to entire array, so only set it on first iteration */
+	if (nregex == 0)
+	    talloc_set_destructor (regexv, _index_as_text_free);
+
 	new_regex = &regexv[nregex];
 
 	rerr = regcomp (new_regex, str, REG_EXTENDED | REG_NOSUB);
