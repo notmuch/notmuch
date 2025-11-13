@@ -1192,7 +1192,7 @@ search results and that are also tagged with the given TAG."
   (interactive
    (list (notmuch-select-tag-with-completion "Filter by tag: "
 					     notmuch-search-query-string)))
-  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)
+  (notmuch-search (format "(%s) and tag:%s" notmuch-search-query-string tag)
 		  notmuch-search-oldest-first
 		  notmuch-search-hide-excluded))
 

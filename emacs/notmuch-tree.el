@@ -1308,7 +1308,7 @@ search results and that are also tagged with the given TAG."
 					     notmuch-tree-basic-query)))
   (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto)))
     (notmuch-tree-close-message-window)
-    (notmuch-tree (concat notmuch-tree-basic-query " and tag:" tag)
+    (notmuch-tree (format "(%s) and tag:%s" notmuch-tree-basic-query tag)
 		  notmuch-tree-query-context
 		  nil
 		  nil
