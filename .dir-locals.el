@@ -21,5 +21,5 @@
   (sh-basic-offset . 4)
   (sh-indentation . 4))
  (nil
-  (fill-column . 70))
- )
+  (fill-column . 70)
+  (sentence-end-double-space . nil)))
