@@ -1,3 +1,10 @@
+notmuch (0.40~rc0-2) experimental; urgency=medium
+
+  * Don't install gdb on armhf (skip gdb based tests). Workaround for
+    #1125796.
+
+ -- David Bremner <bremner@debian.org>  Sun, 18 Jan 2026 07:58:18 +0900
+
 notmuch (0.40~rc0-1) experimental; urgency=medium
 
   * New upstream pre-release
