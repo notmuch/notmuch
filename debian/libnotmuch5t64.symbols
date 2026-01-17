@@ -107,6 +107,7 @@ libnotmuch.so.5 libnotmuch5t64 #MINVER#
  notmuch_messages_destroy@Base 0.3
  notmuch_messages_get@Base 0.3
  notmuch_messages_move_to_next@Base 0.3
+ notmuch_messages_status@Base 0.40~rc0
  notmuch_messages_valid@Base 0.3
  notmuch_query_add_tag_exclude@Base 0.12~rc1
  notmuch_query_count_messages@Base 0.3
@@ -145,6 +146,7 @@ libnotmuch.so.5 libnotmuch5t64 #MINVER#
  notmuch_threads_destroy@Base 0.3
  notmuch_threads_get@Base 0.3
  notmuch_threads_move_to_next@Base 0.3
+ notmuch_threads_status@Base 0.40~rc0
  notmuch_threads_valid@Base 0.3
  (c++)"typeinfo for Xapian::LogicError@Base" 0.6.1
  (c++)"typeinfo for Xapian::RuntimeError@Base" 0.6.1
