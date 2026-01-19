@@ -377,7 +377,8 @@ The following actions on messages are also available in
 .. el:define-key:: f
                    M-x notmuch-show-forward-message
 
-   Forward (as a MIME attachment) message
+   Forward as text or as a MIME attachment, depending on the setting
+   of option :code:`message-forward-as-mime`.
 
 .. el:define-key:: r
                    M-x notmuch-show-reply-to-sender
