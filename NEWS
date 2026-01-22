@@ -1,6 +1,36 @@
 Notmuch 0.40 (UNRELEASED)
 =========================
 
+General
+-------
+
+Accept "key-missing" from a signature from a revoked key
+
+Library
+-------
+
+New API notmuch_{threads,messages}_status to allow distinguishing
+iterator exaustion from iterator invalidation due to errors.
+
+Emacs
+-----
+
+Documentation improvements. Fix for bug related to "hide-exclude" in
+notmuch-hello. A new autoloads file is generated for people installing
+without package.el or similar. Fix disabling notmuch-show-header-line
+via custom.
+
+Python Bindings
+---------------
+
+Provide a binding reopen a database. Some small fixes to
+documentation. Make IndexOptions public.
+
+Ruby Bindings
+-------------
+
+Simplify and cleanup build, fix talloc flags.
+
 Notmuch 0.39 (2025-03-15)
 =========================
 
