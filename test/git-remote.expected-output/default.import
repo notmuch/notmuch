@@ -1,0 +1,228 @@
+feature done
+commit refs/notmuch/master
+mark :1
+committer Notmuch Test Suite <test_suite@notmuchmail.org> TIMESTAMP TIMEZONE
+data 12
+lastmod: 53
+from refs/notmuch/master^0
+M 644 inline _notmuch_metadata/87/b1/4EFC743A.3060609@april.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/9a/a0/877h1wv7mg.fsf@inf-8657.int-evry.fr/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/a8/61/1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/50/8c/877htoqdbo.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/50/69/878we4qdqf.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/94/67/87aaykqe24.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/bd/10/87bpj0qeng.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/27/84/87fx8cqf8v.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/3c/98/87hbssqfix.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/dd/a4/87iqd8qgiz.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/02/28/87k4xoqgnl.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/61/f6/87ocn0qh6d.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/9a/6b/87pr7gqidx.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/cc/ab/867hto2p0t.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/ba/76/1258532999-9316-1-git-send-email-keithp@keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/ec/65/86aayk2rbj.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/15/a0/86d43g2w3y.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/54/e7/ddd65cda0911172214t60d22b63hcfeb5a19ab54a39b@mail.gmail.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/60/cc/86einw2xof.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/68/39/736613.51770.qm@web113505.mail.gq1.yahoo.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/1c/7b/1258520223-15328-1-git-send-email-jan@ryngle.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/46/60/ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/78/87/1258510940-7018-1-git-send-email-stewart@flamingspork.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/8c/92/yunzl6kd1w0.fsf@aiko.keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/cf/e1/yun1vjwegii.fsf@aiko.keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/d3/55/yun3a4cegoa.fsf@aiko.keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/fa/e4/1258509400-32511-1-git-send-email-stewart@flamingspork.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/c2/7f/1258506353-20352-1-git-send-email-stewart@flamingspork.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/13/dd/20091118010116.GC25380@dottiness.seas.harvard.edu/tags
+data 31
+attachment
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/97/cf/20091118005829.GB25380@dottiness.seas.harvard.edu/tags
+data 31
+attachment
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/cf/81/20091118005040.GA25380@dottiness.seas.harvard.edu/tags
+data 20
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/ca/dc/cf0c4d610911171623q3e27a0adx802e47039b57604b@mail.gmail.com/tags
+data 24
+attachment
+inbox
+unread
+M 644 inline _notmuch_metadata/42/c5/1258500222-32066-1-git-send-email-ingmar@exherbo.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/47/c1/20091117232137.GA7669@griffis1.net/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/d7/7c/20091118002059.067214ed@hikari/tags
+data 20
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/ae/4b/1258498485-sup-142@elly/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/41/fa/f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/e4/81/f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/fe/4b/1258496327-12086-1-git-send-email-jan@ryngle.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/2c/3b/1258493565-13508-1-git-send-email-keithp@keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/0c/a5/yunaayketfm.fsf@aiko.keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/21/a3/yunbpj0etua.fsf@aiko.keithp.com/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/b8/fa/1258491078-29658-1-git-send-email-dottedmag@dottedmag.net/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/08/50/87fx8can9z.fsf@vertex.dottedmag/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/d3/76/20091117203301.GV3165@dottiness.seas.harvard.edu/tags
+data 20
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/52/bb/87lji4lx9v.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/df/26/cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com/tags
+data 24
+attachment
+inbox
+unread
+M 644 inline _notmuch_metadata/ab/f7/87iqd9rn3l.fsf@vertex.dottedmag/tags
+data 20
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/c5/19/20091117190054.GU3165@dottiness.seas.harvard.edu/tags
+data 20
+inbox
+signed
+unread
+M 644 inline _notmuch_metadata/15/c2/87lji5cbwo.fsf@yoom.home.cworth.org/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/de/77/1258471718-6781-2-git-send-email-dottedmag@dottedmag.net/tags
+data 13
+inbox
+unread
+M 644 inline _notmuch_metadata/77/76/1258471718-6781-1-git-send-email-dottedmag@dottedmag.net/tags
+data 13
+inbox
+unread
+
+done
