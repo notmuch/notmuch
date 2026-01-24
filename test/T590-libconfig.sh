@@ -443,6 +443,9 @@ cat <<'EOF' >EXPECTED
 13: ''
 14: ', '
 15: '| '
+16: 'true'
+17: '_notmuch_metadata'
+18: 'refs/heads/master'
 == stderr ==
 EOF
 unset MAILDIR
@@ -760,6 +763,9 @@ cat <<'EOF' >EXPECTED
 13: 'text/'
 14: ', '
 15: '| '
+16: 'true'
+17: '_notmuch_metadata'
+18: 'refs/heads/master'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -797,6 +803,9 @@ cat <<'EOF' >EXPECTED
 13: ''
 14: ', '
 15: '| '
+16: 'true'
+17: '_notmuch_metadata'
+18: 'refs/heads/master'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -868,6 +877,9 @@ database.backup_dir MAIL_DIR/.notmuch/backups
 database.hook_dir MAIL_DIR/.notmuch/hooks
 database.mail_root MAIL_DIR
 database.path MAIL_DIR
+git.fail_on_missing true
+git.metadata_prefix _notmuch_metadata
+git.ref refs/heads/master
 index.as_text text/
 key with spaces value, with, spaces!
 maildir.synchronize_flags true
