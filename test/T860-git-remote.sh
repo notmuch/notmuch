@@ -303,7 +303,6 @@ restore_state
 
 backup_state
 test_begin_subtest 'by default, missing messages are an error during export'
-test_subtest_known_broken
 sed s/4EFC743A.3060609@april.org/missing-message@example.com/ < export.in > missing.in
 test_expect_code 1 "run_helper < missing.in"
 restore_state
