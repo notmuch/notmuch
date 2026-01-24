@@ -8,6 +8,8 @@
 /.stamps
 /Makefile.config
 /bindings/python-cffi/build/
+/git-remote-notmuch
+/git-remote-notmuch-shared
 /lib/libnotmuch*.dylib
 /lib/libnotmuch.so*
 /nmbug
