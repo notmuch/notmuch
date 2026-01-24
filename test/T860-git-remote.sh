@@ -32,7 +32,7 @@ export GIT_AUTHOR_NAME="Notmuch Test Suite"
 export GIT_AUTHOR_EMAIL="notmuch@example.com"
 export GIT_COMMITTER_NAME="Notmuch Test Suite"
 export GIT_COMMITTER_EMAIL="notmuch@example.com"
-export GIT_REMOTE_NM_DEBUG="s"
+export GIT_REMOTE_NM_DEBUG="sd"
 export GIT_REMOTE_NM_LOG=grn-log.txt
 EXPECTED=$NOTMUCH_SRCDIR/test/git-remote.expected-output
 MAKE_EXPORT_PY=$NOTMUCH_SRCDIR/test/make-export.py
@@ -271,7 +271,6 @@ restore_state
 
 backup_state
 test_begin_subtest "removing message via repo"
-test_subtest_known_broken
 parent=$(dirname $TAG_FILE)
 # future proof this for when e.g. properties are stored
 git -C repo rm -r $parent
@@ -282,6 +281,24 @@ cat <<EOF > EXPECTED
 #notmuch-dump batch-tag:3 config,properties,tags
 EOF
 test_expect_equal_file EXPECTED OUTPUT
+restore_state
+
+backup_state
+test_begin_subtest "not removing later messages"
+add_message '[subject]="first new message"'
+git -C repo pull
+add_message '[subject]="second new message"'
+git -C repo pull
+notmuch dump | sort > EXPECTED
+git clone repo cloned_repo
+rm -rf ${MAIL_DIR}/.notmuch
+notmuch new --full-scan
+git -C cloned_repo remote add database notmuch::
+notmuch config set git.fail_on_missing false
+git -C cloned_repo push database master
+notmuch config set git.fail_on_missing true
+notmuch dump | sort > OUTPUT
+test_expect_equal_file_nonempty EXPECTED OUTPUT
 restore_state
 
 backup_state
