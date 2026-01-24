@@ -107,6 +107,21 @@ paths are presumed relative to `$HOME` for items in section
 
     Default: see :ref:`database`
 
+.. nmconfig:: git.fail_on_missing
+
+    Determine whether messages not found in database but known in git
+    are an error (``true``) or a warning (``false``) for
+    :any:`git-remote-notmuch(1)`
+
+    Default: ``true``
+
+.. nmconfig:: git.metadata_prefix
+
+    Prefix under which :any:`git-remote-notmuch` stores
+    metadata from the database.
+
+    Default: ``_notmuch_metadata``.
+
 .. nmconfig:: git.path
 
     Default location for git repository for :any:`notmuch-git`.
@@ -117,6 +132,13 @@ paths are presumed relative to `$HOME` for items in section
    messages changed (in the database or in git, as appropriate) is not
    too large. This item controls what fraction of total messages is
    considered "not too large".
+
+.. nmconfig:: git.ref
+
+    Commits that do not match this ref are ignored by
+    :any:`git-remote-notmuch`
+
+    Default: ``refs/heads/master``
 
 .. nmconfig:: git.tag_prefix
 
@@ -396,3 +418,4 @@ SEE ALSO
 :any:`notmuch-search-terms(7)`,
 :any:`notmuch-show(1)`,
 :any:`notmuch-tag(1)`
+:any:`git-remote-notmuch(1)`

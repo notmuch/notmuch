@@ -99,6 +99,9 @@ notmuch_authors = u'Carl Worth and many others'
 man_make_section_directory = False
 
 man_pages = [
+    ('man1/git-remote-notmuch', 'git-remote-notmuch',
+     u'git remote helper for notmuch',
+     [notmuch_authors], 1),
     ('man1/notmuch', 'notmuch',
      u'thread-based email index, search, and tagging',
      [notmuch_authors], 1),

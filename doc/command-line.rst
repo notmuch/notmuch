@@ -23,6 +23,7 @@ Main commands
    man1/notmuch-search
    man1/notmuch-show
    man1/notmuch-tag
+   man1/git-remote-notmuch
    man5/notmuch-hooks
 
 Aliases
