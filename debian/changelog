@@ -1,3 +1,9 @@
+notmuch (0.40-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- David Bremner <bremner@debian.org>  Sat, 31 Jan 2026 13:53:09 +0900
+
 notmuch (0.40~rc1-1) experimental; urgency=medium
 
   * New upstream pre-release
