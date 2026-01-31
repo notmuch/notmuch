@@ -4,7 +4,8 @@ Notmuch 0.40 (UNRELEASED)
 General
 -------
 
-Accept "key-missing" from a signature from a revoked key
+Accept "key-missing" from a signature from a revoked key to match
+apparent change in GnuPG behaviour.
 
 Library
 -------
