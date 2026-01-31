@@ -10,7 +10,7 @@ apparent change in GnuPG behaviour.
 Library
 -------
 
-New API notmuch_{threads,messages}_status to allow distinguishing
+New API `notmuch_{threads,messages}_status` to allow distinguishing
 iterator exaustion from iterator invalidation due to errors.
 
 Emacs
