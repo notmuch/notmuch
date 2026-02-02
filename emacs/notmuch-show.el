@@ -683,7 +683,7 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (when-let ((type (plist-get part :content-type)))
+  (when-let* ((type (plist-get part :content-type)))
     (pcase-let ((`(,type ,subtype)
 		 (split-string (downcase type) "/")))
       (cond ((equal type "multipart")
@@ -702,7 +702,7 @@ This will only find parts from messages that have been inserted
 into the current buffer.  CID must be a raw content ID, without
 enclosing angle brackets, a cid: prefix, or URL encoding.  This
 will return nil if the CID is unknown or cannot be retrieved."
-  (when-let ((descriptor (cdr (assoc cid notmuch-show--cids))))
+  (when-let* ((descriptor (cdr (assoc cid notmuch-show--cids))))
     (pcase-let ((`(,msg ,part) descriptor))
       ;; Request caching for this content, as some messages
       ;; reference the same cid: part many times (hundreds!).
@@ -1057,7 +1057,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 
 (defun notmuch-show-mime-type (part)
   "Return the correct mime-type to use for PART."
-  (when-let ((content-type (plist-get part :content-type)))
+  (when-let* ((content-type (plist-get part :content-type)))
     (setq content-type (downcase content-type))
     (or (and (string= content-type "application/octet-stream")
 	     (notmuch-show-get-mime-type-of-application/octet-stream part))
@@ -1945,7 +1945,7 @@ user decision and we should not override it."
 		 (concat header-line-format
 			 (propertize
 			  "  [some mark read tag changes may have failed]"
-			  'face font-lock-warning-face)))))))))
+			  'face 'font-lock-warning-face)))))))))
 
 (defun notmuch-show-filter-thread (query)
   "Filter or LIMIT the current thread based on a new query string.

@@ -443,7 +443,7 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 		   (lambda (mail) (and (not (funcall nr mail)) mail))
 		 (lambda (mail) (and (not (string-match-p nr mail)) mail)))))
     (dolist (header '("To" "Cc"))
-      (when-let ((v (message-fetch-field header)))
+      (when-let* ((v (message-fetch-field header)))
 	(let* ((tokens (mapcar #'string-trim (message-tokenize-header v)))
 	       (good-tokens (delq nil (mapcar nr-filter tokens)))
 	       (addr (and good-tokens (mapconcat #'identity good-tokens ", "))))
