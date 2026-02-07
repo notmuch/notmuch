@@ -37,7 +37,7 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
     notmuch_status_t err = notmuch_database_get_config (db, "index.decrypt", &decrypt_policy);
 
     if (err)
-	return NULL;
+	goto FAIL;
 
     if (decrypt_policy) {
 	if ((! (strcasecmp (decrypt_policy, "true"))) ||
@@ -54,6 +54,10 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
 
     free (decrypt_policy);
     return ret;
+
+FAIL:
+    talloc_free (ret);
+    return NULL;
 }
 
 notmuch_status_t
