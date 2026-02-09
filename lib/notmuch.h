@@ -807,6 +807,12 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * notmuch_message_destroy when done with the message. On any failure
  * '*message' will be set to NULL.
  *
+ * Note that this does not synchronise Maildir flags to notmuch flags,
+ * regardless of the value of maildir.synchronize_flags. Future calls to
+ * notmuch-new(1) will also not synchronise flags, since the file's current
+ * mtime shall be recorded as indexed. If flags ought to be synchronised,
+ * explicitly call notmuch_message_maildir_flags_to_tags.
+ *
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
