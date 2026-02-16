@@ -20,7 +20,7 @@ Configuration
 This remote helper is configured via :any:`notmuch-config(1)` options.
 
 Git needs an email address and name to construct a commit. This remote
-helper uses the values proved by :nmconfig:`user.primary_email` and
+helper uses the values provided by :nmconfig:`user.primary_email` and
 :nmconfig:`user.name` respectively.
 
 The handling of missing messages (messages referenced in the git
