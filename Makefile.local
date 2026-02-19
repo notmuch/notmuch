@@ -276,7 +276,7 @@ notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 git-remote-notmuch: git-remote-notmuch.o status.o tag-util.o query-string.o lib/libnotmuch.a util/libnotmuch_util.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
-git-remote-notmuch-shared: git-remote-notmuch.o status.o tag-util.o query-string.o
+git-remote-notmuch-shared: git-remote-notmuch.o status.o tag-util.o query-string.o lib/$(LINKER_NAME)
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $^ $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 .PHONY: install
