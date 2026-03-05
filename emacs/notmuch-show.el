@@ -1400,15 +1400,17 @@ function is used.
 Returns the buffer containing the messages, or NIL if no messages
 matched."
   (interactive "sNotmuch show: \nP")
-  (let ((buffer-name (generate-new-buffer-name
-		      (or buffer-name
-			  (concat "*notmuch-" thread-id "*"))))
-	(mm-inline-override-types (notmuch--inline-override-types)))
+  (let* ((buffer-name (generate-new-buffer-name
+		       (or buffer-name
+			   (concat "*notmuch-" thread-id "*"))))
+	 (buffer (get-buffer-create buffer-name))
+	 (mm-inline-override-types (notmuch--inline-override-types)))
 
-    (pop-to-buffer-same-window (get-buffer-create buffer-name))
+    (with-current-buffer buffer
+      (notmuch-show-mode))
+    (pop-to-buffer-same-window buffer)
     ;; No need to track undo information for this buffer.
     (setq buffer-undo-list t)
-    (notmuch-show-mode)
     ;; Set various buffer local variables to their appropriate initial
     ;; state. Do this after enabling `notmuch-show-mode' so that they
     ;; aren't wiped out.
