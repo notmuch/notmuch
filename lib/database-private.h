@@ -185,11 +185,17 @@ operator& (notmuch_field_flag_t a, notmuch_field_flag_t b)
 	static_cast<unsigned>(a) & static_cast<unsigned>(b));
 }
 
+#ifdef HAVE_XAPIAN_WILDCARD_GLOB
+#define NOTMUCH_XAPIAN_WILDCARD_FLAG Xapian::QueryParser::FLAG_WILDCARD_GLOB
+#else
+#define NOTMUCH_XAPIAN_WILDCARD_FLAG Xapian::QueryParser::FLAG_WILDCARD
+#endif
+
 #define NOTMUCH_QUERY_PARSER_FLAGS (Xapian::QueryParser::FLAG_BOOLEAN | \
 				    Xapian::QueryParser::FLAG_PHRASE | \
 				    Xapian::QueryParser::FLAG_LOVEHATE | \
 				    Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE | \
-				    Xapian::QueryParser::FLAG_WILDCARD | \
+				    NOTMUCH_XAPIAN_WILDCARD_FLAG | \
 				    Xapian::QueryParser::FLAG_PURE_NOT)
 
 /*
