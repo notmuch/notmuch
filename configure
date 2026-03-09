@@ -483,6 +483,17 @@ for xapian_config in ${XAPIAN_CONFIG} xapian-config; do
 			have_xapian=1
 			xapian_cxxflags=$(${xapian_config} --cxxflags)
 			xapian_ldflags=$(${xapian_config} --libs)
+			printf "Checking Xapian enhanced wildcards..."
+			printf '#include <xapian.h>\nint main() {  printf ("%%d\\n", Xapian::QueryParser::FLAG_WILDCARD_GLOB); }' > _xapian_wildcard.cc
+			if ${CXX} -o _xapian_wildcard _xapian_wildcard.cc > /dev/null 2>&1
+			then
+			    have_xapian_wildcard_glob=1
+			    printf " Yes.\n"
+			else
+			    printf " No.\n"
+			    have_xapian_wildcard_glob=1
+			fi
+
 			;;
 		*) printf "Xapian $xapian_version not supported... "
 	esac
@@ -1285,7 +1296,8 @@ done
 printf "\n\t%s\n" "${WARN_CFLAGS}"
 
 rm -f minimal minimal.c _time_t.c _libversion.c _libversion _libversion.sh _check_session_keys.c _check_session_keys _check_gmime_cert.c _check_x509_validity _check_email \
-   _verify_sig_with_session_key.c _verify_sig_with_session_key
+   _verify_sig_with_session_key.c _verify_sig_with_session_key \
+   _xapian_wildcard.cc _xapian_wildcard
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
@@ -1501,7 +1513,7 @@ LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
-
+HAVE_XAPIAN_WILDCARD_GLOB=${have_xapian_wildcard_glob}
 # Flags needed to compile and link against GMime
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
@@ -1562,6 +1574,7 @@ COMMON_CONFIGURE_CFLAGS = \\
 	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
 	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
 	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
+	-DHAVE_XAPIAN_WILDCARD_GLOB=\$(HAVE_XAPIAN_WILDCARD_GLOB) \\
 	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
 	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK)
 
@@ -1585,6 +1598,8 @@ NOTMUCH_XAPIAN_LDFLAGS="${xapian_ldflags}"
 
 # Whether to have Xapian retry lock
 NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${WITH_RETRY_LOCK}
+# Whether Xapian query parser supports extended glob syntax
+NOTMUCH_HAVE_XAPIAN_WILDCARD_GLOB=${have_xapian_wildcard_glob}
 
 # Flags needed to compile and link against GMime
 NOTMUCH_GMIME_CFLAGS="${gmime_cflags}"
