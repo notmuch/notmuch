@@ -1,3 +1,11 @@
+notmuch (0.40-2) unstable; urgency=medium
+
+  * Temporarily reduce C optimization level to O1 to work around
+    apparent miscompile problem with gcc-15.2.0-17
+    (Closes: #1135438).
+
+ -- David Bremner <bremner@debian.org>  Sat, 02 May 2026 17:11:21 +0900
+
 notmuch (0.40-1) unstable; urgency=medium
 
   * New upstream release
