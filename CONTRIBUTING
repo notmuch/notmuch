@@ -1,0 +1,56 @@
+<!-- -*- markdown -*- -->
+
+# Introduction
+
+A more detailed and friendly explanation can be found at
+
+  https://notmuchmail.org/contributing/
+
+In case of disagreement, the latest version of this document is the
+binding one.
+
+# Generative AI (LLMs)
+
+Use of generative AI (LLMs, diffusion models and similar technology)
+is not acceptable for contributions to or interactions with the
+Notmuch project.
+
+This includes words, images and code. It includes bug reports, commit
+messages, and email (mailing list or private) and IRC messages.
+
+# Coding Style
+
+Read and follow 
+[`devel/STYLE`](https://git.notmuchmail.org/git/notmuch/tree/devel/STYLE).
+
+# Git commits
+
+Each commit should contain one logical change only. The code should
+build and the tests should pass after each commit.
+
+[Quoting Carl](http://article.gmane.org/gmane.mail.notmuch.general/504),
+"The single line summary is good about saying what the commit does,
+but I always want to see at least one sentence about the why as well."
+
+# Update the test suite
+
+`make test` must pass after your changes. You should add new tests for
+any new functionality.
+
+# Update the documentation
+
+If you modify or add new features to the Notmuch command-line tools or Notmuch Emacs UI
+you should update the sphinx documentation under the `doc` directory of the
+Notmuch source.
+
+If you add a new keybinding, update `devel/emacs-keybindings.org`. As
+much as possible, try to be consistent between modes.
+
+# Send your patches to the mailing list
+
+Changes to Notmuch are contributed as [emailed
+patches](http://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project#Public-Project-over-Email).
+
+For example:
+
+        git send-email --to notmuch@notmuchmail.org origin/master
