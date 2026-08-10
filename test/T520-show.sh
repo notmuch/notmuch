@@ -109,7 +109,6 @@ done
 add_email_corpus broken
 for format in text json sexp; do
     test_begin_subtest "don't crash on empty part ($format)"
-    test_subtest_known_broken
     test_expect_code 0 "notmuch show --format=$format id:1782193672-98446-mlmmj-36f22ff2@FreeBSD.org"
 done
 

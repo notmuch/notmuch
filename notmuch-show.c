@@ -637,9 +637,11 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	}
     }
 
-    for (i = 0; i < node->nchildren; i++)
-	format_part_text (ctx, sp, mime_node_child (node, i), indent, params);
-
+    for (i = 0; i < node->nchildren; i++) {
+	mime_node_t *child = mime_node_child (node, i);
+	if (child != NULL)
+	    format_part_text (ctx, sp, child, indent, params);
+    }
     if (GMIME_IS_MESSAGE (node->part))
 	g_mime_stream_printf (stream, "\fbody}\n");
 
@@ -689,10 +691,13 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->integer (sp, duplicate > 0 ? duplicate : 1);
 
 	if (output_body) {
-	    sp->map_key (sp, "body");
-	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), -1, true, include_html);
-	    sp->end (sp);
+	    mime_node_t *child = mime_node_child (node, 0);
+	    if (child) {
+		sp->map_key (sp, "body");
+		sp->begin_list (sp);
+		format_part_sprinter (ctx, sp, child, -1, true, include_html);
+		sp->end (sp);
+	    }
 	}
 
 	msg_crypto = mime_node_get_message_crypto_status (node);
@@ -854,8 +859,12 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	nclose = 3;
     }
 
-    for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), -1, true, include_html);
+    for (i = 0; i < node->nchildren; i++) {
+	mime_node_t *child = mime_node_child (node, i);
+	if (child) {
+	    format_part_sprinter (ctx, sp, child, -1, true, include_html);
+	}
+    }
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
