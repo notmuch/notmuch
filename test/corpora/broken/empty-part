@@ -1,0 +1,111 @@
+Received: from smrk (smrk [192.168.5.1])
+	by tipi (mpop-1.4.21) with POP3
+	for <stepnem>; Tue, 23 Jun 2026 07:47:57 +0200
+Return-Path: <freebsd-hackers+bounces-help@FreeBSD.org>
+Delivered-To: stepnem@smrk.net
+Received: from mx2.freebsd.org (mx2.freebsd.org [2610:1c1:1:606c::19:2])
+	by smrk (OpenSMTPD) with ESMTPS id 048528c1 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO)
+	for <stepnem@smrk.net>;
+	Tue, 23 Jun 2026 07:47:54 +0200 (CEST)
+Received: from mx1.freebsd.org (mx1.freebsd.org [96.47.72.80])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits)
+	 client-signature RSA-PSS (4096 bits))
+	(Client CN "mx1.freebsd.org", Issuer "YR1" (not verified))
+	by mx2.freebsd.org (Postfix) with ESMTPS id 4gkvHD5qV5z4cym
+	for <stepnem@smrk.net>; Tue, 23 Jun 2026 05:47:52 +0000 (UTC)
+	(envelope-from freebsd-hackers+bounces-help@FreeBSD.org)
+Received: from mlmmj.nyi.freebsd.org (mlmmj.nyi.freebsd.org [IPv6:2610:1c1:1:606c::50:24])
+	by mx1.freebsd.org (Postfix) with ESMTP id 4gkvHD4vQVz4H4g
+	for <stepnem@smrk.net>; Tue, 23 Jun 2026 05:47:52 +0000 (UTC)
+	(envelope-from freebsd-hackers+bounces-help@FreeBSD.org)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=freebsd.org; s=dkim;
+	t=1782193672; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:mime-version:mime-version:
+	 content-type:content-type:  content-transfer-encoding:content-transfer-encoding;
+	bh=eqsARKK3S9sAKUTQ+hDhMn4x7KocAJVVFjzgdmxP9ZU=;
+	b=mPnU51VNlaVOYW6Ti4o6GNepwDHiyWRl1J7CFUZS19E3ys4068b7IZRCWE1ASE43/FkV9Z
+	67RfYHn40j0USZ8kKgWezBHGmfIDp1/Sl5fVlJ0ypdUsMEwrOwsm+04mPwWUtvvta3XQZG
+	H35gqnpFnTraILySluADeILprCcF6CZsStFk2HL9zkcTDQNep31tQJjcC30jjgPaln5MbW
+	8E6UVN8XtKhghn2MavDrE9oqWQUy2K4iqoX2D+IkqrjKcCbsdgGlzHNpayBl423scDXsJT
+	2c0r87Z58uQIQs9LHTCF9HXT0zcFA9eg2E0uuprG/aWrlsb9ffLmRG4GKvUW5Q==
+ARC-Seal: i=1; s=dkim; d=freebsd.org; t=1782193672; a=rsa-sha256; cv=none;
+	b=CUcTW+BkVU7ZqpeXQCjqpqwh6kXjc+ATpbHAv98UdTDIQuIkSfM8ZmGMnj1qqF++5Q78p+
+	9+gkVfvQmOGo746M5vk9OKyWnElzVlfNDr7C8tQr6DnF++W0C+y8hufbQT7/hBG5el7y3H
+	fqKwIaubF0Uq6j0HV9vh3RJHk6JW4Jb40t3UwulVINURk38csm8Om8FgAjIF+K+UVsdevE
+	4M5n3QTdjuyOAyqdw8w/x2Dpg1100h61EHSBU5cQ/OQnRPVyjAVmyL5XPfINNWPMOVo6oV
+	TadjOvqvRSDmQ0CzaC+D5OPdwQ9cR1WoZIssXrfTB9pkqjvAGJfrGcHm5Neyiw==
+ARC-Authentication-Results: i=1;
+	mx1.freebsd.org;
+	none
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=freebsd.org;
+	s=dkim; t=1782193672; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=eqsARKK3S9sAKUTQ+hDhMn4x7KocAJVVFjzgdmxP9ZU=;
+	b=pwnSALs/+x3K3x0delP+Sg5alsgQgRfzhzawTIVm6rSPWQ9vC4/J+PP3Jf2teThU+ZerkK
+	UcRqdlcV1S63M5HtO6dASRTnaMBwy9fgZi1DabyKwnB/79XPyVvIHobH0JMJsKcwlhr08D
+	94QVWNQHLVnVSZa5lXqAOX0iwecuy2GAEwWnNIQK3v0nMm5Oy1euFo54wdW1ndkYWzAfas
+	a1ZbK+odPuAd/BL1LuNH/5R6Js1B2X6jhTCGbPTCVUc/tI8TQ/phzAi7O8DYhknfAqxQYc
+	cjmfueI0zAT52ym0mFbtRmA4kG4ZAlI56sMXfe8detfAecGwNl8dXqQD9j6q3g==
+Received: from mlmmj.nyi.freebsd.org (mlmmj.nyi.freebsd.org [IPv6:2610:1c1:1:606c::50:24])
+	by mlmmj.nyi.freebsd.org (Postfix) with ESMTP id 4gkvHD4N1rz6jPbb
+	for <stepnem@smrk.net>; Tue, 23 Jun 2026 05:47:52 +0000 (UTC)
+	(envelope-from freebsd-hackers+bounces-help@FreeBSD.org)
+Subject: =?utf-8?q?Post_to_freebsd-hackers=40FreeBSD.org_denied:_Re:_rcd=288=29_-_new_service_manager_daemon?=
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="=_1ed8c5746acfba8105c2de406822921e_="
+Content-Transfer-Encoding: 8bit
+From: freebsd-hackers+owner@FreeBSD.org
+To: stepnem@smrk.net
+Message-ID: <1782193672-98446-mlmmj-36f22ff2@FreeBSD.org>
+Date: Tue, 23 Jun 2026 05:47:52 +0000
+Reply-To: freebsd-hackers+subrelease-0d41b2c07ac29c45@FreeBSD.org
+
+--=_1ed8c5746acfba8105c2de406822921e_=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Hi, this is the Mlmmj program managing the <freebsd-hackers@FreeBSD.org>
+mailing list.
+
+The message from <stepnem@smrk.net> with subject "Re: rcd(8) - new service
+manager daemon" was unable to be delivered to the list because you are not
+a list subscriber.
+
+However, this is an open list. If you wish, you can simultaneously
+subscribe and release your post by sending a message to
+<freebsd-hackers+subrelease-0d41b2c07ac29c45@FreeBSD.org> which can usually
+be done simply by replying to this message. The subject and the body of the
+message can be anything.
+
+Or you can simultaneously subscribe to the digest version of the list and
+release your post by sending a message to
+<freebsd-hackers+digestsubrelease-0d41b2c07ac29c45@FreeBSD.org> and you
+will receive multiple posts in a single message, at regular intervals, or
+when a lot of posts have accumulated.
+
+Or you can simultaneously subscribe to the no-mail version of the list and
+release your post by sending a message to
+<freebsd-hackers+nomailsubrelease-0d41b2c07ac29c45@FreeBSD.org> and you
+will not receive posts sent to the list. This means you potentially will
+not see replies to your message, unless you follow the list using a web
+archive or have another email address subscribed to another version of the
+list.
+
+If you believe you are a subscriber, you are probably subscribed with a
+different email address. To find out which address you are subscribed with,
+refer to the message welcoming you to the list, or look at the envelope
+"Return-Path" header of a message you receive from the list.
+
+(The denied message is below.)
+
+--=_1ed8c5746acfba8105c2de406822921e_=
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+Content-Disposition: inline; filename="message.eml"
+
+--=_1ed8c5746acfba8105c2de406822921e_=--
+
