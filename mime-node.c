@@ -374,6 +374,11 @@ _mime_node_set_up_part (mime_node_t *node, GMimeObject *part, int numchild)
 	/* Promote part to an envelope and open it */
 	GMimeMessagePart *message_part = GMIME_MESSAGE_PART (part);
 	GMimeMessage *message = g_mime_message_part_get_message (message_part);
+	if (! message) {
+	    fprintf (stderr, "Warning: null message part, ignoring\n");
+	    return false;
+	}
+
 	node->envelope_part = message_part;
 	node->part = GMIME_OBJECT (message);
 	node->nchildren = 1;
@@ -461,6 +466,8 @@ mime_node_child (mime_node_t *parent, int child)
 			g_type_name (G_OBJECT_TYPE (parent->part)));
     }
     node = _mime_node_create (parent, sub, child);
+    if (! node)
+	return NULL;
 
     if (child == parent->next_child && parent->next_part_num != -1) {
 	/* We're traversing in depth-first order.  Record the child's
