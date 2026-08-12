@@ -293,24 +293,6 @@ get_sender (GMimeMessage *message)
     return g_mime_message_get_from (message);
 }
 
-static InternetAddressList *
-get_to (GMimeMessage *message)
-{
-    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_TO);
-}
-
-static InternetAddressList *
-get_cc (GMimeMessage *message)
-{
-    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_CC);
-}
-
-static InternetAddressList *
-get_bcc (GMimeMessage *message)
-{
-    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_BCC);
-}
-
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
  * "To:", "Cc:", and "Bcc:" headers of 'message'.
  *
@@ -329,27 +311,18 @@ add_recipients_from_message (GMimeMessage *reply,
 			     GMimeMessage *message,
 			     bool reply_all)
 {
-    struct {
-	InternetAddressList * (*get_header)(GMimeMessage *message);
-	GMimeAddressType recipient_type;
-    } reply_to_map[] = {
-	{ get_sender,   GMIME_ADDRESS_TYPE_TO },
-	{ get_to,       GMIME_ADDRESS_TYPE_TO },
-	{ get_cc,       GMIME_ADDRESS_TYPE_CC },
-	{ get_bcc,      GMIME_ADDRESS_TYPE_BCC },
-    };
+    const GMimeAddressType addr_type[] = { GMIME_ADDRESS_TYPE_TO, GMIME_ADDRESS_TYPE_TO,
+					   GMIME_ADDRESS_TYPE_CC, GMIME_ADDRESS_TYPE_BCC };
+
     const char *from_addr = NULL;
     unsigned int i;
+    InternetAddressList *recipients;
     unsigned int n = 0;
 
-    for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	InternetAddressList *recipients;
+    recipients = get_sender (message);
+    n += scan_address_list (recipients, notmuch, reply, GMIME_ADDRESS_TYPE_TO, &from_addr);
 
-	recipients = reply_to_map[i].get_header (message);
-
-	n += scan_address_list (recipients, notmuch, reply,
-				reply_to_map[i].recipient_type, &from_addr);
-
+    for (i = 1; i < ARRAY_SIZE (addr_type); i++) {
 	if (! reply_all && n) {
 	    /* Stop adding new recipients in reply-to-sender mode if
 	     * we have added some recipient(s) above.
@@ -365,6 +338,8 @@ add_recipients_from_message (GMimeMessage *reply,
 	    if (from_addr)
 		break;
 	}
+	recipients = g_mime_message_get_addresses (message, addr_type[i]);
+	n += scan_address_list (recipients, notmuch, reply, addr_type[i], &from_addr);
     }
 
     /* If no recipients were added but we found one of the user's
