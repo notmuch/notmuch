@@ -173,6 +173,10 @@ paths are presumed relative to `$HOME` for items in section
      in ``/usr/share/doc/notmuch``) as ``examples/firejail.profile``. You
      may use it as ``notmuch config set index.filter 'firejail
      --profile=<.../examples/firejail.profile> <your filter program>'``.
+   * Bubblewrap (https://github.com/containers/bubblewrap , Linux-specific); a
+     sample Bubblewrap invocation is shipped with notmuch documentation as
+     ``examples/bwrap.sh``. You may use it as ``notmuch config set index.filter
+     '.../examples/bwrap.sh <your filter program>'``.
 
    The filter is a commandline split in a POSIX shell-like manner (without
    actually invoking the shell, so shell expansions are not performed and shell

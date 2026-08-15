@@ -39,6 +39,7 @@ COPY_INFO1 := $(patsubst $(DOCBUILDDIR)/man/man1/%.1,$(DOCBUILDDIR)/texinfo/%.in
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info) $(COPY_INFO1)
 
 EXAMPLES_FILES := doc/examples/firejail.profile
+EXAMPLES_FILES_EXEC := doc/examples/bwrap.sh
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
@@ -161,6 +162,7 @@ $(dir)/config.dox: version.stamp
 install-examples:
 	mkdir -m0755 -p "$(DESTDIR)$(docdir)/examples"
 	install -m0644 $(EXAMPLES_FILES) $(DESTDIR)$(docdir)/examples
+	install -m0755 $(EXAMPLES_FILES_EXEC) $(DESTDIR)$(docdir)/examples
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp $(DOCBUILDDIR)/.texi.stamp
 CLEAN := $(CLEAN) $(DOCBUILDDIR)/.html.stamp $(DOCBUILDDIR)/.info.stamp
