@@ -38,8 +38,8 @@ endif
 COPY_INFO1 := $(patsubst $(DOCBUILDDIR)/man/man1/%.1,$(DOCBUILDDIR)/texinfo/%.info,$(COPY_ROFF1))
 INFO_INFO_FILES := $(INFO_TEXI_FILES:.texi=.info) $(COPY_INFO1)
 
-EXAMPLES_FILES := doc/examples/firejail.profile
-EXAMPLES_FILES_EXEC := doc/examples/bwrap.sh
+EXAMPLES_FILES := doc/examples/firejail.profile doc/examples/README.filter.rst
+EXAMPLES_FILES_EXEC := doc/examples/bwrap.sh doc/examples/filter.py
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 

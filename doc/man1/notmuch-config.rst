@@ -191,6 +191,13 @@ paths are presumed relative to `$HOME` for items in section
    * :envvar:`NOTMUCH_FILTER_MESSAGE_ID` - the message ID, without enclosing
      angle brackets <>
 
+   A sample filtering script is shipped with notmuch documentation (typically in
+   ``/usr/share/doc/notmuch``) as ``examples/filter.py``. You may use it as e.g.:
+
+   * ``notmuch config set index.as_text text/html application/pdf``
+   * ``notmuch config set index.filter '<your sandbox>
+     <.../contrib/filter/filter.py>'``
+
    History: This configuration value was introduced in notmuch 0.41.
 
 .. nmconfig:: index.decrypt
