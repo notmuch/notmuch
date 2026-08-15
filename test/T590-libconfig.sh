@@ -446,6 +446,7 @@ cat <<'EOF' >EXPECTED
 16: 'true'
 17: '_notmuch_metadata'
 18: 'refs/heads/master'
+19: 'NULL'
 == stderr ==
 EOF
 unset MAILDIR
@@ -734,6 +735,7 @@ notmuch config set search.authors_matched_separator "| "
 notmuch config set search.authors_separator ", "
 notmuch config set new.ignore "sekrit_junk"
 notmuch config set index.as_text "text/"
+notmuch config set index.filter "filter"
 cat c_head2 - c_tail <<'EOF' | test_C ${MAIL_DIR} %NULL% %NULL%
 {
     notmuch_config_key_t key;
@@ -766,6 +768,7 @@ cat <<'EOF' >EXPECTED
 16: 'true'
 17: '_notmuch_metadata'
 18: 'refs/heads/master'
+19: 'filter'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
@@ -806,6 +809,7 @@ cat <<'EOF' >EXPECTED
 16: 'true'
 17: '_notmuch_metadata'
 18: 'refs/heads/master'
+19: 'NULL'
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT.clean
@@ -881,6 +885,7 @@ git.fail_on_missing true
 git.metadata_prefix _notmuch_metadata
 git.ref refs/heads/master
 index.as_text text/
+index.filter filter
 key with spaces value, with, spaces!
 maildir.synchronize_flags true
 new.ignore sekrit_junk

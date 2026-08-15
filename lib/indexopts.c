@@ -22,6 +22,8 @@
 
 struct _notmuch_indexopts {
     _notmuch_crypto_t crypto;
+
+    char *filter_cmd;
 };
 
 notmuch_indexopts_t *
@@ -53,9 +55,24 @@ notmuch_database_get_default_indexopts (notmuch_database_t *db)
     }
 
     free (decrypt_policy);
+
+    char *filter_cmd;
+
+    err = notmuch_database_get_config (db, "index.filter", &filter_cmd);
+    if (err)
+	goto FAIL;
+
+    if (filter_cmd && *filter_cmd) {
+	ret->filter_cmd = talloc_strdup (ret, filter_cmd);
+	free (filter_cmd);
+	if (! ret->filter_cmd)
+	    goto FAIL;
+    } else
+	free (filter_cmd);
+
     return ret;
 
-FAIL:
+  FAIL:
     talloc_free (ret);
     return NULL;
 }
@@ -76,6 +93,23 @@ notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts)
     if (! indexopts)
 	return false;
     return indexopts->crypto.decrypt;
+}
+
+notmuch_status_t
+notmuch_indexopts_set_filter (notmuch_indexopts_t *indexopts,
+			      const char *filter_cmd)
+{
+    talloc_free (indexopts->filter_cmd);
+    indexopts->filter_cmd = talloc_strdup (indexopts, filter_cmd);
+    if (! indexopts->filter_cmd)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+const char *
+notmuch_indexopts_get_filter (const notmuch_indexopts_t *indexopts)
+{
+    return indexopts ? indexopts->filter_cmd : NULL;
 }
 
 void

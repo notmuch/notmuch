@@ -2644,6 +2644,7 @@ typedef enum {
     NOTMUCH_CONFIG_GIT_FAIL_ON_MISSING,
     NOTMUCH_CONFIG_GIT_METADATA_PREFIX,
     NOTMUCH_CONFIG_GIT_REF,
+    NOTMUCH_CONFIG_INDEX_FILTER,
     NOTMUCH_CONFIG_LAST
 } notmuch_config_key_t;
 
@@ -2931,6 +2932,28 @@ notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts);
  *
  * @since libnotmuch 5.1 (notmuch 0.26)
  */
+
+/**
+ * Set a filtering program to extract text from non-text MIME parts.
+ *
+ * CAUTION: improper use of this option may lead to remote code
+ * execution on the user's machine. See the `index.filter` section in
+ * `notmuch-config(1)` for details. Make sure you read and understand
+ * it before calling this function.
+ */
+notmuch_status_t
+notmuch_indexopts_set_filter (notmuch_indexopts_t *indexopts,
+			      const char *filter_cmd);
+
+/**
+ * Return currently configured filtering program, or NULL if one is not
+ * configured.
+ *
+ * see notmuch_indexopts_set_filter
+ */
+const char *
+notmuch_indexopts_get_filter (const notmuch_indexopts_t *indexopts);
+
 void
 notmuch_indexopts_destroy (notmuch_indexopts_t *options);
 

@@ -114,6 +114,22 @@ class TestCreate:
         assert db.needs_upgrade in (True, False)
 
 
+class TestIndexOptions:
+
+    @pytest.fixture
+    def indexopts(self, db):
+        return db.default_indexopts()
+
+    def test_filter_cmd(self, indexopts):
+        filter_cmd = b'some filter command'
+        indexopts.filter_cmd = filter_cmd
+        assert bytes(indexopts.filter_cmd) == filter_cmd
+
+    def test_filter_cmd_invalid(self, indexopts):
+        with pytest.raises(TypeError):
+            indexopts.filter_cmd = {}
+
+
 class TestAtomic:
 
     def test_exit_early(self, db):

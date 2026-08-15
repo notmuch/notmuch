@@ -614,6 +614,8 @@ _notmuch_config_key_to_string (notmuch_config_key_t key)
 	return "git.metadata_prefix";
     case NOTMUCH_CONFIG_GIT_REF:
 	return "git.ref";
+    case NOTMUCH_CONFIG_INDEX_FILTER:
+	return "index.filter";
     default:
 	return NULL;
     }
@@ -675,6 +677,7 @@ _notmuch_config_default (notmuch_database_t *notmuch, notmuch_config_key_t key)
     case NOTMUCH_CONFIG_HOOK_DIR:
     case NOTMUCH_CONFIG_BACKUP_DIR:
     case NOTMUCH_CONFIG_OTHER_EMAIL:
+    case NOTMUCH_CONFIG_INDEX_FILTER:
 	return NULL;
     default:
     case NOTMUCH_CONFIG_LAST:

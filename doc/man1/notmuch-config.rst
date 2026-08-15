@@ -154,6 +154,33 @@ paths are presumed relative to `$HOME` for items in section
 
    History: This configuration value was introduced in notmuch 0.38.
 
+.. nmconfig:: index.filter
+
+   Filtering program to convert non-text MIME parts to a text
+   representation for indexing. Will only be applied to those parts that
+   match ``index.as_text``.
+
+   CAUTION: It is very common for hostile actors to send emails with
+   crafted attachments that exploit bugs in common parsing libraries. It
+   is thus IMPERATIVE that your filtering program uses some sort of a
+   sandboxing mechanism, so that it cannot be subverted to attack your
+   system or steal your data.
+
+   The filter is a commandline split in a POSIX shell-like manner (without
+   actually invoking the shell, so shell expansions are not performed and shell
+   constructs are not allowed) and executed. The payload of the MIME part to be
+   filtered will be supplied on its `stdin`, it is expected to write the text
+   output to its `stdout`. The following environment variables will be set:
+
+   * :envvar:`NOTMUCH_FILTER_MIME_TYPE` - the ``type/subtype`` part of the
+     "content-type" header
+   * :envvar:`NOTMUCH_FILTER_FILENAME` - the file name associated with the
+     attachment, if present
+   * :envvar:`NOTMUCH_FILTER_MESSAGE_ID` - the message ID, without enclosing
+     angle brackets <>
+
+   History: This configuration value was introduced in notmuch 0.41.
+
 .. nmconfig:: index.decrypt
 
     Policy for decrypting encrypted messages during indexing.  Must be

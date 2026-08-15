@@ -328,6 +328,11 @@ ffibuilder.cdef(
                                           notmuch_decryption_policy_t decrypt_policy);
     notmuch_decryption_policy_t
     notmuch_indexopts_get_decrypt_policy (const notmuch_indexopts_t *indexopts);
+    notmuch_status_t
+    notmuch_indexopts_set_filter (notmuch_indexopts_t *indexopts,
+                                  const char *filter_cmd);
+    const char *
+    notmuch_indexopts_get_filter (const notmuch_indexopts_t *indexopts);
     void
     notmuch_indexopts_destroy (notmuch_indexopts_t *options);
 

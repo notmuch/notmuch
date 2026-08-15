@@ -878,3 +878,24 @@ class IndexOptions(base.NotmuchObject):
             self._opts_p, val.value)
         if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
             raise errors.NotmuchError(ret)
+
+    @property
+    def filter_cmd(self):
+        """Filtering program to extract text from non-text MIME parts.
+
+        CAUTION: improper use of this option may lead to remote code
+        execution on the user's machine. See the `index.filter` section
+        in :any:`notmuch-config(1)` for details. Make sure you read and
+        understand it before setting this property.
+
+        The value is a string that is split in a shell-like manner and
+        executed.
+        """
+        raw = capi.lib.notmuch_indexopts_get_filter(self._opts_p)
+        return base.BinString.from_cffi(raw)
+
+    @filter_cmd.setter
+    def filter_cmd(self, val):
+        ret = capi.lib.notmuch_indexopts_set_filter(self._opts_p, val)
+        if ret != capi.lib.NOTMUCH_STATUS_SUCCESS:
+            raise errors.NotmuchError(ret)
