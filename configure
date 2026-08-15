@@ -178,6 +178,7 @@ Fine tuning of some installation directories is available:
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--infodir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--docdir=DIR		Install additional documentation to DIR [PREFIX/share/doc/notmuch]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
@@ -225,6 +226,8 @@ for option; do
 	MANDIR="${option#*=}"
     elif [ "${option%%=*}" = '--infodir' ] ; then
 	INFODIR="${option#*=}"
+    elif [ "${option%%=*}" = '--docdir' ] ; then
+	DOCDIR="${option#*=}"
     elif [ "${option%%=*}" = '--sysconfdir' ] ; then
 	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--emacslispdir' ] ; then
@@ -1401,6 +1404,9 @@ mandir = ${MANDIR:=\$(prefix)/share/man}
 
 # The directory to which man pages should be installed
 infodir = ${INFODIR:=\$(prefix)/share/info}
+
+# The directory to which additional documentation should be installed
+docdir = ${DOCDIR:=\$(prefix)/share/doc/notmuch}
 
 # The directory to which read-only (configuration) files should be installed
 sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}

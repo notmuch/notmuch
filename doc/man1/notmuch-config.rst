@@ -166,6 +166,14 @@ paths are presumed relative to `$HOME` for items in section
    sandboxing mechanism, so that it cannot be subverted to attack your
    system or steal your data.
 
+   Some of the options you may consider are:
+
+   * Firejail (https://firejail.wordpress.com/ , Linux-specific); a sample
+     Firejail profile is shipped with notmuch documentation (typically installed
+     in ``/usr/share/doc/notmuch``) as ``examples/firejail.profile``. You
+     may use it as ``notmuch config set index.filter 'firejail
+     --profile=<.../examples/firejail.profile> <your filter program>'``.
+
    The filter is a commandline split in a POSIX shell-like manner (without
    actually invoking the shell, so shell expansions are not performed and shell
    constructs are not allowed) and executed. The payload of the MIME part to be

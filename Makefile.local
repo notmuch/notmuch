@@ -280,7 +280,7 @@ git-remote-notmuch-shared: git-remote-notmuch.o status.o tag-util.o query-string
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $^ $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 .PHONY: install
-install: all install-man install-info
+install: all install-man install-info install-examples
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
 	install git-remote-notmuch-shared "$(DESTDIR)$(prefix)/bin/git-remote-notmuch"
