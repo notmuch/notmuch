@@ -24,6 +24,9 @@
 
 #include <xapian.h>
 
+#include <poll.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 typedef struct {
     int state;
@@ -397,6 +400,262 @@ _indexable_as_text (notmuch_message_t *message, GMimeObject *part)
     return false;
 }
 
+/* Run from the indexing process to communicate with the attachment
+ * filter child.
+ * Streams attachment payload to the child and reads its output in a
+ * non-blocking manner, in order to avoid placing any restrictions on the
+ * filter's IO patterns.
+ */
+static void
+_filter_attachment_communicate (int *child_stdin, int *child_stdout,
+				char **data, size_t *data_len,
+				notmuch_database_t *db)
+{
+    const char *write_data = *data;
+    size_t to_write = *data_len;
+
+    char *filtered = NULL;
+    size_t filtered_len = 0;
+
+    int err = 0;
+
+    while (1) {
+	struct pollfd fds[2] = {
+	    { *child_stdout, POLLIN,  0 },
+	    { *child_stdin,  POLLOUT, 0 },
+	};
+
+	if (to_write <= 0 && *child_stdin > 0) {
+	    close (*child_stdin);
+	    *child_stdin = -1;
+	}
+
+	err = poll (fds, 1 + (to_write > 0), -1);
+	if (err == -1) {
+	    _notmuch_database_log (db, "poll() returned an error: %s\n",
+				   strerror (errno));
+	    goto FAIL;
+	}
+
+	/* read any newly available data */
+	while (fds[0].revents & POLLIN) {
+	    char out[PIPE_BUF], *tmp;
+	    ssize_t bytes_read = read (fds[0].fd, out, sizeof (out));
+	    if (bytes_read == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		    break;
+
+		_notmuch_database_log (db, "Error reading data from filtering process: %s\n",
+				       strerror (errno));
+		goto FAIL;
+	    } else if (bytes_read == 0)
+		break;
+
+	    /* Use plain realloc(), since the attachment body we are replacing
+	     * needs to be freed with a plain free().
+	     * +1 for the terminating 0 */
+	    tmp = (char *) realloc (filtered, filtered_len + bytes_read + 1);
+	    if (! tmp)
+		goto FAIL;
+	    filtered = tmp;
+	    memcpy (filtered + filtered_len, out, bytes_read);
+	    filtered_len += bytes_read;
+	}
+	/* the child is done writing */
+	if (fds[0].revents & POLLHUP)
+	    break;
+
+	/* send data to be filtered */
+	while (to_write > 0 && (fds[1].revents & POLLOUT)) {
+	    ssize_t written = write (fds[1].fd, write_data, to_write);
+	    if (written == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		    break;
+		else if (errno == EPIPE) {
+		    to_write = 0;
+		    break;
+		}
+
+		_notmuch_database_log (db, "Error piping data to filtering process: %s\n",
+				       strerror (errno));
+		goto FAIL;
+	    }
+	    write_data += written;
+	    to_write   -= written;
+	}
+    }
+
+    if (filtered)
+	filtered[filtered_len] = 0;
+
+    free (*data);
+    *data = filtered;
+    *data_len = filtered_len;
+    return;
+
+  FAIL:
+    free (filtered);
+    free (*data);
+    *data = NULL;
+    *data_len = 0;
+}
+
+static void
+_filter_attachment (notmuch_message_t *message,
+		    const char *filter,
+		    const char *mime_type,
+		    const char *filename,
+		    char **pdata,
+		    size_t *pdata_len)
+{
+    notmuch_database_t * const db = notmuch_message_get_database (message);
+    const char *msgid = notmuch_message_get_message_id (message);
+
+    char *data = NULL;
+    size_t data_len = 0;
+
+    GError *err = NULL;
+
+    GPid pid = -1;
+
+    gchar **cmdline = NULL;
+
+    /* child's standard IO FDs, [0] is stdin, [1] stdout */
+    int pipes[2];
+
+    void *local = NULL;
+    char **env = NULL;
+    int num_env = 0;
+
+    void (*sigpipe_handler_prev)(int) = NULL;
+
+    /* take ownership of input data, so it won't get indexed
+     * if filtering fails */
+    data = *pdata;
+    data_len = *pdata_len;
+    *pdata = NULL;
+    *pdata_len = 0;
+
+    /* disable SIGPIPE while in this function */
+    sigpipe_handler_prev = signal (SIGPIPE, SIG_IGN);
+    if (sigpipe_handler_prev == SIG_ERR) {
+	_notmuch_database_log (db, "Error disabling SIGPIPE: %s\n",
+			       strerror (errno));
+	goto CLOSE;
+    }
+
+    /* split the commandline */
+    if (! g_shell_parse_argv (filter, NULL, &cmdline, &err)) {
+	_notmuch_database_log (db, "Error splitting the commandline: %s\n",
+			       err->message);
+	g_error_free (err);
+	goto CLOSE;
+    }
+
+    /* set up the environment for the child */
+    while (environ[num_env])
+	num_env++;
+
+    local = talloc_new (db);
+    /* +2 for MIME_TYPE and MESSAGE_ID
+     * maybe +1 for FILENAME, if present
+     +1 for terminating NULL */
+    env = talloc_array (local, char *, num_env + 2 + ! ! filename + 1);
+    if (! env)
+	goto CLOSE;
+    for (num_env = 0; environ[num_env]; num_env++) {
+	env[num_env] = talloc_strdup (local, environ[num_env]);
+	if (! env[num_env])
+	    goto CLOSE;
+    }
+
+    env[num_env] = talloc_asprintf (env, "NOTMUCH_FILTER_MIME_TYPE=%s", mime_type);
+    if (! env[num_env])
+	goto CLOSE;
+    num_env++;
+
+    env[num_env] = talloc_asprintf (env, "NOTMUCH_FILTER_MESSAGE_ID=%s", msgid);
+    if (! env[num_env])
+	goto CLOSE;
+    num_env++;
+
+    if (filename) {
+	env[num_env] = talloc_asprintf (env, "NOTMUCH_FILTER_FILENAME=%s", filename);
+	if (! env[num_env])
+	    goto CLOSE;
+	num_env++;
+    }
+
+    env[num_env] = NULL;
+
+    if (! g_spawn_async_with_pipes_and_fds (NULL, cmdline, env, G_SPAWN_DO_NOT_REAP_CHILD,
+					    NULL, NULL,
+					    -1, -1, -1, NULL, NULL, 0, &pid,
+					    &pipes[0], &pipes[1],
+					    NULL, &err)) {
+	_notmuch_database_log (db, "Error spawning the filter process: %s\n",
+			       err->message);
+	g_error_free (err);
+	goto CLOSE;
+    }
+
+    /* make our end of the communication pipes non-blocking */
+    for (unsigned i = 0; i < 2; i++) {
+	int flags, ret;
+
+	flags = fcntl (pipes[i], F_GETFL);
+	if (flags == -1) {
+	    _notmuch_database_log (db, "Error retrieving pipe flags: %s\n",
+				   strerror (errno));
+	    goto CLOSE;
+	}
+
+	flags |= O_NONBLOCK;
+	ret = fcntl (pipes[i], F_SETFL, flags);
+	if (ret == -1) {
+	    _notmuch_database_log (db, "Error making the pipe non-blocking: %s\n",
+				   strerror (errno));
+	    goto CLOSE;
+	}
+    }
+
+    _filter_attachment_communicate (&pipes[0], &pipes[1], &data, &data_len, db);
+
+  CLOSE:
+    for (int i = 0; i < 2; i++)
+	if (pipes[i] >= 0)
+	    close (pipes[i]);
+
+    if (pid > 0) {
+	int status;
+
+	pid = waitpid (pid, &status, 0);
+	if (pid == -1)
+	    _notmuch_database_log (db, "waitpid() returned an error: %s\n",
+				   strerror (errno));
+	else if (WIFSIGNALED (status))
+	    _notmuch_database_log (db, "Filtering process exited due to signal: %d\n",
+				   WTERMSIG (status));
+	else if (WIFEXITED (status) && WEXITSTATUS (status))
+	    _notmuch_database_log (db, "Filtering process exited with error code: %d\n",
+				   WEXITSTATUS (status));
+	else {
+	    /* child exited successfully - return filtered data to caller */
+	    *pdata = data;
+	    *pdata_len = data_len;
+	    data = NULL;
+	}
+    }
+
+    g_strfreev (cmdline);
+    free (data);
+    talloc_free (local);
+
+    /* restore original SIGPIPE handler */
+    if (sigpipe_handler_prev)
+	signal (SIGPIPE, sigpipe_handler_prev);
+}
+
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -405,14 +664,16 @@ _index_mime_part (notmuch_message_t *message,
 		  _notmuch_message_crypto_t *msg_crypto)
 {
     GMimeStream *stream, *filter;
-    GMimeFilter *discard_non_term_filter;
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
     char *body;
+    size_t body_len;
     const char *charset;
     GMimeObject *repaired_part = NULL;
+    const char *filename = NULL;
+    const char *attachment_filter = NULL;
 
     if (! part) {
 	_notmuch_database_log (notmuch_message_get_database (message),
@@ -509,16 +770,15 @@ _index_mime_part (notmuch_message_t *message,
     if (disposition &&
 	strcasecmp (g_mime_content_disposition_get_disposition (disposition),
 		    GMIME_DISPOSITION_ATTACHMENT) == 0) {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	filename = g_mime_part_get_filename (GMIME_PART (part));
 
 	_notmuch_message_add_term (message, "tag", "attachment");
 	_notmuch_message_gen_terms (message, "attachment", filename);
 
 	if (! _indexable_as_text (message, part)) {
-	    /* XXX: Would be nice to call out to something here to parse
-	     * the attachment into text and then index that. */
 	    goto DONE;
 	}
+	attachment_filter = notmuch_indexopts_get_filter (indexopts);
     }
 
     byte_array = g_byte_array_new ();
@@ -527,24 +787,29 @@ _index_mime_part (notmuch_message_t *message,
     g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), false);
 
     filter = g_mime_stream_filter_new (stream);
-
     content_type = g_mime_object_get_content_type (part);
-    discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
 
-    g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
-			      discard_non_term_filter);
+    if (! attachment_filter) {
+	GMimeFilter *discard_non_term_filter;
 
-    charset = g_mime_object_get_content_type_parameter (part, "charset");
-    if (charset) {
-	GMimeFilter *charset_filter;
-	charset_filter = g_mime_filter_charset_new (charset, "UTF-8");
-	/* This result can be NULL for things like "unknown-8bit".
-	 * Don't set a NULL filter as that makes GMime print
-	 * annoying assertion-failure messages on stderr. */
-	if (charset_filter) {
-	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
-				      charset_filter);
-	    g_object_unref (charset_filter);
+	discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
+
+	g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
+				  discard_non_term_filter);
+	g_object_unref (discard_non_term_filter);
+
+	charset = g_mime_object_get_content_type_parameter (part, "charset");
+	if (charset) {
+	    GMimeFilter *charset_filter;
+	    charset_filter = g_mime_filter_charset_new (charset, "UTF-8");
+	    /* This result can be NULL for things like "unknown-8bit".
+	     * Don't set a NULL filter as that makes GMime print
+	     * annoying assertion-failure messages on stderr. */
+	    if (charset_filter) {
+		g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
+					  charset_filter);
+		g_object_unref (charset_filter);
+	    }
 	}
     }
 
@@ -554,10 +819,17 @@ _index_mime_part (notmuch_message_t *message,
 
     g_object_unref (stream);
     g_object_unref (filter);
-    g_object_unref (discard_non_term_filter);
 
     g_byte_array_append (byte_array, (guint8 *) "\0", 1);
+    body_len = byte_array->len - 1;
     body = (char *) g_byte_array_free (byte_array, false);
+
+    if (body && attachment_filter) {
+	_filter_attachment (message, attachment_filter,
+			    g_mime_content_type_get_mime_type (content_type),
+			    filename,
+			    &body, &body_len);
+    }
 
     if (body) {
 	_notmuch_message_gen_terms (message, NULL, body);
