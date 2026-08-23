@@ -176,6 +176,9 @@ test_emacs '(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir st
 test_expect_equal_file $EXPECTED/notmuch-show-indent-thread-content-off OUTPUT
 
 test_begin_subtest "id buttonization"
+if ${TEST_EMACS} --quick --batch --eval '(kill-emacs (if (version< emacs-version "31") 1 0))'; then
+    test_subtest_known_broken
+fi
 add_message '[body]="
 id:abc
 id:abc.def. id:abc,def, id:abc;def; id:abc:def:
