@@ -53,6 +53,10 @@ NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
+/* Needed for places (e.g. NetBSD) where _GNU_SOURCE does not enable
+ * this declaration */
+extern char **environ;
+
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
 # define DEBUG_THREADING 1
